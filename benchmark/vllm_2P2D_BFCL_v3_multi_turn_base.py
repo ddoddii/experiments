@@ -79,14 +79,14 @@ def _p(rel):  # project-root relative → absolute
     return os.path.join(PROJECT_ROOT, rel)
 
 CLASS_TO_FILE = {
-    "GorillaFileSystem": _p("multi_turn_func_doc/gorilla_file_system.json"),
-    "TicketAPI":         _p("multi_turn_func_doc/ticket_api.json"),
-    "MessageAPI":        _p("multi_turn_func_doc/message_api.json"),
-    "MathAPI":           _p("multi_turn_func_doc/math_api.json"),
-    "TradingBot":        _p("multi_turn_func_doc/trading_bot.json"),
-    "TwitterAPI":        _p("multi_turn_func_doc/posting_api.json"),
-    "TravelAPI":         _p("multi_turn_func_doc/travel_booking.json"),
-    "VehicleControlAPI": _p("multi_turn_func_doc/vehicle_control.json"),
+    "GorillaFileSystem": _p("data/multi_turn_func_doc/gorilla_file_system.json"),
+    "TicketAPI":         _p("data/multi_turn_func_doc/ticket_api.json"),
+    "MessageAPI":        _p("data/multi_turn_func_doc/message_api.json"),
+    "MathAPI":           _p("data/multi_turn_func_doc/math_api.json"),
+    "TradingBot":        _p("data/multi_turn_func_doc/trading_bot.json"),
+    "TwitterAPI":        _p("data/multi_turn_func_doc/posting_api.json"),
+    "TravelAPI":         _p("data/multi_turn_func_doc/travel_booking.json"),
+    "VehicleControlAPI": _p("data/multi_turn_func_doc/vehicle_control.json"),
 }
 
 TYPE_MAP = {
