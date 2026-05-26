@@ -31,7 +31,7 @@ export MODEL_PATH=${MODEL_PATH:-/home/uhmturks/hf_models/Llama-3.1-8B-Instruct}
 SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-Llama}
 HOST_IP=${HOST_IP:-127.0.0.1}
 
-XPYD_PROXY="/home/uhmturks/vllm-source/examples/online_serving/disaggregated_serving_p2p_nccl_xpyd/disagg_proxy_p2p_nccl_xpyd.py"
+XPYD_PROXY="/home/uhmturks/vllm-source/examples/disaggregated/p2p_nccl_xpyd/disagg_proxy_p2p_nccl_xpyd.py"
 
 LOG_DIR="/home/uhmturks/experiments/logs/vllm/2P_2D"
 mkdir -p "$LOG_DIR"
