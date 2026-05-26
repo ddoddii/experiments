@@ -26,6 +26,10 @@ import time
 import requests
 from tqdm import tqdm
 
+# ─── Paths (절대경로: 어디서 실행해도 동작) ────────────────────────────────
+SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))   # benchmark/
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
+
 # ─── Config ────────────────────────────────────────────────────────────────
 ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:8000/v1/chat/completions")
 MODEL      = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct-FC")
@@ -71,15 +75,18 @@ def push_to_pg(item_id: str, turn_idx: int, ttft, tpot, ctx_chars: int, n_done: 
         tqdm.write(f"  [PG] push failed: {e}")
 
 # ─── func_doc loading ──────────────────────────────────────────────────────
+def _p(rel):  # project-root relative → absolute
+    return os.path.join(PROJECT_ROOT, rel)
+
 CLASS_TO_FILE = {
-    "GorillaFileSystem": "multi_turn_func_doc/gorilla_file_system.json",
-    "TicketAPI":         "multi_turn_func_doc/ticket_api.json",
-    "MessageAPI":        "multi_turn_func_doc/message_api.json",
-    "MathAPI":           "multi_turn_func_doc/math_api.json",
-    "TradingBot":        "multi_turn_func_doc/trading_bot.json",
-    "TwitterAPI":        "multi_turn_func_doc/posting_api.json",
-    "TravelAPI":         "multi_turn_func_doc/travel_booking.json",
-    "VehicleControlAPI": "multi_turn_func_doc/vehicle_control.json",
+    "GorillaFileSystem": _p("multi_turn_func_doc/gorilla_file_system.json"),
+    "TicketAPI":         _p("multi_turn_func_doc/ticket_api.json"),
+    "MessageAPI":        _p("multi_turn_func_doc/message_api.json"),
+    "MathAPI":           _p("multi_turn_func_doc/math_api.json"),
+    "TradingBot":        _p("multi_turn_func_doc/trading_bot.json"),
+    "TwitterAPI":        _p("multi_turn_func_doc/posting_api.json"),
+    "TravelAPI":         _p("multi_turn_func_doc/travel_booking.json"),
+    "VehicleControlAPI": _p("multi_turn_func_doc/vehicle_control.json"),
 }
 
 TYPE_MAP = {
@@ -112,7 +119,7 @@ def load_func_doc(path):
 
 # ─── Load data ─────────────────────────────────────────────────────────────
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
-items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
+items = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
 results = []
 
 print(f"Config  : {CONFIG}")
