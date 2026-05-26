@@ -21,18 +21,18 @@ SGLang의 Prefill-Decode (PD) disaggregation 성능을 BFCL v3 multi-turn 벤치
 ├── benchmark/
 │   └── BFCL_v3_multi_turn_base_sglang.py   # 메인 벤치마크 스크립트
 ├── data/
-│   └── BFCL_v3_multi_turn_base.json         # 벤치마크 데이터 (200개)
+│   ├── BFCL_v3_multi_turn_base.json         # 벤치마크 데이터 (200개)
+│   └── multi_turn_func_doc/                 # Tool function definitions
+│       ├── gorilla_file_system.json
+│       ├── math_api.json
+│       ├── message_api.json
+│       ├── posting_api.json      # TwitterAPI
+│       ├── ticket_api.json
+│       ├── trading_bot.json
+│       ├── travel_booking.json   # TravelAPI
+│       └── vehicle_control.json  # VehicleControlAPI
 ├── gorilla/                                  # 공식 BFCL evaluator repo
 ├── logs/                                     # 서버 로그 (p1/p2/d1/d2/mooncake/router)
-├── multi_turn_func_doc/                      # Tool function definitions
-│   ├── gorilla_file_system.json
-│   ├── math_api.json
-│   ├── message_api.json
-│   ├── posting_api.json      # TwitterAPI
-│   ├── ticket_api.json
-│   ├── trading_bot.json
-│   ├── travel_booking.json   # TravelAPI
-│   └── vehicle_control.json  # VehicleControlAPI
 ├── possible_answer/
 │   └── BFCL_v3_multi_turn_base.json         # Ground truth
 ├── results/
