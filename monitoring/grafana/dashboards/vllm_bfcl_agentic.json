@@ -81,7 +81,7 @@
       },
       "targets": [{
         "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "histogram_quantile(0.50, sum(rate(vllm:time_per_output_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
+        "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
         "legendFormat": "P50 TPOT", "refId": "A"
       }],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -105,7 +105,7 @@
       },
       "targets": [{
         "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "sum(rate(vllm:num_generation_tokens_total{job=~\"$job\"}[1m]))",
+        "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[1m]))",
         "legendFormat": "tok/s", "refId": "A"
       }],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -127,7 +127,7 @@
       },
       "targets": [{
         "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "avg(vllm:gpu_cache_usage_perc{job=~\"$job\"})",
+        "expr": "avg(vllm:kv_cache_usage_perc{job=~\"$job\"})",
         "legendFormat": "Cache", "refId": "A"
       }],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -149,7 +149,7 @@
       },
       "targets": [{
         "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "avg(vllm:gpu_prefix_cache_hit_rate{job=~\"$job\"})",
+        "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[2m]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[2m]), 0.001)",
         "legendFormat": "Hit Rate", "refId": "A"
       }],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -215,17 +215,17 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.50, sum(rate(vllm:time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
           "legendFormat": "P50", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.90, sum(rate(vllm:time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "expr": "histogram_quantile(0.90, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
           "legendFormat": "P90", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.99, sum(rate(vllm:time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
           "legendFormat": "P99", "refId": "C"
         }
       ],
@@ -250,12 +250,12 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(rate(vllm:num_generation_tokens_total{job=~\"$job\"}[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[$__rate_interval]))",
           "legendFormat": "Generation tok/s", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(rate(vllm:num_prompt_tokens_total{job=~\"$job\"}[$__rate_interval]))",
+          "expr": "sum(rate(vllm:prompt_tokens_total{job=~\"$job\"}[$__rate_interval]))",
           "legendFormat": "Prompt tok/s", "refId": "B"
         }
       ],
@@ -317,13 +317,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:gpu_cache_usage_perc{job=~\"$job\"}",
+          "expr": "vllm:kv_cache_usage_perc{job=~\"$job\"}",
           "legendFormat": "{{job}} GPU cache", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:cpu_cache_usage_perc{job=~\"$job\"}",
-          "legendFormat": "{{job}} CPU cache", "refId": "B"
+          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
+          "legendFormat": "{{job}} prefix hit rate", "refId": "B"
         }
       ],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -347,8 +347,8 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:gpu_prefix_cache_hit_rate{job=~\"$job\"}",
-          "legendFormat": "{{job}} GPU prefix hit rate", "refId": "A"
+          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
+          "legendFormat": "{{job}} prefix hit rate", "refId": "A"
         }
       ],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
@@ -504,5 +504,5 @@
   "timezone": "browser",
   "title": "vLLM BFCL Agentic Workload",
   "uid": "vllm-bfcl-agentic-v1",
-  "version": 1
+  "version": 2
 }
