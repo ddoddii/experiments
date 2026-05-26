@@ -1,5 +1,5 @@
 """
-BFCL v3 Multi-Turn Base Benchmark — vLLM Standalone 4-GPU
+BFCL v3 Multi-Turn Base Benchmark — vLLM Standalone 4-GPU (TP 4)
 ==========================================================
 Target:
   vllm serve /home/uhmturks/hf_models/Llama-3.1-8B-Instruct \\
