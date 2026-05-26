@@ -1,0 +1,730 @@
+[2026-05-21 04:02:53] INFO server_args.py:1835: Attention backend not specified. Use flashinfer backend by default.
+[2026-05-21 04:02:53] WARNING server_args.py:2556: KV cache is forced as chunk cache for decode server
+[2026-05-21 04:02:53] WARNING server_args.py:2610: No IB devices specified for Mooncake backend, falling back to auto discovery.
+[2026-05-21 04:02:53] server_args=ServerArgs(model_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_mode='auto', tokenizer_worker_num=1, skip_tokenizer_init=False, load_format='auto', model_loader_extra_config='{}', trust_remote_code=False, context_length=None, is_embedding=False, enable_multimodal=None, revision=None, model_impl='auto', host='127.0.0.1', port=30002, fastapi_root_path='', grpc_mode=False, skip_server_warmup=False, warmups=None, nccl_port=None, checkpoint_engine_wait_weights_before_ready=False, dtype='auto', quantization=None, quantization_param_path=None, kv_cache_dtype='auto', enable_fp32_lm_head=False, modelopt_quant=None, modelopt_checkpoint_restore_path=None, modelopt_checkpoint_save_path=None, modelopt_export_path=None, quantize_and_serve=False, rl_quant_profile=None, mem_fraction_static=0.861, max_running_requests=None, max_queued_requests=None, max_total_tokens=None, chunked_prefill_size=4096, enable_dynamic_chunking=False, max_prefill_tokens=16384, prefill_max_requests=None, schedule_policy='fcfs', enable_priority_scheduling=False, abort_on_priority_when_disabled=False, schedule_low_priority_values_first=False, priority_scheduling_preemption_threshold=10, schedule_conservativeness=1.0, page_size=1, swa_full_tokens_ratio=0.8, disable_hybrid_swa_memory=False, radix_eviction_policy='lru', enable_prefill_delayer=False, prefill_delayer_max_delay_passes=30, prefill_delayer_token_usage_low_watermark=None, prefill_delayer_forward_passes_buckets=None, prefill_delayer_wait_seconds_buckets=None, device='cuda', tp_size=1, pp_size=1, pp_max_micro_batch_size=None, pp_async_batch_depth=0, stream_interval=1, stream_output=False, random_seed=509768900, constrained_json_whitespace_pattern=None, constrained_json_disable_any_whitespace=False, watchdog_timeout=300, soft_watchdog_timeout=None, dist_timeout=None, download_dir=None, model_checksum=None, base_gpu_id=0, gpu_id_step=1, sleep_on_idle=False, custom_sigquit_handler=None, log_level='info', log_level_http=None, log_requests=False, log_requests_level=2, log_requests_format='text', log_requests_target=None, uvicorn_access_log_exclude_prefixes=[], crash_dump_folder=None, show_time_cost=False, enable_metrics=False, enable_metrics_for_all_schedulers=False, tokenizer_metrics_custom_labels_header='x-custom-labels', tokenizer_metrics_allowed_custom_labels=None, extra_metric_labels=None, bucket_time_to_first_token=None, bucket_inter_token_latency=None, bucket_e2e_request_latency=None, collect_tokens_histogram=False, prompt_tokens_buckets=None, generation_tokens_buckets=None, gc_warning_threshold_secs=0.0, decode_log_interval=40, enable_request_time_stats_logging=False, kv_events_config=None, enable_trace=False, otlp_traces_endpoint='localhost:4317', export_metrics_to_file=False, export_metrics_to_file_dir=None, api_key=None, admin_api_key=None, served_model_name='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', weight_version='default', chat_template=None, hf_chat_template_name=None, completion_template=None, file_storage_path='sglang_storage', enable_cache_report=False, reasoning_parser=None, tool_call_parser=None, tool_server=None, sampling_defaults='model', dp_size=1, load_balance_method='round_robin', attn_cp_size=1, moe_dp_size=1, dist_init_addr=None, nnodes=1, node_rank=0, json_model_override_args='{}', preferred_sampling_params=None, enable_lora=None, enable_lora_overlap_loading=None, max_lora_rank=None, lora_target_modules=None, lora_paths=None, max_loaded_loras=None, max_loras_per_batch=8, lora_eviction_policy='lru', lora_backend='csgmv', max_lora_chunk_size=16, attention_backend='flashinfer', decode_attention_backend=None, prefill_attention_backend=None, sampling_backend='flashinfer', grammar_backend='xgrammar', mm_attention_backend=None, fp8_gemm_runner_backend='auto', fp4_gemm_runner_backend='flashinfer_cutlass', nsa_prefill_backend=None, nsa_decode_backend=None, disable_flashinfer_autotune=False, mamba_backend='triton', speculative_algorithm=None, speculative_draft_model_path=None, speculative_draft_model_revision=None, speculative_draft_load_format=None, speculative_num_steps=None, speculative_eagle_topk=None, speculative_num_draft_tokens=None, speculative_accept_threshold_single=1.0, speculative_accept_threshold_acc=1.0, speculative_token_map=None, speculative_attention_mode='prefill', speculative_draft_attention_backend=None, speculative_moe_runner_backend='auto', speculative_moe_a2a_backend=None, speculative_draft_model_quantization=None, speculative_ngram_min_match_window_size=1, speculative_ngram_max_match_window_size=12, speculative_ngram_min_bfs_breadth=1, speculative_ngram_max_bfs_breadth=10, speculative_ngram_match_type='BFS', speculative_ngram_branch_length=18, speculative_ngram_capacity=10000000, enable_multi_layer_eagle=False, ep_size=1, moe_a2a_backend='none', moe_runner_backend='auto', flashinfer_mxfp4_moe_precision='default', enable_flashinfer_allreduce_fusion=False, deepep_mode='auto', ep_num_redundant_experts=0, ep_dispatch_algorithm=None, init_expert_location='trivial', enable_eplb=False, eplb_algorithm='auto', eplb_rebalance_num_iterations=1000, eplb_rebalance_layers_per_chunk=None, eplb_min_rebalancing_utilization_threshold=1.0, expert_distribution_recorder_mode=None, expert_distribution_recorder_buffer_size=1000, enable_expert_distribution_metrics=False, deepep_config=None, moe_dense_tp_size=None, elastic_ep_backend=None, mooncake_ib_device=None, max_mamba_cache_size=None, mamba_ssm_dtype=None, mamba_full_memory_ratio=0.9, mamba_scheduler_strategy='no_buffer', mamba_track_interval=256, enable_hierarchical_cache=False, hicache_ratio=2.0, hicache_size=0, hicache_write_policy='write_through', hicache_io_backend='kernel', hicache_mem_layout='layer_first', disable_hicache_numa_detect=False, hicache_storage_backend=None, hicache_storage_prefetch_policy='best_effort', hicache_storage_backend_extra_config=None, hierarchical_sparse_attention_extra_config=None, enable_lmcache=False, kt_weight_path=None, kt_method='AMXINT4', kt_cpuinfer=None, kt_threadpool_count=2, kt_num_gpu_experts=None, kt_max_deferred_experts_per_token=None, dllm_algorithm=None, dllm_algorithm_config=None, enable_double_sparsity=False, ds_channel_config_path=None, ds_heavy_channel_num=32, ds_heavy_token_num=256, ds_heavy_channel_type='qk', ds_sparse_decode_threshold=4096, cpu_offload_gb=0, offload_group_size=-1, offload_num_in_group=1, offload_prefetch_step=1, offload_mode='cpu', multi_item_scoring_delimiter=None, disable_radix_cache=True, cuda_graph_max_bs=32, cuda_graph_bs=[1, 2, 4, 8, 12, 16, 24, 32], disable_cuda_graph=False, disable_cuda_graph_padding=False, enable_profile_cuda_graph=False, enable_cudagraph_gc=False, enable_layerwise_nvtx_marker=False, enable_nccl_nvls=False, enable_symm_mem=False, disable_flashinfer_cutlass_moe_fp4_allgather=False, enable_tokenizer_batch_encode=False, disable_tokenizer_batch_decode=False, disable_outlines_disk_cache=False, disable_custom_all_reduce=False, enable_mscclpp=False, enable_torch_symm_mem=False, disable_overlap_schedule=False, enable_mixed_chunk=False, enable_dp_attention=False, enable_dp_lm_head=False, enable_two_batch_overlap=False, enable_single_batch_overlap=False, tbo_token_distribution_threshold=0.48, enable_torch_compile=False, enable_piecewise_cuda_graph=False, enable_torch_compile_debug_mode=False, torch_compile_max_bs=32, piecewise_cuda_graph_max_tokens=4096, piecewise_cuda_graph_tokens=[4, 8, 12, 16, 20, 24, 28, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096], piecewise_cuda_graph_compiler='eager', torchao_config='', enable_nan_detection=False, enable_p2p_check=False, triton_attention_reduce_in_fp32=False, triton_attention_num_kv_splits=8, triton_attention_split_tile_size=None, num_continuous_decode_steps=1, delete_ckpt_after_loading=False, enable_memory_saver=False, enable_weights_cpu_backup=False, enable_draft_weights_cpu_backup=False, allow_auto_truncate=False, enable_custom_logit_processor=False, flashinfer_mla_disable_ragged=False, disable_shared_experts_fusion=False, disable_chunked_prefix_cache=False, disable_fast_image_processor=False, keep_mm_feature_on_device=False, enable_return_hidden_states=False, enable_return_routed_experts=False, scheduler_recv_interval=1, numa_node=None, enable_deterministic_inference=False, rl_on_policy_target=None, enable_attn_tp_input_scattered=False, enable_nsa_prefill_context_parallel=False, nsa_prefill_cp_mode='round-robin-split', enable_fused_qk_norm_rope=False, enable_precise_embedding_interpolation=False, enable_dynamic_batch_tokenizer=False, dynamic_batch_tokenizer_batch_size=32, dynamic_batch_tokenizer_batch_timeout=0.002, debug_tensor_dump_output_folder=None, debug_tensor_dump_layers=None, debug_tensor_dump_input_file=None, debug_tensor_dump_inject=False, disaggregation_mode='decode', disaggregation_transfer_backend='mooncake', disaggregation_bootstrap_port=8998, disaggregation_decode_tp=None, disaggregation_decode_dp=None, disaggregation_prefill_pp=1, disaggregation_ib_device=None, disaggregation_decode_enable_offload_kvcache=False, num_reserved_decode_tokens=512, disaggregation_decode_polling_interval=1, encoder_only=False, language_only=False, encoder_transfer_backend='zmq_to_scheduler', encoder_urls=[], custom_weight_loader=[], weight_loader_disable_mmap=False, remote_instance_weight_loader_seed_instance_ip=None, remote_instance_weight_loader_seed_instance_service_port=None, remote_instance_weight_loader_send_weights_group_ports=None, remote_instance_weight_loader_backend='nccl', remote_instance_weight_loader_start_seed_via_transfer_engine=False, enable_pdmux=False, pdmux_config_path=None, sm_group_num=8, mm_max_concurrent_calls=32, mm_per_request_timeout=10.0, enable_broadcast_mm_inputs_process=False, enable_prefix_mm_cache=False, mm_enable_dp_encoder=False, mm_process_config={}, limit_mm_data_per_request=None, decrypted_config_file=None, decrypted_draft_config_file=None, forward_hooks=None)
+[2026-05-21 04:02:54] Using default HuggingFace chat template with detected content format: string
+[2026-05-21 04:03:00] Mamba selective_state_update backend initialized: triton
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+W0521 04:03:00.285182 1568558 transfer_engine_py.cpp:92] Using default malloc/free for protocol: rdma
+I0521 04:03:00.285260 1568558 transfer_engine_impl.cpp:757] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0521 04:03:00.285272 1568558 transfer_engine_impl.cpp:107] Transfer Engine parseHostNameWithPort. server_name: 165.132.142.205 port: 12001
+I0521 04:03:00.285302 1568558 transfer_engine_impl.cpp:174] Transfer Engine RPC using P2P handshake, listening on 165.132.142.205:16605
+I0521 04:03:00.285355 1568558 transfer_engine_impl.cpp:229] Auto-discovering topology...
+W0521 04:03:00.285419 1568558 topology.cpp:156] No RDMA devices found, check your device installation
+I0521 04:03:00.285473 1568558 transfer_engine_impl.cpp:244] Topology discovery complete. Found 0 HCAs.
+E0521 04:03:00.285499 1568558 transfer_metadata.cpp:863] Local segment descriptor not found
+I0521 04:03:00.285523 1568558 tcp_transport.cpp:541] TcpTransport: listen on port 15457
+[2026-05-21 04:03:00] Init torch distributed begin.
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[2026-05-21 04:03:00] Init torch distributed ends. elapsed=0.22 s, mem usage=0.04 GB
+[2026-05-21 04:03:00] Ignore import error when loading sglang.srt.models.glm_ocr: No module named 'transformers.models.glm_ocr'
+[2026-05-21 04:03:00] Ignore import error when loading sglang.srt.models.glm_ocr_nextn: No module named 'transformers.models.glm_ocr'
+[2026-05-21 04:03:00] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+[2026-05-21 04:03:01] Load weight begin. avail mem=47.08 GB
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:00<00:02,  1.46it/s]
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:01<00:01,  1.30it/s]
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:01<00:00,  1.79it/s]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.68it/s]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.62it/s]
+
+[2026-05-21 04:03:03] Load weight end. elapsed=2.79 s, type=LlamaForCausalLM, dtype=torch.bfloat16, avail mem=32.07 GB, mem usage=15.02 GB.
+[2026-05-21 04:03:03] Using KV cache dtype: torch.bfloat16
+[2026-05-21 04:03:03] KV Cache is allocated. #tokens: 209026, K size: 12.76 GB, V size: 12.76 GB
+[2026-05-21 04:03:03] Memory pool end. avail mem=5.44 GB
+[2026-05-21 04:03:03] Capture cuda graph begin. This can take up to several minutes. avail mem=4.99 GB
+[2026-05-21 04:03:03] Capture cuda graph bs [1, 2, 4, 8, 12, 16, 24, 32]
+  0%|          | 0/8 [00:00<?, ?it/s]Capturing batches (bs=32 avail_mem=4.96 GB):   0%|          | 0/8 [00:00<?, ?it/s]Capturing batches (bs=32 avail_mem=4.96 GB):  12%|█▎        | 1/8 [00:00<00:04,  1.75it/s]Capturing batches (bs=24 avail_mem=4.90 GB):  12%|█▎        | 1/8 [00:00<00:04,  1.75it/s]Capturing batches (bs=16 avail_mem=4.88 GB):  12%|█▎        | 1/8 [00:00<00:04,  1.75it/s]Capturing batches (bs=16 avail_mem=4.88 GB):  38%|███▊      | 3/8 [00:00<00:01,  4.62it/s]Capturing batches (bs=12 avail_mem=4.87 GB):  38%|███▊      | 3/8 [00:00<00:01,  4.62it/s]Capturing batches (bs=8 avail_mem=4.85 GB):  38%|███▊      | 3/8 [00:00<00:01,  4.62it/s] Capturing batches (bs=8 avail_mem=4.85 GB):  62%|██████▎   | 5/8 [00:00<00:00,  7.22it/s]Capturing batches (bs=4 avail_mem=4.84 GB):  62%|██████▎   | 5/8 [00:00<00:00,  7.22it/s]Capturing batches (bs=2 avail_mem=4.82 GB):  62%|██████▎   | 5/8 [00:00<00:00,  7.22it/s]Capturing batches (bs=2 avail_mem=4.82 GB):  88%|████████▊ | 7/8 [00:01<00:00,  9.38it/s]Capturing batches (bs=1 avail_mem=4.81 GB):  88%|████████▊ | 7/8 [00:01<00:00,  9.38it/s]Capturing batches (bs=1 avail_mem=4.81 GB): 100%|██████████| 8/8 [00:01<00:00,  7.45it/s]
+[2026-05-21 04:03:05] Capture cuda graph end. Time elapsed: 1.67 s. mem usage=0.20 GB. avail mem=4.79 GB.
+[2026-05-21 04:03:05] max_total_num_tokens=209026, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=4.79 GB
+[2026-05-21 04:03:06] INFO:     Started server process [1567985]
+[2026-05-21 04:03:06] INFO:     Waiting for application startup.
+[2026-05-21 04:03:06] Using default chat sampling params from model generation config: {'repetition_penalty': 1.0, 'temperature': 0.6, 'top_k': 50, 'top_p': 0.9}
+[2026-05-21 04:03:06] INFO:     Application startup complete.
+[2026-05-21 04:03:06] INFO:     Uvicorn running on http://127.0.0.1:30002 (Press CTRL+C to quit)
+[2026-05-21 04:03:07] INFO:     127.0.0.1:44578 - "GET /model_info HTTP/1.1" 200 OK
+[2026-05-21 04:03:07] Start of pd disaggregation warmup ...
+[2026-05-21 04:03:08] INFO:     127.0.0.1:44582 - "POST /generate HTTP/1.1" 200 OK
+[2026-05-21 04:03:08] End of prefill disaggregation mode warmup with status 200, resp: [{'text': '! (I think I might have gotten', 'output_ids': [0, 320, 40, 1781, 358, 2643, 617, 17454], 'meta_info': {'id': '70c71f126a3547bdb9b806795eb2c5af', 'finish_reason': {'type': 'length', 'length': 8}, 'prompt_tokens': 4, 'weight_version': 'default', 'total_retractions': 0, 'completion_tokens': 8, 'cached_tokens': 0, 'cached_tokens_details': None, 'e2e_latency': 0.6626782417297363, 'response_sent_to_client_ts': 1779336188.1386342}}]
+[2026-05-21 04:03:08] The server is fired up and ready to roll!
+[2026-05-21 04:03:22] INFO:     127.0.0.1:55040 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-05-21 04:03:22] WARNING:  Invalid HTTP request received.
+[2026-05-21 04:03:22] INFO:     127.0.0.1:55044 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-05-21 04:03:22] WARNING:  Invalid HTTP request received.
+[2026-05-21 04:03:23] INFO:     127.0.0.1:55030 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:03:23] INFO:     127.0.0.1:39094 - "GET /server_info HTTP/1.1" 200 OK
+[2026-05-21 04:03:23] INFO:     127.0.0.1:39094 - "GET /model_info HTTP/1.1" 200 OK
+[2026-05-21 04:04:05] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:05] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:06] Decode batch, #running-req: 1, #token: 3792, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 0.60, #queue-req: 0
+[2026-05-21 04:04:09] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:10] Decode batch, #running-req: 1, #token: 5108, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.37, #queue-req: 0
+[2026-05-21 04:04:11] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:11] Decode batch, #running-req: 1, #token: 5199, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.21, #queue-req: 0
+[2026-05-21 04:04:12] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:13] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:13] Decode batch, #running-req: 1, #token: 5349, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 23.21, #queue-req: 0
+[2026-05-21 04:04:14] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:15] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.37, #queue-req: 0
+[2026-05-21 04:04:16] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:18] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:19] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:20] Decode batch, #running-req: 1, #token: 5867, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.25, #queue-req: 0
+[2026-05-21 04:04:21] Decode batch, #running-req: 1, #token: 5907, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.62, #queue-req: 0
+[2026-05-21 04:04:23] INFO:     127.0.0.1:34230 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:04:23] INFO:     127.0.0.1:54566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:25] Decode batch, #running-req: 1, #token: 5814, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.89, #queue-req: 0
+[2026-05-21 04:04:31] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:32] Decode batch, #running-req: 1, #token: 3662, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.85, #queue-req: 0
+[2026-05-21 04:04:35] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:35] Decode batch, #running-req: 1, #token: 3842, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.31, #queue-req: 0
+[2026-05-21 04:04:40] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:41] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.03, #queue-req: 0
+[2026-05-21 04:04:43] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:45] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:45] Decode batch, #running-req: 1, #token: 5898, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.90, #queue-req: 0
+[2026-05-21 04:04:46] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:47] Decode batch, #running-req: 1, #token: 5960, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.84, #queue-req: 0
+[2026-05-21 04:04:48] Decode batch, #running-req: 1, #token: 6000, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.59, #queue-req: 0
+[2026-05-21 04:04:48] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:49] Decode batch, #running-req: 1, #token: 3577, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.43, #queue-req: 0
+[2026-05-21 04:04:51] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:53] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:53] Decode batch, #running-req: 1, #token: 3614, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.11, #queue-req: 0
+[2026-05-21 04:04:57] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:58] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:00] Decode batch, #running-req: 1, #token: 5728, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.20, #queue-req: 0
+[2026-05-21 04:05:01] Decode batch, #running-req: 1, #token: 5768, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.67, #queue-req: 0
+[2026-05-21 04:05:06] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:07] Decode batch, #running-req: 1, #token: 5866, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.05, #queue-req: 0
+[2026-05-21 04:05:07] INFO:     127.0.0.1:46442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:09] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.53, #queue-req: 0
+[2026-05-21 04:05:18] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:20] Decode batch, #running-req: 1, #token: 6149, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 3.54, #queue-req: 0
+[2026-05-21 04:05:21] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:22] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:23] Decode batch, #running-req: 1, #token: 6325, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.50, #queue-req: 0
+[2026-05-21 04:05:23] INFO:     127.0.0.1:40202 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:05:23] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:25] Decode batch, #running-req: 1, #token: 3601, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.25, #queue-req: 0
+[2026-05-21 04:05:29] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:30] Decode batch, #running-req: 1, #token: 4911, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.75, #queue-req: 0
+[2026-05-21 04:05:31] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:31] Decode batch, #running-req: 1, #token: 5004, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.38, #queue-req: 0
+[2026-05-21 04:05:32] Decode batch, #running-req: 1, #token: 5044, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.87, #queue-req: 0
+[2026-05-21 04:05:32] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:34] Decode batch, #running-req: 1, #token: 5965, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.45, #queue-req: 0
+[2026-05-21 04:05:35] Decode batch, #running-req: 1, #token: 6005, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.54, #queue-req: 0
+[2026-05-21 04:05:36] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:37] Decode batch, #running-req: 1, #token: 6080, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.08, #queue-req: 0
+[2026-05-21 04:05:38] Decode batch, #running-req: 1, #token: 6120, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.52, #queue-req: 0
+[2026-05-21 04:05:39] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:40] Decode batch, #running-req: 1, #token: 6203, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.14, #queue-req: 0
+[2026-05-21 04:05:41] Decode batch, #running-req: 1, #token: 6243, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.46, #queue-req: 0
+[2026-05-21 04:05:44] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:45] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:47] Decode batch, #running-req: 1, #token: 5719, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.73, #queue-req: 0
+[2026-05-21 04:05:47] Decode batch, #running-req: 1, #token: 5759, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.63, #queue-req: 0
+[2026-05-21 04:05:48] INFO:     127.0.0.1:40188 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:49] Decode batch, #running-req: 1, #token: 5825, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.51, #queue-req: 0
+[2026-05-21 04:05:57] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:57] Decode batch, #running-req: 1, #token: 5954, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.62, #queue-req: 0
+[2026-05-21 04:05:58] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:00] Decode batch, #running-req: 1, #token: 6042, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.18, #queue-req: 0
+[2026-05-21 04:06:00] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:01] Decode batch, #running-req: 1, #token: 6180, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.83, #queue-req: 0
+[2026-05-21 04:06:02] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:03] Decode batch, #running-req: 1, #token: 5007, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.12, #queue-req: 0
+[2026-05-21 04:06:04] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:05] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:06] Decode batch, #running-req: 1, #token: 5125, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.90, #queue-req: 0
+[2026-05-21 04:06:06] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:08] Decode batch, #running-req: 1, #token: 5064, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.27, #queue-req: 0
+[2026-05-21 04:06:08] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:10] Decode batch, #running-req: 1, #token: 5136, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.15, #queue-req: 0
+[2026-05-21 04:06:10] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:11] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:12] Decode batch, #running-req: 1, #token: 5275, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 23.26, #queue-req: 0
+[2026-05-21 04:06:16] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:17] Decode batch, #running-req: 1, #token: 3716, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.79, #queue-req: 0
+[2026-05-21 04:06:17] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:18] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:19] Decode batch, #running-req: 1, #token: 3656, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.20, #queue-req: 0
+[2026-05-21 04:06:19] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:22] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:23] Decode batch, #running-req: 1, #token: 5129, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.60, #queue-req: 0
+[2026-05-21 04:06:23] INFO:     127.0.0.1:41808 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:06:24] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:24] Decode batch, #running-req: 1, #token: 5219, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.55, #queue-req: 0
+[2026-05-21 04:06:25] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:26] Decode batch, #running-req: 1, #token: 6141, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.74, #queue-req: 0
+[2026-05-21 04:06:28] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:30] Decode batch, #running-req: 1, #token: 6311, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.55, #queue-req: 0
+[2026-05-21 04:06:30] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:32] Decode batch, #running-req: 1, #token: 3583, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.36, #queue-req: 0
+[2026-05-21 04:06:32] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:33] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:34] Decode batch, #running-req: 1, #token: 3676, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.10, #queue-req: 0
+[2026-05-21 04:06:35] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:36] Decode batch, #running-req: 1, #token: 5894, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.33, #queue-req: 0
+[2026-05-21 04:06:39] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:41] Decode batch, #running-req: 1, #token: 6165, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.29, #queue-req: 0
+[2026-05-21 04:06:42] Decode batch, #running-req: 1, #token: 6205, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.44, #queue-req: 0
+[2026-05-21 04:06:43] Decode batch, #running-req: 1, #token: 6245, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.43, #queue-req: 0
+[2026-05-21 04:06:44] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:45] Decode batch, #running-req: 1, #token: 6314, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.68, #queue-req: 0
+[2026-05-21 04:06:46] Decode batch, #running-req: 1, #token: 6354, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.38, #queue-req: 0
+[2026-05-21 04:06:47] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:48] Decode batch, #running-req: 1, #token: 6071, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.91, #queue-req: 0
+[2026-05-21 04:06:49] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:51] Decode batch, #running-req: 1, #token: 6161, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.75, #queue-req: 0
+[2026-05-21 04:06:52] Decode batch, #running-req: 1, #token: 6201, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.42, #queue-req: 0
+[2026-05-21 04:06:54] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:55] Decode batch, #running-req: 1, #token: 4837, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.01, #queue-req: 0
+[2026-05-21 04:06:56] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:57] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:58] Decode batch, #running-req: 1, #token: 5009, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.19, #queue-req: 0
+[2026-05-21 04:07:02] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:04] Decode batch, #running-req: 1, #token: 6157, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.18, #queue-req: 0
+[2026-05-21 04:07:07] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:07] Decode batch, #running-req: 1, #token: 6296, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.66, #queue-req: 0
+[2026-05-21 04:07:08] Decode batch, #running-req: 1, #token: 6336, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.40, #queue-req: 0
+[2026-05-21 04:07:10] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:12] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.71, #queue-req: 0
+[2026-05-21 04:07:12] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:14] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:15] Decode batch, #running-req: 1, #token: 3611, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.60, #queue-req: 0
+[2026-05-21 04:07:16] Decode batch, #running-req: 1, #token: 3651, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.28, #queue-req: 0
+[2026-05-21 04:07:16] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:17] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 33.67, #queue-req: 0
+[2026-05-21 04:07:21] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:22] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:23] INFO:     127.0.0.1:39770 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:07:23] Decode batch, #running-req: 1, #token: 3567, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.45, #queue-req: 0
+[2026-05-21 04:07:24] Decode batch, #running-req: 1, #token: 3607, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.30, #queue-req: 0
+[2026-05-21 04:07:25] Decode batch, #running-req: 1, #token: 3647, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.28, #queue-req: 0
+[2026-05-21 04:07:26] INFO:     127.0.0.1:53740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:27] Decode batch, #running-req: 1, #token: 3713, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 21.77, #queue-req: 0
+[2026-05-21 04:07:34] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:36] Decode batch, #running-req: 1, #token: 4763, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.39, #queue-req: 0
+[2026-05-21 04:07:37] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:37] Decode batch, #running-req: 1, #token: 4830, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.39, #queue-req: 0
+[2026-05-21 04:07:38] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:39] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:41] Decode batch, #running-req: 1, #token: 6055, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.39, #queue-req: 0
+[2026-05-21 04:07:41] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:42] Decode batch, #running-req: 1, #token: 6127, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.91, #queue-req: 0
+[2026-05-21 04:07:44] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:46] Decode batch, #running-req: 1, #token: 4865, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.94, #queue-req: 0
+[2026-05-21 04:07:46] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:48] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:50] Decode batch, #running-req: 1, #token: 6098, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.23, #queue-req: 0
+[2026-05-21 04:07:50] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:52] Decode batch, #running-req: 1, #token: 6156, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.88, #queue-req: 0
+[2026-05-21 04:07:52] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:53] Decode batch, #running-req: 1, #token: 6229, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.78, #queue-req: 0
+[2026-05-21 04:07:53] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:59] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:00] Decode batch, #running-req: 1, #token: 6051, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.56, #queue-req: 0
+[2026-05-21 04:08:01] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:03] Decode batch, #running-req: 1, #token: 6113, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.58, #queue-req: 0
+[2026-05-21 04:08:04] Decode batch, #running-req: 1, #token: 6153, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.43, #queue-req: 0
+[2026-05-21 04:08:09] INFO:     127.0.0.1:53480 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:11] Decode batch, #running-req: 1, #token: 5293, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.69, #queue-req: 0
+[2026-05-21 04:08:17] INFO:     127.0.0.1:38854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:18] Decode batch, #running-req: 1, #token: 6457, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.41, #queue-req: 0
+[2026-05-21 04:08:23] INFO:     127.0.0.1:38862 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:08:24] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:25] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:26] Decode batch, #running-req: 1, #token: 5135, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.31, #queue-req: 0
+[2026-05-21 04:08:30] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:30] Decode batch, #running-req: 1, #token: 6205, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.36, #queue-req: 0
+[2026-05-21 04:08:33] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:35] Decode batch, #running-req: 1, #token: 6067, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.29, #queue-req: 0
+[2026-05-21 04:08:35] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:41] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:43] Decode batch, #running-req: 1, #token: 6287, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.95, #queue-req: 0
+[2026-05-21 04:08:44] Decode batch, #running-req: 1, #token: 6327, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.39, #queue-req: 0
+[2026-05-21 04:08:47] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:52] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:53] Decode batch, #running-req: 1, #token: 3746, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.29, #queue-req: 0
+[2026-05-21 04:08:53] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:56] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:58] Decode batch, #running-req: 1, #token: 6279, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.26, #queue-req: 0
+[2026-05-21 04:08:58] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:59] Decode batch, #running-req: 1, #token: 6384, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.61, #queue-req: 0
+[2026-05-21 04:09:00] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:01] Decode batch, #running-req: 1, #token: 5826, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.09, #queue-req: 0
+[2026-05-21 04:09:06] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:08] Decode batch, #running-req: 1, #token: 6278, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.37, #queue-req: 0
+[2026-05-21 04:09:13] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:15] Decode batch, #running-req: 1, #token: 5265, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.70, #queue-req: 0
+[2026-05-21 04:09:15] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:18] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:19] Decode batch, #running-req: 1, #token: 5509, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.09, #queue-req: 0
+[2026-05-21 04:09:19] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:21] Decode batch, #running-req: 1, #token: 4944, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.34, #queue-req: 0
+[2026-05-21 04:09:23] INFO:     127.0.0.1:52666 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:09:23] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:24] Decode batch, #running-req: 1, #token: 5134, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.05, #queue-req: 0
+[2026-05-21 04:09:25] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:27] Decode batch, #running-req: 1, #token: 4991, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 14.19, #queue-req: 0
+[2026-05-21 04:09:28] Decode batch, #running-req: 1, #token: 5031, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.83, #queue-req: 0
+[2026-05-21 04:09:28] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:29] Decode batch, #running-req: 1, #token: 5106, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.47, #queue-req: 0
+[2026-05-21 04:09:29] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:31] Decode batch, #running-req: 1, #token: 5176, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.24, #queue-req: 0
+[2026-05-21 04:09:32] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:37] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:38] Decode batch, #running-req: 1, #token: 3737, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.06, #queue-req: 0
+[2026-05-21 04:09:39] Decode batch, #running-req: 1, #token: 3777, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.26, #queue-req: 0
+[2026-05-21 04:09:39] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:41] Decode batch, #running-req: 1, #token: 3870, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.06, #queue-req: 0
+[2026-05-21 04:09:41] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:43] Decode batch, #running-req: 1, #token: 6221, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.92, #queue-req: 0
+[2026-05-21 04:09:44] Decode batch, #running-req: 1, #token: 6261, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.40, #queue-req: 0
+[2026-05-21 04:09:45] Decode batch, #running-req: 1, #token: 6301, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.38, #queue-req: 0
+[2026-05-21 04:09:47] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:48] Decode batch, #running-req: 1, #token: 3798, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.60, #queue-req: 0
+[2026-05-21 04:09:49] Decode batch, #running-req: 1, #token: 3838, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.22, #queue-req: 0
+[2026-05-21 04:09:50] Decode batch, #running-req: 1, #token: 3878, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.20, #queue-req: 0
+[2026-05-21 04:09:50] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:55] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:56] Decode batch, #running-req: 1, #token: 4901, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.65, #queue-req: 0
+[2026-05-21 04:09:57] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:57] Decode batch, #running-req: 1, #token: 4967, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.71, #queue-req: 0
+[2026-05-21 04:10:02] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:03] Decode batch, #running-req: 1, #token: 6231, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.08, #queue-req: 0
+[2026-05-21 04:10:05] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:06] Decode batch, #running-req: 1, #token: 6480, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.31, #queue-req: 0
+[2026-05-21 04:10:09] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:11] Decode batch, #running-req: 1, #token: 6159, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.23, #queue-req: 0
+[2026-05-21 04:10:12] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:12] Decode batch, #running-req: 1, #token: 3785, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 32.24, #queue-req: 0
+[2026-05-21 04:10:13] Decode batch, #running-req: 1, #token: 3825, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.22, #queue-req: 0
+[2026-05-21 04:10:14] Decode batch, #running-req: 1, #token: 3865, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.20, #queue-req: 0
+[2026-05-21 04:10:15] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:17] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:18] Decode batch, #running-req: 1, #token: 3787, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.28, #queue-req: 0
+[2026-05-21 04:10:19] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:19] Decode batch, #running-req: 1, #token: 3844, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 32.61, #queue-req: 0
+[2026-05-21 04:10:23] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:23] INFO:     127.0.0.1:39382 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:10:27] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:28] Decode batch, #running-req: 1, #token: 3749, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.50, #queue-req: 0
+[2026-05-21 04:10:29] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:30] Decode batch, #running-req: 1, #token: 3918, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 20.25, #queue-req: 0
+[2026-05-21 04:10:30] INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:45] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:47] Decode batch, #running-req: 1, #token: 6534, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 2.41, #queue-req: 0
+[2026-05-21 04:10:47] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:49] Decode batch, #running-req: 1, #token: 6624, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.18, #queue-req: 0
+[2026-05-21 04:10:51] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:52] Decode batch, #running-req: 1, #token: 6465, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.22, #queue-req: 0
+[2026-05-21 04:10:53] Decode batch, #running-req: 1, #token: 6505, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.34, #queue-req: 0
+[2026-05-21 04:10:58] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:59] Decode batch, #running-req: 1, #token: 3904, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.70, #queue-req: 0
+[2026-05-21 04:10:59] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:02] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:04] Decode batch, #running-req: 1, #token: 6418, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.53, #queue-req: 0
+[2026-05-21 04:11:06] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:07] Decode batch, #running-req: 1, #token: 6608, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.28, #queue-req: 0
+[2026-05-21 04:11:07] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:13] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:14] Decode batch, #running-req: 1, #token: 6544, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.21, #queue-req: 0
+[2026-05-21 04:11:17] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:18] Decode batch, #running-req: 1, #token: 3912, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.17, #queue-req: 0
+[2026-05-21 04:11:21] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:22] Decode batch, #running-req: 1, #token: 3840, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.39, #queue-req: 0
+[2026-05-21 04:11:23] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:23] INFO:     127.0.0.1:53162 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:11:25] Decode batch, #running-req: 1, #token: 3776, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.17, #queue-req: 0
+[2026-05-21 04:11:26] Decode batch, #running-req: 1, #token: 3816, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.24, #queue-req: 0
+[2026-05-21 04:11:28] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:29] Decode batch, #running-req: 1, #token: 3749, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.71, #queue-req: 0
+[2026-05-21 04:11:30] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:31] Decode batch, #running-req: 1, #token: 3821, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 33.42, #queue-req: 0
+[2026-05-21 04:11:31] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:33] Decode batch, #running-req: 1, #token: 6059, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.20, #queue-req: 0
+[2026-05-21 04:11:34] Decode batch, #running-req: 1, #token: 6099, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.45, #queue-req: 0
+[2026-05-21 04:11:38] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:39] Decode batch, #running-req: 1, #token: 3759, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.13, #queue-req: 0
+[2026-05-21 04:11:39] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:41] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:41] Decode batch, #running-req: 1, #token: 3892, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.51, #queue-req: 0
+[2026-05-21 04:11:42] Decode batch, #running-req: 1, #token: 3932, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.19, #queue-req: 0
+[2026-05-21 04:11:44] INFO:     127.0.0.1:47456 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:46] Decode batch, #running-req: 1, #token: 5828, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.28, #queue-req: 0
+[2026-05-21 04:11:51] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:53] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:53] Decode batch, #running-req: 1, #token: 3797, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.14, #queue-req: 0
+[2026-05-21 04:11:56] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:58] Decode batch, #running-req: 1, #token: 5971, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.21, #queue-req: 0
+[2026-05-21 04:12:00] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:01] Decode batch, #running-req: 1, #token: 6127, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.78, #queue-req: 0
+[2026-05-21 04:12:02] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:03] Decode batch, #running-req: 1, #token: 6205, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.72, #queue-req: 0
+[2026-05-21 04:12:07] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:08] Decode batch, #running-req: 1, #token: 3755, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.11, #queue-req: 0
+[2026-05-21 04:12:11] INFO:     127.0.0.1:36658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:19] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:20] Decode batch, #running-req: 1, #token: 3879, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 3.45, #queue-req: 0
+[2026-05-21 04:12:21] Decode batch, #running-req: 1, #token: 3919, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.22, #queue-req: 0
+[2026-05-21 04:12:23] INFO:     127.0.0.1:37446 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:12:23] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:24] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:26] Decode batch, #running-req: 1, #token: 5153, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.19, #queue-req: 0
+[2026-05-21 04:12:27] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:28] Decode batch, #running-req: 1, #token: 5306, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.97, #queue-req: 0
+[2026-05-21 04:12:31] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:32] Decode batch, #running-req: 1, #token: 3991, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.62, #queue-req: 0
+[2026-05-21 04:12:37] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:39] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:39] Decode batch, #running-req: 1, #token: 5339, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.96, #queue-req: 0
+[2026-05-21 04:12:40] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:41] Decode batch, #running-req: 1, #token: 5422, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 28.96, #queue-req: 0
+[2026-05-21 04:12:41] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:43] Decode batch, #running-req: 1, #token: 6307, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.54, #queue-req: 0
+[2026-05-21 04:12:44] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:46] Decode batch, #running-req: 1, #token: 6446, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.06, #queue-req: 0
+[2026-05-21 04:12:48] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:50] Decode batch, #running-req: 1, #token: 3919, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.59, #queue-req: 0
+[2026-05-21 04:12:50] Decode batch, #running-req: 1, #token: 3959, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.19, #queue-req: 0
+[2026-05-21 04:12:53] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:54] Decode batch, #running-req: 1, #token: 3944, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.12, #queue-req: 0
+[2026-05-21 04:12:54] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:55] Decode batch, #running-req: 1, #token: 4065, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 32.90, #queue-req: 0
+[2026-05-21 04:12:58] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:00] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.41, #queue-req: 0
+[2026-05-21 04:13:01] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:03] Decode batch, #running-req: 1, #token: 5421, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.84, #queue-req: 0
+[2026-05-21 04:13:04] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:08] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:08] Decode batch, #running-req: 1, #token: 5771, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.07, #queue-req: 0
+[2026-05-21 04:13:09] Decode batch, #running-req: 1, #token: 5811, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.58, #queue-req: 0
+[2026-05-21 04:13:10] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:14] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:15] Decode batch, #running-req: 1, #token: 5437, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.42, #queue-req: 0
+[2026-05-21 04:13:15] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:16] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:17] Decode batch, #running-req: 1, #token: 3988, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.27, #queue-req: 0
+[2026-05-21 04:13:17] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:18] Decode batch, #running-req: 1, #token: 4117, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 32.73, #queue-req: 0
+[2026-05-21 04:13:18] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:21] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:23] Decode batch, #running-req: 1, #token: 5435, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.77, #queue-req: 0
+[2026-05-21 04:13:23] INFO:     127.0.0.1:45234 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:13:24] Decode batch, #running-req: 1, #token: 5475, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.62, #queue-req: 0
+[2026-05-21 04:13:24] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:25] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:26] Decode batch, #running-req: 1, #token: 5591, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.60, #queue-req: 0
+[2026-05-21 04:13:28] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:30] Decode batch, #running-req: 1, #token: 4008, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 11.25, #queue-req: 0
+[2026-05-21 04:13:34] INFO:     127.0.0.1:37442 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:40] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:40] Decode batch, #running-req: 1, #token: 5414, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 3.76, #queue-req: 0
+[2026-05-21 04:13:40] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:44] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:45] Decode batch, #running-req: 1, #token: 6187, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.04, #queue-req: 0
+[2026-05-21 04:13:46] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:47] Decode batch, #running-req: 1, #token: 6306, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.83, #queue-req: 0
+[2026-05-21 04:13:48] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:49] Decode batch, #running-req: 1, #token: 6457, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 17.75, #queue-req: 0
+[2026-05-21 04:13:52] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:52] Decode batch, #running-req: 1, #token: 5472, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.83, #queue-req: 0
+[2026-05-21 04:13:53] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:54] Decode batch, #running-req: 1, #token: 5555, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.53, #queue-req: 0
+[2026-05-21 04:13:54] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:55] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:55] Decode batch, #running-req: 1, #token: 5681, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 22.11, #queue-req: 0
+[2026-05-21 04:13:59] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:01] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:02] Decode batch, #running-req: 1, #token: 5593, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.40, #queue-req: 0
+[2026-05-21 04:14:02] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:05] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:06] Decode batch, #running-req: 1, #token: 6570, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.37, #queue-req: 0
+[2026-05-21 04:14:08] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:09] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:10] Decode batch, #running-req: 1, #token: 6747, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.96, #queue-req: 0
+[2026-05-21 04:14:10] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:11] Decode batch, #running-req: 1, #token: 5146, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.99, #queue-req: 0
+[2026-05-21 04:14:11] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:12] Decode batch, #running-req: 1, #token: 5225, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.07, #queue-req: 0
+[2026-05-21 04:14:12] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:14] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:15] Decode batch, #running-req: 1, #token: 5277, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.02, #queue-req: 0
+[2026-05-21 04:14:15] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:16] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:17] Decode batch, #running-req: 1, #token: 5389, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.50, #queue-req: 0
+[2026-05-21 04:14:18] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:21] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:22] Decode batch, #running-req: 1, #token: 4109, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.88, #queue-req: 0
+[2026-05-21 04:14:22] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:23] INFO:     127.0.0.1:39446 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:14:23] Decode batch, #running-req: 1, #token: 4181, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.79, #queue-req: 0
+[2026-05-21 04:14:23] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:24] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:26] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.87, #queue-req: 0
+[2026-05-21 04:14:26] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:30] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:31] Decode batch, #running-req: 1, #token: 3959, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.11, #queue-req: 0
+[2026-05-21 04:14:31] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:32] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:33] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:34] Decode batch, #running-req: 1, #token: 4109, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.96, #queue-req: 0
+[2026-05-21 04:14:34] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:35] Decode batch, #running-req: 1, #token: 4184, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.03, #queue-req: 0
+[2026-05-21 04:14:36] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:37] Decode batch, #running-req: 1, #token: 4271, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.34, #queue-req: 0
+[2026-05-21 04:14:37] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:39] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:40] Decode batch, #running-req: 1, #token: 3983, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.85, #queue-req: 0
+[2026-05-21 04:14:43] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:44] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:46] Decode batch, #running-req: 1, #token: 5583, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.43, #queue-req: 0
+[2026-05-21 04:14:46] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:47] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:48] Decode batch, #running-req: 1, #token: 5705, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.90, #queue-req: 0
+[2026-05-21 04:14:48] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:51] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:52] Decode batch, #running-req: 1, #token: 4031, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.05, #queue-req: 0
+[2026-05-21 04:14:53] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:54] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:54] Decode batch, #running-req: 1, #token: 3936, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 23.75, #queue-req: 0
+[2026-05-21 04:14:54] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:56] Decode batch, #running-req: 1, #token: 4007, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 25.57, #queue-req: 0
+[2026-05-21 04:14:57] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:58] Decode batch, #running-req: 1, #token: 4129, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.44, #queue-req: 0
+[2026-05-21 04:14:59] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:00] Decode batch, #running-req: 1, #token: 4034, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.83, #queue-req: 0
+[2026-05-21 04:15:00] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:02] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:02] Decode batch, #running-req: 1, #token: 4147, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.87, #queue-req: 0
+[2026-05-21 04:15:02] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:04] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:05] Decode batch, #running-req: 1, #token: 3956, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.33, #queue-req: 0
+[2026-05-21 04:15:06] Decode batch, #running-req: 1, #token: 3996, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 44.15, #queue-req: 0
+[2026-05-21 04:15:06] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:07] INFO:     127.0.0.1:59774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:08] Decode batch, #running-req: 1, #token: 4081, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.45, #queue-req: 0
+[2026-05-21 04:15:14] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:17] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:17] Decode batch, #running-req: 1, #token: 5515, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.27, #queue-req: 0
+[2026-05-21 04:15:20] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:20] Decode batch, #running-req: 1, #token: 5659, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 13.03, #queue-req: 0
+[2026-05-21 04:15:22] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:23] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:23] INFO:     127.0.0.1:35022 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:15:24] Decode batch, #running-req: 1, #token: 3741, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.29, #queue-req: 0
+[2026-05-21 04:15:25] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:25] Decode batch, #running-req: 1, #token: 3830, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 33.07, #queue-req: 0
+[2026-05-21 04:15:26] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:26] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:27] Decode batch, #running-req: 1, #token: 3993, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 19.02, #queue-req: 0
+[2026-05-21 04:15:28] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:30] Decode batch, #running-req: 1, #token: 4120, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.21, #queue-req: 0
+[2026-05-21 04:15:30] INFO:     127.0.0.1:35018 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:39] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:39] Decode batch, #running-req: 1, #token: 5523, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 4.25, #queue-req: 0
+[2026-05-21 04:15:40] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:41] Decode batch, #running-req: 1, #token: 5605, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.73, #queue-req: 0
+[2026-05-21 04:15:41] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:43] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:43] Decode batch, #running-req: 1, #token: 5762, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 15.12, #queue-req: 0
+[2026-05-21 04:15:44] Decode batch, #running-req: 1, #token: 5802, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.55, #queue-req: 0
+[2026-05-21 04:15:45] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:46] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:47] Decode batch, #running-req: 1, #token: 3976, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 18.30, #queue-req: 0
+[2026-05-21 04:15:49] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:49] Decode batch, #running-req: 1, #token: 4160, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 14.47, #queue-req: 0
+[2026-05-21 04:15:49] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:51] Decode batch, #running-req: 1, #token: 4246, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 20.41, #queue-req: 0
+[2026-05-21 04:15:54] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:56] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:57] Decode batch, #running-req: 1, #token: 5462, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 7.22, #queue-req: 0
+[2026-05-21 04:15:58] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:00] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:01] Decode batch, #running-req: 1, #token: 3860, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.23, #queue-req: 0
+[2026-05-21 04:16:02] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:03] Decode batch, #running-req: 1, #token: 3942, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req:[2026-05-21 04:16:04] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:10] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:15] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:17] INFO:     127.0.0.1:46774 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:23] INFO:     127.0.0.1:60838 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:16:23] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:26] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:30] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:35] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:38] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:40] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:45] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:48] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:49] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:51] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:57] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:59] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:03] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:05] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:07] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:09] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:10] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:12] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:14] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:16] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:18] INFO:     127.0.0.1:42376 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:23] INFO:     127.0.0.1:39118 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:17:27] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:28] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:29] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:32] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:37] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:37] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:41] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:42] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:49] INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:59] INFO:     127.0.0.1:53068 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:03] INFO:     127.0.0.1:53068 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:07] INFO:     127.0.0.1:53068 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:15] INFO:     127.0.0.1:44594 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:23] INFO:     127.0.0.1:44604 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:18:28] INFO:     127.0.0.1:60338 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:32] INFO:     127.0.0.1:60338 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:33] INFO:     127.0.0.1:60338 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:36:23] INFO:     127.0.0.1:34334 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:37:23] INFO:     127.0.0.1:49606 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:38:23] INFO:     127.0.0.1:57224 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:39:23] INFO:     127.0.0.1:43658 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:40:23] INFO:     127.0.0.1:57310 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:41:23] INFO:     127.0.0.1:39108 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:42:23] INFO:     127.0.0.1:46288 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:43:23] INFO:     127.0.0.1:35870 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:44:23] INFO:     127.0.0.1:60450 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:45:23] INFO:     127.0.0.1:42462 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:46:23] INFO:     127.0.0.1:42210 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:47:23] INFO:     127.0.0.1:49158 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:48:23] INFO:     127.0.0.1:40760 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:49:23] INFO:     127.0.0.1:50526 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:50:23] INFO:     127.0.0.1:57674 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:51:23] INFO:     127.0.0.1:37982 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:52:23] INFO:     127.0.0.1:33812 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:53:23] INFO:     127.0.0.1:50492 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:54:23] INFO:     127.0.0.1:46736 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:55:23] INFO:     127.0.0.1:57790 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:56:23] INFO:     127.0.0.1:51552 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:57:23] INFO:     127.0.0.1:47552 - "GET /health HTTP/1.1" 200 OK
+ 0, cuda graph: True, gen throughput (token/s): 22.51, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:05] Decode batch, #running-req: 1, #token: 5365, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 16.44, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:11] Decode batch, #running-req: 1, #token: 6552, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.73, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:16] Decode batch, #running-req: 1, #token: 4050, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.47, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:17] Decode batch, #running-req: 1, #token: 4129, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.87, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:25] Decode batch, #running-req: 1, #token: 6709, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 5.06, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:30] Decode batch, #running-req: 1, #token: 5545, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 8.01, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:36] Decode batch, #running-req: 1, #token: 5432, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.67, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:39] Decode batch, #running-req: 1, #token: 6061, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.26, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:46] Decode batch, #running-req: 1, #token: 5642, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): [2026-05-21 04:58:23] INFO:     127.0.0.1:32862 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:59:23] INFO:     127.0.0.1:56258 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:00:23] INFO:     127.0.0.1:37016 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:01:23] INFO:     127.0.0.1:46644 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:02:23] INFO:     127.0.0.1:45250 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:03:23] INFO:     127.0.0.1:52708 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:04:23] INFO:     127.0.0.1:37154 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:05:23] INFO:     127.0.0.1:39376 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:06:23] INFO:     127.0.0.1:50228 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:07:23] INFO:     127.0.0.1:46462 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:08:23] INFO:     127.0.0.1:34676 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:09:23] INFO:     127.0.0.1:54272 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:10:23] INFO:     127.0.0.1:49766 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:11:23] INFO:     127.0.0.1:35164 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:12:23] INFO:     127.0.0.1:57150 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:13:23] INFO:     127.0.0.1:42280 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:14:23] INFO:     127.0.0.1:42190 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:15:23] INFO:     127.0.0.1:58100 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:16:23] INFO:     127.0.0.1:44354 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:17:23] INFO:     127.0.0.1:43558 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:18:23] INFO:     127.0.0.1:59788 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:19:23] INFO:     127.0.0.1:46554 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:20:23] INFO:     127.0.0.1:36504 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:21:23] INFO:     127.0.0.1:43366 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:22:23] INFO:     127.0.0.1:58188 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:23:23] INFO:     127.0.0.1:49920 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:24:23] INFO:     127.0.0.1:59952 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:25:23] INFO:     127.0.0.1:58090 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:26:23] INFO:     127.0.0.1:49174 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:27:23] INFO:     127.0.0.1:53320 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:28:23] INFO:     127.0.0.1:46564 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:29:23] INFO:     127.0.0.1:57398 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:30:23] INFO:     127.0.0.1:45626 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:31:23] INFO:     127.0.0.1:36304 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:32:23] INFO:     127.0.0.1:52124 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:33:23] INFO:     127.0.0.1:48924 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:34:23] INFO:     127.0.0.1:49860 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:35:23] INFO:     127.0.0.1:57616 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:36:23] INFO:     127.0.0.1:59982 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:37:23] INFO:     127.0.0.1:45622 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:38:23] INFO:     127.0.0.1:51638 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:39:23] INFO:     127.0.0.1:56350 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:40:23] INFO:     127.0.0.1:32812 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:41:23] INFO:     127.0.0.1:58428 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:42:23] INFO:     127.0.0.1:56248 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:43:23] INFO:     127.0.0.1:50132 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:44:23] INFO:     127.0.0.1:52024 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:45:23] INFO:     127.0.0.1:58526 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:46:23] INFO:     127.0.0.1:50960 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:47:23] INFO:     127.0.0.1:48376 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:48:23] INFO:     127.0.0.1:49454 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:00:23] INFO:     127.0.0.1:35982 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:01:23] INFO:     127.0.0.1:60254 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:02:23] INFO:     127.0.0.1:35512 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:03:23] INFO:     127.0.0.1:56158 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:04:23] INFO:     127.0.0.1:52658 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:05:23] INFO:     127.0.0.1:58346 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:06:23] INFO:     127.0.0.1:54354 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:07:23] INFO:     127.0.0.1:41258 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:08:23] INFO:     127.0.0.1:35162 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:09:23] INFO:     127.0.0.1:39426 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:10:23] INFO:     127.0.0.1:41524 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:11:23] INFO:     127.0.0.1:57820 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:12:23] INFO:     127.0.0.1:37826 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:13:23] INFO:     127.0.0.1:58778 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:14:23] INFO:     127.0.0.1:41572 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:15:23] INFO:     127.0.0.1:54046 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:16:23] INFO:     127.0.0.1:37586 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:17:23] INFO:     127.0.0.1:47566 - "GET /health HTTP/1.1" 200 OK
+5.94, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:50] Decode batch, #running-req: 1, #token: 5362, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 9.50, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:52] Decode batch, #running-req: 1, #token: 5448, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 29.76, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:16:57] Decode batch, #running-req: 1, #token: 4155, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.92, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:17:03] Decode batch, #running-req: 1, #token: 5434, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 6.74, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:17:04] Decode batch, #running-req: 1, #token: 5474, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 43.63, #queue-req: 0
+--- Logging error ---
+[2026-05-21 04:17:08] Decode batch, #running-req: 1, #token: 6591, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.69, #queue-req: 0
+--- Logging error ---
+--- Logging error ---
+[2026-05-21 06:18:22] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 0.02, #queue-req: 0
+[2026-05-21 06:18:23] INFO:     127.0.0.1:45074 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:19:23] INFO:     127.0.0.1:57878 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:20:23] INFO:     127.0.0.1:35800 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:21:23] INFO:     127.0.0.1:53612 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:22:23] INFO:     127.0.0.1:44008 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:23:23] INFO:     127.0.0.1:33976 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:24:23] INFO:     127.0.0.1:50560 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:25:23] INFO:     127.0.0.1:46082 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:26:23] INFO:     127.0.0.1:46094 - "GET /health HTTP/1.1" 200 OK
+/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

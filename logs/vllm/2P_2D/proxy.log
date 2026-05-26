@@ -1,0 +1,12 @@
+[2026-05-22 00:42:11 +0000] [1700409] [INFO] Running on http://0.0.0.0:10001 (CTRL + C to quit)
+ * Serving Quart app 'disagg_proxy_p2p_nccl_xpyd'
+ * Debug mode: False
+ * Please use an ASGI server (e.g. Hypercorn) directly in production
+ * Running on http://0.0.0.0:10001 (CTRL + C to quit)
+🔵Add [HTTP:165.132.142.205:8200, ZMQ:165.132.142.205:22001]
+🔵Add [HTTP:165.132.142.205:8100, ZMQ:165.132.142.205:21001]
+🔵Add [HTTP:165.132.142.205:8201, ZMQ:165.132.142.205:22002]
+🔵Add [HTTP:165.132.142.205:8101, ZMQ:165.132.142.205:21002]
+handle_request count: 0, [HTTP:165.132.142.205:8100, ZMQ:165.132.142.205:21001] 👉 [HTTP:165.132.142.205:8200, ZMQ:165.132.142.205:22001]
+[2026-05-22 00:47:04 +0000] [1700409] [INFO] 127.0.0.1:47006 POST /v1/chat/completions 1.1 - - 54736994
+/home/uhmturks/miniconda3/envs/vllm-source/bin/python: can't open file '/home/uhmturks/vllm-source/examples/online_serving/disaggregated_serving_p2p_nccl_xpyd/disagg_proxy_p2p_nccl_xpyd.py': [Errno 2] No such file or directory

@@ -1,0 +1,482 @@
+[2026-05-21 04:02:50] INFO server_args.py:1835: Attention backend not specified. Use flashinfer backend by default.
+[2026-05-21 04:02:50] WARNING server_args.py:2569: Cuda graph is disabled for prefill server when piecewise cuda graph is not enabled.
+[2026-05-21 04:02:50] WARNING server_args.py:2610: No IB devices specified for Mooncake backend, falling back to auto discovery.
+[2026-05-21 04:02:50] server_args=ServerArgs(model_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_mode='auto', tokenizer_worker_num=1, skip_tokenizer_init=False, load_format='auto', model_loader_extra_config='{}', trust_remote_code=False, context_length=None, is_embedding=False, enable_multimodal=None, revision=None, model_impl='auto', host='127.0.0.1', port=30001, fastapi_root_path='', grpc_mode=False, skip_server_warmup=False, warmups=None, nccl_port=None, checkpoint_engine_wait_weights_before_ready=False, dtype='auto', quantization=None, quantization_param_path=None, kv_cache_dtype='auto', enable_fp32_lm_head=False, modelopt_quant=None, modelopt_checkpoint_restore_path=None, modelopt_checkpoint_save_path=None, modelopt_export_path=None, quantize_and_serve=False, rl_quant_profile=None, mem_fraction_static=0.861, max_running_requests=None, max_queued_requests=None, max_total_tokens=None, chunked_prefill_size=4096, enable_dynamic_chunking=False, max_prefill_tokens=16384, prefill_max_requests=None, schedule_policy='fcfs', enable_priority_scheduling=False, abort_on_priority_when_disabled=False, schedule_low_priority_values_first=False, priority_scheduling_preemption_threshold=10, schedule_conservativeness=1.0, page_size=1, swa_full_tokens_ratio=0.8, disable_hybrid_swa_memory=False, radix_eviction_policy='lru', enable_prefill_delayer=False, prefill_delayer_max_delay_passes=30, prefill_delayer_token_usage_low_watermark=None, prefill_delayer_forward_passes_buckets=None, prefill_delayer_wait_seconds_buckets=None, device='cuda', tp_size=1, pp_size=1, pp_max_micro_batch_size=None, pp_async_batch_depth=0, stream_interval=1, stream_output=False, random_seed=151969638, constrained_json_whitespace_pattern=None, constrained_json_disable_any_whitespace=False, watchdog_timeout=300, soft_watchdog_timeout=None, dist_timeout=None, download_dir=None, model_checksum=None, base_gpu_id=0, gpu_id_step=1, sleep_on_idle=False, custom_sigquit_handler=None, log_level='info', log_level_http=None, log_requests=False, log_requests_level=2, log_requests_format='text', log_requests_target=None, uvicorn_access_log_exclude_prefixes=[], crash_dump_folder=None, show_time_cost=False, enable_metrics=False, enable_metrics_for_all_schedulers=False, tokenizer_metrics_custom_labels_header='x-custom-labels', tokenizer_metrics_allowed_custom_labels=None, extra_metric_labels=None, bucket_time_to_first_token=None, bucket_inter_token_latency=None, bucket_e2e_request_latency=None, collect_tokens_histogram=False, prompt_tokens_buckets=None, generation_tokens_buckets=None, gc_warning_threshold_secs=0.0, decode_log_interval=40, enable_request_time_stats_logging=False, kv_events_config=None, enable_trace=False, otlp_traces_endpoint='localhost:4317', export_metrics_to_file=False, export_metrics_to_file_dir=None, api_key=None, admin_api_key=None, served_model_name='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', weight_version='default', chat_template=None, hf_chat_template_name=None, completion_template=None, file_storage_path='sglang_storage', enable_cache_report=False, reasoning_parser=None, tool_call_parser=None, tool_server=None, sampling_defaults='model', dp_size=1, load_balance_method='follow_bootstrap_room', attn_cp_size=1, moe_dp_size=1, dist_init_addr=None, nnodes=1, node_rank=0, json_model_override_args='{}', preferred_sampling_params=None, enable_lora=None, enable_lora_overlap_loading=None, max_lora_rank=None, lora_target_modules=None, lora_paths=None, max_loaded_loras=None, max_loras_per_batch=8, lora_eviction_policy='lru', lora_backend='csgmv', max_lora_chunk_size=16, attention_backend='flashinfer', decode_attention_backend=None, prefill_attention_backend=None, sampling_backend='flashinfer', grammar_backend='xgrammar', mm_attention_backend=None, fp8_gemm_runner_backend='auto', fp4_gemm_runner_backend='flashinfer_cutlass', nsa_prefill_backend=None, nsa_decode_backend=None, disable_flashinfer_autotune=False, mamba_backend='triton', speculative_algorithm=None, speculative_draft_model_path=None, speculative_draft_model_revision=None, speculative_draft_load_format=None, speculative_num_steps=None, speculative_eagle_topk=None, speculative_num_draft_tokens=None, speculative_accept_threshold_single=1.0, speculative_accept_threshold_acc=1.0, speculative_token_map=None, speculative_attention_mode='prefill', speculative_draft_attention_backend=None, speculative_moe_runner_backend='auto', speculative_moe_a2a_backend=None, speculative_draft_model_quantization=None, speculative_ngram_min_match_window_size=1, speculative_ngram_max_match_window_size=12, speculative_ngram_min_bfs_breadth=1, speculative_ngram_max_bfs_breadth=10, speculative_ngram_match_type='BFS', speculative_ngram_branch_length=18, speculative_ngram_capacity=10000000, enable_multi_layer_eagle=False, ep_size=1, moe_a2a_backend='none', moe_runner_backend='auto', flashinfer_mxfp4_moe_precision='default', enable_flashinfer_allreduce_fusion=False, deepep_mode='auto', ep_num_redundant_experts=0, ep_dispatch_algorithm=None, init_expert_location='trivial', enable_eplb=False, eplb_algorithm='auto', eplb_rebalance_num_iterations=1000, eplb_rebalance_layers_per_chunk=None, eplb_min_rebalancing_utilization_threshold=1.0, expert_distribution_recorder_mode=None, expert_distribution_recorder_buffer_size=1000, enable_expert_distribution_metrics=False, deepep_config=None, moe_dense_tp_size=None, elastic_ep_backend=None, mooncake_ib_device=None, max_mamba_cache_size=None, mamba_ssm_dtype=None, mamba_full_memory_ratio=0.9, mamba_scheduler_strategy='no_buffer', mamba_track_interval=256, enable_hierarchical_cache=True, hicache_ratio=1.2, hicache_size=0, hicache_write_policy='write_through', hicache_io_backend='kernel', hicache_mem_layout='layer_first', disable_hicache_numa_detect=False, hicache_storage_backend='file', hicache_storage_prefetch_policy='best_effort', hicache_storage_backend_extra_config=None, hierarchical_sparse_attention_extra_config=None, enable_lmcache=False, kt_weight_path=None, kt_method='AMXINT4', kt_cpuinfer=None, kt_threadpool_count=2, kt_num_gpu_experts=None, kt_max_deferred_experts_per_token=None, dllm_algorithm=None, dllm_algorithm_config=None, enable_double_sparsity=False, ds_channel_config_path=None, ds_heavy_channel_num=32, ds_heavy_token_num=256, ds_heavy_channel_type='qk', ds_sparse_decode_threshold=4096, cpu_offload_gb=0, offload_group_size=-1, offload_num_in_group=1, offload_prefetch_step=1, offload_mode='cpu', multi_item_scoring_delimiter=None, disable_radix_cache=False, cuda_graph_max_bs=32, cuda_graph_bs=[1, 2, 4, 8, 12, 16, 24, 32], disable_cuda_graph=True, disable_cuda_graph_padding=False, enable_profile_cuda_graph=False, enable_cudagraph_gc=False, enable_layerwise_nvtx_marker=False, enable_nccl_nvls=False, enable_symm_mem=False, disable_flashinfer_cutlass_moe_fp4_allgather=False, enable_tokenizer_batch_encode=False, disable_tokenizer_batch_decode=False, disable_outlines_disk_cache=False, disable_custom_all_reduce=False, enable_mscclpp=False, enable_torch_symm_mem=False, disable_overlap_schedule=False, enable_mixed_chunk=False, enable_dp_attention=False, enable_dp_lm_head=False, enable_two_batch_overlap=False, enable_single_batch_overlap=False, tbo_token_distribution_threshold=0.48, enable_torch_compile=False, enable_piecewise_cuda_graph=False, enable_torch_compile_debug_mode=False, torch_compile_max_bs=32, piecewise_cuda_graph_max_tokens=4096, piecewise_cuda_graph_tokens=[4, 8, 12, 16, 20, 24, 28, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096], piecewise_cuda_graph_compiler='eager', torchao_config='', enable_nan_detection=False, enable_p2p_check=False, triton_attention_reduce_in_fp32=False, triton_attention_num_kv_splits=8, triton_attention_split_tile_size=None, num_continuous_decode_steps=1, delete_ckpt_after_loading=False, enable_memory_saver=False, enable_weights_cpu_backup=False, enable_draft_weights_cpu_backup=False, allow_auto_truncate=False, enable_custom_logit_processor=False, flashinfer_mla_disable_ragged=False, disable_shared_experts_fusion=False, disable_chunked_prefix_cache=False, disable_fast_image_processor=False, keep_mm_feature_on_device=False, enable_return_hidden_states=False, enable_return_routed_experts=False, scheduler_recv_interval=1, numa_node=None, enable_deterministic_inference=False, rl_on_policy_target=None, enable_attn_tp_input_scattered=False, enable_nsa_prefill_context_parallel=False, nsa_prefill_cp_mode='round-robin-split', enable_fused_qk_norm_rope=False, enable_precise_embedding_interpolation=False, enable_dynamic_batch_tokenizer=False, dynamic_batch_tokenizer_batch_size=32, dynamic_batch_tokenizer_batch_timeout=0.002, debug_tensor_dump_output_folder=None, debug_tensor_dump_layers=None, debug_tensor_dump_input_file=None, debug_tensor_dump_inject=False, disaggregation_mode='prefill', disaggregation_transfer_backend='mooncake', disaggregation_bootstrap_port=8999, disaggregation_decode_tp=1, disaggregation_decode_dp=1, disaggregation_prefill_pp=1, disaggregation_ib_device=None, disaggregation_decode_enable_offload_kvcache=False, num_reserved_decode_tokens=512, disaggregation_decode_polling_interval=1, encoder_only=False, language_only=False, encoder_transfer_backend='zmq_to_scheduler', encoder_urls=[], custom_weight_loader=[], weight_loader_disable_mmap=False, remote_instance_weight_loader_seed_instance_ip=None, remote_instance_weight_loader_seed_instance_service_port=None, remote_instance_weight_loader_send_weights_group_ports=None, remote_instance_weight_loader_backend='nccl', remote_instance_weight_loader_start_seed_via_transfer_engine=False, enable_pdmux=False, pdmux_config_path=None, sm_group_num=8, mm_max_concurrent_calls=32, mm_per_request_timeout=10.0, enable_broadcast_mm_inputs_process=False, enable_prefix_mm_cache=False, mm_enable_dp_encoder=False, mm_process_config={}, limit_mm_data_per_request=None, decrypted_config_file=None, decrypted_draft_config_file=None, forward_hooks=None)
+[2026-05-21 04:02:51] Using default HuggingFace chat template with detected content format: string
+[2026-05-21 04:02:57] Mamba selective_state_update backend initialized: triton
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+W0521 04:02:57.292774 1568263 transfer_engine_py.cpp:92] Using default malloc/free for protocol: rdma
+I0521 04:02:57.292846 1568263 transfer_engine_impl.cpp:757] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0521 04:02:57.292858 1568263 transfer_engine_impl.cpp:107] Transfer Engine parseHostNameWithPort. server_name: 165.132.142.205 port: 12001
+I0521 04:02:57.292884 1568263 transfer_engine_impl.cpp:174] Transfer Engine RPC using P2P handshake, listening on 165.132.142.205:15532
+I0521 04:02:57.292954 1568263 transfer_engine_impl.cpp:229] Auto-discovering topology...
+W0521 04:02:57.293013 1568263 topology.cpp:156] No RDMA devices found, check your device installation
+I0521 04:02:57.293061 1568263 transfer_engine_impl.cpp:244] Topology discovery complete. Found 0 HCAs.
+E0521 04:02:57.293083 1568263 transfer_metadata.cpp:863] Local segment descriptor not found
+I0521 04:02:57.293104 1568263 tcp_transport.cpp:541] TcpTransport: listen on port 16677
+[2026-05-21 04:02:57] Init torch distributed begin.
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[2026-05-21 04:02:57] Init torch distributed ends. elapsed=0.36 s, mem usage=0.04 GB
+[2026-05-21 04:02:58] Ignore import error when loading sglang.srt.models.glm_ocr: No module named 'transformers.models.glm_ocr'
+[2026-05-21 04:02:58] Ignore import error when loading sglang.srt.models.glm_ocr_nextn: No module named 'transformers.models.glm_ocr'
+[2026-05-21 04:02:58] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+[2026-05-21 04:02:58] Load weight begin. avail mem=47.08 GB
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:00<00:01,  1.55it/s]
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:01<00:01,  1.19it/s]
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:02<00:00,  1.44it/s]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:04<00:00,  1.49s/it]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:04<00:00,  1.21s/it]
+
+[2026-05-21 04:03:03] Load weight end. elapsed=5.30 s, type=LlamaForCausalLM, dtype=torch.bfloat16, avail mem=32.07 GB, mem usage=15.02 GB.
+[2026-05-21 04:03:03] Using KV cache dtype: torch.bfloat16
+[2026-05-21 04:03:03] KV Cache is allocated. #tokens: 209026, K size: 12.76 GB, V size: 12.76 GB
+[2026-05-21 04:03:03] Memory pool end. avail mem=5.44 GB
+[2026-05-21 04:03:03] max_total_num_tokens=209026, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=4.99 GB
+[2026-05-21 04:03:03] libnuma.so: cannot open shared object file: No such file or directory
+[2026-05-21 04:03:04] libnuma.so: cannot open shared object file: No such file or directory
+[2026-05-21 04:03:04] Allocating 32.88 GB host memory for hierarchical KV cache.
+[2026-05-21 04:03:16] Creating storage backend 'file' (sglang.srt.mem_cache.hicache_storage.HiCacheFile)
+[2026-05-21 04:03:17] INFO:     Started server process [1567878]
+[2026-05-21 04:03:17] INFO:     Waiting for application startup.
+[2026-05-21 04:03:17] Using default chat sampling params from model generation config: {'repetition_penalty': 1.0, 'temperature': 0.6, 'top_k': 50, 'top_p': 0.9}
+[2026-05-21 04:03:17] INFO:     Application startup complete.
+[2026-05-21 04:03:17] INFO:     Uvicorn running on http://127.0.0.1:30001 (Press CTRL+C to quit)
+[2026-05-21 04:03:18] INFO:     127.0.0.1:58420 - "GET /model_info HTTP/1.1" 200 OK
+[2026-05-21 04:03:18] Start of pd disaggregation warmup ...
+[2026-05-21 04:03:19] INFO:     127.0.0.1:58422 - "POST /generate HTTP/1.1" 200 OK
+[2026-05-21 04:03:19] End of prefill disaggregation mode warmup with status 200, resp: [{'text': ' The', 'output_ids': [578], 'meta_info': {'id': '787d55084be048f88c7f92fb22a191da', 'finish_reason': {'type': 'length', 'length': 0}, 'prompt_tokens': 4, 'weight_version': 'default', 'total_retractions': 0, 'completion_tokens': 1, 'cached_tokens': 0, 'cached_tokens_details': None, 'e2e_latency': 1.044525384902954, 'response_sent_to_client_ts': 1779336199.7393105}}]
+[2026-05-21 04:03:19] The server is fired up and ready to roll!
+[2026-05-21 04:03:22] INFO:     127.0.0.1:58444 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-05-21 04:03:22] WARNING:  Invalid HTTP request received.
+[2026-05-21 04:03:22] INFO:     127.0.0.1:58458 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-05-21 04:03:22] WARNING:  Invalid HTTP request received.
+[2026-05-21 04:03:23] INFO:     127.0.0.1:58434 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:03:23] INFO:     127.0.0.1:47546 - "GET /server_info HTTP/1.1" 200 OK
+[2026-05-21 04:03:23] INFO:     127.0.0.1:47546 - "GET /model_info HTTP/1.1" 200 OK
+[2026-05-21 04:03:56] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:03:59] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:00] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:01] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:05] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:09] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:12] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:14] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:15] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:19] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:21] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:23] INFO:     127.0.0.1:52530 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:04:26] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:29] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:33] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:35] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:36] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:40] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:43] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:46] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:48] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:49] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:51] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:52] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:53] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:54] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:55] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:04:57] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:01] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:05] INFO:     127.0.0.1:52820 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:11] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:13] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:18] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:20] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:21] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:23] INFO:     127.0.0.1:57024 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:05:25] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:26] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:27] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:29] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:31] INFO:     127.0.0.1:59380 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:36] INFO:     127.0.0.1:37864 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:39] INFO:     127.0.0.1:37864 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:41] INFO:     127.0.0.1:37864 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:49] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:51] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:55] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:05:57] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:00] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:02] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:05] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:08] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:10] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:14] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:16] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:17] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:18] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:19] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:22] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:23] INFO:     127.0.0.1:39054 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:06:24] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:25] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:27] INFO:     127.0.0.1:41754 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:32] INFO:     127.0.0.1:59088 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:35] INFO:     127.0.0.1:59088 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:37] INFO:     127.0.0.1:59088 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:39] INFO:     127.0.0.1:59088 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:47] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:52] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:55] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:06:57] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:02] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:05] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:07] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:12] INFO:     127.0.0.1:38200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:20] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:23] INFO:     127.0.0.1:49910 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:07:26] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:29] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:32] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:34] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:37] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:38] INFO:     127.0.0.1:49908 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:44] INFO:     127.0.0.1:52296 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:46] INFO:     127.0.0.1:52296 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:48] INFO:     127.0.0.1:52296 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:07:55] INFO:     127.0.0.1:43628 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:01] INFO:     127.0.0.1:43628 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:09] INFO:     127.0.0.1:46040 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:11] INFO:     127.0.0.1:46040 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:19] INFO:     127.0.0.1:36332 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:23] INFO:     127.0.0.1:36332 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:23] INFO:     127.0.0.1:36348 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:08:24] INFO:     127.0.0.1:36332 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:25] INFO:     127.0.0.1:36332 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:31] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:36] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:38] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:41] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:45] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:47] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:50] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:51] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:53] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:55] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:56] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:08:58] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:02] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:05] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:08] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:11] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:12] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:16] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:18] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:19] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:21] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:23] INFO:     127.0.0.1:50880 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:09:23] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:24] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:25] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:28] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:32] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:32] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:34] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:35] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:39] INFO:     127.0.0.1:60698 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:47] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:52] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:55] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:09:57] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:00] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:02] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:03] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:04] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:05] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:09] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:12] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:15] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:19] INFO:     127.0.0.1:44348 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:23] INFO:     127.0.0.1:33496 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:10:25] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:27] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:29] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:29] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:30] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:32] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:36] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:39] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:40] INFO:     127.0.0.1:43204 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:47] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:50] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:55] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:10:59] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:01] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:04] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:06] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:07] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:12] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:17] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:19] INFO:     127.0.0.1:33208 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:23] INFO:     127.0.0.1:43952 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:11:26] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:28] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:30] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:34] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:39] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:44] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:46] INFO:     127.0.0.1:35276 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:11:54] INFO:     127.0.0.1:50358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:00] INFO:     127.0.0.1:50358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:02] INFO:     127.0.0.1:50358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:03] INFO:     127.0.0.1:50358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:10] INFO:     127.0.0.1:48712 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:13] INFO:     127.0.0.1:48712 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:14] INFO:     127.0.0.1:48712 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:16] INFO:     127.0.0.1:48712 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:17] INFO:     127.0.0.1:48712 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:23] INFO:     127.0.0.1:49018 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:12:24] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:27] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:28] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:33] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:38] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:40] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:44] INFO:     127.0.0.1:48966 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:12:58] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:00] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:04] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:08] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:10] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:11] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:14] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:15] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:16] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:17] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:20] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:23] INFO:     127.0.0.1:45412 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:13:25] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:30] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:32] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:33] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:34] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:38] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:40] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:45] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:46] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:47] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:48] INFO:     127.0.0.1:48294 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:13:59] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:02] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:03] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:07] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:09] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:11] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:12] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:14] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:15] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:18] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:21] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:23] INFO:     127.0.0.1:59864 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:14:24] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:28] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:28] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:31] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:32] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:33] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:37] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:40] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:41] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:43] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:47] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:50] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:53] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:54] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:56] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:14:58] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:02] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:06] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:07] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:09] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:11] INFO:     127.0.0.1:34704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:18] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:21] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:22] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:23] INFO:     127.0.0.1:43872 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:15:25] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:26] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:28] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:31] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:33] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:34] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:37] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:39] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:40] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:45] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:46] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:47] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:48] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:49] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:51] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:51] Failed to save tensor 5d7d3be5ab9f94ac3eb65f76edf12d95bd69c9bd8a38a488d07bef9aa1ac5650_-home-uhmturks-hf_models-Llama-3.1-8B-Instruct_0_1: 131072 requested and 49152 written
+[2026-05-21 04:15:51] Write page to storage: 54 pages failed.
+[2026-05-21 04:15:53] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:54] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:55] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:56] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:15:57] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:02] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:04] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:06] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:07] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:12] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:15] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:18] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:19] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:21] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:22] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:23] INFO:     127.0.0.1:57288 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:16:27] INFO:     127.0.0.1:43862 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:35] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:37] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:38] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:40] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:42] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:45] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:49] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:55] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:57] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:16:59] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:03] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:05] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:06] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:07] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:10] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:14] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:16] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:20] INFO:     127.0.0.1:36358 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:23] INFO:     127.0.0.1:40046 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:17:27] INFO:     127.0.0.1:59436 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:32] INFO:     127.0.0.1:59436 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:36] INFO:     127.0.0.1:59436 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:37] INFO:     127.0.0.1:59436 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:47] INFO:     127.0.0.1:52316 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:54] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:57] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:17:59] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:01] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:03] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:07] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:08] INFO:     127.0.0.1:58974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-05-21 04:18:23] INFO:     127.0.0.1:49090 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:36:23] INFO:     127.0.0.1:58648 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:37:23] INFO:     127.0.0.1:56448 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:38:23] INFO:     127.0.0.1:50878 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:39:23] INFO:     127.0.0.1:33158 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:40:23] INFO:     127.0.0.1:49152 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:41:23] INFO:     127.0.0.1:45908 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:42:23] INFO:     127.0.0.1:58438 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:43:23] INFO:     127.0.0.1:46456 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:44:23] INFO:     127.0.0.1:51482 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:45:23] INFO:     127.0.0.1:56522 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:46:23] INFO:     127.0.0.1:48012 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:47:23] INFO:     127.0.0.1:51534 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:48:23] INFO:     127.0.0.1:55636 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:49:23] INFO:     127.0.0.1:58116 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:50:23] INFO:     127.0.0.1:37232 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:51:23] INFO:     127.0.0.1:59652 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:52:23] INFO:     127.0.0.1:55672 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:53:23] INFO:     127.0.0.1:47654 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:54:23] INFO:     127.0.0.1:38040 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:55:23] INFO:     127.0.0.1:55768 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:56:23] INFO:     127.0.0.1:43250 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:57:23] INFO:     127.0.0.1:33796 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:58:23] INFO:     127.0.0.1:53802 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 04:59:23] INFO:     127.0.0.1:33548 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:00:23] INFO:     127.0.0.1:60492 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:01:23] INFO:     127.0.0.1:56098 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:02:23] INFO:     127.0.0.1:42136 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:03:23] INFO:     127.0.0.1:55946 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:04:23] INFO:     127.0.0.1:54628 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:05:23] INFO:     127.0.0.1:59096 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:06:23] INFO:     127.0.0.1:55198 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:07:23] INFO:     127.0.0.1:39648 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:08:23] INFO:     127.0.0.1:47302 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:09:23] INFO:     127.0.0.1:57700 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:10:23] INFO:     127.0.0.1:34026 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:11:23] INFO:     127.0.0.1:35130 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:12:23] INFO:     127.0.0.1:40078 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:13:23] INFO:     127.0.0.1:36116 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:14:23] INFO:     127.0.0.1:39566 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:15:23] INFO:     127.0.0.1:37732 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:16:23] INFO:     127.0.0.1:39454 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:17:23] INFO:     127.0.0.1:41706 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:18:23] INFO:     127.0.0.1:34374 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:19:23] INFO:     127.0.0.1:47408 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:20:23] INFO:     127.0.0.1:36438 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:21:23] INFO:     127.0.0.1:49834 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:22:23] INFO:     127.0.0.1:54706 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:23:23] INFO:     127.0.0.1:36356 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:24:23] INFO:     127.0.0.1:39664 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:25:23] INFO:     127.0.0.1:45678 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:26:23] INFO:     127.0.0.1:40802 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:27:23] INFO:     127.0.0.1:57082 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:28:23] INFO:     127.0.0.1:60640 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:29:23] INFO:     127.0.0.1:34432 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:30:23] INFO:     127.0.0.1:35072 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:31:23] INFO:     127.0.0.1:34890 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:32:23] INFO:     127.0.0.1:38998 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:33:23] INFO:     127.0.0.1:39354 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:34:23] INFO:     127.0.0.1:56612 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:35:23] INFO:     127.0.0.1:60936 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:36:23] INFO:     127.0.0.1:46234 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:37:23] INFO:     127.0.0.1:54468 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:38:23] INFO:     127.0.0.1:56942 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:39:23] INFO:     127.0.0.1:56636 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:40:23] INFO:     127.0.0.1:56242 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:41:23] INFO:     127.0.0.1:34468 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:42:23] INFO:     127.0.0.1:57764 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:43:23] INFO:     127.0.0.1:54132 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:44:23] INFO:     127.0.0.1:51794 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:45:23] INFO:     127.0.0.1:40752 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:46:23] INFO:     127.0.0.1:48922 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:47:23] INFO:     127.0.0.1:59088 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:48:23] INFO:     127.0.0.1:46264 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:49:23] INFO:     127.0.0.1:34944 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:50:23] INFO:     127.0.0.1:51726 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:51:23] INFO:     127.0.0.1:44506 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:52:23] INFO:     127.0.0.1:47722 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:53:23] INFO:     127.0.0.1:37420 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:54:23] INFO:     127.0.0.1:40978 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:55:23] INFO:     127.0.0.1:43468 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:56:23] INFO:     127.0.0.1:36830 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:57:23] INFO:     127.0.0.1:35410 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:58:23] INFO:     127.0.0.1:38832 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 05:59:23] INFO:     127.0.0.1:55532 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:00:23] INFO:     127.0.0.1:60526 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:01:23] INFO:     127.0.0.1:46632 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:02:23] INFO:     127.0.0.1:40076 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:03:23] INFO:     127.0.0.1:46654 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:04:23] INFO:     127.0.0.1:51566 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:05:23] INFO:     127.0.0.1:60106 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:06:23] INFO:     127.0.0.1:50324 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:07:23] INFO:     127.0.0.1:36496 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:08:23] INFO:     127.0.0.1:44154 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:09:23] INFO:     127.0.0.1:36908 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:10:23] INFO:     127.0.0.1:33580 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:11:23] INFO:     127.0.0.1:37208 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:12:23] INFO:     127.0.0.1:59750 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:13:23] INFO:     127.0.0.1:48606 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:14:23] INFO:     127.0.0.1:47226 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:15:23] INFO:     127.0.0.1:53088 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:16:23] INFO:     127.0.0.1:56146 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:17:23] INFO:     127.0.0.1:53248 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:18:23] INFO:     127.0.0.1:47478 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:19:23] INFO:     127.0.0.1:34848 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:20:23] INFO:     127.0.0.1:56310 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:21:23] INFO:     127.0.0.1:57212 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:22:23] INFO:     127.0.0.1:48814 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:23:23] INFO:     127.0.0.1:55478 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:24:23] INFO:     127.0.0.1:35968 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:25:23] INFO:     127.0.0.1:33056 - "GET /health HTTP/1.1" 200 OK
+[2026-05-21 06:26:23] INFO:     127.0.0.1:57028 - "GET /health HTTP/1.1" 200 OK
+/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

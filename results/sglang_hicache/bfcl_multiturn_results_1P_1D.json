@@ -1,0 +1,4027 @@
+{
+  "summary": {
+    "total_items": 200,
+    "success_items": 38,
+    "error_items": 162,
+    "total_output_tokens": 4416,
+    "total_wall_time_s": 150.91,
+    "overall_throughput_tok_per_s": 29.26,
+    "avg_ttft_s": 0.395,
+    "avg_tpot_s": 0.0227,
+    "avg_throughput_tok_per_s": 43.95
+  },
+  "results": [
+    {
+      "id": "multi_turn_base_0",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Move 'final_report.pdf' within document directory to 'temp' directory in document. Make sure to create the directory",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"final_report.pdf\", \"destination\": \"temp/final_report.pdf\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4949,
+          "tpot_s": 0.0229,
+          "output_tokens": 28,
+          "e2e_latency_s": 1.1135,
+          "throughput_tok_per_s": 43.65
+        },
+        {
+          "turn": 1,
+          "user": "Perform a detailed search using grep to identify sections in the file pertaining to 'budget analysis'.",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"final_report.pdf\", \"pattern\": \"budget analysis\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4752,
+          "tpot_s": 0.0229,
+          "output_tokens": 26,
+          "e2e_latency_s": 1.0476,
+          "throughput_tok_per_s": 43.67
+        },
+        {
+          "turn": 2,
+          "user": "Upon identifying the requisite 'budget analysis' content, sort the 'final_report.pdf' by line for improved clarity and c",
+          "assistant": "<|python_tag|>{\"name\": \"sort\", \"parameters\": {\"file_name\": \"final_report.pdf\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4689,
+          "tpot_s": 0.0229,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.8815,
+          "throughput_tok_per_s": 43.63
+        },
+        {
+          "turn": 3,
+          "user": "Move 'previous_report.pdf' in document directory to temp as well and having final report also there, proceed to juxtapos",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"previous_report.pdf\", \"destination\": \"temp/previous_report.pdf\"}}; {\"name\": \"diff\", \"parameters\": {\"file_name1\": \"final_report.pdf\", \"file_name2\"",
+          "tool_calls": null,
+          "ttft_s": 0.4651,
+          "tpot_s": 0.0229,
+          "output_tokens": 58,
+          "e2e_latency_s": 1.7728,
+          "throughput_tok_per_s": 43.59
+        }
+      ],
+      "avg_ttft_s": 0.476,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.64,
+      "total_output_tokens": 131
+    },
+    {
+      "id": "multi_turn_base_1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I am alex. Check if the current directory is under my name and list all the visible and hidden contents in the current d",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"alex\"}}; {\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.287,
+          "tpot_s": 0.0225,
+          "output_tokens": 32,
+          "e2e_latency_s": 0.985,
+          "throughput_tok_per_s": 44.41
+        },
+        {
+          "turn": 1,
+          "user": "Go to workspace directory and move one of the 'log.txt' files into a new directory 'archive'.",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"workspace\"}}; {\"name\": \"mv\", \"parameters\": {\"source\": \"log.txt\", \"destination\": \"archive/log.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2992,
+          "tpot_s": 0.0225,
+          "output_tokens": 41,
+          "e2e_latency_s": 1.2004,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 2,
+          "user": "Investigate within 'log.txt' for the occurrence of the keyword 'Error'.",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"log.txt\", \"pattern\": \"Error\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3131,
+          "tpot_s": 0.0225,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.8311,
+          "throughput_tok_per_s": 44.4
+        },
+        {
+          "turn": 3,
+          "user": "Finally, show the last 20 lines the file.",
+          "assistant": "<|python_tag|>{\"name\": \"tail\", \"parameters\": {\"file_name\": \"log.txt\", \"lines\": \"20\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3163,
+          "tpot_s": 0.0225,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.8347,
+          "throughput_tok_per_s": 44.36
+        }
+      ],
+      "avg_ttft_s": 0.3039,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.39,
+      "total_output_tokens": 121
+    },
+    {
+      "id": "multi_turn_base_2",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Go into document folder and Could you draft up a create a document titled 'TeamNotes.txt' for keeping track of all the f",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"document\"}}; {\"name\": \"touch\", \"parameters\": {\"file_name\": \"TeamNotes.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3947,
+          "tpot_s": 0.0228,
+          "output_tokens": 35,
+          "e2e_latency_s": 1.1686,
+          "throughput_tok_per_s": 43.93
+        },
+        {
+          "turn": 1,
+          "user": "We've gathered a couple of wise insights from Simona, so could you jot down 'Collaboration leads to success. Innovation ",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Collaboration leads to success. Innovation ignites growth.\", \"file_name\": \"TeamNotes.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4209,
+          "tpot_s": 0.0228,
+          "output_tokens": 35,
+          "e2e_latency_s": 1.1957,
+          "throughput_tok_per_s": 43.88
+        },
+        {
+          "turn": 2,
+          "user": "There seems to be some differences noted by Simona between the 'ideas.txt' file and our 'TeamNotes.txt'. Could you delve",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"ideas.txt\", \"file_name2\": \"TeamNotes.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4222,
+          "tpot_s": 0.0228,
+          "output_tokens": 29,
+          "e2e_latency_s": 1.0607,
+          "throughput_tok_per_s": 43.85
+        },
+        {
+          "turn": 3,
+          "user": "Simona thinks it's a smart move to secure 'TeamNotes.txt'. How about we copy it over to the archive directory under the ",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"TeamNotes.txt\", \"destination\": \"Archived/IdeasArchive.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4335,
+          "tpot_s": 0.0228,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.0952,
+          "throughput_tok_per_s": 43.82
+        },
+        {
+          "turn": 4,
+          "user": "Before Simona signs off for the day, she'd like to take a peek at what's been stored in 'IdeasArchive.txt'. Could you ar",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"IdeasArchive.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4435,
+          "tpot_s": 0.0228,
+          "output_tokens": 20,
+          "e2e_latency_s": 0.8772,
+          "throughput_tok_per_s": 43.81
+        }
+      ],
+      "avg_ttft_s": 0.423,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.86,
+      "total_output_tokens": 149
+    },
+    {
+      "id": "multi_turn_base_3",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "As part of my latest photography project, I need to gather files that have 'test' in their name from any folder in my cu",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"name\": \"test\", \"path\": \"./alex/projects\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2998,
+          "tpot_s": 0.0225,
+          "output_tokens": 23,
+          "e2e_latency_s": 0.7954,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 1,
+          "user": "After identifying them, the next step is to ensure the images and text files are safely copied into a 'backup_tests' fol",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"test_image1.jpg\", \"destination\": \"backup_tests\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3146,
+          "tpot_s": 0.0225,
+          "output_tokens": 26,
+          "e2e_latency_s": 0.8783,
+          "throughput_tok_per_s": 44.35
+        }
+      ],
+      "avg_ttft_s": 0.3072,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.37,
+      "total_output_tokens": 49
+    },
+    {
+      "id": "multi_turn_base_4",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Could you kindly show me the list of files in tmp directory in my file system including the hidden one?",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4519,
+          "tpot_s": 0.0229,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7953,
+          "throughput_tok_per_s": 43.68
+        },
+        {
+          "turn": 1,
+          "user": "There is a report in my current directory. I have noticed the report appears somewhat cluttered; it could benefit from h",
+          "assistant": "<|python_tag|>{\"name\": \"sort\", \"parameters\": {\"file_name\": \"report.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4411,
+          "tpot_s": 0.0229,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.8306,
+          "throughput_tok_per_s": 43.65
+        },
+        {
+          "turn": 2,
+          "user": "I would appreciate it if you could share the sorted result as the message body on social media, ensuring to tag 'current",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Here is the sorted report: Initial report content\\nMore unsorted data\\nUnsorted data\\nMore unsorted data\", \"tags\": \"['#TechTrends']\", \"m",
+          "tool_calls": null,
+          "ttft_s": 0.4661,
+          "tpot_s": 0.0229,
+          "output_tokens": 65,
+          "e2e_latency_s": 1.9343,
+          "throughput_tok_per_s": 43.59
+        }
+      ],
+      "avg_ttft_s": 0.453,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.64,
+      "total_output_tokens": 99
+    },
+    {
+      "id": "multi_turn_base_5",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Find analysis_report.csv and upon locating it, ensure you move it to the 'archive' directory in the same directory of an",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"path\": \".\", \"name\": \"analysis_report.csv\"}}; {\"name\": \"mv\", \"parameters\": {\"source\": \"analysis_report.csv\", \"destination\": \"archive/analysis_report.csv\"}",
+          "tool_calls": null,
+          "ttft_s": 0.4516,
+          "tpot_s": 0.0229,
+          "output_tokens": 50,
+          "e2e_latency_s": 1.5743,
+          "throughput_tok_per_s": 43.65
+        },
+        {
+          "turn": 1,
+          "user": "After the file transfer, display the contents of 'archive_summary.txt' in the current working directory. Sort the conten",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"archive_summary.txt\"}}; {\"name\": \"sort\", \"parameters\": {\"file_name\": \"archive_summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4405,
+          "tpot_s": 0.0229,
+          "output_tokens": 38,
+          "e2e_latency_s": 1.2873,
+          "throughput_tok_per_s": 43.69
+        },
+        {
+          "turn": 2,
+          "user": "Help me maintain a social media presence by crafting a tweet that states, 'Managed to archive important data files!' usi",
+          "assistant": "<|python_tag|>{\"name\": \"authenticate_twitter\", \"parameters\": {\"username\": \"dr_smith\", \"password\": \"securePass123\"}}; {\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Managed to archive important data",
+          "tool_calls": null,
+          "ttft_s": 0.4518,
+          "tpot_s": 0.0229,
+          "output_tokens": 68,
+          "e2e_latency_s": 1.9875,
+          "throughput_tok_per_s": 43.63
+        },
+        {
+          "turn": 3,
+          "user": "Once the tweet is live, reinforce the achievement by commenting underneath with a phrase like 'Another successful task c",
+          "assistant": "<|python_tag|>{\"name\": \"get_tweet\", \"parameters\": {\"tweet_id\": \"1\"}}; {\"name\": \"comment\", \"parameters\": {\"tweet_id\": \"1\", \"comment_content\": \"Another successful task completed today!\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4618,
+          "tpot_s": 0.0229,
+          "output_tokens": 47,
+          "e2e_latency_s": 1.5171,
+          "throughput_tok_per_s": 43.59
+        }
+      ],
+      "avg_ttft_s": 0.4514,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.64,
+      "total_output_tokens": 203
+    },
+    {
+      "id": "multi_turn_base_6",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "It's getting late here, and I'm wrapping up my notes for the day. Please initiate a file creation in our communal folder",
+          "assistant": "<|python_tag|>{\"name\": \"touch\", \"parameters\": {\"file_name\": \"Annual_Report_2023.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2899,
+          "tpot_s": 0.0225,
+          "output_tokens": 23,
+          "e2e_latency_s": 0.7848,
+          "throughput_tok_per_s": 44.46
+        },
+        {
+          "turn": 1,
+          "user": "Hi, I want to put some statistics in the annual report. Here are the things I want to put 'Company Earning: 2000 Company",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Company Earning: 2000\\\\nCompany Expenditure: 500\\\\nCompany Name: Gorilla\", \"file_name\": \"Annual_Report_2023.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2958,
+          "tpot_s": 0.0225,
+          "output_tokens": 51,
+          "e2e_latency_s": 1.4229,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 2,
+          "user": "May I have a look at what's inside 'Annual_Report_2023.docx'?",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"Annual_Report_2023.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3114,
+          "tpot_s": 0.0225,
+          "output_tokens": 23,
+          "e2e_latency_s": 0.807,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 3,
+          "user": "Let's delve into 'Annual_Report_2023.docx'. How many words does it contain?",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"Annual_Report_2023.docx\", \"mode\": \"w\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2962,
+          "tpot_s": 0.0225,
+          "output_tokens": 29,
+          "e2e_latency_s": 0.9274,
+          "throughput_tok_per_s": 44.35
+        },
+        {
+          "turn": 4,
+          "user": "To conclude, store the number of words in a new file report_word_count in the existing shared directory.",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"2000\", \"file_name\": \"report_word_count\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3009,
+          "tpot_s": 0.0225,
+          "output_tokens": 26,
+          "e2e_latency_s": 0.8644,
+          "throughput_tok_per_s": 44.36
+        }
+      ],
+      "avg_ttft_s": 0.2988,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.38,
+      "total_output_tokens": 152
+    },
+    {
+      "id": "multi_turn_base_7",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Directly open the academic_venture folder and employ precise commands to generate a new directory for our upcoming acade",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"academic_venture\"}}; {\"name\": \"mkdir\", \"parameters\": {\"dir_name\": \"academic_hub\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4348,
+          "tpot_s": 0.0229,
+          "output_tokens": 36,
+          "e2e_latency_s": 1.2371,
+          "throughput_tok_per_s": 43.63
+        },
+        {
+          "turn": 1,
+          "user": "Within academic_venture, meticulously list every project that has goal in its file name, ensuring comprehensive coverage",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"true\"}}; {\"name\": \"find\", \"parameters\": {\"path\": \"academic_venture\", \"name\": \"goal\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4524,
+          "tpot_s": 0.0229,
+          "output_tokens": 40,
+          "e2e_latency_s": 1.3467,
+          "throughput_tok_per_s": 43.61
+        },
+        {
+          "turn": 2,
+          "user": "For clarity, output the complete content of the first file you fine on the terminal.",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"goals.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4637,
+          "tpot_s": 0.0229,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.8532,
+          "throughput_tok_per_s": 43.64
+        }
+      ],
+      "avg_ttft_s": 0.4503,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.63,
+      "total_output_tokens": 94
+    },
+    {
+      "id": "multi_turn_base_8",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I've recently compiled an extensive log of outcomes from my latest scientific experiment into a file titled 'experiment_",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"experiment_log.txt\", \"pattern\": \"Anomaly\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4291,
+          "tpot_s": 0.0229,
+          "output_tokens": 26,
+          "e2e_latency_s": 1.0011,
+          "throughput_tok_per_s": 43.7
+        },
+        {
+          "turn": 1,
+          "user": "Following this, I need you to draw a comparison between 'experiment_log.txt' and 'previous_study_log.txt' to pinpoint an",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"experiment_log.txt\", \"file_name2\": \"previous_study_log.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4345,
+          "tpot_s": 0.0229,
+          "output_tokens": 31,
+          "e2e_latency_s": 1.1214,
+          "throughput_tok_per_s": 43.67
+        },
+        {
+          "turn": 2,
+          "user": "Please share the verbatim results of diff as the body of the post by posting a summary on my Twitter account so it can b",
+          "assistant": "<|python_tag|>{\"name\": \"authenticate_twitter\", \"parameters\": {\"username\": \"dr_smith\", \"password\": \"securePass123\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4383,
+          "tpot_s": 0.0229,
+          "output_tokens": 27,
+          "e2e_latency_s": 1.034,
+          "throughput_tok_per_s": 43.64
+        },
+        {
+          "turn": 3,
+          "user": "When you post the tweet, add a supportive comment 'Cheers!'",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Just compared experiment_log.txt and previous_study_log.txt using diff. Here are the results: \\n\\n[insert diff results here]\\n\\nStay tun",
+          "tool_calls": null,
+          "ttft_s": 0.4395,
+          "tpot_s": 0.023,
+          "output_tokens": 62,
+          "e2e_latency_s": 1.8398,
+          "throughput_tok_per_s": 43.56
+        }
+      ],
+      "avg_ttft_s": 0.4354,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.64,
+      "total_output_tokens": 146
+    },
+    {
+      "id": "multi_turn_base_9",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I remember I should have a document called 'FinalReport.txt' in the 'Documentation' folder. ",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2874,
+          "tpot_s": 0.0225,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.6247,
+          "throughput_tok_per_s": 44.47
+        },
+        {
+          "turn": 1,
+          "user": "Make a copy of 'FinalReport.txt' to the 'Archives' directory inside the 'Documentation' folder, while ensuring the dupli",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"Documentation/FinalReport.txt\", \"destination\": \"Documentation/Archives/ArchivedFinalReport2024.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2963,
+          "tpot_s": 0.0225,
+          "output_tokens": 37,
+          "e2e_latency_s": 1.1078,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 2,
+          "user": "Methodically arrange and sort the inaugural line of the 'ArchivedFinalReport2024.txt' in a seamless alphabetical order t",
+          "assistant": "<|python_tag|>{\"name\": \"sort\", \"parameters\": {\"file_name\": \"Documentation/Archives/ArchivedFinalReport2024.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2954,
+          "tpot_s": 0.0225,
+          "output_tokens": 28,
+          "e2e_latency_s": 0.9041,
+          "throughput_tok_per_s": 44.36
+        }
+      ],
+      "avg_ttft_s": 0.293,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.4,
+      "total_output_tokens": 81
+    },
+    {
+      "id": "multi_turn_base_10",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Hey, can you set up a new directory named 'Projects' right in workspace folder?",
+          "assistant": "<|python_tag|>{\"name\": \"mkdir\", \"parameters\": {\"dir_name\": \"Projects\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2842,
+          "tpot_s": 0.0225,
+          "output_tokens": 17,
+          "e2e_latency_s": 0.6442,
+          "throughput_tok_per_s": 44.44
+        },
+        {
+          "turn": 1,
+          "user": "Let's move over the project's proposal document into this 'Projects' folder, but we'll go ahead and rename it to 'final_",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"proposal.docx\", \"destination\": \"Projects/final_proposal_2024\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2871,
+          "tpot_s": 0.0225,
+          "output_tokens": 31,
+          "e2e_latency_s": 0.9632,
+          "throughput_tok_per_s": 44.38
+        },
+        {
+          "turn": 2,
+          "user": "Inside this directory, get cracking on a new file, call it 'notes.md', to capture all the highlights from our meetings.",
+          "assistant": "<|python_tag|>{\"name\": \"touch\", \"parameters\": {\"file_name\": \"notes.md\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2919,
+          "tpot_s": 0.0225,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.675,
+          "throughput_tok_per_s": 44.37
+        },
+        {
+          "turn": 3,
+          "user": "Also, create a file named 'summary.txt' and write 'Hello' into it. After that, do a quick comparison between this one an",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Hello\", \"file_name\": \"summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2946,
+          "tpot_s": 0.0225,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.8131,
+          "throughput_tok_per_s": 44.35
+        },
+        {
+          "turn": 4,
+          "user": "Finally, tally up the number of characters in 'summary.txt'.",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"summary.txt\", \"mode\": \"c\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2964,
+          "tpot_s": 0.0226,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.8152,
+          "throughput_tok_per_s": 44.33
+        }
+      ],
+      "avg_ttft_s": 0.2908,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.37,
+      "total_output_tokens": 114
+    },
+    {
+      "id": "multi_turn_base_11",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Display all the available files located within the '/temp' directory including hidden one using the terminal interface .",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4214,
+          "tpot_s": 0.0229,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7644,
+          "throughput_tok_per_s": 43.73
+        },
+        {
+          "turn": 1,
+          "user": "With the information presented on the terminal, draft a post on Twitter mentioning only the file names seperated them by",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Just found some amazing files in the /temp directory! Check out file1.txt, file2.txt, and all the others! #fileshowcase\", \"tags\": \"['#fi",
+          "tool_calls": null,
+          "ttft_s": 0.4269,
+          "tpot_s": 0.0229,
+          "output_tokens": 62,
+          "e2e_latency_s": 1.8253,
+          "throughput_tok_per_s": 43.62
+        }
+      ],
+      "avg_ttft_s": 0.4242,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.67,
+      "total_output_tokens": 78
+    },
+    {
+      "id": "multi_turn_base_12",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Pop on over to the 'Documents' directory and craft a new file dubbed 'summary.txt', would you? If it already exists, ret",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"Documents\"}}; {\"name\": \"touch\", \"parameters\": {\"file_name\": \"summary.txt\"}}; {\"name\": \"rm\", \"parameters\": {\"file_name\": \"summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2826,
+          "tpot_s": 0.0225,
+          "output_tokens": 52,
+          "e2e_latency_s": 1.4316,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 1,
+          "user": "In 'Documents', let's capture some profound topic 'quantum computing' and jot them down in the 'summary.txt'. The file s",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"Documents\"}}; {\"name\": \"echo\", \"parameters\": {\"content\": \"quantum computing\", \"file_name\": \"summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2892,
+          "tpot_s": 0.0225,
+          "output_tokens": 42,
+          "e2e_latency_s": 1.2134,
+          "throughput_tok_per_s": 44.37
+        },
+        {
+          "turn": 2,
+          "user": "It would be great to get a sense of how comprehensive this file has become. Mind tallying up the words in 'summary.txt' ",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"summary.txt\", \"mode\": \"w\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3014,
+          "tpot_s": 0.0225,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.8198,
+          "throughput_tok_per_s": 44.37
+        }
+      ],
+      "avg_ttft_s": 0.2911,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.38,
+      "total_output_tokens": 118
+    },
+    {
+      "id": "multi_turn_base_13",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "In documents directory, there's a file that piques my curiosity regarding its contents. It's alphabetically first file i",
+          "assistant": "<|python_tag|>{\"name\": \"tail\", \"parameters\": {\"file_name\": \"documents/documents/report.txt\", \"lines\": \"1\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4623,
+          "tpot_s": 0.0229,
+          "output_tokens": 26,
+          "e2e_latency_s": 1.0353,
+          "throughput_tok_per_s": 43.64
+        },
+        {
+          "turn": 1,
+          "user": "I've lately stored some work that parallels another document on my system. Might you review both files in this directory",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"documents/documents/report.txt\", \"file_name2\": \"documents/documents/summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.5802,
+          "tpot_s": 0.0229,
+          "output_tokens": 33,
+          "e2e_latency_s": 1.3142,
+          "throughput_tok_per_s": 43.6
+        }
+      ],
+      "avg_ttft_s": 0.5212,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.62,
+      "total_output_tokens": 59
+    },
+    {
+      "id": "multi_turn_base_14",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "First cd within the 'ResearchDocs' directory and then locate any files titled 'report.csv'.",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"ResearchDocs\"}}; {\"name\": \"find\", \"parameters\": {\"path\": \".\", \"name\": \"report.csv\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4066,
+          "tpot_s": 0.0227,
+          "output_tokens": 38,
+          "e2e_latency_s": 1.2479,
+          "throughput_tok_per_s": 43.98
+        },
+        {
+          "turn": 1,
+          "user": "Once you locate 'report.csv' in the 'ResearchDocs' directory, delve into it to find lines that reference the 'Quarterly ",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"ResearchDocs\"}}; {\"name\": \"grep\", \"parameters\": {\"file_name\": \"report.csv\", \"pattern\": \"Quarterly Financial Overview\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4037,
+          "tpot_s": 0.0228,
+          "output_tokens": 44,
+          "e2e_latency_s": 1.3831,
+          "throughput_tok_per_s": 43.9
+        },
+        {
+          "turn": 2,
+          "user": "Extract and display the last five lines from the 'report.csv' file in the 'ResearchDocs' directory, as these need to be ",
+          "assistant": "<|python_tag|>{\"name\": \"tail\", \"parameters\": {\"file_name\": \"report.csv\", \"lines\": \"5\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4929,
+          "tpot_s": 0.0228,
+          "output_tokens": 24,
+          "e2e_latency_s": 1.0165,
+          "throughput_tok_per_s": 43.92
+        },
+        {
+          "turn": 3,
+          "user": "Logging in as USR001. Lastly, upon completion of our file review, kindly message my colleague, John Levy, add him as new",
+          "assistant": "<|python_tag|>{\"name\": \"message_login\", \"parameters\": {\"user_id\": \"USR001\"}}; {\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"get_user_id\", \"user\": \"John Levy\", \"message\": \"Latest Quarter Perf",
+          "tool_calls": null,
+          "ttft_s": 0.4984,
+          "tpot_s": 0.0228,
+          "output_tokens": 77,
+          "e2e_latency_s": 2.2322,
+          "throughput_tok_per_s": 43.83
+        }
+      ],
+      "avg_ttft_s": 0.4504,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.91,
+      "total_output_tokens": 183
+    },
+    {
+      "id": "multi_turn_base_15",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_16",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "In research directory, there is a file called 'research_notes.txt'. Please make a prioritized backup by moving a copy of",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"research_notes.txt\", \"destination\": \"archives/2024_research_backup.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3273,
+          "tpot_s": 0.0225,
+          "output_tokens": 31,
+          "e2e_latency_s": 1.0036,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 1,
+          "user": "Now, take the contents of '2024_research_backup.txt' that we just created and sort the lines alphabetically.",
+          "assistant": "<|python_tag|>{\"name\": \"sort\", \"parameters\": {\"file_name\": \"2024_research_backup.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.5007,
+          "tpot_s": 0.0225,
+          "output_tokens": 22,
+          "e2e_latency_s": 0.9738,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 2,
+          "user": "Once the list is sorted, find out how many lines are in the sorted '2024_research_backup.txt' file.",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"2024_research_backup.txt\", \"mode\": \"l\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2957,
+          "tpot_s": 0.0226,
+          "output_tokens": 28,
+          "e2e_latency_s": 0.9046,
+          "throughput_tok_per_s": 44.34
+        }
+      ],
+      "avg_ttft_s": 0.3746,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.36,
+      "total_output_tokens": 81
+    },
+    {
+      "id": "multi_turn_base_17",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Could you provide me with an inventory of files that are currently visible and hidden in the directory I'm working in at",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.382,
+          "tpot_s": 0.0228,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7232,
+          "throughput_tok_per_s": 43.95
+        },
+        {
+          "turn": 1,
+          "user": "Please cd into project folder and find Kelly's test report somewhere in the directory and read the content to me.",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"project\"}}; {\"name\": \"find\", \"parameters\": {\"path\": \"./\", \"name\": \"Kelly\"}}; {\"name\": \"cat\", \"parameters\": {\"file_name\": \"test_report.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3957,
+          "tpot_s": 0.0228,
+          "output_tokens": 57,
+          "e2e_latency_s": 1.6722,
+          "throughput_tok_per_s": 43.87
+        },
+        {
+          "turn": 2,
+          "user": "Please dispatch of the report to Kelly, I need to add her contact (Kelly), in the format of 'Kelly Total Score: total_sc",
+          "assistant": "<|python_tag|>{\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"USR002\", \"message\": \"Kelly Total Score: 96\"}}; {\"name\": \"add_contact\", \"parameters\": {\"user_name\": \"Kelly\"}}; {\"name\": \"view_messa",
+          "tool_calls": null,
+          "ttft_s": 0.4137,
+          "tpot_s": 0.0228,
+          "output_tokens": 62,
+          "e2e_latency_s": 1.8052,
+          "throughput_tok_per_s": 43.84
+        }
+      ],
+      "avg_ttft_s": 0.3971,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.89,
+      "total_output_tokens": 135
+    },
+    {
+      "id": "multi_turn_base_18",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Copy all the text files of the 'Quarter1_Reports' directory and place it in a new directory naming it 'Archived_Quarter1",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"Quarter1_Reports/report1.txt\", \"destination\": \"Archived_Quarter1/report1.txt\"}}; {\"name\": \"cp\", \"parameters\": {\"source\": \"Quarter1_Reports/report",
+          "tool_calls": null,
+          "ttft_s": 0.4645,
+          "tpot_s": 0.023,
+          "output_tokens": 107,
+          "e2e_latency_s": 2.9015,
+          "throughput_tok_per_s": 43.5
+        },
+        {
+          "turn": 1,
+          "user": "Within the 'MonthlySummary.docx' file, display the content and sort it alphabetically by line to organize the informatio",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"MonthlySummary.docx\", \"file_name\": \"MonthlySummary.docx\"}}; {\"name\": \"sort\", \"parameters\": {\"file_name\": \"MonthlySummary.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4642,
+          "tpot_s": 0.023,
+          "output_tokens": 49,
+          "e2e_latency_s": 1.5687,
+          "throughput_tok_per_s": 43.46
+        },
+        {
+          "turn": 2,
+          "user": "Compare the educational material differences between 'History101.txt' and 'History202.txt', then post the differences to",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"History101.txt\", \"file_name2\": \"History202.txt\"}}; {\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Just compared the educational material",
+          "tool_calls": null,
+          "ttft_s": 0.4878,
+          "tpot_s": 0.023,
+          "output_tokens": 88,
+          "e2e_latency_s": 2.4913,
+          "throughput_tok_per_s": 43.42
+        }
+      ],
+      "avg_ttft_s": 0.4722,
+      "avg_tpot_s": 0.023,
+      "avg_throughput_tok_per_s": 43.46,
+      "total_output_tokens": 244
+    },
+    {
+      "id": "multi_turn_base_19",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Find every file with the name 'test_document.txt' nestled within the current directory.",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"name\": \"test_document.txt\", \"path\": \".\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3661,
+          "tpot_s": 0.0227,
+          "output_tokens": 23,
+          "e2e_latency_s": 0.8658,
+          "throughput_tok_per_s": 44.03
+        },
+        {
+          "turn": 1,
+          "user": "Transfer a duplicate of 'test_document.txt' over to the archives folder and rename it 'final_document.txt'.",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"destination\": \"archives/final_document.txt\", \"source\": \"test_document.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3909,
+          "tpot_s": 0.0228,
+          "output_tokens": 28,
+          "e2e_latency_s": 1.0054,
+          "throughput_tok_per_s": 43.94
+        },
+        {
+          "turn": 2,
+          "user": "Reveal the contents of 'final_document.txt' located in the archives.",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"final_document.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3983,
+          "tpot_s": 0.0227,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.8075,
+          "throughput_tok_per_s": 43.99
+        }
+      ],
+      "avg_ttft_s": 0.3851,
+      "avg_tpot_s": 0.0227,
+      "avg_throughput_tok_per_s": 43.99,
+      "total_output_tokens": 70
+    },
+    {
+      "id": "multi_turn_base_20",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Go to documents folder in CWD. Next, from the first document in current folder. What does the last line look like?",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"documents\"}}; {\"name\": \"tail\", \"parameters\": {\"file_name\": \"file1.txt\", \"lines\": \"1\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4407,
+          "tpot_s": 0.0229,
+          "output_tokens": 41,
+          "e2e_latency_s": 1.358,
+          "throughput_tok_per_s": 43.6
+        },
+        {
+          "turn": 1,
+          "user": "Write the difference of the first two file into a new file call file5.txt.",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"file1.txt\", \"file_name2\": \"file2.txt\"}}; {\"name\": \"echo\", \"parameters\": {\"content\": \"Difference between file1.txt and file2.txt\", \"file_nam",
+          "tool_calls": null,
+          "ttft_s": 0.4587,
+          "tpot_s": 0.0229,
+          "output_tokens": 63,
+          "e2e_latency_s": 1.8816,
+          "throughput_tok_per_s": 43.57
+        }
+      ],
+      "avg_ttft_s": 0.4497,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.59,
+      "total_output_tokens": 104
+    },
+    {
+      "id": "multi_turn_base_21",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I've just put together a file named 'ProjectOverview.txt' into my working directory where I've laid out an initial summa",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"To be discussed\", \"file_name\": \"ProjectOverview.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4515,
+          "tpot_s": 0.0229,
+          "output_tokens": 27,
+          "e2e_latency_s": 1.0469,
+          "throughput_tok_per_s": 43.67
+        },
+        {
+          "turn": 1,
+          "user": "For peace of mind, let's ensure both 'ProjectOverview.txt' and 'Draft.txt' are identical.",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"ProjectOverview.txt\", \"destination\": \"Draft.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4377,
+          "tpot_s": 0.0229,
+          "output_tokens": 25,
+          "e2e_latency_s": 0.9875,
+          "throughput_tok_per_s": 43.66
+        },
+        {
+          "turn": 2,
+          "user": "Lastly, I'd like to broadcast my recent documentation progress on Twitter. Please draft a tweet announcing a brief proje",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Recent documentation progress: Initial summary of the project. To be discussed. #ProjectUpdate @manager @team_lead\", \"tags\": \"['ProjectU",
+          "tool_calls": null,
+          "ttft_s": 0.4359,
+          "tpot_s": 0.023,
+          "output_tokens": 59,
+          "e2e_latency_s": 1.768,
+          "throughput_tok_per_s": 43.54
+        }
+      ],
+      "avg_ttft_s": 0.4417,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.62,
+      "total_output_tokens": 111
+    },
+    {
+      "id": "multi_turn_base_22",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "There's a file I cooked up earlier named 'project_analysis.txt' in workspace folder, and I've just realized it desperate",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Initial analysis content.\", \"file_name\": \"project_analysis.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4379,
+          "tpot_s": 0.0229,
+          "output_tokens": 27,
+          "e2e_latency_s": 1.0344,
+          "throughput_tok_per_s": 43.58
+        },
+        {
+          "turn": 1,
+          "user": "Much appreciated! Now, I'm sprucing up my analysis here. Could you whip up a duplicate of 'project_analysis.txt' and shi",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"project_analysis.txt\", \"destination\": \"project_archive/project_analysis.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.442,
+          "tpot_s": 0.023,
+          "output_tokens": 28,
+          "e2e_latency_s": 1.0617,
+          "throughput_tok_per_s": 43.57
+        },
+        {
+          "turn": 2,
+          "user": "Important stuff right there! I need to do a comparative review as my next step; be a champ and compare 'project_analysis",
+          "assistant": "<|python_tag|>{\"name\": \"diff\", \"parameters\": {\"file_name1\": \"project_analysis.txt\", \"file_name2\": \"old_project_analysis.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4511,
+          "tpot_s": 0.023,
+          "output_tokens": 31,
+          "e2e_latency_s": 1.1403,
+          "throughput_tok_per_s": 43.53
+        },
+        {
+          "turn": 3,
+          "user": "In this reflective summary, I'm keen to share some eye-opening insights with my colleagues. Toss a tweet out there about",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Just completed a comparative analysis between the latest and previous project data. Some insightful findings! @colleagues #ProjectInsigh",
+          "tool_calls": null,
+          "ttft_s": 0.4551,
+          "tpot_s": 0.023,
+          "output_tokens": 60,
+          "e2e_latency_s": 1.8139,
+          "throughput_tok_per_s": 43.42
+        }
+      ],
+      "avg_ttft_s": 0.4465,
+      "avg_tpot_s": 0.023,
+      "avg_throughput_tok_per_s": 43.52,
+      "total_output_tokens": 146
+    },
+    {
+      "id": "multi_turn_base_23",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I need you to draft a comprehensive guide for our new initiative, and let's name it 'Project_Guide_1.md'. Put 'Comprehen",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Comprehensive guide for the new initiative.\", \"file_name\": \"Project_Guide_1.md\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3802,
+          "tpot_s": 0.0228,
+          "output_tokens": 34,
+          "e2e_latency_s": 1.1325,
+          "throughput_tok_per_s": 43.86
+        },
+        {
+          "turn": 1,
+          "user": "I would love to get the human-readable disk usage of the current working directory.",
+          "assistant": "<|python_tag|>{\"name\": \"du\", \"parameters\": {\"human_readable\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4062,
+          "tpot_s": 0.0228,
+          "output_tokens": 17,
+          "e2e_latency_s": 0.7708,
+          "throughput_tok_per_s": 43.88
+        },
+        {
+          "turn": 2,
+          "user": "There's a minor snag in our ticketing system. Ticket #7423 is still unresolved, but with our recent brainstorming feedba",
+          "assistant": "<|python_tag|>{\"name\": \"resolve_ticket\", \"parameters\": {\"ticket_id\": \"7423\", \"resolution\": \"\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3846,
+          "tpot_s": 0.0228,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.9093,
+          "throughput_tok_per_s": 43.84
+        }
+      ],
+      "avg_ttft_s": 0.3903,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.86,
+      "total_output_tokens": 75
+    },
+    {
+      "id": "multi_turn_base_24",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Look for draft and final report in my current directory. Compare the content difference of both.",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"name\": \"report_draft.txt\", \"path\": \"project\"}}; {\"name\": \"find\", \"parameters\": {\"name\": \"report_final.txt\", \"path\": \"project\"}}; {\"name\": \"diff\", \"parame",
+          "tool_calls": null,
+          "ttft_s": 0.3889,
+          "tpot_s": 0.0228,
+          "output_tokens": 78,
+          "e2e_latency_s": 2.1471,
+          "throughput_tok_per_s": 43.8
+        },
+        {
+          "turn": 1,
+          "user": "Transfer 'temp_notes.txt' into the 'archives' directory and rename it to 'notes_2024.txt'.",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"temp_notes.txt\", \"destination\": \"archives/notes_2024.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3973,
+          "tpot_s": 0.0228,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.0593,
+          "throughput_tok_per_s": 43.81
+        },
+        {
+          "turn": 2,
+          "user": "I recently documented a support ticket due to an issue with my workstation, and I recall the ticket number was 987654, t",
+          "assistant": "<|python_tag|>{\"name\": \"get_ticket\", \"parameters\": {\"ticket_id\": \"987654\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4063,
+          "tpot_s": 0.0228,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.8173,
+          "throughput_tok_per_s": 43.79
+        },
+        {
+          "turn": 3,
+          "user": "With the information from the ticket at hand, resolve it for me since I've already addressed the core problem independen",
+          "assistant": "<|python_tag|>{\"name\": \"resolve_ticket\", \"parameters\": {\"ticket_id\": \"987654\", \"resolution\": \"Fixed through manual troubleshooting techniques.\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.408,
+          "tpot_s": 0.0228,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.0706,
+          "throughput_tok_per_s": 43.77
+        }
+      ],
+      "avg_ttft_s": 0.4001,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.79,
+      "total_output_tokens": 157
+    },
+    {
+      "id": "multi_turn_base_25",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Examine current directory for any presence of the file named 'summary.txt'. If there is one, What's inside?",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"name\": \"summary.txt\", \"path\": \"./\"}}; {\"name\": \"cat\", \"parameters\": {\"file_name\": \"summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3037,
+          "tpot_s": 0.0225,
+          "output_tokens": 40,
+          "e2e_latency_s": 1.1828,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 1,
+          "user": "Copy it into 'Research2023'.",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"summary.txt\", \"destination\": \"Research2023\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3056,
+          "tpot_s": 0.0225,
+          "output_tokens": 25,
+          "e2e_latency_s": 0.8466,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 2,
+          "user": "Post review, organize the lines in 'summary.txt' alphabetically.",
+          "assistant": "<|python_tag|>{\"name\": \"sort\", \"parameters\": {\"file_name\": \"summary.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3121,
+          "tpot_s": 0.0225,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.6949,
+          "throughput_tok_per_s": 44.41
+        },
+        {
+          "turn": 3,
+          "user": "Conclude by calculating the total lines in the sorted 'summary.txt' to verify that everything is meticulously arranged.",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"summary.txt\", \"mode\": \"l\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2913,
+          "tpot_s": 0.0226,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.81,
+          "throughput_tok_per_s": 44.35
+        }
+      ],
+      "avg_ttft_s": 0.3032,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.37,
+      "total_output_tokens": 107
+    },
+    {
+      "id": "multi_turn_base_26",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Could you kindly navigate to the temporary directory and list all the files available there right in the terminal for me",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\", \"file_name\": \"tmp\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2865,
+          "tpot_s": 0.0225,
+          "output_tokens": 23,
+          "e2e_latency_s": 0.7823,
+          "throughput_tok_per_s": 44.38
+        },
+        {
+          "turn": 1,
+          "user": "What's inside the last file displayed?",
+          "assistant": "<|python_tag|>{\"name\": \"tail\", \"parameters\": {\"file_name\": \"file3.txt\", \"lines\": \"10\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2993,
+          "tpot_s": 0.0225,
+          "output_tokens": 25,
+          "e2e_latency_s": 0.8401,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 2,
+          "user": "Create a docx file with the same name as the previosu file but changing the format, they should also have the same conte",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Nothing important here. Yet another line.\", \"file_name\": \"file3.docx\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3304,
+          "tpot_s": 0.0226,
+          "output_tokens": 32,
+          "e2e_latency_s": 1.0296,
+          "throughput_tok_per_s": 44.34
+        }
+      ],
+      "avg_ttft_s": 0.3054,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.37,
+      "total_output_tokens": 80
+    },
+    {
+      "id": "multi_turn_base_27",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Hey there, I constructed a file titled 'project_plan.md' that resides happily in my workspace directory. Could you be so",
+          "assistant": "<|python_tag|>{\"name\": \"mv\", \"parameters\": {\"source\": \"project_plan.md\", \"destination\": \"project_overview.md\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4049,
+          "tpot_s": 0.0228,
+          "output_tokens": 27,
+          "e2e_latency_s": 0.997,
+          "throughput_tok_per_s": 43.91
+        },
+        {
+          "turn": 1,
+          "user": "In light of new developments with respect to file management, I've come across an urgent conundrum: servers are down une",
+          "assistant": "<|python_tag|>{\"name\": \"create_ticket\", \"parameters\": {\"title\": \"emergency\", \"description\": \"Initial project plan details.\", \"priority\": 3}}; {\"name\": \"ticket_login\", \"parameters\": {\"username\": \"tech_",
+          "tool_calls": null,
+          "ttft_s": 0.4071,
+          "tpot_s": 0.0228,
+          "output_tokens": 59,
+          "e2e_latency_s": 1.7323,
+          "throughput_tok_per_s": 43.77
+        },
+        {
+          "turn": 2,
+          "user": "We've unearthed additional insights concerning the server issue. Please create a new ticket with same title and descript",
+          "assistant": "<|python_tag|>{\"name\": \"create_ticket\", \"parameters\": {\"title\": \"emergency\", \"description\": \"Additional insights.\", \"priority\": 5}}",
+          "tool_calls": null,
+          "ttft_s": 0.4235,
+          "tpot_s": 0.0228,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.0856,
+          "throughput_tok_per_s": 43.79
+        }
+      ],
+      "avg_ttft_s": 0.4118,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.82,
+      "total_output_tokens": 116
+    },
+    {
+      "id": "multi_turn_base_28",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_29",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Open up 'VisionX' folder. What's the human readible disk usage of that folder?",
+          "assistant": "<|python_tag|>{\"name\": \"du\", \"parameters\": {\"human_readable\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2852,
+          "tpot_s": 0.0225,
+          "output_tokens": 17,
+          "e2e_latency_s": 0.6456,
+          "throughput_tok_per_s": 44.39
+        },
+        {
+          "turn": 1,
+          "user": "Create a file name based on the number of byte used. It should be in 'number.pdf' format.",
+          "assistant": "<|python_tag|>{\"name\": \"touch\", \"parameters\": {\"file_name\": \"byte_usage.pdf\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2892,
+          "tpot_s": 0.0225,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.6949,
+          "throughput_tok_per_s": 44.36
+        },
+        {
+          "turn": 2,
+          "user": "Finally, in that file, Write my last question in it.",
+          "assistant": "<|python_tag|>{\"name\": \"echo\", \"parameters\": {\"content\": \"Create a file name based on the number of byte used. It should be in \", \"file_name\": \"byte_usage.pdf\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.294,
+          "tpot_s": 0.0226,
+          "output_tokens": 40,
+          "e2e_latency_s": 1.1741,
+          "throughput_tok_per_s": 44.31
+        }
+      ],
+      "avg_ttft_s": 0.2895,
+      "avg_tpot_s": 0.0225,
+      "avg_throughput_tok_per_s": 44.35,
+      "total_output_tokens": 76
+    },
+    {
+      "id": "multi_turn_base_30",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Search for test result of Apollo Project which is supposed to be in the project directory. It's likely a JSON file. Whil",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"test_results.json\", \"pattern\": \"Apollo Project\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4348,
+          "tpot_s": 0.0229,
+          "output_tokens": 26,
+          "e2e_latency_s": 1.0078,
+          "throughput_tok_per_s": 43.63
+        },
+        {
+          "turn": 1,
+          "user": "Craft and broadcast an electrifying tweet on my profile, sharing with the world the thrilling discovery of these previou",
+          "assistant": "<|python_tag|>{\"name\": \"post_tweet\", \"parameters\": {\"content\": \"Exciting discovery! Just found hidden test result files in the project directory! Here\\\\u2019s what\\\\u2019s inside: {\\\\\\\"experiment\\\\\\\":",
+          "tool_calls": null,
+          "ttft_s": 0.4506,
+          "tpot_s": 0.023,
+          "output_tokens": 107,
+          "e2e_latency_s": 2.8887,
+          "throughput_tok_per_s": 43.48
+        }
+      ],
+      "avg_ttft_s": 0.4427,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.55,
+      "total_output_tokens": 133
+    },
+    {
+      "id": "multi_turn_base_31",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_32",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_33",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "What's the name of the python file my current directory? There should be only one and. Do not list hidden files. ",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"False\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3727,
+          "tpot_s": 0.0228,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7144,
+          "throughput_tok_per_s": 43.9
+        },
+        {
+          "turn": 1,
+          "user": "Use grep to find out the name of the function of the script.",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"deploy.py\", \"pattern\": \"def\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3907,
+          "tpot_s": 0.0228,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.9148,
+          "throughput_tok_per_s": 43.89
+        },
+        {
+          "turn": 2,
+          "user": "And while we're diving into the deployments, let's pinpoint every mention of 'update' in this script and jot those lines",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"deploy.py\", \"pattern\": \"update\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4119,
+          "tpot_s": 0.0228,
+          "output_tokens": 24,
+          "e2e_latency_s": 0.9362,
+          "throughput_tok_per_s": 43.87
+        },
+        {
+          "turn": 3,
+          "user": "Once that's sewn up, it'd be helpful to buzz Catherine with the first update you have found, with message 'update the sy",
+          "assistant": "<|python_tag|>{\"name\": \"get_user_id\", \"parameters\": {\"user\": \"Catherine\"}}; {\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"USR003\", \"message\": \"update the system\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4312,
+          "tpot_s": 0.0228,
+          "output_tokens": 46,
+          "e2e_latency_s": 1.4583,
+          "throughput_tok_per_s": 43.81
+        },
+        {
+          "turn": 4,
+          "user": "Could you double check if the message is sent?",
+          "assistant": "<|python_tag|>{\"name\": \"view_messages_sent\", \"parameters\": {}}",
+          "tool_calls": null,
+          "ttft_s": 0.6068,
+          "tpot_s": 0.0228,
+          "output_tokens": 14,
+          "e2e_latency_s": 0.9032,
+          "throughput_tok_per_s": 43.86
+        }
+      ],
+      "avg_ttft_s": 0.4427,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.87,
+      "total_output_tokens": 124
+    },
+    {
+      "id": "multi_turn_base_34",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_35",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_36",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_37",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Could you go to temp directory, and for each file in there, count the number of lines.",
+          "assistant": "<|python_tag|>{\"name\": \"cd\", \"parameters\": {\"folder\": \"temp\"}}; {\"name\": \"wc\", \"parameters\": {\"file_name\": \"dev_summary.txt\", \"mode\": \"l\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.483,
+          "tpot_s": 0.0226,
+          "output_tokens": 41,
+          "e2e_latency_s": 1.386,
+          "throughput_tok_per_s": 44.3
+        },
+        {
+          "turn": 1,
+          "user": "Now, scour through the mysterious 'dev_summary.txt' and hunt for any mentions or whispers of 'server error'.",
+          "assistant": "<|python_tag|>{\"name\": \"grep\", \"parameters\": {\"file_name\": \"dev_summary.txt\", \"pattern\": \"server error\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3902,
+          "tpot_s": 0.0226,
+          "output_tokens": 26,
+          "e2e_latency_s": 0.9547,
+          "throughput_tok_per_s": 44.28
+        },
+        {
+          "turn": 2,
+          "user": "Make a new file whose name is the number of line but in txt format and append the second sentence containing 'server err",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"dev_summary.txt\", \"mode\": \"l\"}}; {\"name\": \"echo\", \"parameters\": {\"content\": \"However, a server error was detected in the final testing phase.\"",
+          "tool_calls": null,
+          "ttft_s": 0.4934,
+          "tpot_s": 0.0226,
+          "output_tokens": 60,
+          "e2e_latency_s": 1.8276,
+          "throughput_tok_per_s": 44.22
+        }
+      ],
+      "avg_ttft_s": 0.4555,
+      "avg_tpot_s": 0.0226,
+      "avg_throughput_tok_per_s": 44.27,
+      "total_output_tokens": 127
+    },
+    {
+      "id": "multi_turn_base_38",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I've misplaced a vital document inclusive of extensive research. Assist in locating a file named 'findings_report' withi",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"path\": \"researcher/SuperResearch\", \"name\": \"findings_report\"}}; {\"name\": \"rm\", \"parameters\": {\"file_name\": \"findings_report\"}}; {\"name\": \"rmdir\", \"parame",
+          "tool_calls": null,
+          "ttft_s": 0.3086,
+          "tpot_s": 0.0226,
+          "output_tokens": 66,
+          "e2e_latency_s": 1.7769,
+          "throughput_tok_per_s": 44.27
+        },
+        {
+          "turn": 1,
+          "user": "What's left in the current directory including the hidden files?",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3232,
+          "tpot_s": 0.0226,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.6618,
+          "throughput_tok_per_s": 44.3
+        }
+      ],
+      "avg_ttft_s": 0.3159,
+      "avg_tpot_s": 0.0226,
+      "avg_throughput_tok_per_s": 44.28,
+      "total_output_tokens": 82
+    },
+    {
+      "id": "multi_turn_base_39",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "I need you to set up a fresh folder named 'WebDevProjects' wherever you're currently working.",
+          "assistant": "<|python_tag|>{\"name\": \"mkdir\", \"parameters\": {\"dir_name\": \"WebDevProjects\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3129,
+          "tpot_s": 0.0225,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.7186,
+          "throughput_tok_per_s": 44.37
+        },
+        {
+          "turn": 1,
+          "user": "Populate the 'WebDevProjects' folder with 3 files:, 'styles.css',  'index.html', and 'script.js' with content 'Hello Wor",
+          "assistant": "<|python_tag|>{\"name\": \"touch\", \"parameters\": {\"file_name\": \"styles.css\"}}; {\"name\": \"echo\", \"parameters\": {\"content\": \"Hello World!\", \"file_name\": \"styles.css\"}}; {\"name\": \"touch\", \"parameters\": {\"fi",
+          "tool_calls": null,
+          "ttft_s": 0.3737,
+          "tpot_s": 0.0226,
+          "output_tokens": 130,
+          "e2e_latency_s": 3.288,
+          "throughput_tok_per_s": 44.26
+        },
+        {
+          "turn": 2,
+          "user": "What's the second file name by system order? Don't list out hidden files.",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"False\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.2974,
+          "tpot_s": 0.0226,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.6362,
+          "throughput_tok_per_s": 44.28
+        },
+        {
+          "turn": 3,
+          "user": "Can you display the content of the first file by system order?",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"styles.css\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3604,
+          "tpot_s": 0.0226,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.7446,
+          "throughput_tok_per_s": 44.26
+        }
+      ],
+      "avg_ttft_s": 0.3361,
+      "avg_tpot_s": 0.0226,
+      "avg_throughput_tok_per_s": 44.29,
+      "total_output_tokens": 183
+    },
+    {
+      "id": "multi_turn_base_40",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Arrange a complete listing of all files and directories presently located here, making sure you don't overlook the hidde",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4002,
+          "tpot_s": 0.0228,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7418,
+          "throughput_tok_per_s": 43.91
+        },
+        {
+          "turn": 1,
+          "user": "Transfer the 'annual_report.txt' in Documents directory to the 'Reports' directory that's in Documents directory, but al",
+          "assistant": "<|python_tag|>{\"name\": \"cp\", \"parameters\": {\"source\": \"Documents/annual_report.txt\", \"destination\": \"Documents/Reports/annual_report.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.5947,
+          "tpot_s": 0.0228,
+          "output_tokens": 32,
+          "e2e_latency_s": 1.3014,
+          "throughput_tok_per_s": 43.86
+        },
+        {
+          "turn": 2,
+          "user": "Reveal the last lines of 'Q4_summary.doc' so we can ascertain how the report wraps up.",
+          "assistant": "<|python_tag|>{\"name\": \"tail\", \"parameters\": {\"file_name\": \"Q4_summary.doc\", \"lines\": \"10\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4209,
+          "tpot_s": 0.0228,
+          "output_tokens": 26,
+          "e2e_latency_s": 0.9905,
+          "throughput_tok_per_s": 43.89
+        },
+        {
+          "turn": 3,
+          "user": "Attempt to relay a message to the individual with ID 'USR002' by logging in as USR001, updating them on the finalization",
+          "assistant": "<|python_tag|>{\"name\": \"message_login\", \"parameters\": {\"user_id\": \"USR001\"}}; {\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"USR002\", \"message\": \"The report has been finalized.\"}}; {\"name\": \"",
+          "tool_calls": null,
+          "ttft_s": 0.5724,
+          "tpot_s": 0.0228,
+          "output_tokens": 64,
+          "e2e_latency_s": 2.011,
+          "throughput_tok_per_s": 43.79
+        }
+      ],
+      "avg_ttft_s": 0.497,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.86,
+      "total_output_tokens": 138
+    },
+    {
+      "id": "multi_turn_base_41",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Where is my notes? Forward it exactly to Bob please. I am USR001.",
+          "assistant": "<|python_tag|>{\"name\": \"get_user_id\", \"parameters\": {\"user\": \"Bob\"}}; {\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"USR001\", \"message\": \"Your notes are in the initial directory.\"}}; {\"name\":",
+          "tool_calls": null,
+          "ttft_s": 0.3651,
+          "tpot_s": 0.0228,
+          "output_tokens": 62,
+          "e2e_latency_s": 1.7553,
+          "throughput_tok_per_s": 43.88
+        },
+        {
+          "turn": 1,
+          "user": "After Bob has received the details, would you mind removing it since there are some errors?",
+          "assistant": "<|python_tag|>{\"name\": \"rm\", \"parameters\": {\"file_name\": \"notes\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3823,
+          "tpot_s": 0.0227,
+          "output_tokens": 17,
+          "e2e_latency_s": 0.7462,
+          "throughput_tok_per_s": 43.96
+        }
+      ],
+      "avg_ttft_s": 0.3737,
+      "avg_tpot_s": 0.0227,
+      "avg_throughput_tok_per_s": 43.92,
+      "total_output_tokens": 79
+    },
+    {
+      "id": "multi_turn_base_42",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_43",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Arrange a complete listing of all files and directories presently located here, making sure you don't overlook the hidde",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3723,
+          "tpot_s": 0.0227,
+          "output_tokens": 16,
+          "e2e_latency_s": 0.7132,
+          "throughput_tok_per_s": 44.0
+        },
+        {
+          "turn": 1,
+          "user": "Locate any document titled 'annual_report.txt' wherever it might be within this directory or its subdirectories.",
+          "assistant": "<|python_tag|>{\"name\": \"find\", \"parameters\": {\"path\": \".\", \"name\": \"annual_report.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3722,
+          "tpot_s": 0.0228,
+          "output_tokens": 22,
+          "e2e_latency_s": 0.85,
+          "throughput_tok_per_s": 43.96
+        },
+        {
+          "turn": 2,
+          "user": "What's inside?",
+          "assistant": "<|python_tag|>{\"name\": \"cat\", \"parameters\": {\"file_name\": \"annual_report.txt\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4862,
+          "tpot_s": 0.0228,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.8959,
+          "throughput_tok_per_s": 43.93
+        },
+        {
+          "turn": 3,
+          "user": "Log my user id USR001 in, and relay a message to the ID 'USR002', updating them with what's inside verbatim as the body ",
+          "assistant": "<|python_tag|>{\"name\": \"send_message\", \"parameters\": {\"receiver_id\": \"USR002\", \"message\": \"This is the annual report. It includes Q4 results and other financial data.\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4093,
+          "tpot_s": 0.0228,
+          "output_tokens": 40,
+          "e2e_latency_s": 1.2984,
+          "throughput_tok_per_s": 43.86
+        }
+      ],
+      "avg_ttft_s": 0.41,
+      "avg_tpot_s": 0.0228,
+      "avg_throughput_tok_per_s": 43.94,
+      "total_output_tokens": 97
+    },
+    {
+      "id": "multi_turn_base_44",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_45",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_46",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "Delete all the files in the 'Drafts' directory including the directory.",
+          "assistant": "<|python_tag|>{\"name\": \"rm\", \"parameters\": {\"file_name\": \"Drafts\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3924,
+          "tpot_s": 0.0227,
+          "output_tokens": 18,
+          "e2e_latency_s": 0.7787,
+          "throughput_tok_per_s": 44.0
+        }
+      ],
+      "avg_ttft_s": 0.3924,
+      "avg_tpot_s": 0.0227,
+      "avg_throughput_tok_per_s": 44.0,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_48",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "user": "In my workspace folder, direct your attention to the initial directory we have access to and list out the files present ",
+          "assistant": "<|python_tag|>{\"name\": \"ls\", \"parameters\": {\"a\": \"True\"}}; {\"name\": \"cd\", \"parameters\": {\"folder\": \"test\"}}; {\"name\": \"find\", \"parameters\": {\"path\": \".\", \"name\": \"test\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.3934,
+          "tpot_s": 0.0229,
+          "output_tokens": 52,
+          "e2e_latency_s": 1.5595,
+          "throughput_tok_per_s": 43.73
+        },
+        {
+          "turn": 1,
+          "user": "Subsequently,What's the character count of the file all text file with test?",
+          "assistant": "<|python_tag|>{\"name\": \"wc\", \"parameters\": {\"file_name\": \"all text file with test.txt\", \"mode\": \"c\"}}",
+          "tool_calls": null,
+          "ttft_s": 0.4252,
+          "tpot_s": 0.0228,
+          "output_tokens": 28,
+          "e2e_latency_s": 1.042,
+          "throughput_tok_per_s": 43.77
+        },
+        {
+          "turn": 2,
+          "user": "Open up ticket 654321. If the character count of any file is greater than 20, Set the priority to 3. Else, set to 2.",
+          "assistant": "<|python_tag|>{\"name\": \"get_ticket\", \"parameters\": {\"ticket_id\": \"654321\"}}; {\"name\": \"wc\", \"parameters\": {\"file_name\": \"all text file with test.txt\", \"mode\": \"c\"}}; {\"name\": \"edit_ticket\", \"parameter",
+          "tool_calls": null,
+          "ttft_s": 0.405,
+          "tpot_s": 0.0229,
+          "output_tokens": 76,
+          "e2e_latency_s": 2.1244,
+          "throughput_tok_per_s": 43.62
+        }
+      ],
+      "avg_ttft_s": 0.4079,
+      "avg_tpot_s": 0.0229,
+      "avg_throughput_tok_per_s": 43.71,
+      "total_output_tokens": 156
+    },
+    {
+      "id": "multi_turn_base_49",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_50",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_52",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_54",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_55",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_56",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_57",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_58",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_59",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_60",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_63",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_64",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_65",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_66",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_69",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_70",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_71",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_72",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_73",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_74",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_75",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_76",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_77",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_78",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_79",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_80",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_83",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_84",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_85",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_86",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_87",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_88",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_89",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_90",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_91",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_92",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_93",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_94",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_96",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_97",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_98",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_99",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_100",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_101",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_102",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_103",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_104",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_105",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_106",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_107",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_108",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_109",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_110",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_111",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_112",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_113",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_114",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_115",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_117",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_118",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_119",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_120",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_122",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_124",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_128",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_129",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_130",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_131",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_132",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_133",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_134",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_135",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_136",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_138",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_139",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_140",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_141",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_142",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_143",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_145",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_146",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_147",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_148",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_149",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_150",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_151",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_152",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_153",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_154",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_155",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_158",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_159",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_160",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_161",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_163",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_168",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_169",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_170",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_171",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_172",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_173",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_174",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_175",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_176",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_177",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_178",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_179",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_180",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_181",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_182",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_183",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_184",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_185",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_186",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_187",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_188",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_189",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_190",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_191",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_192",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_193",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_194",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_195",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_196",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_197",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_198",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    },
+    {
+      "id": "multi_turn_base_199",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0
+    }
+  ]
+}

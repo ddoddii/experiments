@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash *)",
+      "Bash(curl -sv http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"meta-llama/Llama-3.1-8B-Instruct\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":5}' --max-time 20)",
+      "Bash(grep -v \"^WARNING\\\\|^I0\\\\|^W0\\\\|^E0\\\\|server_args\\\\|Loading\\\\|^$\")",
+      "Bash(chmod +x *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(conda run *)",
+      "Bash(xargs strings)",
+      "Bash(echo 'cuda_runtime: /home/uhmturks/miniconda3/envs/vllm-pr32553/lib/python3.12/site-packages/nvidia/cuda_runtime')",
+      "Bash(ls /home/uhmturks/miniconda3/envs/vllm-pr32553/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/)",
+      "Bash(ls /home/uhmturks/miniconda3/envs/vllm-pr32553/targets/x86_64-linux/lib/)",
+      "Bash(python3 *)"
+    ]
+  }
+}
