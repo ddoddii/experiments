@@ -46,7 +46,7 @@ class KVCachePoller(threading.Thread):
         super().__init__(daemon=True, name="KVCachePoller")
         self.ports    = ports if ports is not None else self.DEFAULT_PORTS
         self.interval = interval
-        self._stop    = threading.Event()
+        self._stop_event = threading.Event()   # renamed: avoids conflict with Thread._stop()
         self.samples: dict[str, list[float]] = {k: [] for k in self.ports}
 
     # ── internal ─────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ class KVCachePoller(threading.Thread):
         return None
 
     def run(self):
-        while not self._stop.wait(self.interval):
+        while not self._stop_event.wait(self.interval):
             for label, port in self.ports.items():
                 val = self._scrape_one(port)
                 if val is not None:
@@ -73,7 +73,7 @@ class KVCachePoller(threading.Thread):
 
     def stop(self):
         """Signal stop and wait for thread to exit."""
-        self._stop.set()
+        self._stop_event.set()
         self.join(timeout=5)
 
     def stats(self) -> dict:
