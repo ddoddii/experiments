@@ -443,6 +443,141 @@
         }
       ],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 51},
+      "id": 105, "title": "🔬 P vs D Node KV Cache — vllm-ppd 2P2D", "type": "row" },
+
+    {
+      "id": 50, "type": "timeseries",
+      "title": "P Node KV Cache vs D Node KV Cache (vllm-ppd 2P2D)",
+      "description": "KV cache utilization per node role in disaggregated prefill-decode setup.\n\n• P nodes (prefill): spike briefly per request as the prompt is processed, then drop to near-zero after KV transfer to D.\n• D nodes (decode): accumulate KV blocks across multi-turn turns — each new tool call adds to the KV already held. Watch for gradual ramp-up: this is the \"D node KV accumulation\" pattern in agentic workloads.\n\nScrape targets in prometheus.yml: vllm-ppd-prefill-1 (8100), vllm-ppd-prefill-2 (8101), vllm-ppd-decode-1 (8200), vllm-ppd-decode-2 (8201).",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 52},
+      "options": {
+        "tooltip": {"mode": "multi", "sort": "desc"},
+        "legend": {"displayMode": "table", "placement": "bottom", "showLegend": true,
+                   "calcs": ["lastNotNull", "max", "mean"]}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1, "decimals": 2,
+          "custom": {"lineWidth": 2, "fillOpacity": 15, "spanNulls": true},
+          "thresholds": { "mode": "absolute", "steps": [
+            {"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}
+          ]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [0, 0]}},
+                           {"id": "displayName", "value": "P1 (prefill, GPU0)"}]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "B"},
+            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [0, 0]}},
+                           {"id": "displayName", "value": "P2 (prefill, GPU1)"}]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "C"},
+            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [5, 5]}},
+                           {"id": "displayName", "value": "D1 (decode, GPU2)"}]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "D"},
+            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [5, 5]}},
+                           {"id": "displayName", "value": "D2 (decode, GPU3)"}]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-1\"}",
+          "legendFormat": "P1 prefill (GPU0)", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-2\"}",
+          "legendFormat": "P2 prefill (GPU1)", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-1\"}",
+          "legendFormat": "D1 decode (GPU2)", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-2\"}",
+          "legendFormat": "D2 decode (GPU3)", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 51, "type": "timeseries",
+      "title": "P Node avg vs D Node avg KV Cache",
+      "description": "Average KV cache usage across all P nodes vs all D nodes. Makes it easy to compare roles at a glance without per-instance noise.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 62},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "custom": {"lineWidth": 2, "fillOpacity": 20, "spanNulls": true}
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "P nodes (avg)"},
+           "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]},
+          {"matcher": {"id": "byName", "options": "D nodes (avg)"},
+           "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-prefill-.*\"})",
+          "legendFormat": "P nodes (avg)", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-decode-.*\"})",
+          "legendFormat": "D nodes (avg)", "refId": "B"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 52, "type": "timeseries",
+      "title": "D Node Running Requests (decode 노드 부하)",
+      "description": "Number of requests actively running on D (decode) nodes. In multi-turn tool-call workloads each request holds KV blocks for its entire conversation — even while waiting between turns. Compare with D node KV cache usage above to see correlation.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 62},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "min": 0,
+          "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true}
+        }
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-decode-.*\"}",
+          "legendFormat": "{{job}} running", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-prefill-.*\"}",
+          "legendFormat": "{{job}} running", "refId": "B"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
     }
 
   ],
@@ -504,5 +639,5 @@
   "timezone": "browser",
   "title": "vLLM BFCL Agentic Workload",
   "uid": "vllm-bfcl-agentic-v1",
-  "version": 2
+  "version": 3
 }
