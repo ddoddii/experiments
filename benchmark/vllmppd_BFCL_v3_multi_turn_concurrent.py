@@ -24,12 +24,16 @@ Usage:
 
 import json
 import os
+import sys
 import time
 import threading
 import shutil
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from kv_cache_poller import KVCachePoller
 
 # ─── Paths ─────────────────────────────────────────────────────────────────
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -137,6 +141,10 @@ _total_output_tokens = 0
 _items_done          = 0
 
 t_experiment_start = time.perf_counter()
+
+# ─── KV cache background poller ────────────────────────────────────────────
+kv_poller = KVCachePoller(interval=2.0)
+kv_poller.start()
 
 # ─── Per-item worker (runs in thread pool) ──────────────────────────────────
 def process_item(item_idx: int, item: dict) -> dict:
@@ -314,6 +322,10 @@ with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
 
 pbar.close()
 
+# ─── Stop KV cache poller ───────────────────────────────────────────────────
+kv_poller.stop()
+kv_stats = kv_poller.stats()
+
 # ─── Final summary ──────────────────────────────────────────────────────────
 t_experiment_end = time.perf_counter()
 total_wall_time  = t_experiment_end - t_experiment_start
@@ -334,6 +346,7 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
+    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
 }
 
 output = {"summary": summary, "results": _results}
