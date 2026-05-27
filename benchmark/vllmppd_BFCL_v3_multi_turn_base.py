@@ -32,7 +32,9 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
 
 # ─── Config ────────────────────────────────────────────────────────────────
 ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:10001/v1/chat/completions")
-MODEL      = os.environ.get("MODEL", "Llama")   # --served-model-name in start_2P_2pD.sh
+# vllm-ppd start_2P_2D.sh does NOT set --served-model-name, so vLLM registers
+# the model under its full path. Override with MODEL env var if different.
+MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
 CONFIG     = os.environ.get("CONFIG", "vllm_ppd_2p2d")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
