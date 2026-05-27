@@ -1,51 +1,44 @@
 """
-BFCL v3 Multi-Turn Base Benchmark — vLLM-PPD 2P2D Disaggregated
-================================================================
+BFCL v3 Multi-Turn Base Benchmark — vLLM Standalone 4-GPU (TP 4)
+==========================================================
 Target:
-  scripts/vllm-ppd/start_2P_2pD.sh 로 시작한 서버
-    P1: GPU0, port 8100   (kv_producer)
-    P2: GPU1, port 8101   (kv_producer)
-    D1: GPU2, port 8200   (kv_consumer)
-    D2: GPU3, port 8201   (kv_consumer)
-    xpyd proxy: port 10001  ← 벤치마크가 여기로 요청
-    served-model-name: Llama
+  vllm serve /home/uhmturks/hf_models/Llama-3.1-8B-Instruct \\
+      --tensor-parallel-size 4 \\
+      --served-model-name meta-llama/Llama-3.1-8B-Instruct-FC \\
+      --enable-auto-tool-choice \\
+      --tool-call-parser llama3_json \\
+      --chat-template .../tool_chat_template_llama3.1_json.jinja \\
+      --max-model-len 131072
 
-Usage:
-  cd ~/experiments
-  bash scripts/vllm-ppd/start_2P_2pD.sh
-  python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+Metrics collected:
+  - TTFT (client-side, per turn)
+  - TPOT (client-side, per turn)
+  - Throughput (tok/s, per turn + overall)
+  - Context length per turn (shows agentic context growth)
 
-  # Pushgateway + Config override:
-  PUSHGATEWAY_URL=localhost:9091 CONFIG=vllm_ppd_2p2d \\
-    python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+Pushgateway (optional):
+  PUSHGATEWAY_URL=localhost:9091 python benchmark/vllm_4gpu_BFCL_v3_multi_turn_base.py
 """
 
 import json
 import os
-import sys
 import time
 import requests
 from tqdm import tqdm
-
-# KV cache poller (same directory)
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from kv_cache_poller import KVCachePoller
 
 # ─── Paths (절대경로: 어디서 실행해도 동작) ────────────────────────────────
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))   # benchmark/
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
 
 # ─── Config ────────────────────────────────────────────────────────────────
-ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:10001/v1/chat/completions")
-# vllm-ppd start_2P_2D.sh does NOT set --served-model-name, so vLLM registers
-# the model under its full path. Override with MODEL env var if different.
-MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
-CONFIG     = os.environ.get("CONFIG", "vllm_ppd_2p2d")
+ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:8000/v1/chat/completions")
+MODEL      = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct-FC")
+CONFIG     = os.environ.get("CONFIG", "vllm_4gpu")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
 
 # Optional: push per-turn metrics to Prometheus Pushgateway
-# PUSHGATEWAY_URL=localhost:9091 로 활성화
+# Set PUSHGATEWAY_URL=localhost:9091 to enable
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL", "")
 
 # ─── Optional Pushgateway setup ────────────────────────────────────────────
@@ -54,15 +47,15 @@ if PUSHGATEWAY_URL:
     try:
         from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
         HAS_PUSHGATEWAY = True
-        _pg_registry = CollectorRegistry()
-        _pg_ttft     = Gauge("bfcl_turn_ttft_seconds",  "Client-side TTFT per turn",
-                             ["config", "item_id", "turn"], registry=_pg_registry)
-        _pg_tpot     = Gauge("bfcl_turn_tpot_seconds",  "Client-side TPOT per turn",
-                             ["config", "item_id", "turn"], registry=_pg_registry)
-        _pg_ctx      = Gauge("bfcl_turn_context_chars", "Conversation context length (chars)",
-                             ["config", "item_id", "turn"], registry=_pg_registry)
-        _pg_progress = Gauge("bfcl_items_completed",    "BFCL items completed so far",
-                             ["config"],                  registry=_pg_registry)
+        _pg_registry     = CollectorRegistry()
+        _pg_ttft         = Gauge("bfcl_turn_ttft_seconds",    "Client-side TTFT per turn",
+                                 ["config", "item_id", "turn"], registry=_pg_registry)
+        _pg_tpot         = Gauge("bfcl_turn_tpot_seconds",    "Client-side TPOT per turn",
+                                 ["config", "item_id", "turn"], registry=_pg_registry)
+        _pg_ctx          = Gauge("bfcl_turn_context_chars",   "Conversation context length (chars)",
+                                 ["config", "item_id", "turn"], registry=_pg_registry)
+        _pg_progress     = Gauge("bfcl_items_completed",      "BFCL items completed so far",
+                                 ["config"],                   registry=_pg_registry)
         print(f"✓ Pushgateway enabled: {PUSHGATEWAY_URL}")
     except ImportError:
         print("⚠ prometheus_client not installed — Pushgateway disabled. pip install prometheus-client")
@@ -139,10 +132,6 @@ print("=" * 60)
 t_experiment_start = time.perf_counter()
 total_output_tokens = 0
 
-# ─── KV cache background poller ────────────────────────────────────────────
-kv_poller = KVCachePoller(interval=2.0)
-kv_poller.start()
-
 for item_idx, item in enumerate(tqdm(items, desc="items")):
     tools = []
     for cls in item.get("involved_classes", []):
@@ -164,7 +153,7 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
         user_msg = turn[0]
         conversation.append(user_msg)
 
-        # Context length tracking (chars of full conversation so far)
+        # Context length tracking (chars of the full conversation so far)
         ctx_chars = sum(len(str(m.get("content", "") or "")) for m in conversation)
 
         tqdm.write(f"  [turn {turn_idx}] ctx={ctx_chars} chars  user: {user_msg['content'][:80]}...")
@@ -232,11 +221,11 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                                 if tool_calls_map else []
 
             # ─── Compute metrics ─────────────────────────────────────
-            ttft        = (t_first_token - t_request)         if t_first_token else None
-            e2e         = (t_last_token  - t_request)         if t_last_token  else None
-            decode_time = (t_last_token  - t_first_token)     if (t_last_token and token_count > 1) else None
-            tpot        = (decode_time   / (token_count - 1)) if (decode_time and token_count > 1) else None
-            turn_tput   = ((token_count  - 1) / decode_time)  if (decode_time and token_count > 1) else None
+            ttft          = (t_first_token - t_request)           if t_first_token else None
+            e2e           = (t_last_token  - t_request)           if t_last_token  else None
+            decode_time   = (t_last_token  - t_first_token)       if (t_last_token and token_count > 1) else None
+            tpot          = (decode_time   / (token_count - 1))   if (decode_time and token_count > 1) else None
+            turn_tput     = ((token_count  - 1) / decode_time)    if (decode_time and token_count > 1) else None
 
             total_output_tokens += token_count
 
@@ -248,23 +237,23 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             )
 
             turn_metrics.append({
-                "turn":                 turn_idx,
-                "user":                 user_msg["content"][:120],
-                "assistant":            assistant_content[:200] if assistant_content else None,
-                "tool_calls":           tool_calls_result if tool_calls_result else None,
-                "ttft_s":               round(ttft,      4) if ttft      else None,
-                "tpot_s":               round(tpot,      4) if tpot      else None,
-                "output_tokens":        token_count,
-                "e2e_latency_s":        round(e2e,       4) if e2e       else None,
-                "throughput_tok_per_s": round(turn_tput, 2) if turn_tput else None,
-                "context_chars":        ctx_chars,
+                "turn":                     turn_idx,
+                "user":                     user_msg["content"][:120],
+                "assistant":                assistant_content[:200] if assistant_content else None,
+                "tool_calls":               tool_calls_result if tool_calls_result else None,
+                "ttft_s":                   round(ttft,       4) if ttft       else None,
+                "tpot_s":                   round(tpot,       4) if tpot       else None,
+                "output_tokens":            token_count,
+                "e2e_latency_s":            round(e2e,        4) if e2e        else None,
+                "throughput_tok_per_s":     round(turn_tput,  2) if turn_tput  else None,
+                "context_chars":            ctx_chars,
             })
 
             # Push per-turn metrics to Prometheus Pushgateway
             push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, item_idx + 1)
 
             # ─── Advance conversation ─────────────────────────────────
-            # Llama3 chat template: tool_call 1개만 허용
+            # Note: Llama3 chat template allows only 1 tool_call per turn
             conversation.append({
                 "role":       "assistant",
                 "content":    assistant_content or None,
@@ -279,27 +268,23 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
     # ─── Per-item summary ────────────────────────────────────────────────
     valid_turns = [t for t in turn_metrics if t.get("ttft_s")]
     results.append({
-        "id":          item["id"],
-        "num_turns":   len(item["question"]),
-        "turns":       turn_metrics,
-        "avg_ttft_s":  round(sum(t["ttft_s"] for t in valid_turns) / len(valid_turns), 4)
-                       if valid_turns else None,
-        "avg_tpot_s":  round(
-                         sum(t["tpot_s"] for t in valid_turns if t.get("tpot_s")) /
-                         max(1, sum(1 for t in valid_turns if t.get("tpot_s"))), 4)
-                       if valid_turns else None,
+        "id":             item["id"],
+        "num_turns":      len(item["question"]),
+        "turns":          turn_metrics,
+        "avg_ttft_s":     round(sum(t["ttft_s"] for t in valid_turns) / len(valid_turns), 4)
+                          if valid_turns else None,
+        "avg_tpot_s":     round(
+                            sum(t["tpot_s"] for t in valid_turns if t.get("tpot_s")) /
+                            max(1, sum(1 for t in valid_turns if t.get("tpot_s"))), 4)
+                          if valid_turns else None,
         "avg_throughput": round(
                             sum(t["throughput_tok_per_s"] for t in valid_turns if t.get("throughput_tok_per_s")) /
                             max(1, sum(1 for t in valid_turns if t.get("throughput_tok_per_s"))), 2)
                           if valid_turns else None,
         "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
-        # Context growth: TTFT by turn (shows agentic overhead pattern)
-        "ttft_by_turn": {str(t["turn"]): t["ttft_s"] for t in valid_turns},
+        # Context growth: TTFT by turn index (shows agentic overhead)
+        "ttft_by_turn":   {str(t["turn"]): t["ttft_s"] for t in valid_turns},
     })
-
-# ─── Stop KV cache poller ───────────────────────────────────────────────────
-kv_poller.stop()
-kv_stats = kv_poller.stats()
 
 # ─── Final summary ──────────────────────────────────────────────────────────
 t_experiment_end = time.perf_counter()
@@ -320,15 +305,15 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
-    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
 }
 
 output = {"summary": summary, "results": results}
 
+import os as _os
 import shutil
-os.makedirs("results", exist_ok=True)
-out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"
-shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
+_os.makedirs("results", exist_ok=True)
+out_path  = f"results/bfcl_multiturn_results_{CONFIG}.json"
+shm_path  = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
 with open(shm_path, "w") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
 shutil.copy(shm_path, out_path)

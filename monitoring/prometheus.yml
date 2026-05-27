@@ -1,0 +1,73 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # ─── vLLM Standalone (4-GPU, TP=4) ────────────────────────────────────────
+  # vllm serve ... --tensor-parallel-size 4 --port 8000
+  - job_name: 'vllm-4gpu'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'vllm-4gpu'
+
+  # ─── SGLang (2P2D, port 8000 router) ──────────────────────────────────────
+  # SGLang router typically runs on port 8000 as well
+  # Switch job_name when running SGLang instead of vLLM standalone
+  # - job_name: 'sglang-2p2d'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:8000']
+  #   metrics_path: /metrics
+  #   relabel_configs:
+  #     - target_label: config
+  #       replacement: 'sglang-2p2d'
+
+  # ─── vLLM PPD 2P2D ────────────────────────────────────────────────────────
+  # Each P/D instance exposes its own /metrics
+  - job_name: 'vllm-ppd-prefill-1'
+    static_configs:
+      - targets: ['host.docker.internal:8100']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'vllm-ppd-2p2d'
+      - target_label: role
+        replacement: 'prefill-1'
+
+  - job_name: 'vllm-ppd-prefill-2'
+    static_configs:
+      - targets: ['host.docker.internal:8101']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'vllm-ppd-2p2d'
+      - target_label: role
+        replacement: 'prefill-2'
+
+  - job_name: 'vllm-ppd-decode-1'
+    static_configs:
+      - targets: ['host.docker.internal:8200']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'vllm-ppd-2p2d'
+      - target_label: role
+        replacement: 'decode-1'
+
+  - job_name: 'vllm-ppd-decode-2'
+    static_configs:
+      - targets: ['host.docker.internal:8201']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'vllm-ppd-2p2d'
+      - target_label: role
+        replacement: 'decode-2'
+
+  # ─── Pushgateway (client-side BFCL per-turn metrics) ──────────────────────
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+      - targets: ['pushgateway:9091']

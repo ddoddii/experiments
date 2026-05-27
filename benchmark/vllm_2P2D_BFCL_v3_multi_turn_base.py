@@ -1,8 +1,8 @@
 """
-BFCL v3 Multi-Turn Base Benchmark — vLLM-PPD 2P2D Disaggregated
-================================================================
+BFCL v3 Multi-Turn Base Benchmark — vLLM 2P2D Disaggregated (P2pNccl)
+======================================================================
 Target:
-  scripts/vllm-ppd/start_2P_2pD.sh 로 시작한 서버
+  scripts/vllm/start_2P_2D.sh 로 시작한 서버
     P1: GPU0, port 8100   (kv_producer)
     P2: GPU1, port 8101   (kv_producer)
     D1: GPU2, port 8200   (kv_consumer)
@@ -12,24 +12,19 @@ Target:
 
 Usage:
   cd ~/experiments
-  bash scripts/vllm-ppd/start_2P_2pD.sh
-  python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+  bash scripts/vllm/start_2P_2D.sh
+  python benchmark/vllm_2P2D_BFCL_v3_multi_turn_base.py
 
   # Pushgateway + Config override:
-  PUSHGATEWAY_URL=localhost:9091 CONFIG=vllm_ppd_2p2d \\
-    python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+  PUSHGATEWAY_URL=localhost:9091 CONFIG=vllm_2p2d \\
+    python benchmark/vllm_2P2D_BFCL_v3_multi_turn_base.py
 """
 
 import json
 import os
-import sys
 import time
 import requests
 from tqdm import tqdm
-
-# KV cache poller (same directory)
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from kv_cache_poller import KVCachePoller
 
 # ─── Paths (절대경로: 어디서 실행해도 동작) ────────────────────────────────
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))   # benchmark/
@@ -37,10 +32,8 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
 
 # ─── Config ────────────────────────────────────────────────────────────────
 ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:10001/v1/chat/completions")
-# vllm-ppd start_2P_2D.sh does NOT set --served-model-name, so vLLM registers
-# the model under its full path. Override with MODEL env var if different.
-MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
-CONFIG     = os.environ.get("CONFIG", "vllm_ppd_2p2d")
+MODEL      = os.environ.get("MODEL", "Llama")   # --served-model-name in start_2P_2D.sh
+CONFIG     = os.environ.get("CONFIG", "vllm_2p2d")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
 
@@ -138,10 +131,6 @@ print("=" * 60)
 
 t_experiment_start = time.perf_counter()
 total_output_tokens = 0
-
-# ─── KV cache background poller ────────────────────────────────────────────
-kv_poller = KVCachePoller(interval=2.0)
-kv_poller.start()
 
 for item_idx, item in enumerate(tqdm(items, desc="items")):
     tools = []
@@ -297,10 +286,6 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
         "ttft_by_turn": {str(t["turn"]): t["ttft_s"] for t in valid_turns},
     })
 
-# ─── Stop KV cache poller ───────────────────────────────────────────────────
-kv_poller.stop()
-kv_stats = kv_poller.stats()
-
 # ─── Final summary ──────────────────────────────────────────────────────────
 t_experiment_end = time.perf_counter()
 total_wall_time  = t_experiment_end - t_experiment_start
@@ -320,13 +305,13 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
-    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
 }
 
 output = {"summary": summary, "results": results}
 
+import os as _os
 import shutil
-os.makedirs("results", exist_ok=True)
+_os.makedirs("results", exist_ok=True)
 out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"
 shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
 with open(shm_path, "w") as f:

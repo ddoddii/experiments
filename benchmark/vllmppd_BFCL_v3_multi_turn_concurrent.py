@@ -1,55 +1,58 @@
 """
-BFCL v3 Multi-Turn Base Benchmark — vLLM-PPD 2P2D Disaggregated
-================================================================
-Target:
-  scripts/vllm-ppd/start_2P_2pD.sh 로 시작한 서버
-    P1: GPU0, port 8100   (kv_producer)
-    P2: GPU1, port 8101   (kv_producer)
-    D1: GPU2, port 8200   (kv_consumer)
-    D2: GPU3, port 8201   (kv_consumer)
-    xpyd proxy: port 10001  ← 벤치마크가 여기로 요청
-    served-model-name: Llama
+BFCL v3 Multi-Turn Base Benchmark — vLLM-PPD 2P2D (Concurrent)
+===============================================================
+동시 요청 수(CONCURRENCY)를 조절해 KV cache 적재를 관찰하기 위한 병렬 버전.
+
+  - 서로 다른 item들은 CONCURRENCY만큼 동시에 처리
+  - 같은 item 내 turn들은 순서대로 처리 (앞 turn 결과가 다음 turn 입력)
+  - KV cache, TPOT 등에서 동시성 효과를 관찰할 수 있음
 
 Usage:
-  cd ~/experiments
-  bash scripts/vllm-ppd/start_2P_2pD.sh
-  python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+  # 동시 4개 item (기본)
+  CONCURRENCY=4 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
 
-  # Pushgateway + Config override:
-  PUSHGATEWAY_URL=localhost:9091 CONFIG=vllm_ppd_2p2d \\
-    python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+  # 동시 8개 + Pushgateway
+  CONCURRENCY=8 PUSHGATEWAY_URL=localhost:9091 \\
+    CONFIG=vllm_ppd_c8 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
+
+  # 다른 설정 재사용
+  VLLM_URL=http://127.0.0.1:8000/v1/chat/completions \\
+    MODEL=meta-llama/Llama-3.1-8B-Instruct-FC \\
+    CONFIG=vllm_4gpu_c4 CONCURRENCY=4 \\
+    python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
 """
 
 import json
 import os
 import sys
 import time
+import threading
+import shutil
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
-# KV cache poller (same directory)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from kv_cache_poller import KVCachePoller
 
-# ─── Paths (절대경로: 어디서 실행해도 동작) ────────────────────────────────
-SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))   # benchmark/
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
+# ─── Paths ─────────────────────────────────────────────────────────────────
+SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
 # ─── Config ────────────────────────────────────────────────────────────────
-ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:10001/v1/chat/completions")
-# vllm-ppd start_2P_2D.sh does NOT set --served-model-name, so vLLM registers
-# the model under its full path. Override with MODEL env var if different.
-MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
-CONFIG     = os.environ.get("CONFIG", "vllm_ppd_2p2d")
-MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
-TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
+ROUTER_URL  = os.environ.get("VLLM_URL",  "http://127.0.0.1:10001/v1/chat/completions")
+MODEL       = os.environ.get("MODEL",     "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
+CONCURRENCY = int(os.environ.get("CONCURRENCY", "4"))
+CONFIG      = os.environ.get("CONFIG",    f"vllm_ppd_2p2d_c{CONCURRENCY}")
+MAX_TOKENS  = int(os.environ.get("MAX_TOKENS",  "512"))
+TIMEOUT     = int(os.environ.get("TIMEOUT",     "600"))
 
-# Optional: push per-turn metrics to Prometheus Pushgateway
-# PUSHGATEWAY_URL=localhost:9091 로 활성화
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL", "")
 
-# ─── Optional Pushgateway setup ────────────────────────────────────────────
+# ─── Optional Pushgateway ───────────────────────────────────────────────────
 HAS_PUSHGATEWAY = False
+_pg_lock        = threading.Lock()   # serialize pushgateway calls across threads
+
 if PUSHGATEWAY_URL:
     try:
         from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
@@ -65,24 +68,25 @@ if PUSHGATEWAY_URL:
                              ["config"],                  registry=_pg_registry)
         print(f"✓ Pushgateway enabled: {PUSHGATEWAY_URL}")
     except ImportError:
-        print("⚠ prometheus_client not installed — Pushgateway disabled. pip install prometheus-client")
+        print("⚠ prometheus_client not installed — Pushgateway disabled.")
 
 def push_to_pg(item_id: str, turn_idx: int, ttft, tpot, ctx_chars: int, n_done: int):
     if not HAS_PUSHGATEWAY:
         return
     try:
-        if ttft is not None:
-            _pg_ttft.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(ttft)
-        if tpot is not None:
-            _pg_tpot.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(tpot)
-        _pg_ctx.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(ctx_chars)
-        _pg_progress.labels(config=CONFIG).set(n_done)
-        push_to_gateway(PUSHGATEWAY_URL, job=f"bfcl_{CONFIG}", registry=_pg_registry)
+        with _pg_lock:  # serialize: multiple threads must not push simultaneously
+            if ttft is not None:
+                _pg_ttft.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(ttft)
+            if tpot is not None:
+                _pg_tpot.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(tpot)
+            _pg_ctx.labels(config=CONFIG, item_id=item_id, turn=str(turn_idx)).set(ctx_chars)
+            _pg_progress.labels(config=CONFIG).set(n_done)
+            push_to_gateway(PUSHGATEWAY_URL, job=f"bfcl_{CONFIG}", registry=_pg_registry)
     except Exception as e:
         tqdm.write(f"  [PG] push failed: {e}")
 
-# ─── func_doc loading ──────────────────────────────────────────────────────
-def _p(rel):  # project-root relative → absolute
+# ─── Data loading ───────────────────────────────────────────────────────────
+def _p(rel):
     return os.path.join(PROJECT_ROOT, rel)
 
 CLASS_TO_FILE = {
@@ -97,14 +101,9 @@ CLASS_TO_FILE = {
 }
 
 TYPE_MAP = {
-    "float":   "number",
-    "integer": "integer",
-    "dict":    "object",
-    "list":    "array",
-    "tuple":   "array",
-    "str":     "string",
-    "bool":    "boolean",
-    "none":    "null",
+    "float": "number", "integer": "integer", "dict": "object",
+    "list": "array",   "tuple": "array",     "str": "string",
+    "bool": "boolean", "none": "null",
 }
 
 def dict_to_object(obj):
@@ -121,29 +120,36 @@ def load_func_doc(path):
         content = f.read().strip()
     docs = json.loads(content) if content.startswith("[") else \
            [json.loads(l) for l in content.splitlines() if l.strip()]
-    return [dict_to_object({k: v for k, v in doc.items() if k != "response"})
-            for doc in docs]
+    return [dict_to_object({k: v for k, v in doc.items() if k != "response"}) for doc in docs]
 
-# ─── Load data ─────────────────────────────────────────────────────────────
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
-items = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
-results = []
+items     = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
 
-print(f"Config  : {CONFIG}")
-print(f"URL     : {ROUTER_URL}")
-print(f"Model   : {MODEL}")
-print(f"Items   : {len(items)}")
-print(f"PushGW  : {PUSHGATEWAY_URL or 'disabled'}")
+print(f"Config      : {CONFIG}")
+print(f"URL         : {ROUTER_URL}")
+print(f"Model       : {MODEL}")
+print(f"Items       : {len(items)}")
+print(f"Concurrency : {CONCURRENCY}")
+print(f"PushGW      : {PUSHGATEWAY_URL or 'disabled'}")
 print("=" * 60)
 
+# ─── Thread-safe shared state ───────────────────────────────────────────────
+_results_lock       = threading.Lock()
+_counter_lock       = threading.Lock()
+_results            = []
+_total_output_tokens = 0
+_items_done          = 0
+
 t_experiment_start = time.perf_counter()
-total_output_tokens = 0
 
 # ─── KV cache background poller ────────────────────────────────────────────
 kv_poller = KVCachePoller(interval=2.0)
 kv_poller.start()
 
-for item_idx, item in enumerate(tqdm(items, desc="items")):
+# ─── Per-item worker (runs in thread pool) ──────────────────────────────────
+def process_item(item_idx: int, item: dict) -> dict:
+    global _total_output_tokens, _items_done
+
     tools = []
     for cls in item.get("involved_classes", []):
         for func in func_docs.get(cls, []):
@@ -155,19 +161,17 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
         f"Environment state:\n{json.dumps(item['initial_config'], indent=2)}"
     )
     conversation = [{"role": "system", "content": system_content}]
-    turn_metrics  = []
+    turn_metrics = []
+    item_tokens  = 0
 
-    tqdm.write(f"\n{'='*60}")
-    tqdm.write(f"[{item['id']}] turns={len(item['question'])}  classes={item.get('involved_classes')}")
+    tqdm.write(f"\n[{item['id']}] turns={len(item['question'])}  classes={item.get('involved_classes')}")
 
     for turn_idx, turn in enumerate(item["question"]):
-        user_msg = turn[0]
+        user_msg  = turn[0]
         conversation.append(user_msg)
-
-        # Context length tracking (chars of full conversation so far)
         ctx_chars = sum(len(str(m.get("content", "") or "")) for m in conversation)
 
-        tqdm.write(f"  [turn {turn_idx}] ctx={ctx_chars} chars  user: {user_msg['content'][:80]}...")
+        tqdm.write(f"  [{item['id']} t{turn_idx}] ctx={ctx_chars}  user: {user_msg['content'][:60]}...")
 
         payload = {
             "model":       MODEL,
@@ -179,25 +183,22 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
         }
 
         try:
-            t_request    = time.perf_counter()
+            t_request     = time.perf_counter()
             resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
             resp.raise_for_status()
 
-            t_first_token = None
-            t_last_token  = None
-            token_count   = 0
+            t_first_token     = None
+            t_last_token      = None
+            token_count       = 0
             assistant_content = ""
             tool_calls_map    = {}
 
             for line in resp.iter_lines():
-                if not line:
-                    continue
+                if not line: continue
                 line = line.decode("utf-8")
-                if not line.startswith("data: "):
-                    continue
+                if not line.startswith("data: "): continue
                 data = line[len("data: "):]
-                if data == "[DONE]":
-                    break
+                if data == "[DONE]": break
 
                 chunk = json.loads(data)
                 delta = chunk["choices"][0]["delta"]
@@ -231,20 +232,19 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] \
                                 if tool_calls_map else []
 
-            # ─── Compute metrics ─────────────────────────────────────
             ttft        = (t_first_token - t_request)         if t_first_token else None
             e2e         = (t_last_token  - t_request)         if t_last_token  else None
             decode_time = (t_last_token  - t_first_token)     if (t_last_token and token_count > 1) else None
             tpot        = (decode_time   / (token_count - 1)) if (decode_time and token_count > 1) else None
             turn_tput   = ((token_count  - 1) / decode_time)  if (decode_time and token_count > 1) else None
 
-            total_output_tokens += token_count
+            item_tokens += token_count
 
             tqdm.write(
-                f"    → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
+                f"    [{item['id']} t{turn_idx}] → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
                 f"tokens={token_count}  tput={turn_tput:.1f} tok/s"
                 if (ttft and tpot and turn_tput)
-                else f"    → ttft={ttft}  tokens={token_count}"
+                else f"    [{item['id']} t{turn_idx}] → ttft={ttft}  tokens={token_count}"
             )
 
             turn_metrics.append({
@@ -260,11 +260,10 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                 "context_chars":        ctx_chars,
             })
 
-            # Push per-turn metrics to Prometheus Pushgateway
-            push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, item_idx + 1)
+            with _counter_lock:
+                current_done = _items_done
+            push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, current_done)
 
-            # ─── Advance conversation ─────────────────────────────────
-            # Llama3 chat template: tool_call 1개만 허용
             conversation.append({
                 "role":       "assistant",
                 "content":    assistant_content or None,
@@ -272,13 +271,13 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             })
 
         except Exception as e:
-            tqdm.write(f"    → ERROR: {e}")
+            tqdm.write(f"    [{item['id']} t{turn_idx}] ERROR: {e}")
             turn_metrics.append({"turn": turn_idx, "error": str(e)})
             break
 
-    # ─── Per-item summary ────────────────────────────────────────────────
+    # ─── Build result ────────────────────────────────────────────────────────
     valid_turns = [t for t in turn_metrics if t.get("ttft_s")]
-    results.append({
+    result = {
         "id":          item["id"],
         "num_turns":   len(item["question"]),
         "turns":       turn_metrics,
@@ -293,9 +292,35 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                             max(1, sum(1 for t in valid_turns if t.get("throughput_tok_per_s"))), 2)
                           if valid_turns else None,
         "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
-        # Context growth: TTFT by turn (shows agentic overhead pattern)
         "ttft_by_turn": {str(t["turn"]): t["ttft_s"] for t in valid_turns},
-    })
+    }
+
+    with _counter_lock:
+        _total_output_tokens += item_tokens
+        _items_done += 1
+
+    with _results_lock:
+        _results.append(result)
+
+    return result
+
+
+# ─── Run concurrent ─────────────────────────────────────────────────────────
+pbar = tqdm(total=len(items), desc="items", position=0)
+
+with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
+    futures = {
+        executor.submit(process_item, idx, item): idx
+        for idx, item in enumerate(items)
+    }
+    for future in as_completed(futures):
+        try:
+            future.result()
+        except Exception as e:
+            tqdm.write(f"[FATAL] item {futures[future]} failed: {e}")
+        pbar.update(1)
+
+pbar.close()
 
 # ─── Stop KV cache poller ───────────────────────────────────────────────────
 kv_poller.stop()
@@ -305,17 +330,18 @@ kv_stats = kv_poller.stats()
 t_experiment_end = time.perf_counter()
 total_wall_time  = t_experiment_end - t_experiment_start
 
-valid   = [r for r in results if r.get("avg_ttft_s")]
+valid   = [r for r in _results if r.get("avg_ttft_s")]
 summary = {
     "config":                       CONFIG,
     "model":                        MODEL,
-    "total_items":                  len(results),
+    "concurrency":                  CONCURRENCY,
+    "total_items":                  len(_results),
     "success_items":                len(valid),
-    "error_items":                  len(results) - len(valid),
-    "total_output_tokens":          total_output_tokens,
+    "error_items":                  len(_results) - len(valid),
+    "total_output_tokens":          _total_output_tokens,
     "total_wall_time_s":            round(total_wall_time, 2),
-    "overall_throughput_tok_per_s": round(total_output_tokens / total_wall_time, 2),
-    "avg_ttft_s":    round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4) if valid else None,
+    "overall_throughput_tok_per_s": round(_total_output_tokens / total_wall_time, 2),
+    "avg_ttft_s":    round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4)             if valid else None,
     "avg_tpot_s":    round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
@@ -323,9 +349,8 @@ summary = {
     "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
 }
 
-output = {"summary": summary, "results": results}
+output = {"summary": summary, "results": _results}
 
-import shutil
 os.makedirs("results", exist_ok=True)
 out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"
 shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
@@ -335,7 +360,8 @@ shutil.copy(shm_path, out_path)
 
 print(f"\n{'='*60}")
 print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개")
-print(f"총 출력 토큰  : {total_output_tokens}")
+print(f"동시성       : {CONCURRENCY}")
+print(f"총 출력 토큰  : {_total_output_tokens}")
 print(f"전체 소요시간 : {total_wall_time:.2f}s")
 print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
