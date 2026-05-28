@@ -286,16 +286,75 @@ vllm-ppd는 C=1(40 tok) vs C=8(47 tok)으로 큰 차이 없음. SGLang C=1(142 t
 
 ### 진행 중 (구현 완료)
 
-**Task D: vllm-ppd KV buffer sweep**
+**Task D: vllm-ppd KV buffer sweep — 완료**
 
-P 노드 `kv_buffer_size` 1→2→4 GB 확장으로 C=8/12/16 성공 여부 확인.
+P 노드 `kv_buffer_size` 1→2→4 GB 확장 × C=8/12/16 총 9개 실험. 전체 성공 (OOM 없음).
 
-```bash
-cd ~/experiments
-bash scripts/vllm-ppd/run_buffer_sweep.sh
+#### 버퍼 sweep 결과 표 (3×3 그리드)
+
+| buf \ C | C=8 | C=12 | C=16 |
+|---------|-----|------|------|
+| **1 GB** | 101/200 (50.5%) · 15.2 tok/s | 95/200 (47.5%) · 20.6 tok/s | 95/200 (47.5%) · 26.6 tok/s |
+| **2 GB** | 116/200 (58%) · 19.1 tok/s | 102/200 (51%) · 22.9 tok/s | 102/200 (51%) · 29.1 tok/s |
+| **4 GB** | **152/200 (76%) · 36.5 tok/s** | 110/200 (55%) · 26.5 tok/s | 110/200 (55%) · **34.0 tok/s** |
+
+TTFT avg (버퍼 × C):
+
+| buf \ C | C=8 | C=12 | C=16 |
+|---------|-----|------|------|
+| **1 GB** | 0.707 s | 0.765 s | 1.074 s |
+| **2 GB** | 0.804 s | 0.891 s | 1.255 s |
+| **4 GB** | 0.875 s | 0.952 s | 1.109 s |
+
+TPOT avg: **모든 셀에서 0.018–0.019 s** (균일).
+
+#### 인사이트
+
+**1. 버퍼 크기 → 성공률 비례 (C=8 기준)**
+
+```
+buf=1GB: 50.5% ──► buf=2GB: 58% ──► buf=4GB: 76%
 ```
 
-예상: 버퍼 4GB에서 C=12 OOM 해소, C=16까지 안정적 처리 가능 여부 확인.
+P 노드 send buffer가 실제로 동시성 병목임을 확인. 버퍼를 1→4GB로 4× 키웠을 때 성공률 +25.5%p.
+
+**2. C=12와 C=16 성공률 동일 — 버퍼가 아닌 다른 병목 존재**
+
+각 버퍼군에서 C=12→C=16 사이에 성공 아이템 수가 변하지 않는다:
+```
+buf1g: C=12 (95), C=16 (95)  — 동일
+buf2g: C=12 (102), C=16 (102) — 동일
+buf4g: C=12 (110), C=16 (110) — 동일
+```
+C=12에서 이미 한계에 도달하며, C=16으로 늘려도 추가 실패가 발생하지 않는다. 이는 C≥12에서 동시 요청 수보다 **요청 복잡도(context 길이, KV 크기)**가 병목임을 시사. 버퍼를 아무리 키워도 특정 아이템들은 구조적으로 실패.
+
+**3. TTFT가 버퍼 커질수록 증가 (survivor bias)**
+
+직관과 반대: 버퍼가 커질수록 같은 C에서 TTFT가 높아진다 (buf1g C=8: 0.707s → buf4g C=8: 0.875s). 원인: 큰 버퍼는 긴 context(복잡한 아이템)도 성공시키며, 그 아이템들은 inherently TTFT가 높다. 즉 성공 아이템 풀이 harder set으로 확장.
+
+**4. Per-turn TTFT: 모든 셀에서 prefix cache 정상 동작**
+
+| config | turn 0 | turn 1 | 개선폭 |
+|--------|--------|--------|--------|
+| buf1g C=8 | 1.243 s | 0.477 s | −62% |
+| buf2g C=8 | 1.313 s | 0.584 s | −56% |
+| buf4g C=8 | 1.361 s | 0.668 s | −51% |
+| buf1g C=16 | 1.704 s | 1.023 s | −40% |
+| buf4g C=16 | 1.728 s | 1.052 s | −39% |
+
+버퍼 크기에 무관하게 turn 1부터 prefix cache hit로 TTFT 개선.
+
+**5. ⚠️ TPOT 불일치 — 이전 vllm-ppd 결과와 비교 필요**
+
+이번 sweep의 TPOT ≈ **0.018–0.019 s** 는 이전 vllm-ppd C=8 측정치(0.072 s) 대비 **4× 낮음**. 동시에 성공률도 이전(200/200)보다 낮아짐(101/200). 원인 추정:
+
+| 가능성 | 설명 |
+|--------|------|
+| 토큰 카운팅 방식 차이 | 이전 결과가 chunk 수 기반, sweep은 `usage.completion_tokens` 기반이면 실제 토큰과 다를 수 있음 |
+| 서버 설정 변경 | sweep의 start_2P_2D.sh가 mem_pool_size_gb를 동적으로 변경 — 내부 동작 영향 가능 |
+| 서버 버전/환경 변화 | vllm-ppd conda env 업데이트 가능성 |
+
+이 불일치로 인해 **sweep의 TPOT와 이전 vllm-ppd 결과를 직접 비교하기 어려움**. 동일 환경에서 재현 검증 필요.
 
 ---
 
@@ -471,10 +530,12 @@ bash scripts/vllm-ppd/run_buffer_sweep.sh
 | `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d_c4.json` | SGLang 2P2D | 4 | 153/200 | per-turn TTFT 있음 |
 | `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d_c8.json` | SGLang 2P2D | 8 | 83/200 | SSD 경합 의심 |
 | `results/bfcl_multiturn_results_sglang_2p2d_c12.json` | SGLang 2P2D | 12 | 67/200 | turn1 TTFT 이상 (7.7s) |
-| `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_2p2d_c8.json` | vllm-ppd 2P2D | 8 | 200/200 | 최고 throughput (63.7 tok/s) |
+| `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_2p2d_c8.json` | vllm-ppd 2P2D | 8 | 200/200 | TPOT 0.072s (구버전 측정) |
 | `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_2p2d_c12.json` | vllm-ppd 2P2D | 12 | 132/200 | buffer OOM |
 | `results/vllm-ppd/bfcl_multiturn_results_2P_2D_vllmppd.json` | vllm-ppd 2P2D | 1 | 200/200 | 순차 |
 | `results/vllm-ppd/bfcl_multiturn_results_2P_2pD_vllmppd.json` | vllm-ppd 2P2pD | 1 | 200/200 | PPD decode, TTFT 개선 |
+| `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_buf{1,2,4}g_c{8,12,16}.json` | vllm-ppd 2P2D sweep | 8/12/16 | 50–76% | buffer×C 그리드, TPOT 0.018–0.019s |
+| `results/vllm-ppd/buffer_sweep_summary.txt` | sweep 요약 | — | — | 9개 셀 pass/fail 테이블 |
 
 ---
 
