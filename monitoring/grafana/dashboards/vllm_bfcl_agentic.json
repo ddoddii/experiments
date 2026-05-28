@@ -611,22 +611,22 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_token_usage{instance=\"p1\"}",
+          "expr": "sglang_token_usage{node=\"p1\"}",
           "legendFormat": "P1 prefill (GPU0)", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_token_usage{instance=\"p2\"}",
+          "expr": "sglang_token_usage{node=\"p2\"}",
           "legendFormat": "P2 prefill (GPU1)", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_token_usage{instance=\"d1\"}",
+          "expr": "sglang_token_usage{node=\"d1\"}",
           "legendFormat": "D1 decode (GPU2)", "refId": "C"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_token_usage{instance=\"d2\"}",
+          "expr": "sglang_token_usage{node=\"d2\"}",
           "legendFormat": "D2 decode (GPU3)", "refId": "D"
         }
       ],
@@ -651,22 +651,22 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l2_dram_mb{instance=\"p1\"}",
+          "expr": "sglang_hicache_l2_dram_mb{node=\"p1\"}",
           "legendFormat": "P1 DRAM", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l2_dram_mb{instance=\"p2\"}",
+          "expr": "sglang_hicache_l2_dram_mb{node=\"p2\"}",
           "legendFormat": "P2 DRAM", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l2_dram_mb{instance=\"d1\"}",
+          "expr": "sglang_hicache_l2_dram_mb{node=\"d1\"}",
           "legendFormat": "D1 DRAM", "refId": "C"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l2_dram_mb{instance=\"d2\"}",
+          "expr": "sglang_hicache_l2_dram_mb{node=\"d2\"}",
           "legendFormat": "D2 DRAM", "refId": "D"
         }
       ],
@@ -691,22 +691,22 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l3_ssd_mb{instance=\"p1\"}",
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"p1\"}",
           "legendFormat": "P1 SSD", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l3_ssd_mb{instance=\"p2\"}",
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"p2\"}",
           "legendFormat": "P2 SSD", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l3_ssd_mb{instance=\"d1\"}",
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"d1\"}",
           "legendFormat": "D1 SSD", "refId": "C"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_hicache_l3_ssd_mb{instance=\"d2\"}",
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"d2\"}",
           "legendFormat": "D2 SSD", "refId": "D"
         }
       ],
@@ -731,22 +731,22 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_num_running_reqs{instance=\"p1\"}",
+          "expr": "sglang_num_running_reqs{node=\"p1\"}",
           "legendFormat": "P1 running", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_num_running_reqs{instance=\"p2\"}",
+          "expr": "sglang_num_running_reqs{node=\"p2\"}",
           "legendFormat": "P2 running", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_num_running_reqs{instance=\"d1\"}",
+          "expr": "sglang_num_running_reqs{node=\"d1\"}",
           "legendFormat": "D1 running", "refId": "C"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_num_running_reqs{instance=\"d2\"}",
+          "expr": "sglang_num_running_reqs{node=\"d2\"}",
           "legendFormat": "D2 running", "refId": "D"
         }
       ],
@@ -771,22 +771,22 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_cache_hit_rate{instance=\"p1\"}",
+          "expr": "sglang_cache_hit_rate{node=\"p1\"}",
           "legendFormat": "P1 hit rate", "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_cache_hit_rate{instance=\"p2\"}",
+          "expr": "sglang_cache_hit_rate{node=\"p2\"}",
           "legendFormat": "P2 hit rate", "refId": "B"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_cache_hit_rate{instance=\"d1\"}",
+          "expr": "sglang_cache_hit_rate{node=\"d1\"}",
           "legendFormat": "D1 hit rate", "refId": "C"
         },
         {
           "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sglang_cache_hit_rate{instance=\"d2\"}",
+          "expr": "sglang_cache_hit_rate{node=\"d2\"}",
           "legendFormat": "D2 hit rate", "refId": "D"
         }
       ],
