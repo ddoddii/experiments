@@ -578,6 +578,219 @@
         }
       ],
       "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 70},
+      "id": 106, "title": "🧊 SGLang hicache — 3-Tier KV Cache (P vs D)", "type": "row" },
+
+    {
+      "id": 60, "type": "timeseries",
+      "title": "L1 GPU KV Cache Usage — SGLang 2P2D (token_usage)",
+      "description": "각 SGLang 인스턴스의 GPU KV 캐시 사용률. P(prefill) vs D(decode) 패턴 관찰.",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 71},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "custom": {"lineWidth": 2, "fillOpacity": 8, "spanNulls": true}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byRegexp", "options": ".*p1.*|.*p2.*|.*prefill.*"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": ".*d1.*|.*d2.*|.*decode.*"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_token_usage{instance=\"p1\"}",
+          "legendFormat": "P1 prefill (GPU0)", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_token_usage{instance=\"p2\"}",
+          "legendFormat": "P2 prefill (GPU1)", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_token_usage{instance=\"d1\"}",
+          "legendFormat": "D1 decode (GPU2)", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_token_usage{instance=\"d2\"}",
+          "legendFormat": "D2 decode (GPU3)", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 61, "type": "timeseries",
+      "title": "L2 CPU DRAM hicache — SGLang (VmRSS 기반 추정)",
+      "description": "각 SGLang 인스턴스 프로세스의 VmRSS. hicache L2 (CPU DRAM) 사용 증가 시 상승함. 단, 모델 파라미터·코드 RSS도 포함되므로 absolute 값보다 추세(trend) 관찰.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 81},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes", "min": 0,
+          "custom": {"lineWidth": 2, "fillOpacity": 8, "spanNulls": true}
+        }
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l2_dram_mb{instance=\"p1\"}",
+          "legendFormat": "P1 DRAM", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l2_dram_mb{instance=\"p2\"}",
+          "legendFormat": "P2 DRAM", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l2_dram_mb{instance=\"d1\"}",
+          "legendFormat": "D1 DRAM", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l2_dram_mb{instance=\"d2\"}",
+          "legendFormat": "D2 DRAM", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 62, "type": "timeseries",
+      "title": "L3 SSD hicache File Backend — SGLang",
+      "description": "hicache --hicache-storage-backend file 디렉토리 크기(du). KV 블록이 SSD로 evict될수록 증가. 0이면 디렉토리 미발견 — HICACHE_DIRS 환경변수로 경로 지정 필요.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 81},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes", "min": 0,
+          "custom": {"lineWidth": 2, "fillOpacity": 8, "spanNulls": true}
+        }
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l3_ssd_mb{instance=\"p1\"}",
+          "legendFormat": "P1 SSD", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l3_ssd_mb{instance=\"p2\"}",
+          "legendFormat": "P2 SSD", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l3_ssd_mb{instance=\"d1\"}",
+          "legendFormat": "D1 SSD", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_hicache_l3_ssd_mb{instance=\"d2\"}",
+          "legendFormat": "D2 SSD", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 63, "type": "timeseries",
+      "title": "SGLang Active Requests per Instance",
+      "description": "인스턴스별 현재 처리중인 요청 수. P노드에서 prefill 중, D노드에서 decode 중인 동시요청 비교.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 89},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "min": 0,
+          "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true}
+        }
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_num_running_reqs{instance=\"p1\"}",
+          "legendFormat": "P1 running", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_num_running_reqs{instance=\"p2\"}",
+          "legendFormat": "P2 running", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_num_running_reqs{instance=\"d1\"}",
+          "legendFormat": "D1 running", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_num_running_reqs{instance=\"d2\"}",
+          "legendFormat": "D2 running", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+    },
+
+    {
+      "id": 64, "type": "timeseries",
+      "title": "SGLang Prefix Cache Hit Rate",
+      "description": "radix/hicache prefix cache hit rate. L2/L3 eviction이 일어나면 서서히 낮아질 수 있음. 데이터 없음 = SGLang 버전이 hit_rate를 /get_server_info에 미노출.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 89},
+      "options": {
+        "tooltip": {"mode": "multi"},
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "custom": {"lineWidth": 2, "fillOpacity": 8, "spanNulls": true}
+        }
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_cache_hit_rate{instance=\"p1\"}",
+          "legendFormat": "P1 hit rate", "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_cache_hit_rate{instance=\"p2\"}",
+          "legendFormat": "P2 hit rate", "refId": "B"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_cache_hit_rate{instance=\"d1\"}",
+          "legendFormat": "D1 hit rate", "refId": "C"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "expr": "sglang_cache_hit_rate{instance=\"d2\"}",
+          "legendFormat": "D2 hit rate", "refId": "D"
+        }
+      ],
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
     }
 
   ],
@@ -639,5 +852,5 @@
   "timezone": "browser",
   "title": "vLLM BFCL Agentic Workload",
   "uid": "vllm-bfcl-agentic-v1",
-  "version": 3
+  "version": 4
 }
