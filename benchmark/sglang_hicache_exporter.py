@@ -187,7 +187,8 @@ def collect_metrics() -> str:
     ]
 
     for label, port in INSTANCES.items():
-        lbl = f'instance="{label}",port="{port}"'
+        # 'instance' is reserved by Prometheus (scrape target addr) → use 'node' instead
+        lbl = f'node="{label}",port="{port}"'
 
         info = _get_server_info(port)
         if info is None:
