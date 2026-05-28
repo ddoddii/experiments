@@ -175,7 +175,9 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             "tools":       tools,
             "tool_choice": "auto",
             "max_tokens":  MAX_TOKENS,
+            "temperature": 0,
             "stream":      True,
+            "stream_options": {"include_usage": True},
         }
 
         try:
@@ -188,6 +190,7 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             token_count   = 0
             assistant_content = ""
             tool_calls_map    = {}
+            server_completion_tokens = None
 
             for line in resp.iter_lines():
                 if not line:
@@ -200,6 +203,10 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                     break
 
                 chunk = json.loads(data)
+                if chunk.get("usage"):
+                    server_completion_tokens = chunk["usage"].get("completion_tokens")
+                if not chunk.get("choices"):
+                    continue
                 delta = chunk["choices"][0]["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
@@ -231,20 +238,22 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] \
                                 if tool_calls_map else []
 
-            # ─── Compute metrics ─────────────────────────────────────
-            ttft        = (t_first_token - t_request)         if t_first_token else None
-            e2e         = (t_last_token  - t_request)         if t_last_token  else None
-            decode_time = (t_last_token  - t_first_token)     if (t_last_token and token_count > 1) else None
-            tpot        = (decode_time   / (token_count - 1)) if (decode_time and token_count > 1) else None
-            turn_tput   = ((token_count  - 1) / decode_time)  if (decode_time and token_count > 1) else None
+            actual_tokens = server_completion_tokens if server_completion_tokens is not None else token_count
 
-            total_output_tokens += token_count
+            # ─── Compute metrics ─────────────────────────────────────
+            ttft        = (t_first_token - t_request)           if t_first_token else None
+            e2e         = (t_last_token  - t_request)           if t_last_token  else None
+            decode_time = (t_last_token  - t_first_token)       if (t_last_token and token_count > 1) else None
+            tpot        = (decode_time   / (actual_tokens - 1)) if (decode_time and actual_tokens > 1) else None
+            turn_tput   = ((actual_tokens - 1) / decode_time)   if (decode_time and actual_tokens > 1) else None
+
+            total_output_tokens += actual_tokens
 
             tqdm.write(
                 f"    → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
-                f"tokens={token_count}  tput={turn_tput:.1f} tok/s"
+                f"tokens={actual_tokens}  tput={turn_tput:.1f} tok/s"
                 if (ttft and tpot and turn_tput)
-                else f"    → ttft={ttft}  tokens={token_count}"
+                else f"    → ttft={ttft}  tokens={actual_tokens}"
             )
 
             turn_metrics.append({
@@ -254,7 +263,7 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
                 "ttft_s":               round(ttft,      4) if ttft      else None,
                 "tpot_s":               round(tpot,      4) if tpot      else None,
-                "output_tokens":        token_count,
+                "output_tokens":        actual_tokens,
                 "e2e_latency_s":        round(e2e,       4) if e2e       else None,
                 "throughput_tok_per_s": round(turn_tput, 2) if turn_tput else None,
                 "context_chars":        ctx_chars,

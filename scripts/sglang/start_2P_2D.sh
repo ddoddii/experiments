@@ -67,6 +67,7 @@ echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
 CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
+  --tool-call-parser llama3 \
   > logs/d1.log 2>&1 &
 echo "  PID: $!"
 sleep 3
@@ -75,6 +76,7 @@ echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
 CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
+  --tool-call-parser llama3 \
   > logs/d2.log 2>&1 &
 echo "  PID: $!"
 sleep 3

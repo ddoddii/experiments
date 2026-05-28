@@ -31,6 +31,7 @@ Environment variables:
 
 import json
 import os
+import re
 import sys
 import time
 import threading
@@ -77,6 +78,26 @@ def push_to_pg(item_id: str, turn_idx: int, ttft, tpot, ctx_chars: int, n_done: 
             _push_metric("bfcl_turn_tpot_seconds",  tpot,      {**lbl})
         _push_metric("bfcl_turn_context_chars",     ctx_chars, {**lbl})
         _push_metric("bfcl_items_completed",        n_done,    {"config": CONFIG})
+
+_PYTHON_TAG_RE = re.compile(r'<\|python_tag\|>(.*)', re.DOTALL)
+
+def _parse_python_tag(content: str) -> dict | None:
+    """Parse Llama3 <|python_tag|> tool call from raw text content (fallback when server has no tool parser)."""
+    m = _PYTHON_TAG_RE.search(content)
+    if not m:
+        return None
+    try:
+        raw = m.group(1).strip()
+        data = json.loads(raw)
+        name = data.get("name", "")
+        params = data.get("parameters", data.get("arguments", {}))
+        return {
+            "id": f"call_{name}",
+            "type": "function",
+            "function": {"name": name, "arguments": json.dumps(params)},
+        }
+    except Exception:
+        return None
 
 # ─── Data loading ────────────────────────────────────────────────────────────
 CLASS_TO_FILE = {
@@ -169,7 +190,9 @@ def process_item(item_idx: int, item: dict) -> dict:
             "tools":       tools,
             "tool_choice": "auto",
             "max_tokens":  MAX_TOKENS,
+            "temperature": 0,
             "stream":      True,
+            "stream_options": {"include_usage": True},
         }
 
         try:
@@ -182,6 +205,7 @@ def process_item(item_idx: int, item: dict) -> dict:
             token_count       = 0
             assistant_content = ""
             tool_calls_map    = {}
+            server_completion_tokens = None
 
             for line in resp.iter_lines():
                 if not line: continue
@@ -191,6 +215,10 @@ def process_item(item_idx: int, item: dict) -> dict:
                 if data == "[DONE]": break
 
                 chunk = json.loads(data)
+                if chunk.get("usage"):
+                    server_completion_tokens = chunk["usage"].get("completion_tokens")
+                if not chunk.get("choices"):
+                    continue
                 delta = chunk["choices"][0]["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
@@ -222,19 +250,28 @@ def process_item(item_idx: int, item: dict) -> dict:
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] \
                                 if tool_calls_map else []
 
-            ttft        = (t_first_token - t_request)         if t_first_token else None
-            e2e         = (t_last_token  - t_request)         if t_last_token  else None
-            decode_time = (t_last_token  - t_first_token)     if (t_last_token and token_count > 1) else None
-            tpot        = (decode_time   / (token_count - 1)) if (decode_time and token_count > 1) else None
-            turn_tput   = ((token_count  - 1) / decode_time)  if (decode_time and token_count > 1) else None
+            # Fallback: parse <|python_tag|> from text content if no structured tool_calls
+            if not tool_calls_result and "<|python_tag|>" in assistant_content:
+                tc = _parse_python_tag(assistant_content)
+                if tc:
+                    tool_calls_result = [tc]
+                    assistant_content = ""
 
-            item_tokens += token_count
+            actual_tokens = server_completion_tokens if server_completion_tokens is not None else token_count
+
+            ttft        = (t_first_token - t_request)           if t_first_token else None
+            e2e         = (t_last_token  - t_request)           if t_last_token  else None
+            decode_time = (t_last_token  - t_first_token)       if (t_last_token and token_count > 1) else None
+            tpot        = (decode_time   / (actual_tokens - 1)) if (decode_time and actual_tokens > 1) else None
+            turn_tput   = ((actual_tokens - 1) / decode_time)   if (decode_time and actual_tokens > 1) else None
+
+            item_tokens += actual_tokens
 
             tqdm.write(
                 f"    [{item['id']} t{turn_idx}] → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
-                f"tokens={token_count}  tput={turn_tput:.1f} tok/s"
+                f"tokens={actual_tokens}  tput={turn_tput:.1f} tok/s"
                 if (ttft and tpot and turn_tput)
-                else f"    [{item['id']} t{turn_idx}] → ttft={ttft}  tokens={token_count}"
+                else f"    [{item['id']} t{turn_idx}] → ttft={ttft}  tokens={actual_tokens}"
             )
 
             turn_metrics.append({
@@ -244,7 +281,7 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
                 "ttft_s":               round(ttft,      4) if ttft      else None,
                 "tpot_s":               round(tpot,      4) if tpot      else None,
-                "output_tokens":        token_count,
+                "output_tokens":        actual_tokens,
                 "e2e_latency_s":        round(e2e,       4) if e2e       else None,
                 "throughput_tok_per_s": round(turn_tput, 2) if turn_tput else None,
                 "context_chars":        ctx_chars,
