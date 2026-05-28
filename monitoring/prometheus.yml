@@ -13,16 +13,63 @@ scrape_configs:
       - target_label: config
         replacement: 'vllm-4gpu'
 
-  # ─── SGLang (2P2D, port 8000 router) ──────────────────────────────────────
-  # SGLang router typically runs on port 8000 as well
-  # Switch job_name when running SGLang instead of vLLM standalone
-  # - job_name: 'sglang-2p2d'
-  #   static_configs:
-  #     - targets: ['host.docker.internal:8000']
-  #   metrics_path: /metrics
-  #   relabel_configs:
-  #     - target_label: config
-  #       replacement: 'sglang-2p2d'
+  # ─── SGLang 2P2D — per-instance native /metrics ──────────────────────────
+  # SGLang exposes Prometheus metrics at /metrics (requires prometheus_client).
+  # If the endpoint returns empty (prometheus_client not installed or no requests
+  # yet), use the custom exporter below (sglang-hicache-exporter) instead.
+  - job_name: 'sglang-prefill-1'
+    static_configs:
+      - targets: ['host.docker.internal:30000']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'sglang-2p2d'
+      - target_label: role
+        replacement: 'prefill-1'
+
+  - job_name: 'sglang-prefill-2'
+    static_configs:
+      - targets: ['host.docker.internal:30001']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'sglang-2p2d'
+      - target_label: role
+        replacement: 'prefill-2'
+
+  - job_name: 'sglang-decode-1'
+    static_configs:
+      - targets: ['host.docker.internal:30002']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'sglang-2p2d'
+      - target_label: role
+        replacement: 'decode-1'
+
+  - job_name: 'sglang-decode-2'
+    static_configs:
+      - targets: ['host.docker.internal:30003']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'sglang-2p2d'
+      - target_label: role
+        replacement: 'decode-2'
+
+  # ─── SGLang hicache custom exporter ───────────────────────────────────────
+  # benchmark/sglang_hicache_exporter.py 를 먼저 실행해야 함:
+  #   cd ~/experiments && python benchmark/sglang_hicache_exporter.py &
+  #
+  # /get_server_info 기반으로 token_usage, DRAM, SSD tier 지표를 노출.
+  # native /metrics 가 비어있을 때의 대안.
+  - job_name: 'sglang-hicache-exporter'
+    static_configs:
+      - targets: ['host.docker.internal:9199']
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: config
+        replacement: 'sglang-2p2d'
 
   # ─── vLLM PPD 2P2D ────────────────────────────────────────────────────────
   # Each P/D instance exposes its own /metrics
