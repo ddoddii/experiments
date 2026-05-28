@@ -1,12 +1,18 @@
 #!/bin/bash
-# SGLang 2P2D — P-only hicache (기본 설정)
-# ==========================================
-# P 노드: --enable-hierarchical-cache (prefix KV → SSD, cross-turn 재사용)
-# D 노드: hicache 없음 (GPU-only KV, standard decode)
+# SGLang 2P2D — P-only hicache
+# ==============================
+# P 노드: --enable-hierarchical-cache (prefix KV → CPU DRAM → SSD, cross-turn 재사용)
+# D 노드: hicache 없음 (decode 모드가 chunk cache 강제 → hicache 불가)
 #
-# 비교 실험:
-#   - D-only hicache: scripts/sglang/start_2P_2D_Dhicache.sh
-#   - P+D full hicache: scripts/sglang/start_2P_2D_PDhicache.sh
+# hicache-ratio: DRAM 캐시 크기 = GPU KV 캐시 × ratio
+#   Llama-3.1-8B A6000 기준 GPU KV ≈ 25.5GB
+#   ratio=0.5 → P 2대 × 12.8GB ≈ 26GB DRAM  (절약)
+#   ratio=1.0 → P 2대 × 25.5GB ≈ 51GB DRAM  (권장)
+#   ratio=1.2 → P 2대 × 30.6GB ≈ 61GB DRAM  (기본값, 125GB 서버 안전)
+#
+# 사용법:
+#   bash start_2P_2D.sh                     # ratio=1.2 (기본값)
+#   HICACHE_RATIO=0.5 bash start_2P_2D.sh  # ratio=0.5
 #
 # 벤치마크:
 #   CONFIG=sglang_2p2d python benchmark/sglang_BFCL_v3_multi_turn_base.py
@@ -17,13 +23,15 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
 
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
+HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 mkdir -p logs/sglang
 
-# SGLang이 실제로 사용하는 hicache SSD 디렉토리 (/tmp/hicache)
 HICACHE_DIR="/tmp/hicache"
 
+echo "hicache-ratio = $HICACHE_RATIO  (est. DRAM: $(python3 -c "print(f'{2*float(\"$HICACHE_RATIO\")*25.52:.0f} GB')") across P1+P2)"
+echo ""
 echo "[0/6] Stopping any existing SGLang/Mooncake/exporter processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
 pkill -9 -f "mooncake.http_metadata_server" 2>/dev/null || true
@@ -53,7 +61,7 @@ export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
 CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 \
-  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio 1.2 \
+  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
   > logs/sglang/p1.log 2>&1 &
@@ -63,7 +71,7 @@ sleep 3
 echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
 CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 \
-  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio 1.2 \
+  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8999 \
   > logs/sglang/p2.log 2>&1 &
