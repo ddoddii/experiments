@@ -131,6 +131,10 @@ _items_done          = 0
 
 t_experiment_start = time.perf_counter()
 
+# ─── KV cache background poller (single vLLM TP=4 instance at port 8000) ────
+kv_poller = KVCachePoller(interval=2.0)
+kv_poller.start()
+
 # ─── Per-item worker ─────────────────────────────────────────────────────────
 def process_item(item_idx: int, item: dict) -> dict:
     global _total_output_tokens, _items_done
@@ -315,6 +319,10 @@ with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
 
 pbar.close()
 
+# ─── Stop KV cache poller ────────────────────────────────────────────────────
+kv_poller.stop()
+kv_stats = kv_poller.stats()
+
 # ─── Final summary ───────────────────────────────────────────────────────────
 t_experiment_end = time.perf_counter()
 total_wall_time  = t_experiment_end - t_experiment_start
@@ -335,6 +343,7 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
+    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
 }
 
 output = {"summary": summary, "results": _results}
