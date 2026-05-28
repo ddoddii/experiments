@@ -19,7 +19,7 @@ conda activate sglang
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-mkdir -p logs
+mkdir -p logs/sglang
 
 # SGLang이 실제로 사용하는 hicache SSD 디렉토리 (/tmp/hicache)
 HICACHE_DIR="/tmp/hicache"
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio 1.2 \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
-  > logs/p1.log 2>&1 &
+  > logs/sglang/p1.log 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -66,7 +66,7 @@ CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio 1.2 \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8999 \
-  > logs/p2.log 2>&1 &
+  > logs/sglang/p2.log 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -79,7 +79,7 @@ CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser llama3 \
-  > logs/d1.log 2>&1 &
+  > logs/sglang/d1.log 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -88,7 +88,7 @@ CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser llama3 \
-  > logs/d2.log 2>&1 &
+  > logs/sglang/d2.log 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -96,7 +96,7 @@ echo ""
 echo "Waiting for all servers to be ready..."
 for port in 30000 30001 30002 30003; do
   echo -n "  Waiting for port $port..."
-  while ! grep -q "ready to roll" logs/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log 2>/dev/null; do
+  while ! grep -q "ready to roll" logs/sglang/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log 2>/dev/null; do
     sleep 3
     echo -n "."
   done
@@ -112,7 +112,7 @@ python -m sglang_router.launch_router \
   --decode http://127.0.0.1:30002 \
   --decode http://127.0.0.1:30003 \
   --host 0.0.0.0 --port 8000 \
-  > logs/router.log 2>&1 &
+  > logs/sglang/router.log 2>&1 &
 echo "  PID: $!"
 
 # ─── Diagnostics: /metrics 엔드포인트 확인 ─────────────────────────────────
@@ -136,8 +136,9 @@ sleep 1
 HICACHE_DIRS="p1:${HICACHE_DIR},p2:${HICACHE_DIR}" \
 SGLANG_INSTANCES="p1:30000,p2:30001,d1:30002,d2:30003" \
 EXPORTER_PORT=9199 \
+LOG_DIR="$PROJECT_DIR/logs/sglang" \
 python3 "$PROJECT_DIR/benchmark/sglang_hicache_exporter.py" \
-  > logs/hicache_exporter.log 2>&1 &
+  > logs/sglang/hicache_exporter.log 2>&1 &
 EXPORTER_PID=$!
 echo "  Exporter PID: $EXPORTER_PID"
 sleep 2
@@ -149,7 +150,7 @@ else
 fi
 
 echo ""
-echo "All done. Logs at logs/*.log"
+echo "All done. Logs at logs/sglang/*.log"
 echo "Router at http://127.0.0.1:8000"
 echo ""
 echo "To check hicache metrics:"
