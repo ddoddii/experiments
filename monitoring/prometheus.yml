@@ -64,6 +64,7 @@ scrape_configs:
   # /get_server_info 기반으로 token_usage, DRAM, SSD tier 지표를 노출.
   # native /metrics 가 비어있을 때의 대안.
   - job_name: 'sglang-hicache-exporter'
+    honor_labels: true          # exporter의 instance="p1" 라벨 유지 (덮어쓰지 않음)
     static_configs:
       - targets: ['host.docker.internal:9199']
     metrics_path: /metrics
