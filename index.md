@@ -13,7 +13,7 @@
 | **GPU** | NVIDIA RTX A6000 × 4 (49 GB VRAM each) |
 | **RAM** | 125 GB |
 | **모델** | `Llama-3.1-8B-Instruct` (`/home/uhmturks/hf_models/`) |
-| **conda 환경** | `vllm-source` (vLLM 2P2D) / `vllm-ppd` (vllm-ppd) / `sglang` (SGLang) |
+| **conda 환경** | `vllm-source` (vLLM TP=4) / `vllm-ppd` (vllm-ppd) / `sglang` (SGLang) |
 
 ---
 
@@ -50,7 +50,7 @@ Context 증가 패턴 (vLLM TP=4 측정):
 |--------|------|----------|
 | **TTFT** | Time To First Token = `t_first_token − t_request` | 클라이언트 |
 | **TPOT** | Time Per Output Token = `(t_last − t_first) / (n_tokens − 1)` | 클라이언트 |
-| **Per-req throughput** | `(n_tokens − 1) / decode_time` (tok/s) | 클라이언트 |
+| **Per-req throughput** | `(n_tokens − 1) / decode_time` (tok/s) | 클라이언트 (C=1만 의미 있음) |
 | **Overall throughput** | `total_output_tokens / total_wall_time` (tok/s) | 실험 전체 |
 | **KV cache usage %** | GPU KV 블록 풀 대비 현재 점유율 | Prometheus |
 | **Context chars** | 매 turn 전송되는 전체 conversation 길이 | 클라이언트 |
@@ -69,7 +69,7 @@ Context 증가 패턴 (vLLM TP=4 측정):
 | **시작** | `vllm serve ... --tensor-parallel-size 4 --enable-auto-tool-choice --tool-call-parser llama3_json` |
 | **벤치마크** | `benchmark/vllm_4gpu_BFCL_v3_multi_turn_base.py` |
 
-**특징**: P/D 분리 없이 4-GPU를 하나의 큰 GPU처럼 사용. Prefill과 decode가 동일 GPU 풀을 공유하고 인접 메모리에 KV cache를 유지해 TTFT와 TPOT 모두 최소. vLLM의 RadixAttention(prefix caching)이 활성화되어 turn 1부터 system prompt + tool 정의 부분의 KV를 GPU DRAM에서 재사용함.
+**특징**: P/D 분리 없이 4-GPU를 하나의 큰 GPU처럼 사용. Prefill과 decode가 동일 GPU 풀을 공유해 KV cache가 항상 로컬에 있음 → 가장 낮은 TTFT. vLLM RadixAttention(prefix caching)이 활성화되어 turn 1부터 system prompt + tool 정의 KV를 GPU DRAM에서 재사용.
 
 ---
 
@@ -82,10 +82,10 @@ Context 증가 패턴 (vLLM TP=4 측정):
 | **Router** | port 8000 (SGLang router) |
 | **KV 전송** | Mooncake metadata server (port 8080) |
 | **hicache** | `--enable-hierarchical-cache --hicache-ratio 1.2 --hicache-storage-backend file` |
-| **시작** | `scripts/sglang/start_2P_2D.sh` |
-| **벤치마크** | `benchmark/sglang_BFCL_v3_multi_turn_base.py` |
+| **시작** | `bash scripts/sglang/start_2P_2D.sh` (또는 `HICACHE_RATIO=0.5 bash ...`) |
+| **벤치마크** | `benchmark/sglang_BFCL_v3_multi_turn_base.py` / `sglang_BFCL_v3_multi_turn_concurrent.py` |
 
-#### SGLang hicache 작동 방식 (핵심)
+**SGLang hicache 작동 방식 (핵심)**
 
 SGLang hicache는 KV cache를 3계층으로 관리한다:
 
@@ -95,8 +95,8 @@ SGLang hicache는 KV cache를 3계층으로 관리한다:
 │                                                     │
 │  ┌─────────────┐    evict    ┌─────────────────┐   │
 │  │ L1: GPU VRAM│ ──────────▶ │ L2: CPU DRAM    │   │
-│  │  ~25.5 GB   │ (write-thru)│  (Python 프로세스│   │
-│  │  (동적 캐시) │             │   RSS 기반)     │   │
+│  │  ~25.5 GB   │ (write-thru)│  ~30.6 GB pool  │   │
+│  │  (동적 캐시) │             │  (ratio=1.2)    │   │
 │  └─────────────┘             └────────┬────────┘   │
 │                                       │ evict       │
 │                              ┌────────▼────────┐   │
@@ -110,42 +110,22 @@ SGLang hicache는 KV cache를 3계층으로 관리한다:
 
 **`hicache_write_policy = 'write_through'` (중요)**
 
-현재 실험 설정에서 P 노드는 `write_through` 정책을 사용한다. 이 동작을 이해하는 것이 핵심이다:
-
 1. Prefill 완료 시 KV block이 GPU(L1)에 생성됨
 2. **즉시** SSD(L3)에도 동시에 기록됨 (write-through)
 3. GPU의 KV block은 해당 요청 처리 후 free됨
-4. 따라서 **steady-state에서 GPU KV cache usage ≈ 0%** — 이것이 정상 동작
-
-이 때문에 Grafana에서 L1 KV cache가 항상 0%로 보이는 것은 버그가 아니라 의도된 설계임.  
-실제로 GPU에 할당된 KV 메모리는 25.52 GB (token capacity = 209,026 tokens)이지만, 이 공간은 단기 작업 버퍼로만 사용된다.
+4. → **steady-state에서 GPU KV cache usage ≈ 0%** — 정상 동작
 
 **Content-addressable SSD caching**
 
 SSD에 저장되는 파일명은 token sequence prefix의 해시 값이다:
 - `system prompt + tool 정의` → 고정 prefix → 동일 해시 → SSD 캐시 히트
 - P1과 P2가 `/tmp/hicache/`를 **공유**하므로 cross-node 캐시 재사용 가능
-- 다음 실험 시작 전 `/tmp/hicache/` 삭제 필요 (캐시 오염 방지)
 
-**L3 SSD가 vllm-ppd 대비 무엇을 제공하는가?**
+**D 노드 hicache 제약 (SGLang 0.5.9)**
 
-| 특성 | vllm-ppd (GPU-only KV) | SGLang hicache (SSD KV) |
-|------|------------------------|-------------------------|
-| KV 저장소 | GPU DRAM에 LRU 유지 | SSD에 영구 저장 |
-| 용량 | ~25 GB (GPU 한계) | 수백 GB (디스크 한계) |
-| 재시작 후 재사용 | ❌ GPU 메모리 소멸 | ✅ 디스크 파일 유지 (선택적) |
-| 크로스 세션 재사용 | ❌ | ✅ 동일 prefix 해시면 재사용 |
-| TTFT 이득 (캐시 히트 시) | GPU DRAM 읽기 (~μs) | SSD 읽기 (~ms, 의미 있는 절감) |
-| Decode 속도 | P→D KV 전송 포함 | P→D KV 전송 후 decode |
-
-**실제 관측 (SGLang 2P2D 실험 중)**:
-- L3 SSD 사용량: 벤치마크 1,250초 동안 ~42 GB까지 성장
-- L2 CPU DRAM: ~1 GB 안정 유지 (LRU 상위 계층)
-- L1 GPU: ≈0% (write_through로 즉시 evict)
-- TPOT: 0.023 s/tok — vllm-ppd (0.064 s/tok) 대비 **2.8× 빠름**
-
-**현재 실험의 SSD 캐시 한계**:
-`disable_chunked_prefix_cache: True` 설정으로 인해 전체 prefix를 atomic하게 캐시한다. Chunked prefix cache를 활성화하면 부분 매칭도 가능해져 캐시 히트율이 올라갈 수 있다.
+`--disaggregation-mode decode` 사용 시 내부적으로 chunk cache를 강제 설정하며,
+이것이 `--enable-hierarchical-cache`와 상호 배타적. → **D 노드에 hicache 불가**.
+현재 구현에서는 P 노드만 hicache를 적용할 수 있음.
 
 ---
 
@@ -156,30 +136,13 @@ SSD에 저장되는 파일명은 token sequence prefix의 해시 값이다:
 | **구성** | Prefill 2 + Decode 2, KV 전송: P2pNcclConnector (NCCL P2P) |
 | **GPU** | P1=GPU0(8100), P2=GPU1(8101), D1=GPU2(8200), D2=GPU3(8201) |
 | **Proxy** | `ppd/comprehensive_proxy.py` — HTTP port 10001, ZMQ port 30001 |
-| **KV buffer** | P: 1 GB send / D: 10 GB receive (per node) |
-| **시작** | `scripts/vllm-ppd/start_2P_2D.sh` |
+| **KV buffer** | P: 1 GB send / D: 10 GB receive (per node, 기본값) |
+| **시작** | `bash scripts/vllm-ppd/start_2P_2D.sh` (또는 `KV_BUFFER_GB=2 bash ...`) |
 | **벤치마크** | `benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py` |
-
-**동시성 한계 분석**:
-- Per-request KV transfer ≈ 0.64 GB (Llama 3.1 8B, avg context length)
-- P node send buffer = 1 GB → **C=2** 이상이면 이미 버퍼 압박
-- D node recv buffer = 10 GB → **C=15** 이하에서 안전
-- 실험 결과: **C=8** 성공 (200/200), **C=12** 실패 (132/200, P node buffer OOM)
 
 **2P2D vs 2P2pD**:
 - 2P2D: Decode 노드가 순수 decode만 담당
-- 2P2pD: Decode 노드가 PPD(Partial Prefill-Decode) 모드 — short prefill을 decode 노드가 처리해 P 노드 부하 분산. TTFT 약 14% 개선 (0.590s → 0.429s)
-
----
-
-### Config 4: vLLM 2P2D (xpyd, non-ppd)
-
-| 항목 | 내용 |
-|------|------|
-| **구성** | upstream vLLM의 실험적 P/D disaggregation |
-| **GPU** | P1=GPU0(8100), P2=GPU1(8101), D1=GPU2(8200), D2=GPU3(8201) |
-| **Proxy** | `disagg_proxy_p2p_nccl_xpyd.py` — port 10001 |
-| **시작** | `scripts/vllm/start_2P_2D.sh` |
+- 2P2pD: Decode 노드가 PPD(Partial Prefill-Decode) 모드 — short prefill을 decode 노드가 처리해 P 노드 부하 분산. TTFT 약 27% 개선 (0.590s → 0.429s)
 
 ---
 
@@ -187,49 +150,90 @@ SSD에 저장되는 파일명은 token sequence prefix의 해시 값이다:
 
 ### 메인 비교 테이블
 
-| Config | TTFT avg | TPOT avg | Per-req Tput | Overall Tput | 성공 | Wall time |
-|--------|---------|---------|-------------|-------------|------|----------|
-| **vLLM TP=4** | **0.130 s** | **0.022 s** | **50.5 tok/s** | 34.1 tok/s | 200/200 | 280 s |
-| SGLang 2P2D (C=1) | 0.825 s | **0.023 s** | **43.9 tok/s** | 23.0 tok/s | 200/200 | 1,250 s |
-| SGLang 1P1D (C=1) | 0.395 s | 0.023 s | 44.0 tok/s | 29.3 tok/s | 38/200 ⚠️ | 151 s |
-| vllm-ppd 2P2D (C=1) | 0.517 s | 0.064 s | 17.1 tok/s | 10.6 tok/s | 200/200 | 887 s |
-| vllm-ppd 2P2pD (C=1) | 0.429 s | 0.063 s | 17.2 tok/s | 12.0 tok/s | 200/200 | 764 s |
-| **vllm-ppd 2P2D (C=8)** | 0.872 s | 0.072 s | 15.2 tok/s | **63.7 tok/s** | 200/200 | 148 s |
-| vllm-ppd 2P2D (C=12) | 1.305 s | 0.076 s | 14.3 tok/s | 22.1 tok/s | 132/200 ❌ | 197 s |
+| Config | C | TTFT avg | TPOT avg | Per-req Tput† | Overall Tput | 성공 | Wall time |
+|--------|---|---------|---------|--------------|-------------|------|----------|
+| **vLLM TP=4** | 1 | **0.130 s** | **0.022 s** | **50.5 tok/s** | 34.1 tok/s | 200/200 | 280 s |
+| SGLang 1P1D | 1 | 0.395 s | 0.023 s | 44.0 tok/s | 29.3 tok/s | 38/200 ⚠️ | 151 s |
+| SGLang 2P2D (hicache) | 1 | 0.814 s | 0.023 s | 43.9 tok/s | 22.6 tok/s | 200/200 | 1,252 s |
+| SGLang 2P2D | 4 | 1.500 s | 0.020 s | — | 47.8 tok/s | 153/200 ❌ | 306 s |
+| SGLang 2P2D | 8 | 2.511 s | 0.020 s | — | 42.5 tok/s | 83/200 ❌ | 198 s |
+| SGLang 2P2D | 12 | 3.445 s | 0.019 s | — | 37.1 tok/s | 67/200 ❌ | 181 s |
+| vllm-ppd 2P2D | 1 | 0.590 s | 0.065 s | 16.7 tok/s | 11.0 tok/s | 200/200 | 732 s |
+| vllm-ppd 2P2pD | 1 | 0.429 s | 0.063 s | 17.2 tok/s | 12.0 tok/s | 200/200 | 764 s |
+| **vllm-ppd 2P2D** | **8** | 0.872 s | 0.072 s | — | **63.7 tok/s** | **200/200** | 148 s |
+| vllm-ppd 2P2D | 12 | 1.305 s | 0.076 s | — | 22.1 tok/s | 132/200 ❌ | 197 s |
 
-> ⚠️ SGLang 1P1D: func_doc 타입 변환 미적용(float→number 변환 누락)으로 162개 에러 발생, 수치는 참고용.  
-> ❌ vllm-ppd C=12: P node KV send buffer OOM으로 68개 에러.
+> ⚠️ SGLang 1P1D: func_doc 타입 변환 미적용으로 162개 에러, 수치는 참고용.  
+> ❌ SGLang C≥4: Mooncake KV 전송 타임아웃/실패로 에러 증가 (C=4: 23.5%, C=8: 58.5%, C=12: 66.5%).  
+> ❌ vllm-ppd C=12: P 노드 1GB KV send buffer 포화로 68개 에러.  
+> † Per-req Tput은 C=1 순차 실행에서만 의미 있음 (동시 실행 시 — 표시).
 
-**핵심 인사이트**:
-- **최저 TTFT**: vLLM TP=4 (0.130 s) — PD 분리 없이 GPU KV가 항상 인접
-- **최고 단일 요청 decode 속도**: vLLM TP=4와 SGLang 동급 (~44–50 tok/s)
-- **최고 시스템 throughput**: vllm-ppd C=8 (63.7 tok/s) — PD disaggregation의 병렬처리 이득
-- **SGLang vs vllm-ppd decode 비교**: SGLang TPOT 0.023s vs vllm-ppd 0.064s — **2.8× 빠름**
+---
+
+### 핵심 인사이트
+
+**1. Decode 속도: SGLang이 vllm-ppd 대비 3–4× 빠름**
+
+| | SGLang (C=1) | vllm-ppd C=1 | vllm-ppd C=8 |
+|--|-------------|-------------|-------------|
+| **TPOT** | **0.023 s/tok** | 0.065 s/tok | 0.072 s/tok |
+| **Per-req Tput** | **43.9 tok/s** | 16.7 tok/s | — |
+
+SGLang은 FlashInfer decode 커널과 continuous batching 최적화 덕분에 decode 속도가 일관되게 빠름. 반면 vllm-ppd는 D 노드가 KV 수신 후 attention 연산 시 추가 오버헤드 발생.
+
+**2. 동시성 확장: vllm-ppd가 SGLang보다 안정적**
+
+SGLang은 C=4부터 에러가 급증 (Mooncake KV 전송 실패/타임아웃):
+```
+SGLang C=1: 200/200 (100%)  vllm-ppd C=1: 200/200 (100%)
+SGLang C=4: 153/200 (77%)   vllm-ppd C=8: 200/200 (100%)  ← 안정
+SGLang C=8:  83/200 (42%)   vllm-ppd C=12: 132/200 (66%)
+SGLang C=12: 67/200 (34%)
+```
+
+SGLang의 에러율이 높아질수록 **성공한 아이템이 easier 항목으로 편향**됨.  
+따라서 SGLang C≥4의 TTFT/TPOT 개선은 일부 survivor bias 포함.
+
+**3. Overall throughput 피크**
+
+| Config | Overall throughput |
+|--------|-------------------|
+| vllm-ppd C=8 | **63.7 tok/s** ← 전체 최고 |
+| SGLang C=4 | 47.8 tok/s |
+| SGLang C=8 | 42.5 tok/s |
+| vLLM TP=4 C=1 | 34.1 tok/s |
+
+vllm-ppd C=8이 최고 throughput을 보임. SGLang은 에러율 증가로 실효 throughput이 C=4에서 이미 정체.
+
+**4. SGLang TPOT의 concurrency 개선 (batching 효과)**
+
+SGLang C=1→C=12로 갈수록 TPOT이 0.023s → 0.019s로 **17% 개선**됨. Decode 노드가 여러 요청을 배치 처리하면서 GPU 활용률이 올라가는 것. 에러 없이 동시성을 높일 수 있다면 SGLang decode throughput은 더 좋아질 여지가 있음.
+
+**5. vllm-ppd C=8→C=12 절벽**
+
+C=8: 200/200, 63.7 tok/s → C=12: 132/200, 22.1 tok/s. 에러율 34%로 급증하며 overall throughput도 **65% 폭락**. P 노드 1 GB KV send buffer가 C=12에서 포화 → buffer expansion 실험(Task D) 필요.
 
 ---
 
 ### Per-Turn TTFT 패턴 (Prefix Cache 효과)
 
-Agentic 워크로드에서 turn이 반복될수록 system prompt + tool 정의가 KV cache에 쌓인다. 이를 재사용하면 TTFT가 떨어져야 한다.
+Turn 0은 첫 prefill (캐시 없음), turn 1+는 system prompt + tool 정의 KV가 캐시에 남아 있을 때.
 
-| Turn | vLLM TP=4 | vllm-ppd C=1 | vllm-ppd C=8 |
-|------|-----------|-------------|-------------|
-| 0 (첫 요청) | 0.221 s | 0.967 s | 1.327 s |
-| 1 | **0.093 s** (−58%) | **0.321 s** (−67%) | **0.687 s** (−48%) |
-| 2 | 0.090 s | 0.310 s | 0.658 s |
-| 3 | 0.092 s | 0.313 s | 0.565 s |
-| 4 | 0.093 s | 0.319 s | 0.601 s |
-| 5 | 0.099 s | 0.321 s | 0.478 s |
+| Turn | vLLM TP=4 | vllm-ppd C=1 | vllm-ppd C=8 | vllm-ppd C=12 | SGLang C=4 | SGLang C=8 | SGLang C=12 |
+|------|-----------|-------------|-------------|--------------|-----------|-----------|------------|
+| 0 | 0.145 s | 0.967 s | **1.712 s** | **2.003 s** | 2.840 s | 1.366 s | 1.413 s |
+| 1 | **0.078 s** (−46%) | **0.321 s** (−67%) | **0.669 s** (−61%) | **1.400 s** (−30%) | **1.023 s** (−64%) | **0.802 s** (−41%) | **7.652 s** (+441%) ⚠️ |
+| 2 | 0.076 s | 0.310 s | 0.658 s | — | — | — | — |
+| 3 | 0.076 s | 0.313 s | 0.565 s | — | — | — | — |
+
+> ⚠️ SGLang C=12 turn 1 TTFT 7.652s: turn 0(1.413s)보다 **5× 높음**. 정상적인 prefix cache 히트라면 낮아져야 하는데 오히려 급등. 추정 원인: C=12 부하에서 `/tmp/hicache/` SSD I/O 경합으로 캐시 읽기 지연 발생. 동시 12개 요청이 같은 SSD 디렉토리를 동시 읽기/쓰기.
 
 **관찰**:
-- 모든 config에서 **turn 0 → turn 1에 TTFT 급감** — prefix cache hit 확인
-- vLLM TP=4: 0.221s → 0.093s (2.4× 개선). Turn 1부터 system prompt + tool 정의 KV 재사용
-- vllm-ppd C=1: 0.967s → 0.321s (3.0× 개선). P 노드 KV cache에 prefix 유지
-- vllm-ppd C=8: 1.327s → 0.687s (1.9× 개선). 동시 요청 경쟁으로 캐시 히트율 낮아짐
-- SGLang 2P2D: 전체 요약만 있고 per-turn TTFT 데이터 부재 (0.825s avg는 turn 0~N 혼합)
-
-**vllm-ppd turn 0 TTFT가 높은 이유**:  
-P 노드가 prefill 후 KV를 D 노드로 전송(P2pNccl)하는 시간이 포함. Llama 3.1 8B 기준 KV transfer ≈ 0.6 GB/request, NVLink 없이 PCIe bus를 통해 전송.
+- 모든 config에서 **turn 0 → turn 1에 TTFT 감소** (SGLang C=12 제외) — prefix cache hit 확인
+- vLLM TP=4: 가장 깨끗한 패턴 (0.145s → 0.078s, turn 2+도 안정)
+- vllm-ppd C=12: prefix cache 히트하지만 동시 경쟁으로 개선폭 축소 (−30%)
+- SGLang C=8: turn 0 TTFT가 C=4(2.84s)보다 낮은 1.37s — 더 쉬운 아이템이 먼저 처리된 결과 (survivor bias)
+- SGLang hicache의 SSD 기반 캐싱은 단일 요청에서는 효과적이나, **고동시성에서 SSD I/O 병목** 발생 가능
 
 ---
 
@@ -242,104 +246,158 @@ P 노드가 prefill 후 KV를 D 노드로 전송(P2pNccl)하는 시간이 포함
 | D1 (GPU2) | decode | **17.2%** | 5.9% |
 | D2 (GPU3) | decode | **15.5%** | 5.4% |
 
-- **P 노드**: KV를 즉시 D 노드로 전송하므로 거의 비어 있음
+- **P 노드**: KV를 즉시 D 노드로 전송하므로 거의 비어 있음 (turn-around buffer 역할)
 - **D 노드**: 여러 요청의 KV가 누적되어 P 대비 ~7–8× 높은 점유율
-- 이것이 PD disaggregation의 핵심 효과: D 노드가 KV를 장기 보유하며 decode에 집중
-
-vllm-ppd C=12에서는 D1이 최대 26.3%까지 상승 — OOM 직전 고수위 기록.
+- vllm-ppd C=12에서 D1 최대 26.3%까지 상승 — OOM 직전 고수위
 
 ---
 
-## SGLang hicache vs vllm-ppd 상세 비교
+### 출력 토큰 수 비교 (주의 사항)
 
-### Decode 속도 차이 (가장 큰 차이점)
+| Config | Total Output Tokens | 성공 아이템 수 | 아이템당 평균 |
+|--------|---------------------|-------------|------------|
+| vLLM TP=4 | 9,557 | 200 | **47.8 tok** |
+| vllm-ppd C=1 | 8,075 | 200 | 40.4 tok |
+| vllm-ppd C=8 | 9,424 | 200 | **47.1 tok** |
+| vllm-ppd C=12 | 4,352 | 132 | 33.0 tok |
+| **SGLang 2P2D C=1** | **28,323** | 200 | **141.6 tok** |
+| SGLang C=4 | 14,633 | 153 | 95.6 tok |
+| SGLang C=8 | 8,417 | 83 | 101.4 tok |
+| SGLang C=12 | 6,713 | 67 | 100.2 tok |
 
-| | SGLang 2P2D | vllm-ppd 2P2D C=1 |
-|--|-------------|------------------|
-| **TPOT** | **0.023 s/tok** | 0.064 s/tok |
-| **Per-req Tput** | **43.9 tok/s** | 17.1 tok/s |
-| 격차 | — | SGLang이 **2.8× 빠름** |
+SGLang C=1 아이템당 141.6 tok은 vllm-ppd(47 tok) 대비 **3×**. 동시성을 높이면 성공한 아이템이 쉬운 것들로 편향되어 ~100 tok으로 수렴.
 
-SGLang이 decode에서 훨씬 빠른 이유:
-1. **Continuous batching 최적화**: SGLang의 스케줄러가 decode step을 더 효율적으로 배치
-2. **FlashInfer 커널**: SGLang은 decode-optimized CUDA 커널 사용
-3. **vllm-ppd 오버헤드**: D 노드가 KV를 받은 후 자체 attention 연산 시 일부 추가 오버헤드
-
-### TTFT 비교
-
-| | SGLang 2P2D (avg) | vllm-ppd C=1 Turn 0 | vllm-ppd C=1 Turn 1+ |
-|--|------------------|--------------------|---------------------|
-| TTFT | 0.825 s | 0.967 s | ~0.315 s |
-
-SGLang의 평균 TTFT(0.825s)는 vllm-ppd turn 0(0.967s)보다 낮지만, turn 1+의 캐시 히트 TTFT(0.315s)보다는 높다. SGLang도 per-turn TTFT를 수집하면 동일한 패턴이 보일 것으로 예상.
-
-### 총 Output Token 수 차이 (주의 사항)
-
-| Config | Total Output Tokens | Per-turn avg |
-|--------|---------------------|-------------|
-| vLLM TP=4 | 9,557 | ~12.9 tok |
-| vllm-ppd C=1 | 9,440 | ~12.7 tok |
-| vllm-ppd C=8 | 9,424 | ~12.7 tok |
-| **SGLang 2P2D** | **28,791** | **~38.9 tok** |
-
-SGLang 2P2D의 총 output token이 ~3× 많다. 응답 형식 차이 또는 MAX_TOKENS 설정 차이에 기인할 수 있으며, 직접적인 throughput 비교 시 이 점을 고려해야 함.
-
-### 시스템 Throughput 비교
-
-C=1 순차 처리 기준으로 SGLang이 vllm-ppd보다 overall throughput이 높은 이유는 decode가 2.8× 빠르기 때문이다. 동시성을 높이면 (SGLang C=8 미실험) 격차는 더 벌어질 것으로 예상.
-
-vllm-ppd의 장점은 동시성 처리 효율성: C=8에서 63.7 tok/s로 baseline TP=4(34.1 tok/s)의 **1.87×** 달성.
+원인 추정: SGLang `--tool-call-parser llama3`가 구조화된 tool call 대신 longer natural language 응답 형식을 유도할 가능성, 또는 temperature/stop 조건 차이. **프레임워크 간 직접 throughput 비교 시 이 점을 반드시 고려해야 함.**
 
 ---
 
-## 결과 파일 목록
+## 추가 실험 제안 / 연구 주제
 
-| 파일 | Config | 비고 |
-|------|--------|------|
-| `results/bfcl_multiturn_results_vllm_tp4.json` | vLLM TP=4 | 기준선, 200/200 성공 |
-| `results/bfcl_multiturn_results_vllm_ppd_2p2d.json` | vllm-ppd C=1 | 순차, per-turn 데이터 있음 |
-| `results/bfcl_multiturn_results_vllm_ppd_2p2d_c8.json` | vllm-ppd C=8 | 최고 throughput, KV 모니터링 포함 |
-| `results/bfcl_multiturn_results_vllm_ppd_2p2d_c12.json` | vllm-ppd C=12 | 68 에러 (OOM), 참고용 |
-| `results/sglang_hicache/bfcl_multiturn_results_2P_2D.json` | SGLang 2P2D | 요약만 (per-turn 미수집) |
-| `results/sglang_hicache/bfcl_multiturn_results_1P_1D.json` | SGLang 1P1D | 162 에러 (타입 변환 버그), 참고용 |
-| `results/vllm-ppd/bfcl_multiturn_results_2P_2D_vllmppd.json` | vllm-ppd 구버전 2P2D | 이전 설정 |
-| `results/vllm-ppd/bfcl_multiturn_results_2P_2pD_vllmppd.json` | vllm-ppd 구버전 2P2pD | PPD decode 실험 |
+### 진행 중 (구현 완료)
 
----
+**Task D: vllm-ppd KV buffer sweep**
 
-## 모니터링
+P 노드 `kv_buffer_size` 1→2→4 GB 확장으로 C=8/12/16 성공 여부 확인.
 
-```
-monitoring/
-├── docker-compose.yaml        # Prometheus(9090) + Grafana(3000) + Pushgateway(9091)
-├── prometheus.yml             # scrape targets: 모든 config P/D nodes
-└── grafana/
-    ├── dashboards/
-    │   └── vllm_bfcl_agentic.json   # 커스텀 대시보드 (v5)
-    └── provisioning/
-        ├── datasources/prometheus.yml
-        └── dashboards/dashboards.yml
-```
-
-**대시보드 패널 구성 (v5):**
-- Summary Stats: TTFT P50/P99, TPOT P50, Generation Throughput, KV Cache, Prefix Cache Hit Rate
-- Latency: TTFT/TPOT percentile timeseries
-- Throughput & Queue: Token throughput (prompt vs generation), Request queue
-- Memory: GPU KV cache per instance, Prefix cache hit rate
-- P vs D Node KV Cache: P/D 노드별 KV cache 점유율 비교
-- **SGLang hicache 3-tier panels** (v5):
-  - L1 GPU KV Cache Usage (≈0 with write_through — 정상)
-  - L2 CPU DRAM (VmRSS 기반)
-  - L3 SSD (`/tmp/hicache/` du 기반)
-  - Active Requests per Instance
-  - Prefix Cache Hit Rate (scheduler log 파싱)
-  - KV Cache Allocated GB (static config, 25.52 GB)
-- BFCL Per-Turn Metrics (Pushgateway): 클라이언트 측 turn별 TTFT, TPOT, Context 성장
-
-**SSH 포트 포워딩:**
 ```bash
-ssh -L 3000:localhost:3000 -L 9090:localhost:9090 -L 9091:localhost:9091 uhmturks@server17
+cd ~/experiments
+bash scripts/vllm-ppd/run_buffer_sweep.sh
 ```
+
+예상: 버퍼 4GB에서 C=12 OOM 해소, C=16까지 안정적 처리 가능 여부 확인.
+
+---
+
+### 우선순위 높음
+
+**E. SGLang no-hicache baseline**
+
+현재 hicache ON(P-only)과 OFF의 TTFT/에러율 차이가 불명확함.
+
+```bash
+# 현재 start_2P_2D.sh에서 --enable-hierarchical-cache 제거한 버전 필요
+# → hicache 오버헤드 vs 이득을 고동시성에서 분리
+CONFIG=sglang_2p2d_nohicache CONCURRENCY=1 python ...
+CONFIG=sglang_2p2d_nohicache CONCURRENCY=4 python ...
+CONFIG=sglang_2p2d_nohicache CONCURRENCY=8 python ...
+```
+
+가설: hicache SSD I/O가 C=8+ 에러의 주 원인이라면 hicache OFF 시 에러율 대폭 감소.
+
+**F. SGLang concurrent 에러 원인 분석**
+
+C=4에서 이미 23.5% 에러. 에러 유형 분류:
+- Mooncake KV transfer timeout
+- SGLang router timeout
+- P→D KV 전송 실패 (KVTransferError)
+- SSD write 실패
+
+로그 분석으로 병목 정확히 규명 → 파라미터 튜닝 방향 결정.
+
+**G. vLLM TP=4 concurrent benchmark**
+
+현재 TP=4는 C=1만 측정됨. C=4/8/12 동시성에서 throughput 피크 확인.
+
+```bash
+CONCURRENCY=8 CONFIG=vllm_tp4_c8 python benchmark/vllm_4gpu_BFCL_v3_multi_turn_concurrent.py
+```
+
+예상: TP=4는 모든 요청이 로컬 GPU이므로 KV transfer 병목 없음 → 높은 동시성에서도 안정적.
+
+---
+
+### 중간 우선순위
+
+**H. SGLang hicache cross-session 재사용 측정**
+
+벤치마크를 두 번 실행 (1st run: cold SSD, 2nd run: warm SSD, /tmp/hicache 미삭제).
+TTFT 차이를 측정해 SSD 캐시의 실제 cross-session 이득 정량화.
+
+```bash
+bash scripts/sglang/start_2P_2D.sh
+python benchmark/sglang_BFCL_v3_multi_turn_base.py  # cold
+python benchmark/sglang_BFCL_v3_multi_turn_base.py  # warm
+```
+
+**I. SGLang chunked prefix cache 활성화**
+
+현재 `disable_chunked_prefix_cache: True`로 전체 prefix를 atomic하게 캐싱.
+`False`로 바꾸면 부분 매칭도 가능 → 캐시 히트율 상승 가능.
+
+```python
+# SGLang server arg
+--disable-chunked-prefix-cache False  # (또는 해당 플래그 이름 확인 필요)
+```
+
+가설: 특히 multi-turn에서 prefix 길이가 가변적이므로 partial match로 TTFT 5–15% 개선 가능.
+
+**J. vllm-ppd 2P2pD concurrent**
+
+2P2pD(PPD decode 모드)는 C=1만 측정됨. C=8에서 2P2D와 비교.
+
+```bash
+CONCURRENCY=8 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py  # 2P2pD config
+```
+
+PPD decode가 short prefill을 D 노드에서 처리하므로 P 노드 부하 분산 → C=8에서도 TTFT 개선 유지 여부 확인.
+
+**K. 출력 토큰 정규화 실험**
+
+SGLang 3× 토큰 원인 규명. 동일 프롬프트로 vllm-ppd vs SGLang 비교하여 실제 응답 내용 차이 분석. `max_tokens=100`으로 강제 제한 후 동일 조건 재실험.
+
+---
+
+### 탐색적 연구 주제
+
+**L. PD disaggregation 이득이 유효한 조건 분석**
+
+현재 결과에서 PD disaggregation의 이득은 throughput에서만 명확함 (vllm-ppd C=8: 63.7 vs TP=4 C=1: 34.1). TTFT는 오히려 나빠짐 (0.130s → 0.590s+).
+
+연구 질문: PD disaggregation이 TTFT도 개선되는 조건은?
+- Context length가 매우 긴 경우 (prefill-heavy)
+- Decode가 매우 긴 경우 (decode-heavy)
+- Batch size를 더 크게 잡을 수 있는 경우
+→ BFCL 이외의 워크로드 (예: long-context summarization, code generation) 실험 필요
+
+**M. Mooncake vs NCCL P2P KV 전송 성능 비교**
+
+SGLang (Mooncake)과 vllm-ppd (NCCL P2P) 모두 P→D KV 전송을 수행하지만 메커니즘이 다름.
+- Mooncake: 고수준 KV 전송 추상화, 타임아웃 관리 포함
+- NCCL P2P: 저수준 GPU 메모리 직접 전송
+
+동일 workload에서 두 방식의 KV 전송 대역폭/latency 직접 측정.
+
+**N. SGLang hicache SSD I/O 모니터링**
+
+C=8+ 에서 SSD read/write latency를 `iostat -x` 또는 `/proc/diskstats`로 모니터링.
+캐시 히트 시 SSD read latency가 TTFT에 얼마나 기여하는지 정량화.
+
+**O. 4P4D 또는 1P3D 비율 실험**
+
+현재 실험은 2P2D 고정. 동일 4-GPU에서:
+- 1P3D: prefill 병목 시 D 증설 효과
+- 3P1D: decode 병목 시 P 증설 효과
+vllm-ppd의 proxy는 이미 N:M 구성을 지원하므로 스크립트 변경만으로 실험 가능.
 
 ---
 
@@ -356,37 +414,77 @@ vllm serve /home/uhmturks/hf_models/Llama-3.1-8B-Instruct \
 python benchmark/vllm_4gpu_BFCL_v3_multi_turn_base.py
 ```
 
-### SGLang 2P2D (hicache)
+### SGLang 2P2D (hicache, 순차)
 ```bash
-# 이전 실험 잔여물 정리 (SSD 캐시 포함)
-bash scripts/sglang/cleanup_all.sh
-
-# 서버 시작 (Mooncake + 4 nodes + router + exporter 자동 시작)
 conda activate sglang
-bash scripts/sglang/start_2P_2D.sh
-
-# 벤치마크 (순차)
+bash scripts/sglang/start_2P_2D.sh          # 기본 ratio=1.2
+# 또는 HICACHE_RATIO=0.5 bash scripts/sglang/start_2P_2D.sh
 python benchmark/sglang_BFCL_v3_multi_turn_base.py
+```
 
-# 벤치마크 (동시, C=4 권장)
+### SGLang 2P2D (동시, C=4 권장 — C=8+는 에러율 높음)
+```bash
 CONCURRENCY=4 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py
 ```
 
-> **주의**: 실험 사이에 반드시 `cleanup_all.sh` 실행하여 `/tmp/hicache/` 삭제.  
-> 이전 실험의 SSD 캐시가 남아있으면 다음 실험의 TTFT가 인위적으로 낮아짐.
+> **주의**: 실험 사이에 반드시 cleanup 실행하여 `/tmp/hicache/` 삭제.  
+> 이전 실험의 SSD 캐시가 남아있으면 TTFT가 인위적으로 낮아짐.
 
-### vllm-ppd 2P2D (순차)
+### vllm-ppd 2P2D (C=8 권장)
 ```bash
 conda activate vllm-ppd
-bash scripts/vllm-ppd/start_2P_2D.sh
-python benchmark/vllmppd_BFCL_v3_multi_turn_base.py
+bash scripts/vllm-ppd/start_2P_2D.sh         # 기본 KV_BUFFER_GB=1
+# 또는 KV_BUFFER_GB=2 bash ...
+CONCURRENCY=8 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
 ```
 
-### vllm-ppd 2P2D (동시, C=8 권장)
+### vllm-ppd KV buffer sweep
 ```bash
 conda activate vllm-ppd
-bash scripts/vllm-ppd/start_2P_2D.sh
-CONCURRENCY=8 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
+cd ~/experiments
+bash scripts/vllm-ppd/run_buffer_sweep.sh
+# buffer {1,2,4}GB × concurrency {8,12,16} 자동 실행
+# 결과: results/vllm-ppd/buffer_sweep_summary.txt
+```
+
+---
+
+## 결과 파일 목록
+
+| 파일 | Config | C | 성공 | 비고 |
+|------|--------|---|------|------|
+| `results/vllm/bfcl_multiturn_results_vllm_tp4.json` | vLLM TP=4 | 1 | 200/200 | 기준선, per-turn TTFT 있음 |
+| `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d.json` | SGLang 2P2D hicache | 1 | 200/200 | 28,323 tok |
+| `results/sglang_hicache/bfcl_multiturn_results_1P_1D.json` | SGLang 1P1D | 1 | 38/200 ⚠️ | 타입 변환 버그, 참고용 |
+| `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d_c4.json` | SGLang 2P2D | 4 | 153/200 | per-turn TTFT 있음 |
+| `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d_c8.json` | SGLang 2P2D | 8 | 83/200 | SSD 경합 의심 |
+| `results/bfcl_multiturn_results_sglang_2p2d_c12.json` | SGLang 2P2D | 12 | 67/200 | turn1 TTFT 이상 (7.7s) |
+| `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_2p2d_c8.json` | vllm-ppd 2P2D | 8 | 200/200 | 최고 throughput (63.7 tok/s) |
+| `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_2p2d_c12.json` | vllm-ppd 2P2D | 12 | 132/200 | buffer OOM |
+| `results/vllm-ppd/bfcl_multiturn_results_2P_2D_vllmppd.json` | vllm-ppd 2P2D | 1 | 200/200 | 순차 |
+| `results/vllm-ppd/bfcl_multiturn_results_2P_2pD_vllmppd.json` | vllm-ppd 2P2pD | 1 | 200/200 | PPD decode, TTFT 개선 |
+
+---
+
+## 모니터링
+
+```
+monitoring/
+├── docker-compose.yaml        # Prometheus(9090) + Grafana(3000) + Pushgateway(9091)
+├── prometheus.yml             # scrape targets
+└── grafana/
+    └── dashboards/vllm_bfcl_agentic.json   # 커스텀 대시보드 (v5)
+```
+
+**대시보드 패널 (v5):**
+- TTFT/TPOT percentile, Request queue, Prefix cache hit rate
+- P vs D 노드별 KV cache 점유율
+- SGLang hicache 3-tier: L1 GPU (≈0%), L2 CPU DRAM (VmRSS), L3 SSD (du)
+- BFCL Per-Turn Metrics (Pushgateway): turn별 TTFT/TPOT/context 성장
+
+```bash
+# SSH 포트 포워딩
+ssh -L 3000:localhost:3000 -L 9090:localhost:9090 -L 9091:localhost:9091 uhmturks@server17
 ```
 
 ---
@@ -397,101 +495,45 @@ CONCURRENCY=8 python benchmark/vllmppd_BFCL_v3_multi_turn_concurrent.py
 experiments/
 │
 ├── index.md                          ← 이 파일
-├── CLAUDE.md                         ← Claude Code 지시사항
+├── CLAUDE.md
 │
 ├── benchmark/
-│   ├── kv_cache_poller.py            # GPU KV cache 백그라운드 폴링 (vllm-ppd용)
+│   ├── kv_cache_poller.py
 │   ├── sglang_hicache_exporter.py    # SGLang Prometheus exporter (port 9199)
 │   ├── vllm_4gpu_BFCL_v3_multi_turn_base.py
-│   ├── vllm_2P2D_BFCL_v3_multi_turn_base.py
+│   ├── vllm_4gpu_BFCL_v3_multi_turn_concurrent.py
 │   ├── vllmppd_BFCL_v3_multi_turn_base.py
-│   ├── vllmppd_BFCL_v3_multi_turn_concurrent.py  # CONCURRENCY=N 환경변수
+│   ├── vllmppd_BFCL_v3_multi_turn_concurrent.py
 │   ├── sglang_BFCL_v3_multi_turn_base.py
-│   └── sglang_BFCL_v3_multi_turn_concurrent.py   # CONCURRENCY=N 환경변수
-│
-├── data/
-│   ├── BFCL_v3_multi_turn_base.json
-│   └── multi_turn_func_doc/          # Tool 함수 정의 (8종)
-│
-├── possible_answer/
-│   └── BFCL_v3_multi_turn_base.json
-│
-├── gorilla/                          # Berkeley 공식 BFCL evaluator
-│
-├── ppd/
-│   ├── comprehensive_proxy.py
-│   └── optimizer/ppd_decision_engine.py
+│   └── sglang_BFCL_v3_multi_turn_concurrent.py
 │
 ├── scripts/
 │   ├── vllm/start_2P_2D.sh
 │   ├── vllm-ppd/
-│   │   ├── start_2P_2D.sh
+│   │   ├── start_2P_2D.sh            # KV_BUFFER_GB=N 환경변수 지원
 │   │   ├── start_2P_2pD.sh
+│   │   ├── run_buffer_sweep.sh       # buffer(1/2/4GB) × C(8/12/16) 자동 스윕
 │   │   └── cleanup_all.sh
 │   └── sglang/
-│       ├── start_2P_2D.sh            # hicache exporter 자동 시작 포함
-│       └── cleanup_all.sh            # /tmp/hicache/ 포함 전체 정리
-│
-├── monitoring/
-│   ├── docker-compose.yaml
-│   ├── prometheus.yml
-│   └── grafana/dashboards/vllm_bfcl_agentic.json
+│       ├── start_2P_2D.sh            # HICACHE_RATIO=N 환경변수 지원
+│       └── cleanup_all.sh
 │
 ├── results/
-│   ├── bfcl_multiturn_results_vllm_tp4.json
-│   ├── bfcl_multiturn_results_vllm_ppd_2p2d.json
-│   ├── bfcl_multiturn_results_vllm_ppd_2p2d_c8.json
-│   ├── bfcl_multiturn_results_vllm_ppd_2p2d_c12.json
+│   ├── bfcl_multiturn_results_sglang_2p2d_c12.json
+│   ├── vllm/
+│   │   └── bfcl_multiturn_results_vllm_tp4.json
 │   ├── vllm-ppd/
 │   │   ├── bfcl_multiturn_results_2P_2D_vllmppd.json
-│   │   └── bfcl_multiturn_results_2P_2pD_vllmppd.json
+│   │   ├── bfcl_multiturn_results_2P_2pD_vllmppd.json
+│   │   ├── bfcl_multiturn_results_vllm_ppd_2p2d_c8.json
+│   │   └── bfcl_multiturn_results_vllm_ppd_2p2d_c12.json
 │   └── sglang_hicache/
 │       ├── bfcl_multiturn_results_1P_1D.json
-│       └── bfcl_multiturn_results_2P_2D.json
+│       ├── bfcl_multiturn_results_sglang_2p2d.json
+│       ├── bfcl_multiturn_results_sglang_2p2d_c4.json
+│       └── bfcl_multiturn_results_sglang_2p2d_c8.json
 │
-└── logs/                             ← 서버 로그 (gitignore)
+├── logs/sglang/                      ← SGLang 서버 로그 (gitignore)
+├── logs/vllm-ppd/                    ← vllm-ppd 서버 로그 (gitignore)
+└── monitoring/
 ```
-
----
-
-## 결과 파일 구조
-
-```json
-{
-  "summary": {
-    "config": "vllm_ppd_2p2d_c8",
-    "concurrency": 8,
-    "total_items": 200,
-    "success_items": 200,
-    "total_output_tokens": 9424,
-    "total_wall_time_s": 147.97,
-    "overall_throughput_tok_per_s": 63.69,
-    "avg_ttft_s": 0.8715,
-    "avg_tpot_s": 0.0723,
-    "avg_throughput_tok_per_s": 15.2,
-    "kv_cache_per_gpu": {
-      "p1": {"min": 0.0, "max": 0.031, "mean": 0.008},
-      "d1": {"min": 0.0, "max": 0.172, "mean": 0.059}
-    }
-  },
-  "results": [
-    {
-      "id": "multi_turn_base_0",
-      "num_turns": 4,
-      "avg_ttft_s": 0.83,
-      "ttft_by_turn": {"0": 1.327, "1": 0.687, "2": 0.658, "3": 0.565},
-      "turns": [
-        {
-          "turn": 0,
-          "ttft_s": 1.327,
-          "tpot_s": 0.072,
-          "output_tokens": 18,
-          "context_chars": 4821
-        }
-      ]
-    }
-  ]
-}
-```
-
-`ttft_by_turn`: turn 인덱스별 TTFT → context가 길어질수록 TTFT 증가하는 agentic 패턴 관찰 가능.
