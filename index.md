@@ -152,7 +152,8 @@ SSD에 저장되는 파일명은 token sequence prefix의 해시 값이다:
 
 | Config | C | TTFT avg | TPOT avg | Per-req Tput† | Overall Tput | 성공 | Wall time |
 |--------|---|---------|---------|--------------|-------------|------|----------|
-| **vLLM TP=4** | 1 | **0.130 s** | **0.022 s** | **50.5 tok/s** | 34.1 tok/s | 200/200 | 280 s |
+| vLLM TP=4 | 1 | **0.130 s** | **0.022 s** | **50.5 tok/s** | 34.1 tok/s | 200/200 | 280 s |
+| **vLLM TP=4** | **8** | 0.874 s | 0.038 s | — | **132.9 tok/s** | **200/200** | 198 s |
 | SGLang 1P1D | 1 | 0.395 s | 0.023 s | 44.0 tok/s | 29.3 tok/s | 38/200 ⚠️ | 151 s |
 | SGLang 2P2D (hicache) | 1 | 0.814 s | 0.023 s | 43.9 tok/s | 22.6 tok/s | 200/200 | 1,252 s |
 | SGLang 2P2D | 4 | 1.500 s | 0.020 s | — | 47.8 tok/s | 153/200 ❌ | 306 s |
@@ -160,13 +161,14 @@ SSD에 저장되는 파일명은 token sequence prefix의 해시 값이다:
 | SGLang 2P2D | 12 | 3.445 s | 0.019 s | — | 37.1 tok/s | 67/200 ❌ | 181 s |
 | vllm-ppd 2P2D | 1 | 0.590 s | 0.065 s | 16.7 tok/s | 11.0 tok/s | 200/200 | 732 s |
 | vllm-ppd 2P2pD | 1 | 0.429 s | 0.063 s | 17.2 tok/s | 12.0 tok/s | 200/200 | 764 s |
-| **vllm-ppd 2P2D** | **8** | 0.872 s | 0.072 s | — | **63.7 tok/s** | **200/200** | 148 s |
+| vllm-ppd 2P2D | 8 | 0.872 s | 0.072 s | — | 63.7 tok/s | 200/200 | 148 s |
 | vllm-ppd 2P2D | 12 | 1.305 s | 0.076 s | — | 22.1 tok/s | 132/200 ❌ | 197 s |
 
 > ⚠️ SGLang 1P1D: func_doc 타입 변환 미적용으로 162개 에러, 수치는 참고용.  
 > ❌ SGLang C≥4: Mooncake KV 전송 타임아웃/실패로 에러 증가 (C=4: 23.5%, C=8: 58.5%, C=12: 66.5%).  
 > ❌ vllm-ppd C=12: P 노드 1GB KV send buffer 포화로 68개 에러.  
-> † Per-req Tput은 C=1 순차 실행에서만 의미 있음 (동시 실행 시 — 표시).
+> † Per-req Tput은 C=1 순차 실행에서만 의미 있음 (동시 실행 시 — 표시).  
+> ※ vLLM TP=4 C=1과 C=8의 총 출력 토큰이 9,557 vs 26,351로 크게 다름 — 아래 주의사항 참조.
 
 ---
 
@@ -194,16 +196,17 @@ SGLang C=12: 67/200 (34%)
 SGLang의 에러율이 높아질수록 **성공한 아이템이 easier 항목으로 편향**됨.  
 따라서 SGLang C≥4의 TTFT/TPOT 개선은 일부 survivor bias 포함.
 
-**3. Overall throughput 피크**
+**3. Overall throughput 피크: vLLM TP=4 C=8이 압도적 1위**
 
-| Config | Overall throughput |
-|--------|-------------------|
-| vllm-ppd C=8 | **63.7 tok/s** ← 전체 최고 |
-| SGLang C=4 | 47.8 tok/s |
-| SGLang C=8 | 42.5 tok/s |
-| vLLM TP=4 C=1 | 34.1 tok/s |
+| Config | Overall throughput | 성공률 |
+|--------|-------------------|--------|
+| **vLLM TP=4 C=8** | **132.9 tok/s** | 100% |
+| vllm-ppd C=8 | 63.7 tok/s | 100% |
+| SGLang C=4 | 47.8 tok/s | 77% |
+| SGLang C=8 | 42.5 tok/s | 42% |
+| vLLM TP=4 C=1 | 34.1 tok/s | 100% |
 
-vllm-ppd C=8이 최고 throughput을 보임. SGLang은 에러율 증가로 실효 throughput이 C=4에서 이미 정체.
+vLLM TP=4 C=8이 **132.9 tok/s**로 vllm-ppd C=8(63.7)의 **2.1×**, vLLM TP=4 C=1(34.1)의 **3.9×**. 4-GPU를 single instance로 공유하므로 KV transfer 병목 없이 C=8을 100% 성공으로 처리. PD disaggregation이 throughput에서도 TP=4에 뒤처지는 결과.
 
 **4. SGLang TPOT의 concurrency 개선 (batching 효과)**
 
@@ -219,20 +222,21 @@ C=8: 200/200, 63.7 tok/s → C=12: 132/200, 22.1 tok/s. 에러율 34%로 급증�
 
 Turn 0은 첫 prefill (캐시 없음), turn 1+는 system prompt + tool 정의 KV가 캐시에 남아 있을 때.
 
-| Turn | vLLM TP=4 | vllm-ppd C=1 | vllm-ppd C=8 | vllm-ppd C=12 | SGLang C=4 | SGLang C=8 | SGLang C=12 |
-|------|-----------|-------------|-------------|--------------|-----------|-----------|------------|
-| 0 | 0.145 s | 0.967 s | **1.712 s** | **2.003 s** | 2.840 s | 1.366 s | 1.413 s |
-| 1 | **0.078 s** (−46%) | **0.321 s** (−67%) | **0.669 s** (−61%) | **1.400 s** (−30%) | **1.023 s** (−64%) | **0.802 s** (−41%) | **7.652 s** (+441%) ⚠️ |
-| 2 | 0.076 s | 0.310 s | 0.658 s | — | — | — | — |
-| 3 | 0.076 s | 0.313 s | 0.565 s | — | — | — | — |
+| Turn | vLLM TP=4 C=1 | vLLM TP=4 C=8 | vllm-ppd C=1 | vllm-ppd C=8 | vllm-ppd C=12 | SGLang C=4 | SGLang C=8 | SGLang C=12 |
+|------|--------------|--------------|-------------|-------------|--------------|-----------|-----------|------------|
+| 0 | 0.145 s | 1.577 s | 0.967 s | 1.712 s | 2.003 s | 2.840 s | 1.366 s | 1.413 s |
+| 1 | 0.078 s (−46%) | **0.560 s (−64%)** | 0.321 s (−67%) | 0.669 s (−61%) | 1.400 s (−30%) | 1.023 s (−64%) | 0.802 s (−41%) | 7.652 s (+441%) ⚠️ |
+| 2 | 0.076 s | **0.550 s** | 0.310 s | 0.658 s | — | — | — | — |
+| 3 | 0.076 s | **0.592 s** | 0.313 s | 0.565 s | — | — | — | — |
+| 4 | 0.093 s | **0.567 s** | — | — | — | — | — | — |
 
-> ⚠️ SGLang C=12 turn 1 TTFT 7.652s: turn 0(1.413s)보다 **5× 높음**. 정상적인 prefix cache 히트라면 낮아져야 하는데 오히려 급등. 추정 원인: C=12 부하에서 `/tmp/hicache/` SSD I/O 경합으로 캐시 읽기 지연 발생. 동시 12개 요청이 같은 SSD 디렉토리를 동시 읽기/쓰기.
+> ⚠️ SGLang C=12 turn 1 TTFT 7.652s: turn 0(1.413s)보다 **5× 높음**. 정상적인 prefix cache 히트라면 낮아져야 하는데 오히려 급등. 추정 원인: C=12 부하에서 `/tmp/hicache/` SSD I/O 경합으로 캐시 읽기 지연 발생.
 
 **관찰**:
 - 모든 config에서 **turn 0 → turn 1에 TTFT 감소** (SGLang C=12 제외) — prefix cache hit 확인
-- vLLM TP=4: 가장 깨끗한 패턴 (0.145s → 0.078s, turn 2+도 안정)
-- vllm-ppd C=12: prefix cache 히트하지만 동시 경쟁으로 개선폭 축소 (−30%)
-- SGLang C=8: turn 0 TTFT가 C=4(2.84s)보다 낮은 1.37s — 더 쉬운 아이템이 먼저 처리된 결과 (survivor bias)
+- **vLLM TP=4 C=8**: turn 0이 1.577s로 C=1(0.145s)보다 10.9× 높아짐 (동시 8개 큐 대기). 하지만 turn 1부터 0.550~0.592s로 안정 → **prefix cache가 동시성 환경에서도 안정적으로 동작**
+- vLLM TP=4 C=8의 turn 1+ TTFT(0.56s)는 vllm-ppd C=8(0.67s)보다 낮음 — KV 전송 오버헤드 없이 로컬에서 처리하기 때문
+- vLLM TP=4 C=1 → C=8 TTFT 변화: turn0 0.145s → 1.577s (10.9×), turn1+ 0.078s → 0.56s (7.2×)
 - SGLang hicache의 SSD 기반 캐싱은 단일 요청에서는 효과적이나, **고동시성에서 SSD I/O 병목** 발생 가능
 
 ---
@@ -254,20 +258,27 @@ Turn 0은 첫 prefill (캐시 없음), turn 1+는 system prompt + tool 정의 KV
 
 ### 출력 토큰 수 비교 (주의 사항)
 
-| Config | Total Output Tokens | 성공 아이템 수 | 아이템당 평균 |
-|--------|---------------------|-------------|------------|
-| vLLM TP=4 | 9,557 | 200 | **47.8 tok** |
-| vllm-ppd C=1 | 8,075 | 200 | 40.4 tok |
-| vllm-ppd C=8 | 9,424 | 200 | **47.1 tok** |
-| vllm-ppd C=12 | 4,352 | 132 | 33.0 tok |
-| **SGLang 2P2D C=1** | **28,323** | 200 | **141.6 tok** |
-| SGLang C=4 | 14,633 | 153 | 95.6 tok |
-| SGLang C=8 | 8,417 | 83 | 101.4 tok |
-| SGLang C=12 | 6,713 | 67 | 100.2 tok |
+| Config | Benchmark 스크립트 | Total Tokens | 성공 | 아이템당 평균 |
+|--------|-----------------|-------------|------|------------|
+| vLLM TP=4 C=1 | `*_base.py` | 9,557 | 200 | 47.8 tok |
+| **vLLM TP=4 C=8** | `*_concurrent.py` | **26,351** | 200 | **131.8 tok** |
+| vllm-ppd C=1 | `*_base.py` | 8,075 | 200 | 40.4 tok |
+| vllm-ppd C=8 | `*_concurrent.py` | 9,424 | 200 | 47.1 tok |
+| vllm-ppd C=12 | `*_concurrent.py` | 4,352 | 132 | 33.0 tok |
+| SGLang C=1 | `*_base.py` | 28,323 | 200 | 141.6 tok |
+| SGLang C=4 | `*_concurrent.py` | 14,633 | 153 | 95.6 tok |
+| SGLang C=8 | `*_concurrent.py` | 8,417 | 83 | 101.4 tok |
+| SGLang C=12 | `*_concurrent.py` | 6,713 | 67 | 100.2 tok |
 
-SGLang C=1 아이템당 141.6 tok은 vllm-ppd(47 tok) 대비 **3×**. 동시성을 높이면 성공한 아이템이 쉬운 것들로 편향되어 ~100 tok으로 수렴.
+**⚠️ vLLM TP=4 C=1 vs C=8 토큰 수 불일치 (9,557 vs 26,351, 2.75×)**
 
-원인 추정: SGLang `--tool-call-parser llama3`가 구조화된 tool call 대신 longer natural language 응답 형식을 유도할 가능성, 또는 temperature/stop 조건 차이. **프레임워크 간 직접 throughput 비교 시 이 점을 반드시 고려해야 함.**
+같은 모델·데이터셋인데 C=8에서 토큰이 훨씬 많다. 가능한 원인:
+1. `*_base.py`와 `*_concurrent.py`의 토큰 카운팅 방식 차이 — base 스크립트가 `stream_options: include_usage` 미적용 시 실제보다 적게 카운팅할 수 있음
+2. 동시성 환경에서 모델이 다른 응답 형식을 생성할 가능성 (미확인)
+
+vllm-ppd는 C=1(40 tok) vs C=8(47 tok)으로 큰 차이 없음. SGLang C=1(142 tok)도 concurrent와 격차 있으나 이는 에러 아이템의 survivor bias로 설명 가능. **vLLM TP=4 C=1 결과는 재실행이 필요할 수 있음.**
+
+**프레임워크 간 직접 throughput 비교 시 토큰 수 차이를 반드시 고려해야 함.** 특히 vLLM TP=4 C=8의 132.9 tok/s는 vllm-ppd(47 tok)보다 ~2.8× 많은 토큰을 출력한 결과임을 감안할 것.
 
 ---
 
@@ -454,6 +465,7 @@ bash scripts/vllm-ppd/run_buffer_sweep.sh
 | 파일 | Config | C | 성공 | 비고 |
 |------|--------|---|------|------|
 | `results/vllm/bfcl_multiturn_results_vllm_tp4.json` | vLLM TP=4 | 1 | 200/200 | 기준선, per-turn TTFT 있음 |
+| `results/vllm/bfcl_multiturn_results_vllm_4gpu_c8.json` | vLLM TP=4 | 8 | 200/200 | **132.9 tok/s**, per-turn TTFT 있음 |
 | `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d.json` | SGLang 2P2D hicache | 1 | 200/200 | 28,323 tok |
 | `results/sglang_hicache/bfcl_multiturn_results_1P_1D.json` | SGLang 1P1D | 1 | 38/200 ⚠️ | 타입 변환 버그, 참고용 |
 | `results/sglang_hicache/bfcl_multiturn_results_sglang_2p2d_c4.json` | SGLang 2P2D | 4 | 153/200 | per-turn TTFT 있음 |
