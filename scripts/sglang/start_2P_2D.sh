@@ -10,19 +10,26 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 mkdir -p logs
 
-# hicache SSD 파일 디렉토리 (exporter가 크기 모니터링에 사용)
-HICACHE_BASE="/tmp/sglang_hicache"
-mkdir -p "${HICACHE_BASE}/p1" "${HICACHE_BASE}/p2"
+# SGLang이 실제로 사용하는 hicache SSD 디렉토리 (/tmp/hicache)
+HICACHE_DIR="/tmp/hicache"
 
-echo "[0/6] Stopping any existing SGLang/Mooncake processes..."
+echo "[0/6] Stopping any existing SGLang/Mooncake/exporter processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
 pkill -9 -f "mooncake.http_metadata_server" 2>/dev/null || true
 pkill -9 -f "sglang_router.launch_router" 2>/dev/null || true
+pkill -9 -f "sglang_hicache_exporter" 2>/dev/null || true
 # 포트 점유 프로세스도 강제 종료
-for port in 8998 8999 9000 9001 30000 30001 30002 30003 8000; do
+for port in 8998 8999 9000 9001 30000 30001 30002 30003 8000 9199; do
   fuser -k ${port}/tcp 2>/dev/null || true
 done
 sleep 5
+
+# /tmp/hicache 정리 (이전 실험 잔여물 제거)
+if [ -d "$HICACHE_DIR" ]; then
+    SIZE=$(du -sh "$HICACHE_DIR" 2>/dev/null | cut -f1)
+    echo "  Cleaning $HICACHE_DIR ($SIZE) ..."
+    rm -rf "$HICACHE_DIR"
+fi
 
 echo "[1/6] Starting Mooncake metadata server..."
 python -m mooncake.http_metadata_server > logs/mooncake.log 2>&1 &
@@ -113,7 +120,7 @@ echo "Starting SGLang hicache Prometheus exporter (port 9199)..."
 pkill -f "sglang_hicache_exporter" 2>/dev/null || true
 sleep 1
 
-HICACHE_DIRS="p1:${HICACHE_BASE}/p1,p2:${HICACHE_BASE}/p2" \
+HICACHE_DIRS="p1:${HICACHE_DIR},p2:${HICACHE_DIR}" \
 SGLANG_INSTANCES="p1:30000,p2:30001,d1:30002,d2:30003" \
 EXPORTER_PORT=9199 \
 python3 "$PROJECT_DIR/benchmark/sglang_hicache_exporter.py" \
