@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import requests
 from tqdm import tqdm
@@ -70,6 +71,26 @@ def push_metric(metric: str, value: float, labels: dict):
     except Exception:
         pass
 
+_PYTHON_TAG_RE = re.compile(r'<\|python_tag\|>(.*)', re.DOTALL)
+
+def _parse_python_tag(content: str) -> dict | None:
+    """Parse Llama3 <|python_tag|> tool call from raw text content (fallback when server has no tool parser)."""
+    m = _PYTHON_TAG_RE.search(content)
+    if not m:
+        return None
+    try:
+        raw = m.group(1).strip()
+        data = json.loads(raw)
+        name = data.get("name", "")
+        params = data.get("parameters", data.get("arguments", {}))
+        return {
+            "id": f"call_{name}",
+            "type": "function",
+            "function": {"name": name, "arguments": json.dumps(params)},
+        }
+    except Exception:
+        return None
+
 # ── SGLang hicache 모니터링 (exporter가 떠있으면 자동 수집) ──────────────────
 from sglang_hicache_exporter import SGLangHiCachePoller
 
@@ -113,7 +134,9 @@ for item in tqdm(items, desc="items"):
             "tools": tools,
             "tool_choice": "auto",
             "max_tokens": MAX_TOKENS,
+            "temperature": 0,
             "stream": True,
+            "stream_options": {"include_usage": True},
         }
 
         try:
@@ -126,6 +149,7 @@ for item in tqdm(items, desc="items"):
             token_count = 0
             assistant_content = ""
             tool_calls_map = {}
+            server_completion_tokens = None
 
             for line in resp.iter_lines():
                 if not line:
@@ -138,6 +162,10 @@ for item in tqdm(items, desc="items"):
                     break
 
                 chunk = json.loads(data)
+                if chunk.get("usage"):
+                    server_completion_tokens = chunk["usage"].get("completion_tokens")
+                if not chunk.get("choices"):
+                    continue
                 delta = chunk["choices"][0]["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
@@ -165,19 +193,28 @@ for item in tqdm(items, desc="items"):
 
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] if tool_calls_map else []
 
+            # Fallback: parse <|python_tag|> from text content if no structured tool_calls
+            if not tool_calls_result and "<|python_tag|>" in assistant_content:
+                tc = _parse_python_tag(assistant_content)
+                if tc:
+                    tool_calls_result = [tc]
+                    assistant_content = ""
+
+            actual_tokens = server_completion_tokens if server_completion_tokens is not None else token_count
+
             ttft = (t_first_token - t_request) if t_first_token else None
             e2e  = (t_last_token  - t_request) if t_last_token  else None
             decode_time = (t_last_token - t_first_token) if (t_last_token and token_count > 1) else None
-            tpot = (decode_time / (token_count - 1)) if (decode_time and token_count > 1) else None
-            turn_throughput = ((token_count - 1) / decode_time) if (decode_time and token_count > 1) else None
+            tpot = (decode_time / (actual_tokens - 1)) if (decode_time and actual_tokens > 1) else None
+            turn_throughput = ((actual_tokens - 1) / decode_time) if (decode_time and actual_tokens > 1) else None
 
-            total_output_tokens += token_count
+            total_output_tokens += actual_tokens
 
             tqdm.write(
                 f"    → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
-                f"tokens={token_count}  throughput={turn_throughput:.1f} tok/s"
+                f"tokens={actual_tokens}  throughput={turn_throughput:.1f} tok/s"
                 if (ttft and tpot and turn_throughput) else
-                f"    → ttft={ttft}  tokens={token_count}"
+                f"    → ttft={ttft}  tokens={actual_tokens}"
             )
 
             # Pushgateway에 per-turn 지표 전송
@@ -195,7 +232,7 @@ for item in tqdm(items, desc="items"):
                 "tool_calls": tool_calls_result if tool_calls_result else None,
                 "ttft_s": round(ttft, 4) if ttft else None,
                 "tpot_s": round(tpot, 4) if tpot else None,
-                "output_tokens": token_count,
+                "output_tokens": actual_tokens,
                 "e2e_latency_s": round(e2e, 4) if e2e else None,
                 "throughput_tok_per_s": round(turn_throughput, 2) if turn_throughput else None,
                 "ctx_chars": ctx_chars,
@@ -221,6 +258,7 @@ for item in tqdm(items, desc="items"):
         "avg_tpot_s": round(sum(t["tpot_s"] for t in valid_turns if t.get("tpot_s")) / max(1, sum(1 for t in valid_turns if t.get("tpot_s"))), 4) if valid_turns else None,
         "avg_throughput_tok_per_s": round(sum(t["throughput_tok_per_s"] for t in valid_turns if t.get("throughput_tok_per_s")) / max(1, sum(1 for t in valid_turns if t.get("throughput_tok_per_s"))), 2) if valid_turns else None,
         "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
+        "ttft_by_turn": {str(t["turn"]): t["ttft_s"] for t in valid_turns},
     })
 
     push_metric("bfcl_items_completed", len(results), {"config": CONFIG})
