@@ -39,7 +39,7 @@ BFCL v3 multi-turn 벤치마크(200 items, avg 3.7 turns/item)에서 측정한 p
 모든 시스템에서 turn 1부터 KV cache hit로 TTFT 40–67% 감소. **KV retention은 first-order performance lever임**.  
 → "어디에 두느냐"는 이 이득을 얼마나 보존하느냐를 결정한다.
 
-### 2.2 잘못된 placement는 오히려 손해 — SSD I/O 경합
+### 2.2 고동시성에서 cache 이득 소멸 — 원인 미확인 이상 현상
 
 SGLang hicache는 `write_through` 정책으로 모든 KV를 즉시 `/tmp/hicache/` (SSD)에 기록한다. C=12 실험에서 이상 현상 관측:
 
@@ -49,9 +49,17 @@ SGLang 2P2D C=12, 첫 번째 성공 아이템:
   turn 1 TTFT:  7.652 s  ← cache hit임에도 turn 0보다 5.4× 느림
 ```
 
-12개 요청이 동시에 동일 SSD 디렉토리에 read/write → I/O 경합으로 캐시 히트가 오히려 latency를 악화.  
-→ **naive placement (항상 SSD) 는 고동시성에서 역효과**.  
-올바른 policy라면 "빨리 돌아올 요청"의 KV는 SSD 대신 GPU에 남겨야 한다.
+**⚠️ 이 관측의 한계**: 67개 성공 아이템 중 첫 번째 아이템의 단일 데이터 포인트. 현재 가설로는 다음 세 가지가 동등하게 가능하다:
+
+| 가설 | 설명 |
+|------|------|
+| SSD I/O 경합 | 12개 요청이 동시에 `/tmp/hicache/` read/write → 디스크 대기 | 
+| Mooncake KV 전송 실패 → re-prefill | turn1의 KV transfer 실패로 full re-prefill fallback (C=12 에러율 66.5%) |
+| Queue 대기 | P/D 노드 포화로 turn1 요청이 큐에서 장시간 대기 |
+
+어느 가설이 맞는지 확인하려면 해당 시점의 `iostat`, Mooncake 에러 로그, SGLang hicache 내부 read latency 측정이 필요하다 (→ §4.D 참조).
+
+**관찰 자체의 함의**: turn1이 turn0보다 느린 상황은, cache hit 여부와 무관하게 **고동시성에서 hicache의 이득이 사라질 수 있음**을 시사한다. 원인이 SSD I/O이든 KV transfer 실패이든, 이 패턴이 재현된다면 placement policy의 motivation이 된다.
 
 ### 2.3 Tool call 중 GPU KV는 idle — resource waste 정량화
 
