@@ -46,11 +46,14 @@ def _p(rel): return os.path.join(PROJECT_ROOT, rel)
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 ROUTER_URL  = os.environ.get("VLLM_URL",      "http://127.0.0.1:8000/v1/chat/completions")
-MODEL       = os.environ.get("MODEL",          "meta-llama/Llama-3.1-8B-Instruct-FC")
+MODEL       = os.environ.get("MODEL",          "Qwen")
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "4"))
 CONFIG      = os.environ.get("CONFIG",          f"vllm_4gpu_c{CONCURRENCY}")
 MAX_TOKENS  = int(os.environ.get("MAX_TOKENS",  "512"))
 TIMEOUT     = int(os.environ.get("TIMEOUT",     "600"))
+# Simulated tool execution delay between turns (seconds).
+# Injects idle time to study KV tier placement under realistic agent workloads.
+TOOL_DELAY  = float(os.environ.get("TOOL_DELAY", "0"))
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL", "")
 
 # ─── Pushgateway (simple HTTP POST, no prometheus_client dependency) ─────────
@@ -119,6 +122,7 @@ print(f"URL         : {ROUTER_URL}")
 print(f"Model       : {MODEL}")
 print(f"Items       : {len(items)}")
 print(f"Concurrency : {CONCURRENCY}")
+print(f"Tool delay  : {TOOL_DELAY}s per tool-call turn")
 print(f"PushGW      : {PUSHGATEWAY_URL or 'disabled'}")
 print("=" * 60)
 
@@ -268,6 +272,10 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "tool_calls": tool_calls_result[:1] if tool_calls_result else None,
             })
 
+            # Simulate tool execution time (studies KV idle across tiers)
+            if TOOL_DELAY > 0 and tool_calls_result:
+                time.sleep(TOOL_DELAY)
+
         except Exception as e:
             tqdm.write(f"    [{item['id']} t{turn_idx}] ERROR: {e}")
             turn_metrics.append({"turn": turn_idx, "error": str(e)})
@@ -343,7 +351,8 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
-    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
+    "tool_delay_s":             TOOL_DELAY,
+    "kv_cache_per_gpu":         kv_stats,
 }
 
 output = {"summary": summary, "results": _results}
@@ -364,4 +373,5 @@ print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT      : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT      : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
+print(f"Tool delay     : {TOOL_DELAY}s per tool-call turn")
 print(f"결과 저장      : {out_path}")

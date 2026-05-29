@@ -27,9 +27,13 @@ export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$CONDA_PREFIX/lib:$LIBRARY_PATH
 # Configuration
 # =============================================================================
 
-export MODEL_PATH=${MODEL_PATH:-/home/uhmturks/hf_models/Llama-3.1-8B-Instruct}
-SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-Llama}
+export MODEL_PATH=${MODEL_PATH:-/home/uhmturks/hf_models/Qwen3.6-27B}
+SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-Qwen}
 HOST_IP=${HOST_IP:-127.0.0.1}
+TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-hermes}
+# TP=4 splits the model across 4 GPUs (~13.5GB/GPU for 27B BF16), no quantization needed
+QUANTIZATION=${QUANTIZATION:-}
+DTYPE=${DTYPE:-bfloat16}
 
 XPYD_PROXY="/home/uhmturks/vllm-source/examples/disaggregated/p2p_nccl_xpyd/disagg_proxy_p2p_nccl_xpyd.py"
 
@@ -70,6 +74,7 @@ wait_for_server() {
 
 echo "=============================================="
 echo "Starting vLLM 2P2D Disaggregated"
+echo "Model: $(basename $MODEL_PATH)  dtype: $DTYPE  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
 echo "=============================================="
 
 echo "[1/5] Starting xpyd proxy (ZMQ=$NCCL_PROXY_PORT, HTTP=$SERVICE_PORT)..."
@@ -84,8 +89,9 @@ CUDA_VISIBLE_DEVICES=$P1_GPU "$CONDA_PYTHON" -m vllm.entrypoints.cli.main serve 
     --host 0.0.0.0 --port $P1_PORT \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEM_UTIL \
-    --dtype float16 --trust-remote-code --enforce-eager \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --dtype $DTYPE --trust-remote-code --enforce-eager \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config \
     "{\"kv_connector\":\"P2pNcclConnector\",\"kv_role\":\"kv_producer\",\"kv_buffer_size\":\"1e9\",\"kv_port\":\"${P1_KV_PORT}\",\"kv_connector_extra_config\":{\"proxy_ip\":\"${HOST_IP}\",\"proxy_port\":\"${NCCL_PROXY_PORT}\",\"http_ip\":\"${HOST_IP}\",\"http_port\":\"${P1_PORT}\",\"send_type\":\"PUT_ASYNC\",\"nccl_num_channels\":\"16\",\"mem_pool_size_gb\":\"8\"}}" \
     > "$LOG_DIR/prefill1.log" 2>&1 &
@@ -96,8 +102,9 @@ CUDA_VISIBLE_DEVICES=$P2_GPU "$CONDA_PYTHON" -m vllm.entrypoints.cli.main serve 
     --host 0.0.0.0 --port $P2_PORT \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEM_UTIL \
-    --dtype float16 --trust-remote-code --enforce-eager \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --dtype $DTYPE --trust-remote-code --enforce-eager \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config \
     "{\"kv_connector\":\"P2pNcclConnector\",\"kv_role\":\"kv_producer\",\"kv_buffer_size\":\"1e9\",\"kv_port\":\"${P2_KV_PORT}\",\"kv_connector_extra_config\":{\"proxy_ip\":\"${HOST_IP}\",\"proxy_port\":\"${NCCL_PROXY_PORT}\",\"http_ip\":\"${HOST_IP}\",\"http_port\":\"${P2_PORT}\",\"send_type\":\"PUT_ASYNC\",\"nccl_num_channels\":\"16\",\"mem_pool_size_gb\":\"8\"}}" \
     > "$LOG_DIR/prefill2.log" 2>&1 &
@@ -108,8 +115,9 @@ CUDA_VISIBLE_DEVICES=$D1_GPU "$CONDA_PYTHON" -m vllm.entrypoints.cli.main serve 
     --host 0.0.0.0 --port $D1_PORT \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEM_UTIL \
-    --dtype float16 --trust-remote-code --enforce-eager \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --dtype $DTYPE --trust-remote-code --enforce-eager \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config \
     "{\"kv_connector\":\"P2pNcclConnector\",\"kv_role\":\"kv_consumer\",\"kv_buffer_size\":\"8e9\",\"kv_port\":\"${D1_KV_PORT}\",\"kv_connector_extra_config\":{\"proxy_ip\":\"${HOST_IP}\",\"proxy_port\":\"${NCCL_PROXY_PORT}\",\"http_ip\":\"${HOST_IP}\",\"http_port\":\"${D1_PORT}\",\"send_type\":\"PUT_ASYNC\",\"nccl_num_channels\":\"16\",\"mem_pool_size_gb\":\"8\"}}" \
     > "$LOG_DIR/decode1.log" 2>&1 &
@@ -120,8 +128,9 @@ CUDA_VISIBLE_DEVICES=$D2_GPU "$CONDA_PYTHON" -m vllm.entrypoints.cli.main serve 
     --host 0.0.0.0 --port $D2_PORT \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEM_UTIL \
-    --dtype float16 --trust-remote-code --enforce-eager \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --dtype $DTYPE --trust-remote-code --enforce-eager \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config \
     "{\"kv_connector\":\"P2pNcclConnector\",\"kv_role\":\"kv_consumer\",\"kv_buffer_size\":\"8e9\",\"kv_port\":\"${D2_KV_PORT}\",\"kv_connector_extra_config\":{\"proxy_ip\":\"${HOST_IP}\",\"proxy_port\":\"${NCCL_PROXY_PORT}\",\"http_ip\":\"${HOST_IP}\",\"http_port\":\"${D2_PORT}\",\"send_type\":\"PUT_ASYNC\",\"nccl_num_channels\":\"16\",\"mem_pool_size_gb\":\"8\"}}" \
     > "$LOG_DIR/decode2.log" 2>&1 &
