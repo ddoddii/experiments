@@ -59,6 +59,7 @@ rm -f "$LOG_DIR"/*.log 2>/dev/null || true
 echo "=============================================="
 echo "Starting vLLM Configuration: 2P_2D"
 echo "Architecture: 2P + 2D"
+echo "Model: $(basename $MODEL_PATH)  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
 echo "P node kv_buffer: ${KV_BUFFER_GB}GB  mem_pool: ${MEM_POOL_GB}GB"
 echo "=============================================="
 
@@ -116,7 +117,8 @@ CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/prefill0.log" 2>&1 &
 sleep 3
@@ -130,7 +132,8 @@ CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/prefill1.log" 2>&1 &
 sleep 3
@@ -144,7 +147,8 @@ CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/decode2.log" 2>&1 &
 sleep 3
@@ -158,7 +162,8 @@ CUDA_VISIBLE_DEVICES=3 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/decode3.log" 2>&1 &
 
