@@ -5,13 +5,13 @@
 # D 노드: hicache 없음 (decode 모드가 chunk cache 강제 → hicache 불가)
 #
 # hicache-ratio: DRAM 캐시 크기 = GPU KV 캐시 × ratio
-#   Qwen3.6-27B fp8 A6000 기준 GPU KV ≈ 20GB (47GB - 27GB 모델 가중치)
-#   ratio=0.5 → P 2대 × 10GB ≈ 20GB DRAM
-#   ratio=1.0 → P 2대 × 20GB ≈ 40GB DRAM  (권장)
-#   ratio=1.2 → P 2대 × 24GB ≈ 48GB DRAM  (기본값, 125GB 서버 안전)
+#   Qwen3-14B BF16 A6000 기준 GPU KV ≈ 19GB (47GB - 28GB 모델 가중치)
+#   ratio=0.5 → P 2대 × 9.5GB ≈ 19GB DRAM
+#   ratio=1.0 → P 2대 × 19GB  ≈ 38GB DRAM  (권장)
+#   ratio=1.2 → P 2대 × 22.8GB ≈ 46GB DRAM (기본값, 125GB 서버 안전)
 #
 # 사용법:
-#   bash start_2P_2D.sh                                  # 기본값 (Qwen3.6-27B, fp8)
+#   bash start_2P_2D.sh                                  # 기본값 (Qwen3-14B, BF16)
 #   MODEL_PATH=/path/to/Llama QUANTIZATION= TOOL_CALL_PARSER=llama3 bash start_2P_2D.sh
 #   HICACHE_RATIO=0.5 bash start_2P_2D.sh               # ratio=0.5
 #
@@ -23,8 +23,8 @@ set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
 
-MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3.6-27B"}
-QUANTIZATION=${QUANTIZATION:-"fp8"}        # 27B@BF16=54GB > 47GB VRAM, fp8=27GB OK
+MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3-14B"}
+QUANTIZATION=${QUANTIZATION:-""}           # 14B@BF16=28GB, quantization 불필요
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}   # Qwen uses hermes format
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
