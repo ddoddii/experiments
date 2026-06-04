@@ -16,6 +16,13 @@ GPU L1 vs CPU DRAM L2 vs SSD L3 KV fetch 시간 측정
   TTFT(L2) - TTFT(L1) = DRAM→GPU KV 전송 오버헤드
   TTFT(L3) - TTFT(L1) = SSD→DRAM→GPU KV 전송 오버헤드
 
+Phase 3 디자인 (disk space):
+  write-through 정책으로 모든 KV가 GPU와 동시에 DRAM에도 기록된다.
+  Phase 3a (GPU 재축출) 중 DRAM이 가득 차면 Phase 2 eviction 데이터가
+  /tmp/hicache (SSD)에 써져 수십 GB를 차지한다.
+  Phase 3b (DRAM 축출) 전에 hicache를 정리하여 anchor→SSD 기록에 필요한
+  공간을 확보한다 (anchor KV는 DRAM에 있으므로 정리해도 안전).
+
 실험 조건 (중요):
   - 모든 요청이 동일한 P 노드에서 처리되어야 한다.
   - 2P2D 라우터는 P1/P2를 랜덤 분산하므로, 단일 P+D 라우터 사용 권장:
@@ -42,25 +49,29 @@ Usage:
 
   # 파라미터 커스텀
   SERVER_URL=http://127.0.0.1:8001 \\
-  ANCHOR_CHARS=15000 GPU_EVICT_N=35 DRAM_EVICT_N=38 \\
+  ANCHOR_CHARS=15000 GPU_EVICT_N=35 DRAM_EVICT_N=8 \\
     python benchmark/sglang_kv_tier_latency.py
 
 Environment variables:
-  SERVER_URL       SGLang 라우터 주소     (default: http://127.0.0.1:8001)
-  P_NODE_URL       P 노드 직접 주소 (stats용)  (default: http://127.0.0.1:30000)
-  MODEL            모델 경로               (default: /home/uhmturks/hf_models/Qwen3-14B)
-  ANCHOR_CHARS     anchor 텍스트 길이     (default: 15000 ≈ 5000 tokens)
-  EVICT_CHARS      eviction 요청 텍스트 길이 (default: 12000 ≈ 4000 tokens)
-  GPU_EVICT_N      GPU 축출용 eviction 요청 수  (default: 32)
-  DRAM_EVICT_N     DRAM 축출용 추가 eviction 수 (default: 38)
-  REPEAT_N         phase당 측정 반복 수   (default: 5)
-  GPU_KV_GB        GPU KV 예산 GB         (default: 18.0)
-  DRAM_KV_GB       DRAM KV 예산 GB        (default: 21.6)
-  MAX_TOKENS_OUT   응답 최대 토큰 수      (default: 16)
+  SERVER_URL       SGLang 라우터 주소        (default: http://127.0.0.1:8001)
+  P_NODE_URL       P 노드 직접 주소 (stats용)   (default: http://127.0.0.1:30000)
+  MODEL            모델 경로                  (default: /home/uhmturks/hf_models/Qwen3-14B)
+  ANCHOR_CHARS     anchor 텍스트 길이        (default: 15000 ≈ 5000 tokens)
+  EVICT_CHARS      eviction 요청 텍스트 길이  (default: 12000 ≈ 4000 tokens)
+  GPU_EVICT_N      GPU 축출용 eviction 요청 수   (default: 32)
+  DRAM_EVICT_N     DRAM 축출용 추가 eviction 수  (default: 8)
+                   Phase 3a 후 DRAM은 가득 참; anchor(5K)+Phase2 잔여(~7K)를
+                   밀어내는 데 최소 3개 필요. 기본값 8이면 충분.
+  REPEAT_N         phase당 측정 반복 수      (default: 5)
+  GPU_KV_GB        GPU KV 예산 GB            (default: 18.0)
+  DRAM_KV_GB       DRAM KV 예산 GB           (default: 21.6)
+  HICACHE_PATH     SGLang hicache SSD 경로   (default: /tmp/hicache)
+  MAX_TOKENS_OUT   응답 최대 토큰 수         (default: 16)
 """
 
 import json
 import os
+import shutil
 import statistics
 import sys
 import time
@@ -80,10 +91,11 @@ MODEL          = os.environ.get("MODEL",         "/home/uhmturks/hf_models/Qwen3
 ANCHOR_CHARS   = int(os.environ.get("ANCHOR_CHARS",   "15000"))  # ≈ 5000 tokens
 EVICT_CHARS    = int(os.environ.get("EVICT_CHARS",    "12000"))  # ≈ 4000 tokens per request
 GPU_EVICT_N    = int(os.environ.get("GPU_EVICT_N",    "32"))     # GPU 채우기 요청 수
-DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "38"))     # DRAM 채우기 추가 요청 수
+DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "8"))      # DRAM 채우기 추가 요청 수
 REPEAT_N       = int(os.environ.get("REPEAT_N",       "5"))
 GPU_KV_GB      = float(os.environ.get("GPU_KV_GB",    "18.0"))
 DRAM_KV_GB     = float(os.environ.get("DRAM_KV_GB",   "21.6"))   # 1.2 × GPU_KV_GB
+HICACHE_PATH   = os.environ.get("HICACHE_PATH",       "/tmp/hicache")
 MAX_TOKENS_OUT = int(os.environ.get("MAX_TOKENS_OUT", "16"))
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
@@ -123,6 +135,7 @@ print(f"  GPU_EVICT_N  : {GPU_EVICT_N} requests"
 print(f"  DRAM_EVICT_N : {DRAM_EVICT_N} requests"
       f"  ({DRAM_EVICT_N*evict_tok_est:,} tokens = {DRAM_EVICT_N*evict_tok_est/dram_max_tokens*100:.0f}% of DRAM KV)")
 print(f"  Repeat N     : {REPEAT_N} per phase")
+print(f"  HiCache path : {HICACHE_PATH}  (cleaned before Phase 3b)")
 print("=" * 68)
 
 # ─── Storage tier check ──────────────────────────────────────────────────────
@@ -227,6 +240,40 @@ def print_cache_stats(label: str):
               f"cached={stats.get('num_cached_tokens')}/"
               f"{stats.get('num_total_tokens')}")
 
+# ─── Disk / hicache helpers ──────────────────────────────────────────────────
+def free_disk_gb(path: str = "/tmp") -> float:
+    try:
+        st = os.statvfs(path)
+        return st.f_bavail * st.f_frsize / 1024 ** 3
+    except Exception:
+        return float("inf")
+
+def hicache_used_gb() -> float:
+    try:
+        total = 0
+        for root, _dirs, files in os.walk(HICACHE_PATH):
+            for f in files:
+                try:
+                    total += os.path.getsize(os.path.join(root, f))
+                except OSError:
+                    pass
+        return total / 1024 ** 3
+    except Exception:
+        return 0.0
+
+def clean_hicache(reason: str = ""):
+    """Remove all SSD hicache data to free disk space.
+    Safe to call when anchor is in DRAM (not yet evicted to SSD)."""
+    if not os.path.isdir(HICACHE_PATH):
+        return
+    used_gb = hicache_used_gb()
+    shutil.rmtree(HICACHE_PATH, ignore_errors=True)
+    os.makedirs(HICACHE_PATH, exist_ok=True)
+    msg = f"  Cleaned {HICACHE_PATH} ({used_gb:.1f} GB freed)"
+    if reason:
+        msg += f" — {reason}"
+    print(msg)
+
 # ─── Phase runner ────────────────────────────────────────────────────────────
 def measure_phase(label: str) -> list[float]:
     """Run REPEAT_N anchor requests; return TTFT list in ms."""
@@ -303,15 +350,28 @@ record["l2_dram"] = {
 }
 
 # Phase 3: L3 SSD
-# After L2 measurement, anchor is back in GPU (loaded from DRAM).
-# Must: (a) re-evict anchor from GPU, (b) overflow DRAM to push anchor to SSD.
-# Use fresh seeds to avoid cache conflicts with Phase 2 data.
+# After L2 measurement, anchor is back in GPU+DRAM (loaded from DRAM, LRU refreshed).
+# Step 3a: flood GPU with fresh requests → anchor evicted GPU→DRAM (already there).
+#          This also overflows DRAM: Phase 2 evictions (oldest) spill to SSD.
+# Clean:   /tmp/hicache holds the Phase 2 overflow (can be 10-20 GB).
+#          Anchor is still safely in DRAM. Cleaning frees disk for Step 3b.
+# Step 3b: a few more requests overflow DRAM → oldest (Phase2 leftovers + anchor) → SSD.
+#          Only ~3 requests needed; default 8 gives a comfortable margin.
 total_l3_flood = GPU_EVICT_N + DRAM_EVICT_N
-print(f"\n[Phase 3] L3 SSD — evicting anchor from GPU+DRAM with {total_l3_flood} requests")
-print(f"  Step 3a: re-fill GPU ({GPU_EVICT_N} new requests)  →  anchor GPU→DRAM")
+print(f"\n[Phase 3] L3 SSD — evicting anchor from GPU+DRAM")
+print(f"  Step 3a: re-fill GPU ({GPU_EVICT_N} requests)  →  anchor GPU→DRAM, Phase2 data→SSD")
 flood("L3 GPU re-evict", range(3000, 3000 + GPU_EVICT_N))
-print(f"  Step 3b: overflow DRAM ({DRAM_EVICT_N} more requests)  →  anchor DRAM→SSD")
-flood("L3 DRAM evict",   range(4000, 4000 + DRAM_EVICT_N))
+
+# Clean hicache: Phase 3a flushed Phase 2 eviction data to SSD (can be ~10-20 GB).
+# Anchor is in DRAM (not SSD), so this is safe.
+free_before = free_disk_gb(HICACHE_PATH)
+print(f"  Disk free before hicache clean: {free_before:.1f} GB")
+clean_hicache("freeing disk space before anchor DRAM→SSD eviction")
+free_after = free_disk_gb(HICACHE_PATH)
+print(f"  Disk free after  hicache clean: {free_after:.1f} GB")
+
+print(f"  Step 3b: overflow DRAM ({DRAM_EVICT_N} requests)  →  anchor DRAM→SSD")
+flood("L3 DRAM evict", range(4000, 4000 + DRAM_EVICT_N))
 
 print("  Waiting 5s for async SSD writes to complete ...")
 time.sleep(5)
@@ -366,7 +426,7 @@ if l3_vs_l2 and l3_vs_l2 > 0:
 if l1_mean and l2_mean and abs(l2_mean - l1_mean) < 20:
     print()
     print("  ⚠  L2 TTFT ≈ L1 TTFT: anchor may not have been evicted from GPU.")
-    print("     Try increasing GPU_EVICT_N (current: {GPU_EVICT_N})")
+    print(f"     Try increasing GPU_EVICT_N (current: {GPU_EVICT_N})")
 
 if l2_mean and l3_mean and abs(l3_mean - l2_mean) < 30:
     print()
