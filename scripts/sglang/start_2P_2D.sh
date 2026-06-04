@@ -29,7 +29,8 @@ TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}   # Qwen uses hermes format
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
-mkdir -p logs/sglang
+LOG_DIR="$PROJECT_DIR/logs/sglang"
+mkdir -p "$LOG_DIR"
 
 HICACHE_DIR="/tmp/hicache"
 
@@ -55,7 +56,7 @@ if [ -d "$HICACHE_DIR" ]; then
 fi
 
 echo "[1/6] Starting Mooncake metadata server..."
-python -m mooncake.http_metadata_server > logs/mooncake.log 2>&1 &
+python -m mooncake.http_metadata_server > "$PROJECT_DIR/logs/mooncake.log" 2>&1 &
 MOONCAKE_PID=$!
 echo "  PID: $MOONCAKE_PID"
 sleep 2
@@ -69,7 +70,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
-  > logs/sglang/p1.log 2>&1 &
+  > "$LOG_DIR/p1.log" 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -80,7 +81,7 @@ CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8999 \
-  > logs/sglang/p2.log 2>&1 &
+  > "$LOG_DIR/p2.log" 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -94,7 +95,7 @@ CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
-  > logs/sglang/d1.log 2>&1 &
+  > "$LOG_DIR/d1.log" 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -104,7 +105,7 @@ CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
-  > logs/sglang/d2.log 2>&1 &
+  > "$LOG_DIR/d2.log" 2>&1 &
 echo "  PID: $!"
 sleep 3
 
@@ -112,7 +113,7 @@ echo ""
 echo "Waiting for all servers to be ready..."
 for port in 30000 30001 30002 30003; do
   echo -n "  Waiting for port $port..."
-  while ! grep -q "ready to roll" logs/sglang/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log 2>/dev/null; do
+  while ! grep -q "ready to roll" "$LOG_DIR/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log" 2>/dev/null; do
     sleep 3
     echo -n "."
   done
@@ -128,7 +129,7 @@ python -m sglang_router.launch_router \
   --decode http://127.0.0.1:30002 \
   --decode http://127.0.0.1:30003 \
   --host 0.0.0.0 --port 8000 \
-  > logs/sglang/router.log 2>&1 &
+  > "$LOG_DIR/router.log" 2>&1 &
 echo "  PID: $!"
 
 # ─── Diagnostics: /metrics 엔드포인트 확인 ─────────────────────────────────
