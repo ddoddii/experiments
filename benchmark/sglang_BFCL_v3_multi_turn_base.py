@@ -10,12 +10,13 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 def _p(rel): return os.path.join(PROJECT_ROOT, rel)
 
 ROUTER_URL = os.environ.get("SGLANG_URL", "http://127.0.0.1:8000/v1/chat/completions")
-# SGLang은 /v1/models 에서 모델명을 확인: curl http://localhost:30000/v1/models
-# 보통 HF 모델 ID (meta-llama/Llama-3.1-8B-Instruct) 로 등록됨
-MODEL  = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct")
-CONFIG = os.environ.get("CONFIG", "sglang_2p2d")
+# SGLang served_model_name defaults to model path; check with: curl http://localhost:30000/v1/models
+MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Qwen3-14B")
+CONFIG     = os.environ.get("CONFIG", "sglang_2p2d")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "120"))
+
+MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL", "http://localhost:9091")
 
@@ -96,6 +97,13 @@ from sglang_hicache_exporter import SGLangHiCachePoller
 
 poller = SGLangHiCachePoller()
 poller.start()
+
+print(f"Config     : {CONFIG}")
+print(f"URL        : {ROUTER_URL}")
+print(f"Model      : {MODEL_SLUG}")
+print(f"Items      : 200")
+print(f"PushGW     : {PUSHGATEWAY_URL}")
+print("=" * 60)
 
 # ── 데이터 로드 ──────────────────────────────────────────────────────────────
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
@@ -287,13 +295,13 @@ summary = {
 
 output = {"summary": summary, "results": results}
 
-os.makedirs(_p("results"), exist_ok=True)
-shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
-out_path  = _p(f"results/bfcl_multiturn_results_{CONFIG}.json")
+import shutil
+out_dir  = _p(f"results/sglang_hicache/{MODEL_SLUG}")
+os.makedirs(out_dir, exist_ok=True)
+out_path = os.path.join(out_dir, f"bfcl_multiturn_{CONFIG}.json")
+shm_path = f"/dev/shm/bfcl_sglang_{MODEL_SLUG}_{CONFIG}.json"
 with open(shm_path, "w") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
-
-import shutil
 shutil.copy(shm_path, out_path)
 
 print(f"\n{'='*60}")

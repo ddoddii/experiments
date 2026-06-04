@@ -21,7 +21,7 @@ Usage:
 
 Environment variables:
   SGLANG_URL      SGLang router URL  (default: http://127.0.0.1:8000/v1/chat/completions)
-  MODEL           model name         (default: meta-llama/Llama-3.1-8B-Instruct)
+  MODEL           model name         (default: /home/uhmturks/hf_models/Qwen3-14B)
   CONCURRENCY     parallel items     (default: 4)
   CONFIG          result file tag    (default: sglang_2p2d_c{CONCURRENCY})
   MAX_TOKENS      max output tokens  (default: 512)
@@ -50,12 +50,14 @@ def _p(rel): return os.path.join(PROJECT_ROOT, rel)
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 ROUTER_URL      = os.environ.get("SGLANG_URL",       "http://127.0.0.1:8000/v1/chat/completions")
-MODEL           = os.environ.get("MODEL",             "meta-llama/Llama-3.1-8B-Instruct")
+MODEL           = os.environ.get("MODEL",             "/home/uhmturks/hf_models/Qwen3-14B")
 CONCURRENCY     = int(os.environ.get("CONCURRENCY",   "4"))
 CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}")
 MAX_TOKENS      = int(os.environ.get("MAX_TOKENS",    "512"))
 TIMEOUT         = int(os.environ.get("TIMEOUT",       "600"))
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL",   "http://localhost:9091")
+
+MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 
 # ─── Pushgateway (simple HTTP POST, no prometheus_client dependency) ─────────
 _pg_lock = threading.Lock()
@@ -138,7 +140,7 @@ items     = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json")
 
 print(f"Config      : {CONFIG}")
 print(f"URL         : {ROUTER_URL}")
-print(f"Model       : {MODEL}")
+print(f"Model       : {MODEL_SLUG}")
 print(f"Items       : {len(items)}")
 print(f"Concurrency : {CONCURRENCY}")
 print(f"PushGW      : {PUSHGATEWAY_URL}")
@@ -377,9 +379,10 @@ summary = {
 
 output = {"summary": summary, "results": _results}
 
-os.makedirs(_p("results"), exist_ok=True)
-out_path = _p(f"results/bfcl_multiturn_results_{CONFIG}.json")
-shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
+out_dir  = _p(f"results/sglang_hicache/{MODEL_SLUG}")
+os.makedirs(out_dir, exist_ok=True)
+out_path = os.path.join(out_dir, f"bfcl_multiturn_{CONFIG}.json")
+shm_path = f"/dev/shm/bfcl_sglang_{MODEL_SLUG}_{CONFIG}.json"
 with open(shm_path, "w") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
 shutil.copy(shm_path, out_path)
