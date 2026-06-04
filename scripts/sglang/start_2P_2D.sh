@@ -5,14 +5,15 @@
 # D 노드: hicache 없음 (decode 모드가 chunk cache 강제 → hicache 불가)
 #
 # hicache-ratio: DRAM 캐시 크기 = GPU KV 캐시 × ratio
-#   Llama-3.1-8B A6000 기준 GPU KV ≈ 25.5GB
-#   ratio=0.5 → P 2대 × 12.8GB ≈ 26GB DRAM  (절약)
-#   ratio=1.0 → P 2대 × 25.5GB ≈ 51GB DRAM  (권장)
-#   ratio=1.2 → P 2대 × 30.6GB ≈ 61GB DRAM  (기본값, 125GB 서버 안전)
+#   Qwen3.6-27B fp8 A6000 기준 GPU KV ≈ 20GB (47GB - 27GB 모델 가중치)
+#   ratio=0.5 → P 2대 × 10GB ≈ 20GB DRAM
+#   ratio=1.0 → P 2대 × 20GB ≈ 40GB DRAM  (권장)
+#   ratio=1.2 → P 2대 × 24GB ≈ 48GB DRAM  (기본값, 125GB 서버 안전)
 #
 # 사용법:
-#   bash start_2P_2D.sh                     # ratio=1.2 (기본값)
-#   HICACHE_RATIO=0.5 bash start_2P_2D.sh  # ratio=0.5
+#   bash start_2P_2D.sh                                  # 기본값 (Qwen3.6-27B, fp8)
+#   MODEL_PATH=/path/to/Llama QUANTIZATION= TOOL_CALL_PARSER=llama3 bash start_2P_2D.sh
+#   HICACHE_RATIO=0.5 bash start_2P_2D.sh               # ratio=0.5
 #
 # 벤치마크:
 #   CONFIG=sglang_2p2d python benchmark/sglang_BFCL_v3_multi_turn_base.py
@@ -22,7 +23,9 @@ set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
 
-MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
+MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3.6-27B"}
+QUANTIZATION=${QUANTIZATION:-"fp8"}        # 27B@BF16=54GB > 47GB VRAM, fp8=27GB OK
+TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}   # Qwen uses hermes format
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
@@ -30,7 +33,8 @@ mkdir -p logs/sglang
 
 HICACHE_DIR="/tmp/hicache"
 
-echo "hicache-ratio = $HICACHE_RATIO  (est. DRAM: $(python3 -c "print(f'{2*float(\"$HICACHE_RATIO\")*25.52:.0f} GB')") across P1+P2)"
+echo "Model     : $(basename $MODEL_PATH)  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
+echo "hicache-ratio = $HICACHE_RATIO"
 echo ""
 echo "[0/6] Stopping any existing SGLang/Mooncake/exporter processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
@@ -61,6 +65,7 @@ export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
 CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 \
+  ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
@@ -71,6 +76,7 @@ sleep 3
 echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
 CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 \
+  ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8999 \
@@ -85,8 +91,9 @@ sleep 3
 echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
 CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 \
+  ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
-  --tool-call-parser llama3 \
+  --tool-call-parser $TOOL_CALL_PARSER \
   > logs/sglang/d1.log 2>&1 &
 echo "  PID: $!"
 sleep 3
@@ -94,8 +101,9 @@ sleep 3
 echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
 CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 \
+  ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
-  --tool-call-parser llama3 \
+  --tool-call-parser $TOOL_CALL_PARSER \
   > logs/sglang/d2.log 2>&1 &
 echo "  PID: $!"
 sleep 3
