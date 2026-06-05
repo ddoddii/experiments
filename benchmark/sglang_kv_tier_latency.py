@@ -59,9 +59,10 @@ Environment variables:
   ANCHOR_CHARS     anchor 텍스트 길이        (default: 15000 ≈ 5000 tokens)
   EVICT_CHARS      eviction 요청 텍스트 길이  (default: 12000 ≈ 4000 tokens)
   GPU_EVICT_N      GPU 축출용 eviction 요청 수   (default: 32)
-  DRAM_EVICT_N     DRAM 축출용 추가 eviction 수  (default: 8)
-                   Phase 3a 후 DRAM은 가득 참; anchor(5K)+Phase2 잔여(~7K)를
-                   밀어내는 데 최소 3개 필요. 기본값 8이면 충분.
+  DRAM_EVICT_N     DRAM 축출용 추가 eviction 수  (default: 30)
+                   Phase 3a 후 DRAM은 가득 참; anchor를 밀어내려면
+                   Phase2 잔여 + anchor 토큰 수 이상이 필요.
+                   실제 GPU KV 예산에 따라 필요량이 달라지므로 30이 안전한 기본값.
   REPEAT_N         phase당 측정 반복 수      (default: 5)
   GPU_KV_GB        GPU KV 예산 GB            (default: 18.0)
   DRAM_KV_GB       DRAM KV 예산 GB           (default: 21.6)
@@ -91,7 +92,7 @@ MODEL          = os.environ.get("MODEL",         "/home/uhmturks/hf_models/Qwen3
 ANCHOR_CHARS   = int(os.environ.get("ANCHOR_CHARS",   "15000"))  # ≈ 5000 tokens
 EVICT_CHARS    = int(os.environ.get("EVICT_CHARS",    "12000"))  # ≈ 4000 tokens per request
 GPU_EVICT_N    = int(os.environ.get("GPU_EVICT_N",    "32"))     # GPU 채우기 요청 수
-DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "8"))      # DRAM 채우기 추가 요청 수
+DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "30"))     # DRAM 채우기 추가 요청 수
 REPEAT_N       = int(os.environ.get("REPEAT_N",       "5"))
 GPU_KV_GB      = float(os.environ.get("GPU_KV_GB",    "18.0"))
 DRAM_KV_GB     = float(os.environ.get("DRAM_KV_GB",   "21.6"))   # 1.2 × GPU_KV_GB
@@ -428,10 +429,12 @@ if l1_mean and l2_mean and abs(l2_mean - l1_mean) < 20:
     print("  ⚠  L2 TTFT ≈ L1 TTFT: anchor may not have been evicted from GPU.")
     print(f"     Try increasing GPU_EVICT_N (current: {GPU_EVICT_N})")
 
-if l2_mean and l3_mean and abs(l3_mean - l2_mean) < 30:
+if l2_mean and l3_mean and abs(l3_mean - l2_mean) < 100:
     print()
     print("  ⚠  L3 TTFT ≈ L2 TTFT: anchor may not have been evicted from DRAM.")
-    print(f"     Try increasing DRAM_EVICT_N (current: {DRAM_EVICT_N})")
+    print(f"     Try increasing DRAM_EVICT_N (current: {DRAM_EVICT_N}).")
+    print(f"     Verify actual DRAM token budget:")
+    print(f"       curl -s http://127.0.0.1:30000/get_server_info | python3 -m json.tool | grep num_total_tokens")
     if check_tmp_is_tmpfs():
         print("     Also: /tmp is tmpfs — SSD backend is actually in RAM.")
 
