@@ -457,6 +457,45 @@ if l3_vs_l2 and l3_vs_l2 > 0:
     ssd_bw = anchor_kv_mb / (l3_vs_l2 / 1000)
     print(f"  Est. SSD→DRAM bandwidth : {ssd_bw:.0f} MB/s  (NVMe limit ~7,000 MB/s)")
 
+# ── Recompute vs Fetch comparison ────────────────────────────────────────────
+print()
+print("  ── Recompute vs Fetch (for this anchor length) ──")
+if cold_ms:
+    print(f"  Cold recompute : {cold_ms:.1f} ms  (P-node GPU prefill from scratch)")
+if l2_miss_ms and cold_ms:
+    delta_l2 = l2_miss_ms - cold_ms
+    sign = "+" if delta_l2 >= 0 else ""
+    verdict = "SLOWER than recompute" if delta_l2 > 0 else "faster than recompute"
+    print(f"  L2 DRAM fetch  : {l2_miss_ms:.1f} ms  ({sign}{delta_l2:.1f} ms vs recompute → {verdict})")
+if l3_miss_ms and cold_ms:
+    delta_l3 = l3_miss_ms - cold_ms
+    sign = "+" if delta_l3 >= 0 else ""
+    verdict = "SLOWER than recompute" if delta_l3 > 0 else "faster than recompute"
+    print(f"  L3 SSD  fetch  : {l3_miss_ms:.1f} ms  ({sign}{delta_l3:.1f} ms vs recompute → {verdict})")
+print()
+# Crossover insight
+if cold_ms and l2_miss_ms and l1_baseline:
+    if l2_miss_ms >= cold_ms:
+        # For this anchor length, recompute wins. Estimate crossover.
+        # compute_time ∝ N (approximate: prefill = O(N) for causal mask amortized)
+        # fetch_time ≈ const (DRAM bandwidth overhead is mostly transfer-size independent latency + N*bytes/bw)
+        # At crossover: cold_ms/anchor_tok_est * N_cross = l2_overhead * (N_cross/anchor_tok_est)
+        # Both sides scale with N → no simple crossover unless there's a fixed component
+        # Simpler: note that DRAM bw overhead = l2_overhead ms for anchor_tok_est tokens
+        # GPU compute speed = anchor_tok_est / (cold_ms - l1_baseline) tokens/ms (minus decode overhead)
+        compute_only_ms = cold_ms - l1_baseline  # subtract decode overhead
+        if compute_only_ms > 0 and l2_overhead and l2_overhead > 0:
+            compute_tok_per_ms = anchor_tok_est / compute_only_ms
+            dram_tok_per_ms    = anchor_kv_mb * 1024 / (anchor_kv_mb / (l2_overhead / 1000) / 1024)
+            crossover_tok = int(compute_tok_per_ms * (l2_overhead / 1000) * 1000)
+            print(f"  Note: At {anchor_tok_est:,} tokens, DRAM fetch ({l2_miss_ms:.0f}ms) >= recompute ({cold_ms:.0f}ms).")
+            print(f"  Hicache L2/L3 helps TTFT only for shorter contexts or faster PCIe bandwidth.")
+        else:
+            print(f"  Note: DRAM fetch >= recompute at {anchor_tok_est:,} tokens.")
+            print(f"  For shorter contexts hicache would be beneficial.")
+    else:
+        print(f"  Note: DRAM fetch < recompute at {anchor_tok_est:,} tokens → hicache beneficial here.")
+
 # Sanity checks on first-miss values
 if l1_baseline and l2_miss_ms and l2_miss_ms < l1_baseline + 50:
     print()
@@ -492,6 +531,8 @@ summary = {
     "l2_overhead_ms":     l2_overhead,
     "l3_overhead_ms":     l3_overhead,
     "l3_vs_l2_ms":        l3_vs_l2,
+    "l2_vs_recompute_ms": round(l2_miss_ms - cold_ms, 1) if (l2_miss_ms and cold_ms) else None,
+    "l3_vs_recompute_ms": round(l3_miss_ms - cold_ms, 1) if (l3_miss_ms and cold_ms) else None,
 }
 
 out_dir  = _p(f"results/sglang_hicache/{MODEL_SLUG}")
