@@ -16,12 +16,15 @@ GPU L1 vs CPU DRAM L2 vs SSD L3 KV fetch 시간 측정
   TTFT(L2) - TTFT(L1) = DRAM→GPU KV 전송 오버헤드
   TTFT(L3) - TTFT(L1) = SSD→DRAM→GPU KV 전송 오버헤드
 
-Phase 3 디자인 (disk space):
-  write-through 정책으로 모든 KV가 GPU와 동시에 DRAM에도 기록된다.
-  Phase 3a (GPU 재축출) 중 DRAM이 가득 차면 Phase 2 eviction 데이터가
-  /tmp/hicache (SSD)에 써져 수십 GB를 차지한다.
-  Phase 3b (DRAM 축출) 전에 hicache를 정리하여 anchor→SSD 기록에 필요한
-  공간을 확보한다 (anchor KV는 DRAM에 있으므로 정리해도 안전).
+L3 anchor 설계 (핵심):
+  L2 측정에서 anchor를 DRAM에서 읽으면 anchor의 DRAM LRU가 "지금"으로 갱신된다.
+  이후 Phase 3에서 flood를 보내도 anchor가 "최신"이라 DRAM에서 밀려나지 않는다.
+
+  해결: L3 전용 별도 anchor를 실험 시작 전(Pre-Phase)에 미리 DRAM에 써둔다.
+  이 L3 anchor의 DRAM LRU는 실험 전체에서 가장 오래됐다.
+  Phase 2 flood, L2 측정, Phase 3 소량 flood 후에도 L3 anchor가 제일 오래됐으므로
+  DRAM이 조금만 넘쳐도 L3 anchor가 SSD로 먼저 축출된다.
+  → SSD 기록량: anchor KV (~780MB) + 소량. 디스크 가득 찰 위험 없음.
 
 실험 조건 (중요):
   - 모든 요청이 동일한 P 노드에서 처리되어야 한다.
@@ -59,10 +62,10 @@ Environment variables:
   ANCHOR_CHARS     anchor 텍스트 길이        (default: 15000 ≈ 5000 tokens)
   EVICT_CHARS      eviction 요청 텍스트 길이  (default: 12000 ≈ 4000 tokens)
   GPU_EVICT_N      GPU 축출용 eviction 요청 수   (default: 32)
-  DRAM_EVICT_N     DRAM 축출용 추가 eviction 수  (default: 30)
-                   Phase 3a 후 DRAM은 가득 참; anchor를 밀어내려면
-                   Phase2 잔여 + anchor 토큰 수 이상이 필요.
-                   실제 GPU KV 예산에 따라 필요량이 달라지므로 30이 안전한 기본값.
+  L3_FLOOD_N       L3 eviction 요청 수              (default: 20)
+                   L3 anchor (Pre-Phase에 DRAM에 써둔 것)이 DRAM 최고령이라
+                   DRAM 조금만 넘쳐도 SSD로 먼저 밀려남. 20개면 충분히 여유있음.
+                   GPU KV가 예상보다 크면 30으로 늘려볼 것.
   REPEAT_N         phase당 측정 반복 수      (default: 5)
   GPU_KV_GB        GPU KV 예산 GB            (default: 18.0)
   DRAM_KV_GB       DRAM KV 예산 GB           (default: 21.6)
@@ -92,7 +95,8 @@ MODEL          = os.environ.get("MODEL",         "/home/uhmturks/hf_models/Qwen3
 ANCHOR_CHARS   = int(os.environ.get("ANCHOR_CHARS",   "15000"))  # ≈ 5000 tokens
 EVICT_CHARS    = int(os.environ.get("EVICT_CHARS",    "12000"))  # ≈ 4000 tokens per request
 GPU_EVICT_N    = int(os.environ.get("GPU_EVICT_N",    "32"))     # GPU 채우기 요청 수
-DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "30"))     # DRAM 채우기 추가 요청 수
+DRAM_EVICT_N   = int(os.environ.get("DRAM_EVICT_N",   "30"))     # Phase 2 GPU evict 이후 L2 측정용 (사용 안함)
+L3_FLOOD_N     = int(os.environ.get("L3_FLOOD_N",     "20"))     # L3 eviction 요청 수 (소량으로 충분)
 REPEAT_N       = int(os.environ.get("REPEAT_N",       "5"))
 GPU_KV_GB      = float(os.environ.get("GPU_KV_GB",    "18.0"))
 DRAM_KV_GB     = float(os.environ.get("DRAM_KV_GB",   "21.6"))   # 1.2 × GPU_KV_GB
@@ -136,7 +140,13 @@ print(f"  GPU_EVICT_N  : {GPU_EVICT_N} requests"
 print(f"  DRAM_EVICT_N : {DRAM_EVICT_N} requests"
       f"  ({DRAM_EVICT_N*evict_tok_est:,} tokens = {DRAM_EVICT_N*evict_tok_est/dram_max_tokens*100:.0f}% of DRAM KV)")
 print(f"  Repeat N     : {REPEAT_N} per phase")
-print(f"  HiCache path : {HICACHE_PATH}  (cleaned before Phase 3b)")
+print(f"  L3_FLOOD_N   : {L3_FLOOD_N} requests  (small flood to push pre-aged L3 anchor to SSD)")
+print(f"  HiCache path : {HICACHE_PATH}")
+print("=" * 68)
+print()
+print("  L3 anchor design: computed at experiment START (before Phase 0) so its DRAM")
+print("  LRU timestamp is the oldest. Phase 3 flood overflows DRAM by just enough to")
+print("  evict it to SSD. No hicache cleanup needed — SSD writes are tiny (~few GB).")
 print("=" * 68)
 
 # ─── Storage tier check ──────────────────────────────────────────────────────
@@ -156,18 +166,30 @@ if check_tmp_is_tmpfs():
 
 # ─── Text generation ────────────────────────────────────────────────────────
 def _anchor_text(n: int) -> str:
-    """Fixed deterministic English text. Always identical."""
+    """Fixed deterministic English text for L1/L2 anchor."""
     unit = "the quick brown fox jumps over the lazy dog "
     return (unit * (n // len(unit) + 1))[:n]
 
+def _l3_anchor_text(n: int) -> str:
+    """Different phrase for L3 anchor — no shared prefix with L1/L2 anchor.
+    Computed BEFORE Phase 0 so its DRAM LRU timestamp is the oldest."""
+    unit = "pack my box with five dozen liquor jugs now "
+    return (unit * (n // len(unit) + 1))[:n]
+
 def _evict_text(seed: int, n: int) -> str:
-    """Unique per seed; starts with EVICT{seed} → no shared prefix with anchor."""
+    """Unique per seed; starts with EVICT{seed} → no shared prefix with anchors."""
     unit = f"evict{seed:06d}x "
     return (unit * (n // len(unit) + 1))[:n]
 
 ANCHOR_TEXT   = _anchor_text(ANCHOR_CHARS)
 ANCHOR_MESSAGES = [
     {"role": "system", "content": f"ANCHOR context: {ANCHOR_TEXT}"},
+    {"role": "user",   "content": "Summarize in one word."},
+]
+
+L3_ANCHOR_TEXT = _l3_anchor_text(ANCHOR_CHARS)
+L3_ANCHOR_MESSAGES = [
+    {"role": "system", "content": f"L3ANCHOR context: {L3_ANCHOR_TEXT}"},
     {"role": "user",   "content": "Summarize in one word."},
 ]
 
@@ -276,11 +298,12 @@ def clean_hicache(reason: str = ""):
     print(msg)
 
 # ─── Phase runner ────────────────────────────────────────────────────────────
-def measure_phase(label: str) -> list[float]:
-    """Run REPEAT_N anchor requests; return TTFT list in ms."""
+def measure_phase(label: str, messages: list | None = None) -> list[float]:
+    """Run REPEAT_N requests; return TTFT list in ms."""
+    msgs = messages if messages is not None else ANCHOR_MESSAGES
     ttfts = []
     for i in range(REPEAT_N):
-        ttft, e2e = do_request(ANCHOR_MESSAGES, label=f"{label}[{i}]")
+        ttft, e2e = do_request(msgs, label=f"{label}[{i}]")
         ms = ttft * 1000 if ttft else None
         e2e_ms = e2e * 1000 if e2e else None
         if ms is not None:
@@ -318,6 +341,16 @@ def fmt_stats(vals: list[float]) -> str:
 # ─── Experiment ──────────────────────────────────────────────────────────────
 record = {}
 
+# ── Pre-Phase: L3 anchor into DRAM (MUST run before Phase 0) ─────────────────
+# L3 anchor is computed NOW so its DRAM LRU timestamp (t_pre) is the oldest.
+# Phase 0/1/2 run after this, so Phase 2 evictions and L2 re-access all have
+# timestamps NEWER than t_pre. When Phase 3 overflows DRAM, L3 anchor (oldest)
+# is evicted to SSD first — no need for large flood or hicache cleanup.
+print("\n[Pre-Phase] Computing L3 anchor into GPU+DRAM ...")
+print(f"  Text: 'L3ANCHOR context: {L3_ANCHOR_TEXT[:60]}...'")
+do_request(L3_ANCHOR_MESSAGES, "L3-PRE")
+print("  L3 anchor written to DRAM (LRU timestamp = oldest in experiment).")
+
 # Phase 0: COLD
 print("\n[Phase 0] COLD — no cache (initial prefill)")
 ttft_cold, _ = do_request(ANCHOR_MESSAGES, "COLD")
@@ -351,40 +384,27 @@ record["l2_dram"] = {
 }
 
 # Phase 3: L3 SSD
-# After L2 measurement, anchor is back in GPU+DRAM (loaded from DRAM, LRU refreshed).
-# Step 3a: flood GPU with fresh requests → anchor evicted GPU→DRAM (already there).
-#          This also overflows DRAM: Phase 2 evictions (oldest) spill to SSD.
-# Clean:   /tmp/hicache holds the Phase 2 overflow (can be 10-20 GB).
-#          Anchor is still safely in DRAM. Cleaning frees disk for Step 3b.
-# Step 3b: a few more requests overflow DRAM → oldest (Phase2 leftovers + anchor) → SSD.
-#          Only ~3 requests needed; default 8 gives a comfortable margin.
-total_l3_flood = GPU_EVICT_N + DRAM_EVICT_N
-print(f"\n[Phase 3] L3 SSD — evicting anchor from GPU+DRAM")
-print(f"  Step 3a: re-fill GPU ({GPU_EVICT_N} requests)  →  anchor GPU→DRAM, Phase2 data→SSD")
-flood("L3 GPU re-evict", range(3000, 3000 + GPU_EVICT_N))
-
-# Clean hicache: Phase 3a flushed Phase 2 eviction data to SSD (can be ~10-20 GB).
-# Anchor is in DRAM (not SSD), so this is safe.
-free_before = free_disk_gb(HICACHE_PATH)
-print(f"  Disk free before hicache clean: {free_before:.1f} GB")
-clean_hicache("freeing disk space before anchor DRAM→SSD eviction")
-free_after = free_disk_gb(HICACHE_PATH)
-print(f"  Disk free after  hicache clean: {free_after:.1f} GB")
-
-print(f"  Step 3b: overflow DRAM ({DRAM_EVICT_N} requests)  →  anchor DRAM→SSD")
-flood("L3 DRAM evict", range(4000, 4000 + DRAM_EVICT_N))
+# L3 anchor (computed in Pre-Phase) is the OLDEST item in DRAM (LRU = t_pre).
+# Phase 2 evictions and L2 re-access of anchor all happened AFTER t_pre.
+# A small flood overflows DRAM → L3 anchor evicted to SSD first (LRU policy).
+# SSD writes are tiny: only ~anchor_kv_mb + a bit more (no multi-GB flood needed).
+print(f"\n[Phase 3] L3 SSD — overflowing DRAM to evict pre-aged L3 anchor to SSD")
+print(f"  L3 anchor DRAM LRU = oldest in experiment (t_pre, before Phase 0).")
+print(f"  Flood: {L3_FLOOD_N} requests overflow DRAM → L3 anchor → SSD.")
+print(f"  (Disk writes: ~{max(L3_FLOOD_N * evict_tok_est - dram_max_tokens, evict_tok_est) * KV_BYTES_PER_TOKEN / 1024**3:.1f} GB est.)")
+flood("L3 flood", range(5000, 5000 + L3_FLOOD_N))
 
 print("  Waiting 5s for async SSD writes to complete ...")
 time.sleep(5)
-print_cache_stats("after-DRAM-flood")
+print_cache_stats("after-L3-flood")
 
-print("  Measuring anchor TTFT (expected: L3 SSD hit) ...")
-ttfts_l3 = measure_phase("L3")
+print("  Measuring L3 anchor TTFT (expected: SSD hit) ...")
+ttfts_l3 = measure_phase("L3", messages=L3_ANCHOR_MESSAGES)
 print(f"  → {fmt_stats(ttfts_l3)}")
 record["l3_ssd"] = {
     **stats_dict(ttfts_l3),
-    "total_evict_n": total_l3_flood,
-    "evict_tokens":  total_l3_flood * evict_tok_est,
+    "l3_flood_n":   L3_FLOOD_N,
+    "evict_tokens": L3_FLOOD_N * evict_tok_est,
 }
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
@@ -431,10 +451,9 @@ if l1_mean and l2_mean and abs(l2_mean - l1_mean) < 20:
 
 if l2_mean and l3_mean and abs(l3_mean - l2_mean) < 100:
     print()
-    print("  ⚠  L3 TTFT ≈ L2 TTFT: anchor may not have been evicted from DRAM.")
-    print(f"     Try increasing DRAM_EVICT_N (current: {DRAM_EVICT_N}).")
-    print(f"     Verify actual DRAM token budget:")
-    print(f"       curl -s http://127.0.0.1:30000/get_server_info | python3 -m json.tool | grep num_total_tokens")
+    print("  ⚠  L3 TTFT ≈ L2 TTFT: L3 anchor may not have been evicted from DRAM.")
+    print(f"     Try increasing L3_FLOOD_N (current: {L3_FLOOD_N}).")
+    print(f"     Also check: did Pre-Phase L3 anchor run before Phase 0? (should print 'L3 anchor written to DRAM')")
     if check_tmp_is_tmpfs():
         print("     Also: /tmp is tmpfs — SSD backend is actually in RAM.")
 
@@ -451,7 +470,7 @@ summary = {
     "dram_kv_gb":       DRAM_KV_GB,
     "kv_bytes_per_token": KV_BYTES_PER_TOKEN,
     "gpu_evict_n":      GPU_EVICT_N,
-    "dram_evict_n":     DRAM_EVICT_N,
+    "l3_flood_n":       L3_FLOOD_N,
     "repeat_n":         REPEAT_N,
     "cold_ttft_ms":     round(cold_ms, 1) if cold_ms else None,
     "l1_mean_ms":       round(l1_mean,  1) if l1_mean  else None,
