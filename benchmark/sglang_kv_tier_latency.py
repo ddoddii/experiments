@@ -298,20 +298,28 @@ def clean_hicache(reason: str = ""):
     print(msg)
 
 # ─── Phase runner ────────────────────────────────────────────────────────────
-def measure_phase(label: str, messages: list | None = None) -> list[float]:
-    """Run REPEAT_N requests; return TTFT list in ms."""
+def measure_phase(label: str, messages: list | None = None) -> tuple[list[float], float | None]:
+    """Run REPEAT_N requests; return (ttft_list_ms, first_miss_ms).
+
+    first_miss_ms is the first request's TTFT — this is the actual tier load
+    latency (cache miss). Subsequent requests hit GPU cache and measure ~L1.
+    """
     msgs = messages if messages is not None else ANCHOR_MESSAGES
     ttfts = []
+    first_miss: float | None = None
     for i in range(REPEAT_N):
         ttft, e2e = do_request(msgs, label=f"{label}[{i}]")
         ms = ttft * 1000 if ttft else None
         e2e_ms = e2e * 1000 if e2e else None
         if ms is not None:
             ttfts.append(ms)
-            print(f"    [{label} {i+1}/{REPEAT_N}]  TTFT={ms:7.1f} ms  e2e={e2e_ms:.1f} ms")
+            if first_miss is None:
+                first_miss = ms
+            marker = " ← tier miss" if i == 0 else ""
+            print(f"    [{label} {i+1}/{REPEAT_N}]  TTFT={ms:7.1f} ms  e2e={e2e_ms:.1f} ms{marker}")
         else:
             print(f"    [{label} {i+1}/{REPEAT_N}]  FAILED")
-    return ttfts
+    return ttfts, first_miss
 
 def flood(desc: str, seeds: range):
     """Send eviction requests to fill KV pool."""
@@ -360,7 +368,7 @@ record["cold"] = {"ttft_ms": round(cold_ms, 1) if cold_ms else None}
 
 # Phase 1: L1 GPU
 print("\n[Phase 1] L1 GPU — KV in GPU (immediate re-request)")
-ttfts_l1 = measure_phase("L1")
+ttfts_l1, _ = measure_phase("L1")
 print(f"  → {fmt_stats(ttfts_l1)}")
 print_cache_stats("after-L1")
 record["l1_gpu"] = stats_dict(ttfts_l1)
@@ -375,10 +383,12 @@ flood("GPU evict", range(1000, 1000 + GPU_EVICT_N))
 print_cache_stats("after-GPU-flood")
 
 print("  Measuring anchor TTFT (expected: L2 DRAM hit) ...")
-ttfts_l2 = measure_phase("L2")
+ttfts_l2, l2_miss_ms = measure_phase("L2")
 print(f"  → {fmt_stats(ttfts_l2)}")
+print(f"    (first-miss = {l2_miss_ms:.1f} ms = DRAM load latency)")
 record["l2_dram"] = {
     **stats_dict(ttfts_l2),
+    "first_miss_ms": round(l2_miss_ms, 1) if l2_miss_ms else None,
     "gpu_evict_n": GPU_EVICT_N,
     "evict_tokens": GPU_EVICT_N * evict_tok_est,
 }
@@ -399,33 +409,38 @@ time.sleep(5)
 print_cache_stats("after-L3-flood")
 
 print("  Measuring L3 anchor TTFT (expected: SSD hit) ...")
-ttfts_l3 = measure_phase("L3", messages=L3_ANCHOR_MESSAGES)
+ttfts_l3, l3_miss_ms = measure_phase("L3", messages=L3_ANCHOR_MESSAGES)
 print(f"  → {fmt_stats(ttfts_l3)}")
+print(f"    (first-miss = {l3_miss_ms:.1f} ms = SSD load latency)")
 record["l3_ssd"] = {
     **stats_dict(ttfts_l3),
+    "first_miss_ms": round(l3_miss_ms, 1) if l3_miss_ms else None,
     "l3_flood_n":   L3_FLOOD_N,
     "evict_tokens": L3_FLOOD_N * evict_tok_est,
 }
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
-l1_mean  = statistics.mean(ttfts_l1) if ttfts_l1 else None
-l2_mean  = statistics.mean(ttfts_l2) if ttfts_l2 else None
-l3_mean  = statistics.mean(ttfts_l3) if ttfts_l3 else None
+# Use first-miss (= [0]) for overhead/bandwidth — it's the actual tier load.
+# Subsequent hits go to GPU cache and reflect L1-like latency, not tier latency.
+l1_baseline = min(ttfts_l1) if ttfts_l1 else None  # pure GPU hit, no load overhead
 
-l2_overhead = round(l2_mean - l1_mean, 1) if (l1_mean and l2_mean) else None
-l3_overhead = round(l3_mean - l1_mean, 1) if (l1_mean and l3_mean) else None
-l3_vs_l2    = round(l3_mean - l2_mean, 1) if (l2_mean and l3_mean) else None
+l2_overhead = round(l2_miss_ms - l1_baseline, 1) if (l2_miss_ms and l1_baseline) else None
+l3_overhead = round(l3_miss_ms - l1_baseline, 1) if (l3_miss_ms and l1_baseline) else None
+l3_vs_l2    = round(l3_miss_ms - l2_miss_ms,  1) if (l3_miss_ms and l2_miss_ms)  else None
+
+anchor_kv_mb = anchor_tok_est * KV_BYTES_PER_TOKEN / 1024 / 1024
 
 print("\n" + "=" * 68)
-print("RESULTS SUMMARY")
+print("RESULTS SUMMARY  (overheads use first-miss = actual tier load)")
 print("=" * 68)
-print(f"  Anchor prefix : {ANCHOR_CHARS:,} chars ≈ {anchor_tok_est:,} tokens"
-      f"  ({anchor_tok_est * KV_BYTES_PER_TOKEN / 1024**2:.0f} MB KV)")
+print(f"  Anchor KV    : {anchor_tok_est:,} tokens  {anchor_kv_mb:.0f} MB")
 print()
 print(f"  Phase 0 COLD  : {cold_ms:.1f} ms" if cold_ms else "  Phase 0 COLD  : FAILED")
 print(f"  Phase 1 L1 GPU: {fmt_stats(ttfts_l1)}")
-print(f"  Phase 2 L2 RAM: {fmt_stats(ttfts_l2)}")
-print(f"  Phase 3 L3 SSD: {fmt_stats(ttfts_l3)}")
+print(f"  Phase 2 L2 RAM: first-miss={l2_miss_ms:.1f} ms  │  GPU re-hits: {fmt_stats(ttfts_l2[1:])}"
+      if (l2_miss_ms and len(ttfts_l2) > 1) else f"  Phase 2 L2 RAM: {fmt_stats(ttfts_l2)}")
+print(f"  Phase 3 L3 SSD: first-miss={l3_miss_ms:.1f} ms  │  GPU re-hits: {fmt_stats(ttfts_l3[1:])}"
+      if (l3_miss_ms and len(ttfts_l3) > 1) else f"  Phase 3 L3 SSD: {fmt_stats(ttfts_l3)}")
 print()
 if l2_overhead is not None:
     print(f"  L2 vs L1 overhead : +{l2_overhead:.1f} ms  (DRAM→GPU fetch)")
@@ -435,25 +450,23 @@ if l3_overhead is not None:
     print(f"  L3 vs L1 overhead : +{l3_overhead:.1f} ms  (total SSD→DRAM→GPU fetch)")
 print()
 
-anchor_kv_mb = anchor_tok_est * KV_BYTES_PER_TOKEN / 1024 / 1024
 if l2_overhead and l2_overhead > 0:
     dram_bw = anchor_kv_mb / (l2_overhead / 1000)
     print(f"  Est. DRAM→GPU bandwidth : {dram_bw:.0f} MB/s  (PCIe limit ~32,000 MB/s)")
 if l3_vs_l2 and l3_vs_l2 > 0:
     ssd_bw = anchor_kv_mb / (l3_vs_l2 / 1000)
-    print(f"  Est. SSD→DRAM bandwidth : {ssd_bw:.0f} MB/s  (NVMe limit ~5,000 MB/s)")
+    print(f"  Est. SSD→DRAM bandwidth : {ssd_bw:.0f} MB/s  (NVMe limit ~7,000 MB/s)")
 
-# Sanity check: warn if L2 ≈ L1 (anchor may not have been evicted)
-if l1_mean and l2_mean and abs(l2_mean - l1_mean) < 20:
+# Sanity checks on first-miss values
+if l1_baseline and l2_miss_ms and l2_miss_ms < l1_baseline + 50:
     print()
-    print("  ⚠  L2 TTFT ≈ L1 TTFT: anchor may not have been evicted from GPU.")
+    print("  ⚠  L2 first-miss ≈ L1: anchor may not have been evicted from GPU.")
     print(f"     Try increasing GPU_EVICT_N (current: {GPU_EVICT_N})")
 
-if l2_mean and l3_mean and abs(l3_mean - l2_mean) < 100:
+if l2_miss_ms and l3_miss_ms and l3_miss_ms < l2_miss_ms + 50:
     print()
-    print("  ⚠  L3 TTFT ≈ L2 TTFT: L3 anchor may not have been evicted from DRAM.")
+    print("  ⚠  L3 first-miss ≈ L2 first-miss: L3 anchor may not be on SSD.")
     print(f"     Try increasing L3_FLOOD_N (current: {L3_FLOOD_N}).")
-    print(f"     Also check: did Pre-Phase L3 anchor run before Phase 0? (should print 'L3 anchor written to DRAM')")
     if check_tmp_is_tmpfs():
         print("     Also: /tmp is tmpfs — SSD backend is actually in RAM.")
 
@@ -472,13 +485,13 @@ summary = {
     "gpu_evict_n":      GPU_EVICT_N,
     "l3_flood_n":       L3_FLOOD_N,
     "repeat_n":         REPEAT_N,
-    "cold_ttft_ms":     round(cold_ms, 1) if cold_ms else None,
-    "l1_mean_ms":       round(l1_mean,  1) if l1_mean  else None,
-    "l2_mean_ms":       round(l2_mean,  1) if l2_mean  else None,
-    "l3_mean_ms":       round(l3_mean,  1) if l3_mean  else None,
-    "l2_overhead_ms":   l2_overhead,
-    "l3_overhead_ms":   l3_overhead,
-    "l3_vs_l2_ms":      l3_vs_l2,
+    "cold_ttft_ms":       round(cold_ms,    1) if cold_ms    else None,
+    "l1_baseline_ms":     round(l1_baseline, 1) if l1_baseline else None,
+    "l2_first_miss_ms":   round(l2_miss_ms,  1) if l2_miss_ms  else None,
+    "l3_first_miss_ms":   round(l3_miss_ms,  1) if l3_miss_ms  else None,
+    "l2_overhead_ms":     l2_overhead,
+    "l3_overhead_ms":     l3_overhead,
+    "l3_vs_l2_ms":        l3_vs_l2,
 }
 
 out_dir  = _p(f"results/sglang_hicache/{MODEL_SLUG}")
