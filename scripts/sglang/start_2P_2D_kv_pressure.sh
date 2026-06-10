@@ -31,7 +31,7 @@ MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3-14B"}
 QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
-PREFILL_MEM_FRACTION=${PREFILL_MEM_FRACTION:-"0.93"}
+PREFILL_MEM_FRACTION=${PREFILL_MEM_FRACTION:-"0.15"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang"
@@ -39,10 +39,15 @@ mkdir -p "$LOG_DIR"
 
 HICACHE_DIR="/tmp/hicache"
 
+# mem_fraction_static 의미: KV pool = mem_fraction_static × available_after_model_load
+#   available ≈ 49GB - 28GB(weights) - 2.5GB(CUDA) = ~18.5GB
+#   default (0.88): KV = 0.88 × 18.5 = 16.3GB ≈ 99,600 tokens  (eviction 거의 없음)
+#   0.15          : KV = 0.15 × 18.5 =  2.8GB ≈ 17,000 tokens  ← 기본값 (flood으로 확실히 evict)
+#   0.10          : KV = 0.10 × 18.5 =  1.9GB ≈ 11,500 tokens  (더 공격적)
 echo "Model               : $(basename $MODEL_PATH)"
 echo "hicache-ratio       : $HICACHE_RATIO"
 echo "prefill mem_fraction: $PREFILL_MEM_FRACTION"
-echo "  → P1/P2 GPU KV pool ≈ $(python3 -c "print(f'{(1-$PREFILL_MEM_FRACTION)*49:.1f}GB ≈ {int((1-$PREFILL_MEM_FRACTION)*49*1024**3/163840):,} tokens')")"
+echo "  → P1/P2 GPU KV pool ≈ $(python3 -c "print(f'{$PREFILL_MEM_FRACTION * 18.5:.1f}GB ≈ {int($PREFILL_MEM_FRACTION * 18.5 * 1024**3 / 163840):,} tokens (default=99,600)')")"
 echo ""
 
 echo "[0/6] Stopping existing processes..."

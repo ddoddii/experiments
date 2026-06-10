@@ -71,12 +71,45 @@ _delay_tag      = f"_d{int(TOOL_DELAY_SEC)}s" if TOOL_DELAY_SEC > 0 else ""
 CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}{_delay_tag}")
 MAX_TOKENS      = int(os.environ.get("MAX_TOKENS",    "512"))
 TIMEOUT         = int(os.environ.get("TIMEOUT",       "600"))
-PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL",   "http://localhost:9091")
+PUSHGATEWAY_URL    = os.environ.get("PUSHGATEWAY_URL",    "http://localhost:9091")
+# KV flush: tool delay 후 명시적으로 P1/P2 KV pool을 채워서 eviction을 강제 유도
+# FLOOD_DURING_DELAY=0 으로 끌 수 있음
+FLOOD_DURING_DELAY = os.environ.get("FLOOD_DURING_DELAY", "1") != "0"
+FLOOD_N            = int(os.environ.get("FLOOD_N",     "20"))   # flood 요청 수
+FLOOD_TOKENS       = int(os.environ.get("FLOOD_TOKENS", "3000"))  # 요청당 토큰 수 (≈ chars÷5)
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 
 # ─── Pushgateway (simple HTTP POST, no prometheus_client dependency) ─────────
 _pg_lock = threading.Lock()
+
+def _kv_flush(flood_n: int = FLOOD_N, flood_tokens: int = FLOOD_TOKENS):
+    """
+    Prefill 서버의 GPU KV pool을 채워서 sleeping conversation의 KV를 L2/L3로 강제 evict.
+
+    각 요청마다 고유한 seed prefix → prefix sharing 없음 → KV pool을 최대한 채움.
+    max_tokens=4 로 decode 시간 최소화. flood_n × flood_tokens 토큰 → KV pool overflow.
+    """
+    filler = ("alpha beta gamma delta epsilon zeta eta theta iota kappa " * 200)
+    chars_needed = flood_tokens * 5  # ~5 chars per token
+
+    def _one(seed: int):
+        text = f"[kv-flush seed={seed:08x}] " + filler[:chars_needed]
+        try:
+            requests.post(ROUTER_URL, json={
+                "model":       MODEL,
+                "messages":    [{"role": "user", "content": text}],
+                "max_tokens":  4,
+                "temperature": 0,
+                "stream":      False,
+            }, timeout=60)
+        except Exception:
+            pass
+
+    threads = [threading.Thread(target=_one, args=(s,), daemon=True) for s in range(flood_n)]
+    for t in threads: t.start()
+    for t in threads: t.join(timeout=65)
+
 
 def _push_metric(metric: str, value: float, labels: dict):
     job = labels.pop("job", CONFIG)
@@ -160,6 +193,10 @@ print(f"Model       : {MODEL_SLUG}")
 print(f"Items       : {len(items)}")
 print(f"Concurrency : {CONCURRENCY}")
 print(f"Tool delay  : {TOOL_DELAY_SEC}s  {'(KV eviction experiment active)' if TOOL_DELAY_SEC > 0 else '(no delay)'}")
+if TOOL_DELAY_SEC > 0:
+    print(f"KV flush    : {'ON' if FLOOD_DURING_DELAY else 'OFF'}  "
+          f"({FLOOD_N} reqs × {FLOOD_TOKENS} tok = {FLOOD_N*FLOOD_TOKENS:,} tokens/flush)")
+    print(f"  ↑ flush으로 P1/P2 GPU KV 강제 overflow → L2/L3 eviction 보장")
 print(f"PushGW      : {PUSHGATEWAY_URL}")
 print("=" * 60)
 
@@ -306,6 +343,7 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
                 "had_tool_call":        bool(tool_calls_result),
                 "tool_delay_before_s":  round(turn_delay_applied, 3),
+                "kv_flush_applied":     (turn_delay_applied > 0 and FLOOD_DURING_DELAY),
                 "ttft_s":               round(ttft,      4) if ttft      else None,
                 "tpot_s":               round(tpot,      4) if tpot      else None,
                 "output_tokens":        actual_tokens,
@@ -325,16 +363,27 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "tool_calls": tool_calls_result[:1] if tool_calls_result else None,
             })
 
-            # ── Tool delay: simulate tool execution time ──────────────────────
-            # During this sleep, other concurrent conversations keep sending
-            # requests → GPU KV fills up → this conversation's KV may be evicted
-            # to DRAM (L2) or SSD (L3). The NEXT turn's TTFT reveals which tier.
+            # ── Tool delay + KV flush: force eviction to L2/L3 ───────────────
+            # 1) Sleep TOOL_DELAY_SEC  (tool execution simulation)
+            # 2) Send FLOOD_N × FLOOD_TOKENS flood requests to overflow P1/P2 GPU KV
+            #    → sleeping conversation's prefix is LRU-evicted to DRAM (L2) or SSD (L3)
+            # 3) Next turn TTFT reflects the tier: L2 ≈ +900ms, L3 ≈ +1000ms
             if tool_calls_result and TOOL_DELAY_SEC > 0:
+                fn_name = tool_calls_result[0]['function']['name']
                 tqdm.write(
-                    f"    [{item['id']} t{turn_idx}] tool_call={tool_calls_result[0]['function']['name']}"
-                    f" → sleeping {TOOL_DELAY_SEC}s (simulating tool execution) ..."
+                    f"    [{item['id']} t{turn_idx}] tool_call={fn_name}"
+                    f" → sleeping {TOOL_DELAY_SEC}s ..."
                 )
                 time.sleep(TOOL_DELAY_SEC)
+
+                if FLOOD_DURING_DELAY:
+                    tqdm.write(
+                        f"    [{item['id']} t{turn_idx}] KV flush: {FLOOD_N} reqs × {FLOOD_TOKENS} tok"
+                        f" → forcing GPU KV eviction to L2/L3 ..."
+                    )
+                    _kv_flush()
+                    tqdm.write(f"    [{item['id']} t{turn_idx}] flush done → next TTFT = L2/L3 fetch")
+
                 tool_delay_for_next_turn = TOOL_DELAY_SEC
 
                 # Add synthetic tool result so model context is well-formed
@@ -446,6 +495,9 @@ summary = {
     "model":                        MODEL,
     "concurrency":                  CONCURRENCY,
     "tool_delay_sec":               TOOL_DELAY_SEC,
+    "flood_during_delay":           FLOOD_DURING_DELAY,
+    "flood_n":                      FLOOD_N if FLOOD_DURING_DELAY else 0,
+    "flood_tokens":                 FLOOD_TOKENS if FLOOD_DURING_DELAY else 0,
     "total_items":                  len(_results),
     "success_items":                len(valid),
     "error_items":                  len(_results) - len(valid),
