@@ -8,8 +8,9 @@ BFCL v3 Multi-Turn Base Benchmark — SGLang 2P2D (Concurrent)
   - L1 GPU KV cache, L2 DRAM, L3 SSD 사용률이 명확하게 올라가는 것을 관찰 가능
 
 Tool Delay + KV Flush 실험:
-  서버 설정: --hicache-write-policy write_back (write_through이면 GPU hit 없음)
+  서버 설정: --hicache-write-policy write_through (write_back은 disagg prefill SGLang 버그)
              --mem-fraction-static 0.5 (GPU KV pool ~9.25GB ≈ 56,500 tokens)
+             write_through도 GPU LRU 유지함. flush 60k > 56.5k → eviction 보장.
 
   시나리오:
     1) tool call 반환 후 TOOL_DELAY_SEC sleep
