@@ -27,6 +27,7 @@ MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3-14B"}
 QUANTIZATION=${QUANTIZATION:-""}           # 14B@BF16=28GB, quantization 불필요
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}   # Qwen uses hermes format
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
+HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through_selective"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang"
@@ -36,6 +37,7 @@ HICACHE_DIR="/tmp/hicache"
 
 echo "Model     : $(basename $MODEL_PATH)  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
 echo "hicache-ratio = $HICACHE_RATIO"
+echo "hicache-write-policy = $HICACHE_WRITE_POLICY"
 echo ""
 echo "[0/6] Stopping any existing SGLang/Mooncake/exporter processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
@@ -67,7 +69,7 @@ echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
 CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
-  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
+  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO --hicache-write-policy $HICACHE_WRITE_POLICY \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
   > "$LOG_DIR/p1.log" 2>&1 &
