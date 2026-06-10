@@ -82,7 +82,7 @@ PUSHGATEWAY_URL    = os.environ.get("PUSHGATEWAY_URL",    "http://localhost:9091
 # KV flush: tool delay 후 명시적으로 P1/P2 KV pool을 채워서 eviction을 강제 유도
 # FLOOD_DURING_DELAY=0 으로 끌 수 있음
 FLOOD_DURING_DELAY = os.environ.get("FLOOD_DURING_DELAY", "1") != "0"
-FLOOD_N            = int(os.environ.get("FLOOD_N",     "20"))   # flood 요청 수
+FLOOD_N            = int(os.environ.get("FLOOD_N",     "30"))   # flood 요청 수 (30×3000=90k > 79k KV pool)
 FLOOD_TOKENS       = int(os.environ.get("FLOOD_TOKENS", "3000"))  # 요청당 토큰 수 (≈ chars÷5)
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
