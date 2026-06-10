@@ -220,6 +220,7 @@ def process_item(item_idx: int, item: dict) -> dict:
 
         try:
             t_request = time.perf_counter()
+            t_wall_s  = t_request - t_experiment_start
             resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
             resp.raise_for_status()
 
@@ -299,6 +300,7 @@ def process_item(item_idx: int, item: dict) -> dict:
 
             turn_metrics.append({
                 "turn":                 turn_idx,
+                "t_wall_s":             round(t_wall_s,  1),
                 "user":                 user_msg["content"][:120],
                 "assistant":            assistant_content[:200] if assistant_content else None,
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
@@ -414,10 +416,30 @@ turns_no_delay       = [t for t in all_turns if t.get("tool_delay_before_s", 0) 
 
 def _avg(vals): return round(sum(vals) / len(vals), 4) if vals else None
 
+def _percentile(vals, p):
+    if not vals: return None
+    s = sorted(vals)
+    idx = int(len(s) * p / 100)
+    return round(s[min(idx, len(s)-1)], 4)
+
+ttft_all_vals     = [t["ttft_s"] for t in all_turns]
 ttft_after_delay  = _avg([t["ttft_s"] for t in turns_after_delay])
 ttft_no_delay     = _avg([t["ttft_s"] for t in turns_no_delay])
 ttft_degradation  = round(ttft_after_delay - ttft_no_delay, 4) \
                     if (ttft_after_delay and ttft_no_delay) else None
+
+# TTFT histogram buckets (KV tier 판별용)
+# <0.5s = L1 GPU hit, 0.5-1.5s = 경쟁/중간, 1.5-2.5s = L2 DRAM, >2.5s = L3 SSD
+def _hist(vals):
+    if not vals: return {}
+    n = len(vals)
+    buckets = {"lt_0.5s": 0, "0.5_1.5s": 0, "1.5_2.5s": 0, "gt_2.5s": 0}
+    for v in vals:
+        if   v < 0.5:  buckets["lt_0.5s"]  += 1
+        elif v < 1.5:  buckets["0.5_1.5s"] += 1
+        elif v < 2.5:  buckets["1.5_2.5s"] += 1
+        else:          buckets["gt_2.5s"]  += 1
+    return {k: {"count": v, "pct": round(v/n*100, 1)} for k, v in buckets.items()}
 
 summary = {
     "config":                       CONFIG,
@@ -440,6 +462,12 @@ summary = {
     "ttft_no_delay_s":          ttft_no_delay,
     "ttft_degradation_s":       ttft_degradation,
     "turns_after_delay_count":  len(turns_after_delay),
+    # TTFT distribution
+    "ttft_p50_s":  _percentile(ttft_all_vals, 50),
+    "ttft_p90_s":  _percentile(ttft_all_vals, 90),
+    "ttft_p99_s":  _percentile(ttft_all_vals, 99),
+    "ttft_histogram": _hist(ttft_all_vals),
+    "ttft_histogram_after_delay": _hist([t["ttft_s"] for t in turns_after_delay]),
     "hicache_stats": hicache_stats,
 }
 
@@ -463,14 +491,28 @@ print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT     : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
+print(f"\n── TTFT 분포 (전체 {len(ttft_all_vals)}개 turn) ──")
+print(f"  p50={summary['ttft_p50_s']}s  p90={summary['ttft_p90_s']}s  p99={summary['ttft_p99_s']}s")
+hist = summary["ttft_histogram"]
+print(f"  <0.5s (L1 GPU)   : {hist['lt_0.5s']['count']:4d}턴  ({hist['lt_0.5s']['pct']}%)")
+print(f"  0.5~1.5s (중간)   : {hist['0.5_1.5s']['count']:4d}턴  ({hist['0.5_1.5s']['pct']}%)")
+print(f"  1.5~2.5s (L2 예상): {hist['1.5_2.5s']['count']:4d}턴  ({hist['1.5_2.5s']['pct']}%)")
+print(f"  >2.5s    (L3 예상): {hist['gt_2.5s']['count']:4d}턴  ({hist['gt_2.5s']['pct']}%)")
 if TOOL_DELAY_SEC > 0:
     print(f"\n── Tool Delay KV Tier 영향 ({TOOL_DELAY_SEC}s delay) ──")
-    print(f"  delay 전 turn TTFT  : {ttft_no_delay}s  (KV 아직 GPU에 있을 때)")
-    print(f"  delay 후 turn TTFT  : {ttft_after_delay}s  (KV 다른 tier로 이동했을 때)")
+    print(f"  delay 전 turn TTFT  : {ttft_no_delay}s  (KV GPU 재사용)")
+    print(f"  delay 후 turn TTFT  : {ttft_after_delay}s  (KV 다른 tier 이동 후)")
     print(f"  TTFT 증가량         : {ttft_degradation}s  ({len(turns_after_delay)}개 turn 샘플)")
     if ttft_degradation and ttft_no_delay:
         pct = ttft_degradation / ttft_no_delay * 100
-        print(f"  degradation         : +{pct:.0f}% TTFT 증가")
+        verdict = "↑ KV eviction 발생!" if ttft_degradation > 0.2 else "△ 미미함 (eviction 없음)"
+        print(f"  degradation         : {pct:+.0f}%  {verdict}")
+    dh = summary["ttft_histogram_after_delay"]
+    if dh:
+        print(f"  delay 후 TTFT 분포  :")
+        print(f"    <0.5s (GPU)  : {dh['lt_0.5s']['count']}턴 ({dh['lt_0.5s']['pct']}%)")
+        print(f"    1.5~2.5s (L2): {dh['1.5_2.5s']['count']}턴 ({dh['1.5_2.5s']['pct']}%)")
+        print(f"    >2.5s (L3)   : {dh['gt_2.5s']['count']}턴 ({dh['gt_2.5s']['pct']}%)")
 print(f"\n[SGLang hicache KV stats (token_usage sampled during benchmark)]")
 for inst, s in hicache_stats.items():
     if s and s.get("token_usage"):
