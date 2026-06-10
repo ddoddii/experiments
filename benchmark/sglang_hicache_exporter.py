@@ -111,38 +111,86 @@ LOG_DIR: str = os.environ.get("LOG_DIR", _default_log_dir)
 
 # ─── Metric collection ────────────────────────────────────────────────────────
 
+_PROM_METRIC_RE = re.compile(
+    r'^(?P<name>sglang[_:]\w+)\{[^}]*\}\s+(?P<value>[-\d.eE+]+)',
+    re.MULTILINE,
+)
+
+# Map Prometheus metric names → data dict keys
+_PROM_FIELD_MAP = {
+    "sglang:num_used_tokens":  "num_used_tokens",
+    "sglang_num_used_tokens":  "num_used_tokens",
+    "sglang:token_usage":      "token_usage",
+    "sglang_token_usage":      "token_usage",
+    "sglang:num_running_reqs": "num_running_reqs",
+    "sglang_num_running_reqs": "num_running_reqs",
+    "sglang:num_queue_reqs":   "num_queue_reqs",
+    "sglang_num_queue_reqs":   "num_queue_reqs",
+    "sglang:num_waiting_tokens": "num_waiting_tokens",
+    "sglang_num_waiting_tokens": "num_waiting_tokens",
+}
+
+
+def _enrich_from_native_metrics(port: int, data: dict) -> None:
+    """Augment *data* with values scraped from SGLang's native /metrics endpoint."""
+    try:
+        r = requests.get(f"http://localhost:{port}/metrics", timeout=2.0)
+        if r.status_code != 200 or not r.text.strip():
+            return
+        for m in _PROM_METRIC_RE.finditer(r.text):
+            key = _PROM_FIELD_MAP.get(m.group("name"))
+            if key and key not in data:
+                data[key] = float(m.group("value"))
+    except Exception:
+        pass
+
+
 def _get_server_info(port: int) -> dict | None:
+    data = None
     for path in ("/server_info", "/get_server_info"):
         try:
             r = requests.get(f"http://localhost:{port}{path}", timeout=2.0)
             if r.status_code == 200:
                 data = r.json()
-                # /server_info wraps per-worker state inside "internal_states" list;
-                # flatten the first worker's fields to top-level for backward compat.
-                if "internal_states" in data and isinstance(data["internal_states"], list):
-                    for state in data["internal_states"]:
-                        if isinstance(state, dict):
-                            for k, v in state.items():
-                                if k not in data:
-                                    data[k] = v
-                            break
-                # Field name aliases (newer SGLang renamed some fields)
-                if "token_usage" not in data:
-                    # token_usage = used / capacity
-                    cap = data.get("token_capacity") or data.get("num_total_tokens")
-                    used = data.get("num_used_tokens") or data.get("used_token_num")
-                    if cap and used is not None:
-                        data["token_usage"] = used / cap
-                if "num_running_reqs" not in data:
-                    data["num_running_reqs"] = (
-                        data.get("num_running_requests")
-                        or data.get("running_req_num")
-                        or 0
-                    )
-                return data
+                break
         except Exception:
             pass
-    return None
+    if data is None:
+        return None
+
+    # /server_info wraps per-worker state inside "internal_states" list;
+    # flatten the first worker's fields to top-level for backward compat.
+    if "internal_states" in data and isinstance(data["internal_states"], list):
+        for state in data["internal_states"]:
+            if isinstance(state, dict):
+                for k, v in state.items():
+                    if k not in data:
+                        data[k] = v
+                break
+
+    # Hoist memory_usage sub-fields so alias logic below can find them
+    mem = data.get("memory_usage")
+    if isinstance(mem, dict):
+        for k, v in mem.items():
+            if k not in data:
+                data[k] = v  # e.g. token_capacity, kvcache, weight, graph
+
+    # Fill live runtime metrics from native /metrics endpoint (has num_used_tokens etc.)
+    _enrich_from_native_metrics(port, data)
+
+    # Compute token_usage = used / capacity when not already provided
+    if "token_usage" not in data or data["token_usage"] == 0.0:
+        cap = data.get("token_capacity") or data.get("num_total_tokens")
+        used = data.get("num_used_tokens") or data.get("used_token_num")
+        if cap and used is not None and float(cap) > 0:
+            data["token_usage"] = float(used) / float(cap)
+
+    if "num_running_reqs" not in data:
+        data["num_running_reqs"] = (
+            data.get("num_running_requests") or data.get("running_req_num") or 0
+        )
+
+    return data
 
 
 def _find_sglang_pid(port: int) -> int | None:
@@ -279,15 +327,19 @@ def collect_metrics() -> str:
         num_used = info.get("num_used_tokens", 0)
         lines.append(f"sglang_num_used_tokens{{{lbl}}} {num_used}")
 
-        # Static GPU memory allocated for KV cache (from internal_states config)
-        for state in info.get("internal_states", []):
-            if isinstance(state, dict) and "memory_usage" in state:
-                mem = state["memory_usage"]
-                if isinstance(mem, dict) and "kvcache" in mem:
-                    lines.append(
-                        f"sglang_kvcache_allocated_gb{{{lbl}}} {float(mem['kvcache']):.3f}"
-                    )
-                break  # only need the first worker state
+        # Static GPU memory allocated for KV cache
+        # After _get_server_info hoists memory_usage sub-fields, "kvcache" is top-level
+        kvcache_gb = info.get("kvcache")
+        if kvcache_gb is None:
+            # Fallback: search internal_states directly
+            for state in info.get("internal_states", []):
+                if isinstance(state, dict):
+                    mem = state.get("memory_usage", {})
+                    if isinstance(mem, dict) and "kvcache" in mem:
+                        kvcache_gb = mem["kvcache"]
+                        break
+        if kvcache_gb is not None:
+            lines.append(f"sglang_kvcache_allocated_gb{{{lbl}}} {float(kvcache_gb):.3f}")
 
         num_running = info.get("num_running_reqs", 0)
         lines.append(f"sglang_num_running_reqs{{{lbl}}} {num_running}")
@@ -375,9 +427,12 @@ class SGLangHiCachePoller(threading.Thread):
         self.interval = interval
         self._stop_event = threading.Event()
         self.samples: dict[str, dict[str, list[float]]] = {
-            label: {"token_usage": [], "num_running_reqs": []}
+            label: {"token_usage": [], "num_running_reqs": [], "num_used_tokens": []}
             for label in self.instances
         }
+        # Static capacity recorded on first successful scrape
+        self._token_capacity: dict[str, int] = {}
+        self._kvcache_gb: dict[str, float] = {}
 
     def run(self):
         while not self._stop_event.wait(self.interval):
@@ -390,6 +445,18 @@ class SGLangHiCachePoller(threading.Thread):
                     self.samples[label]["num_running_reqs"].append(
                         int(info.get("num_running_reqs", 0))
                     )
+                    used = info.get("num_used_tokens")
+                    if used is not None:
+                        self.samples[label]["num_used_tokens"].append(float(used))
+                    # Record static capacity once
+                    if label not in self._token_capacity:
+                        cap = info.get("token_capacity")
+                        if cap:
+                            self._token_capacity[label] = int(cap)
+                    if label not in self._kvcache_gb:
+                        kv = info.get("kvcache")
+                        if kv:
+                            self._kvcache_gb[label] = float(kv)
 
     def stop(self):
         self._stop_event.set()
@@ -409,6 +476,11 @@ class SGLangHiCachePoller(threading.Thread):
                     }
                 else:
                     result[label][metric] = None
+            # Attach static capacity info alongside dynamic metrics
+            if label in self._token_capacity:
+                result[label]["token_capacity"] = self._token_capacity[label]
+            if label in self._kvcache_gb:
+                result[label]["kvcache_gb"] = self._kvcache_gb[label]
         return result
 
 
