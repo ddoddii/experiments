@@ -31,7 +31,7 @@ MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3-14B"}
 QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
-PREFILL_MEM_FRACTION=${PREFILL_MEM_FRACTION:-"0.5"}
+PREFILL_MEM_FRACTION=${PREFILL_MEM_FRACTION:-"0.7"}
 HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
@@ -49,15 +49,16 @@ HICACHE_DIR="/tmp/hicache"
 # ── mem_fraction_static 설명 ────────────────────────────────────────────────
 #   KV pool = mem_fraction_static × available_after_model_load
 #   available ≈ 49GB - 28GB(weights) - 2.5GB(CUDA) = ~18.5GB
-#   0.88 (기본값): KV = 16.3GB ≈ 99,600 tokens  flood 60k < 99.6k → eviction 안 됨
-#   0.50 (실험용): KV =  9.3GB ≈ 56,500 tokens  flood 60k > 56.5k → eviction 보장
-#   0.30          : KV =  5.6GB ≈ 34,000 tokens  더 공격적 (0.15 이하는 OOM)
+#   0.88 (기본값): KV = 16.3GB ≈  99,600 tokens  flood 90k < 99.6k → eviction 안 됨
+#   0.70 (실험용): KV = 12.9GB ≈  79,000 tokens  flood 90k > 79k  → eviction 보장  ← 기본값
+#   0.50          : KV =  9.3GB ≈  56,500 tokens  (서버 kill됨, 사용 불가)
+#   flood: benchmark FLOOD_N=30 × FLOOD_TOKENS=3000 = 90,000 tokens > 79,000 → OK
 echo "Model               : $(basename $MODEL_PATH)"
 echo "hicache-ratio       : $HICACHE_RATIO"
 echo "hicache-write-policy: $HICACHE_WRITE_POLICY"
 echo "prefill mem_fraction: $PREFILL_MEM_FRACTION"
 echo "  → P1/P2 GPU KV pool ≈ $(python3 -c "print(f'{$PREFILL_MEM_FRACTION * 18.5:.1f}GB ≈ {int($PREFILL_MEM_FRACTION * 18.5 * 1024**3 / 163840):,} tokens')")"
-echo "  → flood (20 req × 3000 tok = 60,000 tok) > KV pool → eviction 보장"
+echo "  → flood (30 req × 3000 tok = 90,000 tok) > KV pool → eviction 보장"
 echo ""
 
 echo "[0/6] Stopping existing processes..."
