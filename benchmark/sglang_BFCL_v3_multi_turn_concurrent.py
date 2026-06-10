@@ -7,15 +7,19 @@ BFCL v3 Multi-Turn Base Benchmark — SGLang 2P2D (Concurrent)
   - 같은 item 내 turn들은 순서대로 처리 (앞 turn 결과가 다음 turn 입력)
   - L1 GPU KV cache, L2 DRAM, L3 SSD 사용률이 명확하게 올라가는 것을 관찰 가능
 
-Tool Delay 실험:
-  TOOL_DELAY_SEC > 0 이면 모델이 tool call을 반환한 직후 해당 시간만큼 sleep.
-  이 sleep 동안 다른 concurrent conversation들이 계속 요청을 보내
-  GPU KV pool을 채우므로, 자연스럽게 KV eviction이 발생.
-  다음 turn의 TTFT가 높아지면 KV가 DRAM(L2) 또는 SSD(L3)로 밀려난 것.
+Tool Delay + KV Flush 실험:
+  서버 설정: --hicache-write-policy write_back (write_through이면 GPU hit 없음)
+             --mem-fraction-static 0.5 (GPU KV pool ~9.25GB ≈ 56,500 tokens)
 
-  delay=0s  → KV GPU 상주 → 다음 turn TTFT ~340ms (L1)
-  delay=1s  → KV DRAM 이동 가능 → 다음 turn TTFT ~1200ms (L2)
-  delay=5s  → KV SSD 이동 가능 → 다음 turn TTFT ~1341ms (L3)
+  시나리오:
+    1) tool call 반환 후 TOOL_DELAY_SEC sleep
+    2) FLOOD_N × FLOOD_TOKENS flood request로 GPU KV pool 강제 overflow
+       → sleeping conversation의 prefix가 LRU로 DRAM(L2)으로 evict
+    3) 다음 turn TTFT에서 L2/L3 fetch overhead 측정
+
+  기대 결과 (write_back 기준):
+    delay=0s  → GPU hit      → TTFT ~0.5-0.8s
+    delay+flush → DRAM fetch → TTFT ~1.5-2.0s  (+900ms overhead)
 
 Usage:
   # 기본 (동시 4개, delay 없음)
