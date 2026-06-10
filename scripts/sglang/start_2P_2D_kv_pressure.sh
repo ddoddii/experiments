@@ -32,7 +32,7 @@ QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 PREFILL_MEM_FRACTION=${PREFILL_MEM_FRACTION:-"0.5"}
-HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_back"}
+HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through"}
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang"
@@ -41,25 +41,23 @@ mkdir -p "$LOG_DIR"
 HICACHE_DIR="/tmp/hicache"
 
 # ── Write policy 설명 ──────────────────────────────────────────────────────────
-# write_through (기본값): KV 계산 즉시 GPU+DRAM+SSD 동시 쓰기.
-#   GPU cache가 항상 비어있음 → 모든 fetch가 L2 DRAM → 실험에서 delay 효과 없음
-#
-# write_back (실험용):    KV는 GPU에만 쓰고, GPU 꽉 찰 때 DRAM으로 evict.
-#   delay 없음 → GPU hit → TTFT ~0.5s
-#   flush 후    → DRAM fetch → TTFT ~1.5-2.0s (+900ms overhead)
-#   ↑ 이 차이를 측정하는 것이 목적
+# write_back  : GPU 꽉 찰 때만 DRAM 기록 → disagg prefill 모드에서 SGLang 내부 버그(assertion) 발생
+# write_through (기본값, 안정적): KV 계산 시 GPU+DRAM+SSD 동시 기록.
+#   쓰는 시점에 DRAM에 복사되지만, GPU에는 LRU 정책으로 유지됨.
+#   → flood으로 GPU overflow 유발 시 evicted 항목은 DRAM에서 fetch → TTFT 증가
 #
 # ── mem_fraction_static 설명 ────────────────────────────────────────────────
 #   KV pool = mem_fraction_static × available_after_model_load
 #   available ≈ 49GB - 28GB(weights) - 2.5GB(CUDA) = ~18.5GB
-#   0.88 (기본값): KV = 0.88 × 18.5 = 16.3GB ≈ 99,600 tokens  → write_through라 GPU hit 없음
-#   0.50          : KV = 0.50 × 18.5 =  9.3GB ≈ 56,500 tokens  ← 기본값 (flood 60k>56.5k → evict)
-#   0.30          : KV = 0.30 × 18.5 =  5.6GB ≈ 34,000 tokens  (더 공격적, 0.15는 OOM)
+#   0.88 (기본값): KV = 16.3GB ≈ 99,600 tokens  flood 60k < 99.6k → eviction 안 됨
+#   0.50 (실험용): KV =  9.3GB ≈ 56,500 tokens  flood 60k > 56.5k → eviction 보장
+#   0.30          : KV =  5.6GB ≈ 34,000 tokens  더 공격적 (0.15 이하는 OOM)
 echo "Model               : $(basename $MODEL_PATH)"
 echo "hicache-ratio       : $HICACHE_RATIO"
-echo "hicache-write-policy: $HICACHE_WRITE_POLICY  (write_back → GPU hit 보존, flush 후 DRAM fetch 측정 가능)"
+echo "hicache-write-policy: $HICACHE_WRITE_POLICY"
 echo "prefill mem_fraction: $PREFILL_MEM_FRACTION"
 echo "  → P1/P2 GPU KV pool ≈ $(python3 -c "print(f'{$PREFILL_MEM_FRACTION * 18.5:.1f}GB ≈ {int($PREFILL_MEM_FRACTION * 18.5 * 1024**3 / 163840):,} tokens')")"
+echo "  → flood (20 req × 3000 tok = 60,000 tok) > KV pool → eviction 보장"
 echo ""
 
 echo "[0/6] Stopping existing processes..."
@@ -178,12 +176,9 @@ echo ""
 echo "All done."
 echo "  Router        : http://127.0.0.1:8000"
 echo "  Exporter      : http://127.0.0.1:9199/metrics"
-echo "  Write policy  : $HICACHE_WRITE_POLICY  (write_back → GPU hit 보존)"
+echo "  Write policy  : $HICACHE_WRITE_POLICY"
 echo "  GPU KV pool   : $(python3 -c "print(f'{$PREFILL_MEM_FRACTION * 18.5:.1f}GB ≈ {int($PREFILL_MEM_FRACTION * 18.5 * 1024**3 / 163840):,} tokens per P1/P2')")"
 echo ""
-echo "KV eviction 실험:"
-echo "  # Baseline: GPU hit → TTFT ~0.5s"
-echo "  CONCURRENCY=8 TOOL_DELAY_SEC=0 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py"
-echo ""
-echo "  # After flush: DRAM fetch → TTFT ~1.5-2.0s (+900ms)"
-echo "  CONCURRENCY=8 TOOL_DELAY_SEC=10 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py"
+echo "KV eviction 실험 (write_through + flood):"
+echo "  HICACHE_WRITE_POLICY=write_through CONCURRENCY=8 TOOL_DELAY_SEC=0  python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py"
+echo "  HICACHE_WRITE_POLICY=write_through CONCURRENCY=8 TOOL_DELAY_SEC=10 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py"
