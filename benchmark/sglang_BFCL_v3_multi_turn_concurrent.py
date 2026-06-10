@@ -7,23 +7,37 @@ BFCL v3 Multi-Turn Base Benchmark — SGLang 2P2D (Concurrent)
   - 같은 item 내 turn들은 순서대로 처리 (앞 turn 결과가 다음 turn 입력)
   - L1 GPU KV cache, L2 DRAM, L3 SSD 사용률이 명확하게 올라가는 것을 관찰 가능
 
+Tool Delay 실험:
+  TOOL_DELAY_SEC > 0 이면 모델이 tool call을 반환한 직후 해당 시간만큼 sleep.
+  이 sleep 동안 다른 concurrent conversation들이 계속 요청을 보내
+  GPU KV pool을 채우므로, 자연스럽게 KV eviction이 발생.
+  다음 turn의 TTFT가 높아지면 KV가 DRAM(L2) 또는 SSD(L3)로 밀려난 것.
+
+  delay=0s  → KV GPU 상주 → 다음 turn TTFT ~340ms (L1)
+  delay=1s  → KV DRAM 이동 가능 → 다음 turn TTFT ~1200ms (L2)
+  delay=5s  → KV SSD 이동 가능 → 다음 turn TTFT ~1341ms (L3)
+
 Usage:
-  # 기본 (동시 4개)
+  # 기본 (동시 4개, delay 없음)
   CONCURRENCY=4 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py
 
-  # 동시 8개 + Pushgateway
-  CONCURRENCY=8 PUSHGATEWAY_URL=http://localhost:9091 \\
+  # tool delay 실험 (concurrent 8, 5초 delay)
+  CONCURRENCY=8 TOOL_DELAY_SEC=5 \\
     python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py
 
-  # SGLang 서버 URL 오버라이드
-  SGLANG_URL=http://127.0.0.1:8000/v1/chat/completions \\
-    CONCURRENCY=4 python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py
+  # delay sweep (별도 실행 3회)
+  for D in 0 1 5; do
+    CONCURRENCY=8 TOOL_DELAY_SEC=$D \\
+      python benchmark/sglang_BFCL_v3_multi_turn_concurrent.py
+  done
 
 Environment variables:
   SGLANG_URL      SGLang router URL  (default: http://127.0.0.1:8000/v1/chat/completions)
   MODEL           model name         (default: /home/uhmturks/hf_models/Qwen3-14B)
   CONCURRENCY     parallel items     (default: 4)
-  CONFIG          result file tag    (default: sglang_2p2d_c{CONCURRENCY})
+  TOOL_DELAY_SEC  tool execution delay in seconds (default: 0)
+                  applied after every model turn that contains a tool_call.
+  CONFIG          result file tag    (default: sglang_2p2d_c{CONCURRENCY}_d{delay}s)
   MAX_TOKENS      max output tokens  (default: 512)
   TIMEOUT         per-request sec    (default: 600)
   PUSHGATEWAY_URL http://host:9091   (default: http://localhost:9091)
@@ -52,7 +66,9 @@ def _p(rel): return os.path.join(PROJECT_ROOT, rel)
 ROUTER_URL      = os.environ.get("SGLANG_URL",       "http://127.0.0.1:8000/v1/chat/completions")
 MODEL           = os.environ.get("MODEL",             "/home/uhmturks/hf_models/Qwen3-14B")
 CONCURRENCY     = int(os.environ.get("CONCURRENCY",   "4"))
-CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}")
+TOOL_DELAY_SEC  = float(os.environ.get("TOOL_DELAY_SEC", "0"))
+_delay_tag      = f"_d{int(TOOL_DELAY_SEC)}s" if TOOL_DELAY_SEC > 0 else ""
+CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}{_delay_tag}")
 MAX_TOKENS      = int(os.environ.get("MAX_TOKENS",    "512"))
 TIMEOUT         = int(os.environ.get("TIMEOUT",       "600"))
 PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL",   "http://localhost:9091")
@@ -143,6 +159,7 @@ print(f"URL         : {ROUTER_URL}")
 print(f"Model       : {MODEL_SLUG}")
 print(f"Items       : {len(items)}")
 print(f"Concurrency : {CONCURRENCY}")
+print(f"Tool delay  : {TOOL_DELAY_SEC}s  {'(KV eviction experiment active)' if TOOL_DELAY_SEC > 0 else '(no delay)'}")
 print(f"PushGW      : {PUSHGATEWAY_URL}")
 print("=" * 60)
 
@@ -176,6 +193,7 @@ def process_item(item_idx: int, item: dict) -> dict:
     conversation = [{"role": "system", "content": system_content}]
     turn_metrics = []
     item_tokens  = 0
+    tool_delay_for_next_turn = 0.0  # delay applied before this turn (set by previous turn)
 
     tqdm.write(f"\n[{item['id']}] turns={len(item['question'])}  classes={item.get('involved_classes')}")
 
@@ -184,7 +202,10 @@ def process_item(item_idx: int, item: dict) -> dict:
         conversation.append(user_msg)
         ctx_chars = sum(len(str(m.get("content", "") or "")) for m in conversation)
 
-        tqdm.write(f"  [{item['id']} t{turn_idx}] ctx={ctx_chars}ch  user: {user_msg['content'][:60]}...")
+        delay_label = f"  [after {tool_delay_for_next_turn:.1f}s tool delay]" if tool_delay_for_next_turn > 0 else ""
+        tqdm.write(f"  [{item['id']} t{turn_idx}]{delay_label} ctx={ctx_chars}ch  user: {user_msg['content'][:60]}...")
+        turn_delay_applied = tool_delay_for_next_turn
+        tool_delay_for_next_turn = 0.0  # reset for this turn
 
         payload = {
             "model":       MODEL,
@@ -281,6 +302,8 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "user":                 user_msg["content"][:120],
                 "assistant":            assistant_content[:200] if assistant_content else None,
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
+                "had_tool_call":        bool(tool_calls_result),
+                "tool_delay_before_s":  round(turn_delay_applied, 3),
                 "ttft_s":               round(ttft,      4) if ttft      else None,
                 "tpot_s":               round(tpot,      4) if tpot      else None,
                 "output_tokens":        actual_tokens,
@@ -293,11 +316,33 @@ def process_item(item_idx: int, item: dict) -> dict:
                 current_done = _items_done
             push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, current_done)
 
+            # ── Append assistant message ──────────────────────────────────────
             conversation.append({
                 "role":       "assistant",
                 "content":    assistant_content or None,
                 "tool_calls": tool_calls_result[:1] if tool_calls_result else None,
             })
+
+            # ── Tool delay: simulate tool execution time ──────────────────────
+            # During this sleep, other concurrent conversations keep sending
+            # requests → GPU KV fills up → this conversation's KV may be evicted
+            # to DRAM (L2) or SSD (L3). The NEXT turn's TTFT reveals which tier.
+            if tool_calls_result and TOOL_DELAY_SEC > 0:
+                tqdm.write(
+                    f"    [{item['id']} t{turn_idx}] tool_call={tool_calls_result[0]['function']['name']}"
+                    f" → sleeping {TOOL_DELAY_SEC}s (simulating tool execution) ..."
+                )
+                time.sleep(TOOL_DELAY_SEC)
+                tool_delay_for_next_turn = TOOL_DELAY_SEC
+
+                # Add synthetic tool result so model context is well-formed
+                tc = tool_calls_result[0]
+                conversation.append({
+                    "role":         "tool",
+                    "tool_call_id": tc["id"],
+                    "content":      json.dumps({"status": "success",
+                                                "function": tc["function"]["name"]}),
+                })
 
         except Exception as e:
             tqdm.write(f"    [{item['id']} t{turn_idx}] ERROR: {e}")
@@ -359,22 +404,43 @@ t_experiment_end = time.perf_counter()
 total_wall_time  = t_experiment_end - t_experiment_start
 
 valid   = [r for r in _results if r.get("avg_ttft_s")]
+
+# ── Tool delay TTFT breakdown ─────────────────────────────────────────────────
+# turns_after_delay: the turn IMMEDIATELY following a tool call with delay.
+# Its TTFT shows which KV tier the conversation landed on after sleeping.
+all_turns = [t for r in _results for t in r["turns"] if t.get("ttft_s")]
+turns_after_delay    = [t for t in all_turns if t.get("tool_delay_before_s", 0) > 0]
+turns_no_delay       = [t for t in all_turns if t.get("tool_delay_before_s", 0) == 0]
+
+def _avg(vals): return round(sum(vals) / len(vals), 4) if vals else None
+
+ttft_after_delay  = _avg([t["ttft_s"] for t in turns_after_delay])
+ttft_no_delay     = _avg([t["ttft_s"] for t in turns_no_delay])
+ttft_degradation  = round(ttft_after_delay - ttft_no_delay, 4) \
+                    if (ttft_after_delay and ttft_no_delay) else None
+
 summary = {
     "config":                       CONFIG,
     "model":                        MODEL,
     "concurrency":                  CONCURRENCY,
+    "tool_delay_sec":               TOOL_DELAY_SEC,
     "total_items":                  len(_results),
     "success_items":                len(valid),
     "error_items":                  len(_results) - len(valid),
     "total_output_tokens":          _total_output_tokens,
     "total_wall_time_s":            round(total_wall_time, 2),
     "overall_throughput_tok_per_s": round(_total_output_tokens / total_wall_time, 2),
-    "avg_ttft_s":        round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4)                             if valid else None,
-    "avg_tpot_s":        round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4)         if valid else None,
+    "avg_ttft_s":        round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4)                   if valid else None,
+    "avg_tpot_s":        round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
     "avg_throughput_tok_per_s": round(
                             sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                          if valid else None,
-    "hicache_stats": hicache_stats,  # token_usage per instance (min/max/mean/samples)
+    # KV tier degradation from tool delay
+    "ttft_after_tool_delay_s":  ttft_after_delay,
+    "ttft_no_delay_s":          ttft_no_delay,
+    "ttft_degradation_s":       ttft_degradation,
+    "turns_after_delay_count":  len(turns_after_delay),
+    "hicache_stats": hicache_stats,
 }
 
 output = {"summary": summary, "results": _results}
@@ -390,12 +456,21 @@ shutil.copy(shm_path, out_path)
 print(f"\n{'='*60}")
 print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개")
 print(f"동시성       : {CONCURRENCY}")
+print(f"Tool delay   : {TOOL_DELAY_SEC}s")
 print(f"총 출력 토큰  : {_total_output_tokens}")
 print(f"전체 소요시간 : {total_wall_time:.2f}s")
 print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT     : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
+if TOOL_DELAY_SEC > 0:
+    print(f"\n── Tool Delay KV Tier 영향 ({TOOL_DELAY_SEC}s delay) ──")
+    print(f"  delay 전 turn TTFT  : {ttft_no_delay}s  (KV 아직 GPU에 있을 때)")
+    print(f"  delay 후 turn TTFT  : {ttft_after_delay}s  (KV 다른 tier로 이동했을 때)")
+    print(f"  TTFT 증가량         : {ttft_degradation}s  ({len(turns_after_delay)}개 turn 샘플)")
+    if ttft_degradation and ttft_no_delay:
+        pct = ttft_degradation / ttft_no_delay * 100
+        print(f"  degradation         : +{pct:.0f}% TTFT 증가")
 print(f"\n[SGLang hicache KV stats (token_usage sampled during benchmark)]")
 for inst, s in hicache_stats.items():
     if s and s.get("token_usage"):
