@@ -112,12 +112,36 @@ LOG_DIR: str = os.environ.get("LOG_DIR", _default_log_dir)
 # ─── Metric collection ────────────────────────────────────────────────────────
 
 def _get_server_info(port: int) -> dict | None:
-    try:
-        r = requests.get(f"http://localhost:{port}/get_server_info", timeout=2.0)
-        if r.status_code == 200:
-            return r.json()
-    except Exception:
-        pass
+    for path in ("/server_info", "/get_server_info"):
+        try:
+            r = requests.get(f"http://localhost:{port}{path}", timeout=2.0)
+            if r.status_code == 200:
+                data = r.json()
+                # /server_info wraps per-worker state inside "internal_states" list;
+                # flatten the first worker's fields to top-level for backward compat.
+                if "internal_states" in data and isinstance(data["internal_states"], list):
+                    for state in data["internal_states"]:
+                        if isinstance(state, dict):
+                            for k, v in state.items():
+                                if k not in data:
+                                    data[k] = v
+                            break
+                # Field name aliases (newer SGLang renamed some fields)
+                if "token_usage" not in data:
+                    # token_usage = used / capacity
+                    cap = data.get("token_capacity") or data.get("num_total_tokens")
+                    used = data.get("num_used_tokens") or data.get("used_token_num")
+                    if cap and used is not None:
+                        data["token_usage"] = used / cap
+                if "num_running_reqs" not in data:
+                    data["num_running_reqs"] = (
+                        data.get("num_running_requests")
+                        or data.get("running_req_num")
+                        or 0
+                    )
+                return data
+        except Exception:
+            pass
     return None
 
 
