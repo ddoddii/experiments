@@ -71,8 +71,10 @@ ROUTER_URL      = os.environ.get("SGLANG_URL",       "http://127.0.0.1:8000/v1/c
 MODEL           = os.environ.get("MODEL",             "/home/uhmturks/hf_models/Qwen3-14B")
 CONCURRENCY     = int(os.environ.get("CONCURRENCY",   "4"))
 TOOL_DELAY_SEC  = float(os.environ.get("TOOL_DELAY_SEC", "0"))
+HICACHE_WRITE_POLICY = os.environ.get("HICACHE_WRITE_POLICY", "write_through")
 _delay_tag      = f"_d{int(TOOL_DELAY_SEC)}s" if TOOL_DELAY_SEC > 0 else ""
-CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}{_delay_tag}")
+_policy_tag     = "_wb" if HICACHE_WRITE_POLICY == "write_back" else ""
+CONFIG          = os.environ.get("CONFIG",            f"sglang_2p2d_c{CONCURRENCY}{_delay_tag}{_policy_tag}")
 MAX_TOKENS      = int(os.environ.get("MAX_TOKENS",    "512"))
 TIMEOUT         = int(os.environ.get("TIMEOUT",       "600"))
 PUSHGATEWAY_URL    = os.environ.get("PUSHGATEWAY_URL",    "http://localhost:9091")
@@ -498,6 +500,7 @@ summary = {
     "config":                       CONFIG,
     "model":                        MODEL,
     "concurrency":                  CONCURRENCY,
+    "hicache_write_policy":         HICACHE_WRITE_POLICY,
     "tool_delay_sec":               TOOL_DELAY_SEC,
     "flood_during_delay":           FLOOD_DURING_DELAY,
     "flood_n":                      FLOOD_N if FLOOD_DURING_DELAY else 0,
