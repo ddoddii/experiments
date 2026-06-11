@@ -296,6 +296,66 @@ P와 `/tmp/hicache`를 공유하면 P가 D의 offload KV를 읽을 수 있음 (�
    → kv_breakeven_map_3tier.{json,png} (T1 proxy / T2 / T3 / EVT)
 ```
 
+### 2.10 3-tier Break-even 맵 1차 (2026-06-11) — 가설 1차 입증
+
+§2.9의 3-tier 모드로 PD(router 8001) 측정 + 단일 서버 T1 proxy 결합 결과
+(`results/sglang_hicache/Qwen3-14B/kv_breakeven_map_3tier.{json,png}`):
+
+| tokens | T1 (D-HBM proxy) | T2 (P-HBM+전송) | T3 (DRAM) | cold | pen.T2 | pen.EVT |
+|---|---|---|---|---|---|---|
+| 666 | 52 ms | 166 ms | 399 ms | 385 ms | 114 ms | 332 ms |
+| 2,000 | 55 ms | 326 ms | 1,137 ms | 1,130 ms | 271 ms | 1,075 ms |
+| 5,000 | 62 ms | 672 ms | 2,454 ms | 2,453 ms | 610 ms | 2,391 ms |
+| 10,000 | 75 ms | 1,325 ms | 4,879 ms | 4,882 ms | 1,250 ms | 4,807 ms |
+| 20,000 | 96 ms | 2,562 ms | 11,179 ms | 11,135 ms | 2,466 ms | 11,040 ms |
+
+**보정 맵** (아래 아티팩트 수정 후):
+
+```
+tokens \ d(s) │  0.1  0.2  0.5    1    2    5   10   30   60
+          666 │   T1   T2  EVT  EVT  EVT  EVT  EVT  EVT  EVT
+        2,000 │   T1   T1   T2   T2  EVT  EVT  EVT  EVT  EVT
+        5,000 │   T1   T1   T1   T2   T2  EVT  EVT  EVT  EVT
+       10,000 │   T1   T1   T1   T1   T2  EVT  EVT  EVT  EVT
+       20,000 │   T1   T1   T1   T1   T1   T2   T2  EVT  EVT
+```
+
+**해석 — 연구 가설("duration × context 길이가 최적 placement를 결정")의 첫 실측 증거:**
+
+1. **T1 영역 (d < pen.T2)**: tool call이 Mooncake 전송(0.11–2.5 s)보다 짧으면 D-HBM 유지 외
+   대안 없음. context가 클수록 영역 확장 (20k는 d=2s까지). BFCL fast/medium 클래스
+   tool call 대부분이 이 영역.
+2. **T2 밴드 (pen.T2 ≤ d < pen.EVT)**: 전송은 숨겨지지만 재계산은 못 숨기는 구간 —
+   **P-HBM tier가 optimal인 영역이 실존함을 입증.**
+3. **Mooncake 세금 3번째 재현**: pen.T2 환산 0.91–1.28 GB/s (3회 독립 실행 일관 — 재현성 확보).
+4. **T3(DRAM)는 여전히 사망**: T3 ≈ cold 0.1% 이내 (P 노드 ratio=1.2/layer_first 그대로).
+5. **T1은 proxy 측정** (단일 서버 L1) — 실제 D-HBM retention 메커니즘이 아닌 하한 근사임을
+   논문에 명시할 것.
+
+**아티팩트 보정**: 원본 맵의 10k row RAM 칸 4개는 pen.T3(4803.6) vs pen.EVT(4807.2)가
+**3.6 ms 동률**이라 EVICT 게이트가 코인플립한 것. fetch ≈ recompute 동률(50 ms 마진 내)이면
+EVICT로 판정하도록 수정 (`EVT_TIE_MARGIN_MS`, 기본 50 ms).
+
+**L2(DRAM) 수리 후 예측 맵** — pen.T3′ = pen.T2 + KV/20 GB/s (PCIe) 가정:
+
+```
+tokens \ d(s) │  0.1  0.2  0.5    1    2    5   10   30   60
+          666 │   T1  RAM  RAM  RAM  RAM  RAM  RAM  RAM  RAM
+        2,000 │   T1   T1  RAM  RAM  RAM  RAM  RAM  RAM  RAM
+        5,000 │   T1   T1   T1  RAM  RAM  RAM  RAM  RAM  RAM
+       10,000 │   T1   T1   T1   T1  RAM  RAM  RAM  RAM  RAM
+       20,000 │   T1   T1   T1   T1   T1  RAM  RAM  RAM  RAM
+```
+
+(예: 20k에서 pen.T3′ = 2,466 + 153 ≈ 2,619 ms vs pen.EVT 11,040 ms → EVT/T2 영역 대부분이
+RAM으로 전환.) **"현재 맵(EVT 지배) vs 수리 후 맵(RAM 지배)" before/after 쌍 = Figure 1의
+가장 강력한 형태.** 이 예측이 §2.9 step 2(L2 살리기)의 검증 목표를 정량 정의:
+실측 pen.T3가 pen.T2 + ~50–150 ms에 근접하는가.
+
+**측정 방법론 주의 (시행착오 기록)**: PD 측정은 반드시 router(8001)로 보낼 것.
+P 노드(30000)에 직접 보내면 standalone으로 처리되어 단일 서버와 동일한 수치가 나옴
+(전송 세금 미포함) — 1회 잘못 측정 후 재실행으로 확인.
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
