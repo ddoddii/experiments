@@ -66,6 +66,19 @@ TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 MEM_FRACTION=${MEM_FRACTION:-"0.70"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through"}
+# ─── L2(DRAM) hit 살리기 노브 (research.md §2.8: L2 ≈ cold = hit 무효 관측) ──
+# HICACHE_RATIO=3.0      : host pool을 GPU pool의 3배로 — ratio 1.2는 host가 GPU보다
+#                          겨우 20% 커서 GPU flood가 host까지 같이 밀어내는 구조
+# HICACHE_MEM_LAYOUT     : layer_first(기본)는 I/O 비효율. page_first(kernel io),
+#                          page_first_direct(direct io 전용)
+# HICACHE_IO_BACKEND     : kernel(기본) | direct (direct는 page_first_direct와 조합)
+# HICACHE_PREFETCH_POLICY: best_effort(기본) | wait_complete (PD에서는 스톨 — 단일은 시험 가능)
+# 재시도 권장 조합:
+#   HICACHE_RATIO=3.0 HICACHE_MEM_LAYOUT=page_first bash scripts/sglang/start_single_hicache.sh
+#   HICACHE_RATIO=3.0 HICACHE_MEM_LAYOUT=page_first_direct HICACHE_IO_BACKEND=direct bash ...
+HICACHE_MEM_LAYOUT=${HICACHE_MEM_LAYOUT:-""}
+HICACHE_IO_BACKEND=${HICACHE_IO_BACKEND:-""}
+HICACHE_PREFETCH_POLICY=${HICACHE_PREFETCH_POLICY:-""}
 PORT=${PORT:-"30000"}
 GPU=${GPU:-"0"}
 
@@ -92,6 +105,7 @@ echo " Model       : $(basename $MODEL_PATH)"
 echo " GPU         : $GPU  →  port $PORT"
 echo " mem_fraction: $MEM_FRACTION  →  $KV_EST"
 echo " hicache     : ratio=$HICACHE_RATIO  policy=$HICACHE_WRITE_POLICY"
+echo "               layout=${HICACHE_MEM_LAYOUT:-(default)}  io=${HICACHE_IO_BACKEND:-(default)}  prefetch=${HICACHE_PREFETCH_POLICY:-(default)}"
 echo " hicache dir : $HICACHE_DIR"
 echo " Log dir     : $LOG_DIR"
 echo "=================================================="
@@ -125,6 +139,9 @@ CUDA_VISIBLE_DEVICES=$GPU python3 -m sglang.launch_server \
   --hicache-storage-backend file \
   --hicache-ratio "$HICACHE_RATIO" \
   --hicache-write-policy "$HICACHE_WRITE_POLICY" \
+  ${HICACHE_MEM_LAYOUT:+--hicache-mem-layout "$HICACHE_MEM_LAYOUT"} \
+  ${HICACHE_IO_BACKEND:+--hicache-io-backend "$HICACHE_IO_BACKEND"} \
+  ${HICACHE_PREFETCH_POLICY:+--hicache-storage-prefetch-policy "$HICACHE_PREFETCH_POLICY"} \
   --tool-call-parser "$TOOL_CALL_PARSER" \
   > "$LOG_DIR/server.log" 2>&1 &
 SERVER_PID=$!
