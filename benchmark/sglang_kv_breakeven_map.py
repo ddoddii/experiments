@@ -122,6 +122,10 @@ MAX_TOKENS_OUT = int(os.environ.get("MAX_TOKENS_OUT", "16"))
 # 3-tier 모드 (research.md §2.9): SSD tier 측정 생략 + D-HBM(T1) proxy 결합
 SKIP_L3        = os.environ.get("SKIP_L3", "0") == "1"
 T1_REF_JSON    = os.environ.get("T1_REF_JSON", "")
+# EVICT 동률 마진: 가장 깊은 tier의 fetch가 재계산과 이 범위 내 동률이면 EVICT 우선
+# (fetch ≈ recompute 노이즈 동률에서 맵 칸이 코인플립되는 것 방지 — 동률이면 캐시를
+#  안 쓰는 쪽이 단순하므로 EVICT로 판정)
+EVT_TIE_MARGIN_MS = float(os.environ.get("EVT_TIE_MARGIN_MS", "50"))
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 CHAT_URL   = f"{SERVER_URL.rstrip('/')}/v1/chat/completions"
@@ -433,13 +437,13 @@ def measure_length(chars: int) -> dict:
 TIER_GPU, TIER_RAM, TIER_SSD, TIER_EVT, TIER_UNK = "GPU", "RAM", "SSD", "EVT", "?"
 
 def _evict_candidate(m: dict) -> bool:
-    """EVICT는 가장 깊은 tier보다 재계산이 빠를 때만 후보.
+    """EVICT는 가장 깊은 tier보다 재계산이 빠르거나 동률(마진 내)일 때 후보.
     L3 미측정(SKIP_L3)이면 L2와 비교, 둘 다 없으면 항상 후보."""
     if m["cold_ttft_ms"] is None:
         return False
     deepest = m["l3_first_miss_ms"] if m["l3_first_miss_ms"] is not None \
         else m["l2_first_miss_ms"]
-    return deepest is None or m["cold_ttft_ms"] <= deepest
+    return deepest is None or m["cold_ttft_ms"] <= deepest + EVT_TIE_MARGIN_MS
 
 def _deepest_within(m: dict, budget_ms: float) -> str:
     choice = TIER_GPU  # always feasible (penalty 0)
@@ -622,7 +626,8 @@ def optimal_3tier(row: dict, budget_ms: float) -> str:
     if row["penalty_t3_ms"] is not None and row["penalty_t3_ms"] <= budget_ms:
         choice = TIER_RAM
     evt_ok = (row["cold_ttft_ms"] is not None
-              and (row["t3_ms"] is None or row["cold_ttft_ms"] <= row["t3_ms"]))
+              and (row["t3_ms"] is None
+                   or row["cold_ttft_ms"] <= row["t3_ms"] + EVT_TIE_MARGIN_MS))
     if (row["penalty_evict_ms"] is not None
             and row["penalty_evict_ms"] <= budget_ms and evt_ok):
         choice = TIER_EVT
