@@ -186,6 +186,99 @@ L3는 ~260 ms가 되어 **맵의 중간 영역(d = 0.1–5 s) 전체가 RAM/SSD�
   P에서 일어나므로). D 노드의 turn별 KV는 요청 종료와 함께 재사용 불가.
 - → 제안하는 Tier 1(D-HBM) 관리와 D→하위 tier offload는 **현재 존재하지 않는 경로**이며
   시스템 기여 지점 (§3.4 구현 공수 행 참조).
+  **(2차 측정 후 업데이트: sglang 0.5.9에 `--disaggregation-decode-enable-offload-kvcache`
+  플래그 존재 확인 — §2.9 참조)**
+
+### 2.8 Break-even 맵 2차 측정 (2026-06-11) — PD-특이성 기각, 1.2 GB/s 전송 세금 발견
+
+명시적 정책(`write_through` + `wait_complete`)으로 1p1d 재실행 + 단일 서버(비-PD) 대조
+실험 결과 (sglang 0.5.9, 결과: `results/sglang_hicache/Qwen3-14B/{1p1d,1server}_kv_breakeven_map.json`):
+
+**(1) PD-특이성 기각.** 단일 서버에서도 L2 ≈ cold (+2~+41 ms, 0.2–1% 이내),
+L3 = cold + Δ (Δ ∝ KV 크기, 환산 1.8–3.1 GB/s = NVMe 읽기 속도 모양) 패턴이 동일 재현.
+→ hicache L2/L3 복원 실패는 PD 때문이 아니라 **hicache 메커니즘 자체의 문제**.
+가설이 (b') **"storage 읽기는 일어나지만 결과가 compute를 대체하지 못함"**으로 좁혀짐
+(읽고 + 어차피 재계산). 역설: 재계산의 KV 생산 속도는 0.33–0.5 GB/s라,
+2–3 GB/s SSD 로드가 compute를 실제로 대체하기만 하면 **4–6× 빨라질 하드웨어가 낭비되는 중**.
+
+**(2) 황금 측정치 — Mooncake P→D 전송 세금 ≈ 1.2 GB/s.** L1(GPU radix hit) 비교:
+
+| tokens | L1 단일 서버 | L1 1p1d | 차이 | 환산 대역폭 |
+|---|---|---|---|---|
+| 666 | 52 ms | 165 ms | +113 ms | 0.92 GB/s |
+| 2,000 | 55 ms | 327 ms | +272 ms | 1.15 GB/s |
+| 5,000 | 62 ms | 698 ms | +636 ms | 1.23 GB/s |
+| 10,000 | 75 ms | 1,383 ms | +1,308 ms | 1.19 GB/s |
+| 20,000 | 96 ms | 2,735 ms | +2,639 ms | 1.18 GB/s |
+
+단일 서버 L1은 52–96 ms로 평평(진짜 GPU hit), PD의 L1은 context에 비례 —
+**PD에서는 완벽한 prefix hit조차 매 turn 전체 KV를 P→D로 전송**하기 때문.
+20k tokens에서 "hit" 비용의 96%가 전송(28×). cold의 PD-단일 차이는 이보다 작음
+→ prefill과 전송이 chunk 단위로 겹쳐지지만, hit일 때는 겹칠 compute가 없어 전송이 그대로 노출.
+
+**논문 framing**: Tier 1(tool call 동안 D-HBM 유지)이 정확히 이 세금을 0으로 만든다.
+단일 서버 L1(52–96 ms) = Tier-1 hit의 proxy, 1p1d L1 = 현 PD의 최선.
+→ **Tier 1 retention의 가치 = turn당 최대 2.6 s (20k tok), 이미 실측 완료.**
+부수 발견: SSD 읽기(2–3 GB/s) > Mooncake 경로(1.2 GB/s) → "D가 storage에서 직접 읽는"
+prefetch 경로(RQ4)가 P 경유보다 나을 수 있음을 데이터가 뒷받침.
+
+**(3) `wait_complete`는 PD에서 재앙적.** 1p1d L2/L3 first-miss가 24–126 s
+비단조·간헐 스톨 (666 tok L3 = 24 s, 5k L2 = 43 s, 5k L3 = 126 s; 20k는 정상 복귀).
+1차(기본 best_effort)에서는 L2 ≈ cold로 깔끔했으므로 PD + wait_complete 조합이
+storage prefetch 대기/타임아웃 스톨 유발. → **PD에서는 best_effort 고정** (스크립트 반영).
+
+**(4) 카운터 진단 실패 (한계).** `/server_info` 캐시 카운터 차분이 COLD에서조차 전무
+→ 이 버전은 HTTP로 hicache 카운터를 노출하지 않음 (`sglang_hicache_exporter.py`가
+VmRSS/du로 우회 추정하는 것과 같은 이유). 결정적 판별은 서버 로그 grep으로 수행:
+`grep -iE "hicache|prefetch|storage" logs/sglang_single/server.log`
+
+### 2.9 설계 결정: 3-tier 축소 (D-HBM / P-HBM / CPU DRAM) + EVICT
+
+SSD(Tier 4)를 평가 범위에서 제외하고 **3-tier + EVICT**로 축소한다. 근거:
+
+| 근거 | 측정치 |
+|------|--------|
+| SSD는 현재 재계산보다 느림 | L3 − cold = +39 ~ +1,766 ms (양쪽 구성 모두, §2.7–2.8) |
+| SSD는 고쳐져도 DRAM 대비 ~10× 느림 | SSD 2–3 GB/s vs PCIe DRAM ~20 GB/s |
+| DRAM 용량이 이 규모에선 충분 | RAM 125 GB → KV용 ~80 GB = 512k tokens = 10k-token 세션 50개 동시 파킹 |
+| Novelty가 상위 3개 tier에 집중 | D-HBM(1.2 GB/s 세금 절약 — 실측), P-HBM(prefix 전송 0, RQ4), DRAM(용량). SSD는 AttentionStore가 이미 한 가장 덜 새로운 tier |
+
+- **Formulation은 N-tier 일반**으로 쓰고 평가만 3-tier — SSD는 discussion에서
+  "DRAM pressure가 큰 대규모 배포의 자연스러운 확장"으로 한 단락.
+- **EVICT는 유지** — 짧은 context에서 재계산이 여전히 경쟁력 있음(666 tok에 213 ms).
+  맵은 {T1: D-HBM, T2: P-HBM, T3: DRAM, EVICT} 4-way 선택.
+- 실용 이득: 고장난 hicache file backend가 연구의 blocking dependency에서 빠짐
+  (§3.4 "SSD tier 정당화" 리스크 해소).
+
+**3-tier 사다리 현황** (절반은 이미 측정됨):
+
+| Tier | Resume 비용 | 출처 |
+|------|------------|------|
+| T1: D-HBM 유지 | ~52–96 ms (context 무관) | 단일 서버 L1이 proxy (§2.8) |
+| T2: P-HBM (radix) | 165 ms → 2,735 ms (∝ L, 1.2 GB/s 전송 포함) | 1p1d L1 실측 |
+| T3: CPU DRAM | T2 + DRAM 로드 (~수십 ms @20 GB/s, **L2 수리 후 측정 필요**) | 미확보 |
+| EVICT | 427 ms → 11.4 s (∝ L) | cold 실측 |
+
+**메커니즘 발견 — D→storage offload가 이미 존재**: sglang 0.5.9의
+[`--disaggregation-decode-enable-offload-kvcache`](https://github.com/sgl-project/sglang/issues/11016)
+플래그는 decode 노드가 생성한 KV를 비동기로 hicache storage에 기록해 **P가 multi-turn에서
+재사용**하게 한다 = D→하위 tier 경로의 출발점이 mainline에 있음. 단 multi-turn 부하에서
+CUDA error 보고([#11016](https://github.com/sgl-project/sglang/issues/11016)) — 안정성 검증
+필요. 동작하면 Tier-1 관리의 구현 공수가 "scheduler 수정"에서 "기존 경로 + 정책"으로 급감.
+
+**다음 단계 (§5.A 후속과 통합):**
+```
+1. D-offload 검증: D_OFFLOAD_KVCACHE=1 bash scripts/sglang/start_1P_1D_breakeven.sh
+   → BFCL multi-turn + tool delay로 동작/안정성 확인 (#11016 재현 여부)
+2. L2(DRAM) hit 살리기 — 단일 서버에서:
+   HICACHE_RATIO=3.0 HICACHE_MEM_LAYOUT=page_first bash scripts/sglang/start_single_hicache.sh
+   (대안: HICACHE_MEM_LAYOUT=page_first_direct HICACHE_IO_BACKEND=direct)
+   → 로그 grep으로 host write/load 이벤트 확인, T3 진짜 비용 확보
+3. L2가 살아나면 3-tier 맵 재생성:
+   SKIP_L3=1 T1_REF_JSON=results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json \
+     SERVER_URL=http://127.0.0.1:8001 python benchmark/sglang_kv_breakeven_map.py
+   → kv_breakeven_map_3tier.{json,png} (T1 proxy / T2 / T3 / EVT)
+```
 
 ---
 
@@ -257,11 +350,11 @@ A6000 시스템(PCIe, NVLink 없음)에서 1 GB KV (8k tokens) 기준 추정:
 | 리스크 | 내용 | 대응 |
 |--------|------|------|
 | Memory pressure 부재 | §2.3에서 D 노드 KV max 17% — pressure 없으면 Tier 1 유지가 항상 최적 | 동시성 ↑ 또는 `--mem-fraction` 축소로 포화 영역에서 평가. "idle KV가 active 요청을 queueing시킴"을 직접 시연 |
-| SSD tier 정당화 | RAM 125 GB 시스템에서 8B 모델 KV는 거의 전부 DRAM에 흡수 | Tier ablation (§5.I)으로 각 tier의 한계 기여 분리. SSD는 DRAM pressure 시나리오(동시 세션 수백 개 / DRAM 캐시 용량 제한)에서만 주장 |
+| ~~SSD tier 정당화~~ | **해소 (§2.9)**: SSD를 평가 범위에서 제외하고 3-tier로 축소. Formulation만 N-tier 일반 유지 | — |
 | BFCL mock tool | tool이 즉시 반환 → synthetic delay 주입만으로는 약함 | 실제 trace 기반 분포(SWE-bench agent 로그, 실 API latency) 주입. Continuum과 동일 워크로드로 비교 가능성 확보 |
 | Duration 예측 novelty 소진 | Continuum이 이미 empirical CDF 예측 입증 | 예측기는 차용, 기여는 multi-tier placement + PD 고유 문제로 |
 | 단일 8B 모델 | 모델 스케일 axis 약함 (70B는 하드웨어상 불가) | long-context 변형(turn 누적 + 긴 system prompt)으로 KV pressure axis 보강 |
-| 구현 공수 | D 노드 decode 중 KV를 P-HBM/DRAM/SSD로 내보내고 가져오는 경로가 SGLang에 없음 (HiCache는 P 노드 radix cache 계층화) | Oracle(§5.E)까지는 캐시 flush/유지 조작으로 시뮬레이션 → 가설 확정 후 시스템 구현 |
+| 구현 공수 | D 노드 decode 중 KV를 하위 tier로 내보내는 경로가 SGLang에 없음 (HiCache는 P 노드 radix cache 계층화) | **완화 (§2.9)**: sglang 0.5.9의 `--disaggregation-decode-enable-offload-kvcache`가 D→storage 경로 제공 (안정성 검증 필요, #11016). Oracle(§5.E)까지는 캐시 flush/유지 조작으로 시뮬레이션 |
 
 ---
 
@@ -289,7 +382,8 @@ A6000 시스템(PCIe, NVLink 없음)에서 1 GB KV (8k tokens) 기준 추정:
   f5. transfer_congestion (Mooncake in-flight KV 양)
 
 출력:
-  placement ∈ {D_HBM, P_HBM, CPU_DRAM, SSD, EVICT}
+  placement ∈ {D_HBM, P_HBM, CPU_DRAM, EVICT}   # §2.9 결정: 평가는 3-tier + EVICT
+                                                 # (formulation은 N-tier 일반, SSD는 discussion)
   prefetch_at = tool 종료 예상 시점 − recovery_latency(tier, context_length) × margin
 
 단순 rule-based policy (baseline):
@@ -361,22 +455,13 @@ SERVER_URL=http://127.0.0.1:8001 \
   python benchmark/sglang_kv_breakeven_map.py          # 2) 벤치마크 (상세는 docstring 참조)
 ```
 
-**1차 측정 결과 (2026-06-11)**: §2.7 참조 — 중간 tier(RAM/SSD)가 optimal인 칸 0개.
-L2 ≈ cold (hit 미발생 의심), L3 > cold (load가 재계산보다 느림). 후속 단계:
-
-```
-A-1. 가설 판별 재실행: 벤치마크가 first-miss 전후 /server_info 캐시 카운터 차분을
-     자동 수집하도록 수정됨. start 스크립트에 write_through + wait_complete 명시.
-     → 카운터 무변화 = hit 미발생(a) / hit 증가 + TTFT≈cold = 느린 load(b)
-
-A-2. 단일 서버(비-PD) 대조 실험: PD가 hit 경로를 깨는지 분리 확인.
-     bash scripts/sglang/start_single_hicache.sh
-     SERVER_URL=http://127.0.0.1:30000 P_NODE_URL=http://127.0.0.1:30000 \
-       python benchmark/sglang_kv_breakeven_map.py
-     → 단일 서버에서 L2/L3가 정상이면 "PD에서만 hicache 무력화" = 논문급 발견.
-       단일 서버 수치는 best-case hicache baseline으로도 사용 (transfer 비용이
-       다르므로 PD 수치의 대체재는 아님 — 대조군임에 유의)
-```
+**측정 경과**:
+- 1차 (§2.7): 중간 tier(RAM/SSD)가 optimal인 칸 0개. L2 ≈ cold, L3 > cold.
+- 2차 A-1/A-2 완료 (§2.8): PD-특이성 기각 (단일 서버도 동일 패턴), Mooncake P→D
+  전송 세금 1.2 GB/s 실측, wait_complete는 PD에서 24–126 s 스톨, 카운터 진단은
+  server_info 미노출로 실패 (로그 grep으로 대체).
+- 설계 결정 (§2.9): 3-tier 축소. **후속 단계는 §2.9 하단 1–3 참조**
+  (D-offload 플래그 검증 → L2 살리기 → 3-tier 맵 재생성).
 
 **측정 가능 범위 주의**: 현 SGLang 구조에서 실측 가능한 사다리는 P-HBM(radix L1) / DRAM(L2)
 / SSD(L3) / cold = **Tier 2/3/4 + EVICT**다. Tier 1(D-HBM 유지)은 D 노드 append-prefill
@@ -574,9 +659,11 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/vllm/bfcl_multiturn_results_vllm_tp4.json` | §2.1 Turn별 TTFT drop (−46%) |
 | `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_buf*_c*.json` | §2.4 Buffer sweep, context 길이 병목 |
 | `benchmark/sglang_kv_tier_latency.py` | §5.A 방법론 원형 (단일 길이 4-phase 측정) |
-| `scripts/sglang/start_1P_1D_breakeven.sh` | §5.A 서버 시작 (1P+1D + hicache + router 8001) |
-| `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 + 맵 생성 (신규) |
-| `results/sglang_hicache/{model}/kv_breakeven_map.json` | §5.A 결과 (실행 후 생성) |
+| `scripts/sglang/start_1P_1D_breakeven.sh` | §5.A 서버 시작 (1P+1D + hicache + router 8001, `D_OFFLOAD_KVCACHE` 노브) |
+| `scripts/sglang/start_single_hicache.sh` | §2.8 대조군 / §2.9 L2 살리기 (ratio/layout/io/prefetch 노브) |
+| `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 (`SKIP_L3`, `T1_REF_JSON` 3-tier 모드) |
+| `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
+| `results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json` | §2.8 단일 서버 대조군 = T1 proxy 소스 |
 
 ## 9. References
 
@@ -589,3 +676,6 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 - [Conveyor: Efficient Tool-aware LLM Serving with Tool Partial Execution](https://arxiv.org/pdf/2406.00059) (2024)
 - [PrefillShare: A Shared Prefill Module for KV Reuse in Multi-LLM Disaggregated Serving](https://arxiv.org/abs/2602.12029) (2026.2)
 - InferCept (ICML 2024), AttentionStore/CachedAttention (USENIX ATC 2024), Mooncake (FAST 2025)
+- [SGLang HiCache Best Practices](https://docs.sglang.ai/advanced_features/hicache_best_practices.html) — mem_layout/io_backend/prefetch 정책 가이드
+- [SGLang HiCache 블로그](https://www.lmsys.org/blog/2025-09-10-sglang-hicache/), [Mooncake × HiCache 설계](https://kvcache-ai.github.io/Mooncake/design/hicache-design.html)
+- [sglang #11016](https://github.com/sgl-project/sglang/issues/11016) — `disaggregation-decode-enable-offload-kvcache` CUDA error 보고 (안정성 주의)

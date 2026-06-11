@@ -27,15 +27,23 @@ QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 
-# ─── HiCache 정책 (1차 측정에서 L2/L3 무이득 → 기본값 함정 배제용 명시) ──────
+# ─── HiCache 정책 ────────────────────────────────────────────────────────────
 # write_through        : 계산 즉시 host(DRAM)+SSD 기록 (selective는 재접근 prefix만 기록)
-# wait_complete        : storage 로드를 끝까지 기다림 (best_effort는 포기 후 재계산 fallback
-#                        → L2/L3 first-miss ≈ cold 패턴의 유력 용의자)
-# HICACHE_IO_BACKEND   : 빈 값이면 서버 기본값. 'direct' 지원 여부는 버전에 따라 다름
+# prefetch=best_effort : 기본값 복귀. ⚠ wait_complete는 PD에서 24–126s 스톨 실측
+#                        (research.md §2.8) — 사용 금지
+# HICACHE_MEM_LAYOUT   : layer_first(기본)는 I/O 비효율. page_first(kernel io 권장),
+#                        page_first_direct(direct io 전용) 시도 가능
+# HICACHE_IO_BACKEND   : 빈 값이면 서버 기본값(kernel). direct는 page_first_direct와 조합
 # ※ 플래그 이름/지원 여부 확인: python3 -m sglang.launch_server --help | grep hicache
 HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through"}
-HICACHE_PREFETCH_POLICY=${HICACHE_PREFETCH_POLICY:-"wait_complete"}
+HICACHE_PREFETCH_POLICY=${HICACHE_PREFETCH_POLICY:-"best_effort"}
+HICACHE_MEM_LAYOUT=${HICACHE_MEM_LAYOUT:-""}
 HICACHE_IO_BACKEND=${HICACHE_IO_BACKEND:-""}
+
+# ─── Decode 노드 KV offload (sglang 0.5.9, research.md §2.9) ────────────────
+# 1: decode 노드가 생성한 KV를 비동기로 storage에 기록 → P가 multi-turn에서 재사용
+#    = D→하위 tier 경로. ⚠ multi-turn 부하에서 CUDA error 보고됨 (sglang #11016)
+D_OFFLOAD_KVCACHE=${D_OFFLOAD_KVCACHE:-"0"}
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
@@ -49,7 +57,8 @@ echo "Model    : $(basename $MODEL_PATH)"
 echo "Log dir  : $LOG_DIR"
 echo "Router   : http://127.0.0.1:8001"
 echo "HiCache  : write=$HICACHE_WRITE_POLICY  prefetch=$HICACHE_PREFETCH_POLICY"
-echo "           io=${HICACHE_IO_BACKEND:-(server default)}  ratio=$HICACHE_RATIO"
+echo "           layout=${HICACHE_MEM_LAYOUT:-(server default)}  io=${HICACHE_IO_BACKEND:-(server default)}  ratio=$HICACHE_RATIO"
+echo "D-offload: ${D_OFFLOAD_KVCACHE} (1=decode KV→storage, sglang #11016 주의)"
 echo ""
 
 # ─── /tmp 디스크 타입 확인 ─────────────────────────────────────────────────
@@ -94,6 +103,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --hicache-ratio $HICACHE_RATIO \
   --hicache-write-policy $HICACHE_WRITE_POLICY \
   --hicache-storage-prefetch-policy $HICACHE_PREFETCH_POLICY \
+  ${HICACHE_MEM_LAYOUT:+--hicache-mem-layout $HICACHE_MEM_LAYOUT} \
   ${HICACHE_IO_BACKEND:+--hicache-io-backend $HICACHE_IO_BACKEND} \
   --disaggregation-mode prefill \
   --disaggregation-transfer-backend mooncake \
@@ -109,6 +119,7 @@ CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode \
   --disaggregation-transfer-backend mooncake \
+  $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache") \
   --tool-call-parser $TOOL_CALL_PARSER \
   > "$LOG_DIR/d1.log" 2>&1 &
 echo "  PID: $!  log: $LOG_DIR/d1.log"

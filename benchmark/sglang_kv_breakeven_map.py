@@ -57,6 +57,14 @@ Usage:
   SERVER_URL=http://127.0.0.1:30000 P_NODE_URL=http://127.0.0.1:30000 \\
     python benchmark/sglang_kv_breakeven_map.py
 
+  # 3-tier 모드 (research.md §2.9 — SSD 제외, D-HBM proxy 결합):
+  #   1) 단일 서버 결과를 T1 proxy로 저장해 두고 (위 대조 실험 결과 JSON)
+  #   2) PD(1p1d)에서 SSD phase 생략 + T1 ref 결합:
+  SKIP_L3=1 T1_REF_JSON=results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json \\
+    SERVER_URL=http://127.0.0.1:8001 python benchmark/sglang_kv_breakeven_map.py
+  #   → kv_breakeven_map_3tier.{json,png} 추가 생성
+  #   (T1=D-HBM 유지 proxy, T2=이 실행의 L1(P radix+전송), T3=이 실행의 L2(DRAM))
+
   # 길이/duration 격자 커스텀
   SWEEP_CHARS=2000,6000,15000 DURATIONS=0.5,1,5,10 \\
     SERVER_URL=http://127.0.0.1:8001 python benchmark/sglang_kv_breakeven_map.py
@@ -111,6 +119,9 @@ GPU_KV_GB      = float(os.environ.get("GPU_KV_GB",    "18.0"))
 DRAM_KV_GB     = float(os.environ.get("DRAM_KV_GB",   "21.6"))
 HICACHE_PATH   = os.environ.get("HICACHE_PATH",       "/tmp/hicache")
 MAX_TOKENS_OUT = int(os.environ.get("MAX_TOKENS_OUT", "16"))
+# 3-tier 모드 (research.md §2.9): SSD tier 측정 생략 + D-HBM(T1) proxy 결합
+SKIP_L3        = os.environ.get("SKIP_L3", "0") == "1"
+T1_REF_JSON    = os.environ.get("T1_REF_JSON", "")
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 CHAT_URL   = f"{SERVER_URL.rstrip('/')}/v1/chat/completions"
@@ -146,6 +157,10 @@ print(f"  Durations    : {DURATIONS_S} s")
 print(f"  Prefetch α   : {PREFETCH_ALPHA}   SLO penalty: {SLO_PENALTY_MS:.0f} ms")
 print(f"  GPU_EVICT_N  : {GPU_EVICT_N}   L3_FLOOD_N: {L3_FLOOD_N}   REPEAT_N: {REPEAT_N}")
 print(f"  HiCache path : {HICACHE_PATH}")
+if SKIP_L3:
+    print("  SKIP_L3=1    : SSD(L3) phase 생략 — 3-tier 모드")
+if T1_REF_JSON:
+    print(f"  T1_REF_JSON  : {T1_REF_JSON} (D-HBM Tier-1 proxy = 단일 서버 L1 baseline)")
 print("=" * 68)
 
 # ─── Storage tier check ──────────────────────────────────────────────────────
@@ -342,10 +357,11 @@ def measure_length(chars: int) -> dict:
     anchor    = anchor_messages("anchor", chars)
     l3_anchor = anchor_messages("late",   chars)   # distinct prefix, pre-aged for L3
 
-    # Pre-phase: L3 anchor into GPU+DRAM — its DRAM LRU becomes the oldest of
-    # this iteration, so the small Phase-3 flood evicts it to SSD first.
-    print("  [Pre] L3 anchor → GPU+DRAM (oldest LRU of this iteration)")
-    do_request(l3_anchor, "L3-PRE")
+    if not SKIP_L3:
+        # Pre-phase: L3 anchor into GPU+DRAM — its DRAM LRU becomes the oldest of
+        # this iteration, so the small Phase-3 flood evicts it to SSD first.
+        print("  [Pre] L3 anchor → GPU+DRAM (oldest LRU of this iteration)")
+        do_request(l3_anchor, "L3-PRE")
 
     # Phase 0: COLD (unique prefix → guaranteed miss)
     print("  [Phase 0] COLD")
@@ -369,12 +385,15 @@ def measure_length(chars: int) -> dict:
     ttfts_l2, l2_miss_ms, l2_counters = measure_phase("L2", anchor)
 
     # Phase 3: overflow DRAM → pre-aged L3 anchor lands on SSD
-    print(f"  [Phase 3] L3 SSD — DRAM overflow ({L3_FLOOD_N} reqs)")
-    flood("L3 flood", L3_FLOOD_N)
-    print("    Waiting 5s for async SSD writes ...")
-    time.sleep(5)
-    print_cache_stats("after-L3-flood")
-    ttfts_l3, l3_miss_ms, l3_counters = measure_phase("L3", l3_anchor)
+    if SKIP_L3:
+        ttfts_l3, l3_miss_ms, l3_counters = [], None, {}
+    else:
+        print(f"  [Phase 3] L3 SSD — DRAM overflow ({L3_FLOOD_N} reqs)")
+        flood("L3 flood", L3_FLOOD_N)
+        print("    Waiting 5s for async SSD writes ...")
+        time.sleep(5)
+        print_cache_stats("after-L3-flood")
+        ttfts_l3, l3_miss_ms, l3_counters = measure_phase("L3", l3_anchor)
 
     # Sanity warnings (same thresholds as sglang_kv_tier_latency.py)
     if l1_baseline and l2_miss_ms and l2_miss_ms < l1_baseline + 50:
@@ -413,41 +432,38 @@ def measure_length(chars: int) -> dict:
 # Tier order: shallow → deep. Deeper = cheaper memory, larger recovery penalty.
 TIER_GPU, TIER_RAM, TIER_SSD, TIER_EVT, TIER_UNK = "GPU", "RAM", "SSD", "EVT", "?"
 
-def optimal_tier_prefetch(m: dict, d_s: float) -> str:
-    """Deepest tier whose recovery penalty hides within d (prefetch model)."""
-    if m["l1_baseline_ms"] is None:
-        return TIER_UNK
-    budget_ms = d_s * 1000 * PREFETCH_ALPHA
+def _evict_candidate(m: dict) -> bool:
+    """EVICT는 가장 깊은 tier보다 재계산이 빠를 때만 후보.
+    L3 미측정(SKIP_L3)이면 L2와 비교, 둘 다 없으면 항상 후보."""
+    if m["cold_ttft_ms"] is None:
+        return False
+    deepest = m["l3_first_miss_ms"] if m["l3_first_miss_ms"] is not None \
+        else m["l2_first_miss_ms"]
+    return deepest is None or m["cold_ttft_ms"] <= deepest
+
+def _deepest_within(m: dict, budget_ms: float) -> str:
     choice = TIER_GPU  # always feasible (penalty 0)
     if m["penalty_l2_ms"] is not None and m["penalty_l2_ms"] <= budget_ms:
         choice = TIER_RAM
     if m["penalty_l3_ms"] is not None and m["penalty_l3_ms"] <= budget_ms:
         choice = TIER_SSD
-    # EVICT only beats SSD when recompute is faster than SSD fetch
     if (m["penalty_evict_ms"] is not None
             and m["penalty_evict_ms"] <= budget_ms
-            and m["cold_ttft_ms"] is not None
-            and m["l3_first_miss_ms"] is not None
-            and m["cold_ttft_ms"] <= m["l3_first_miss_ms"]):
+            and _evict_candidate(m)):
         choice = TIER_EVT
     return choice
+
+def optimal_tier_prefetch(m: dict, d_s: float) -> str:
+    """Deepest tier whose recovery penalty hides within d (prefetch model)."""
+    if m["l1_baseline_ms"] is None:
+        return TIER_UNK
+    return _deepest_within(m, d_s * 1000 * PREFETCH_ALPHA)
 
 def optimal_tier_no_prefetch(m: dict) -> str:
     """No prefetch: penalty is fully visible at resume → bound by SLO budget."""
     if m["l1_baseline_ms"] is None:
         return TIER_UNK
-    choice = TIER_GPU
-    if m["penalty_l2_ms"] is not None and m["penalty_l2_ms"] <= SLO_PENALTY_MS:
-        choice = TIER_RAM
-    if m["penalty_l3_ms"] is not None and m["penalty_l3_ms"] <= SLO_PENALTY_MS:
-        choice = TIER_SSD
-    if (m["penalty_evict_ms"] is not None
-            and m["penalty_evict_ms"] <= SLO_PENALTY_MS
-            and m["cold_ttft_ms"] is not None
-            and m["l3_first_miss_ms"] is not None
-            and m["cold_ttft_ms"] <= m["l3_first_miss_ms"]):
-        choice = TIER_EVT
-    return choice
+    return _deepest_within(m, SLO_PENALTY_MS)
 
 def print_map(rows: list[dict], map_grid: list[list[str]]):
     header = "  tokens \\ d(s) │" + "".join(f"{d:>7g}" for d in DURATIONS_S)
@@ -456,7 +472,8 @@ def print_map(rows: list[dict], map_grid: list[list[str]]):
     for m, row in zip(rows, map_grid):
         print(f"  {m['tokens_est']:>13,} │" + "".join(f"{t:>7}" for t in row))
 
-def save_heatmap(rows: list[dict], map_grid: list[list[str]], out_png: str):
+def save_heatmap(rows: list[dict], map_grid: list[list[str]], out_png: str,
+                 tier_order: list[str], legend: str):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -465,17 +482,18 @@ def save_heatmap(rows: list[dict], map_grid: list[list[str]], out_png: str):
     except ImportError:
         print("  (matplotlib 미설치 — PNG 생략)")
         return
-    tier_idx = {TIER_GPU: 0, TIER_RAM: 1, TIER_SSD: 2, TIER_EVT: 3, TIER_UNK: 4}
+    tier_idx = {t: i for i, t in enumerate(tier_order)}
+    tier_idx[TIER_UNK] = len(tier_order)
     data = [[tier_idx[t] for t in row] for row in map_grid]
-    cmap = ListedColormap(["#d73027", "#fdae61", "#74add1", "#4575b4", "#cccccc"])
+    palette = ["#d73027", "#fdae61", "#74add1", "#4575b4", "#cccccc"]
+    cmap = ListedColormap(palette[:len(tier_order)] + [palette[-1]])
     fig, ax = plt.subplots(figsize=(1.2 * len(DURATIONS_S) + 2, 0.8 * len(rows) + 2))
-    ax.imshow(data, cmap=cmap, vmin=0, vmax=4, aspect="auto")
+    ax.imshow(data, cmap=cmap, vmin=0, vmax=len(tier_order), aspect="auto")
     ax.set_xticks(range(len(DURATIONS_S)), [f"{d:g}" for d in DURATIONS_S])
     ax.set_yticks(range(len(rows)), [f"{m['tokens_est']:,}" for m in rows])
     ax.set_xlabel("Tool call duration (s)")
     ax.set_ylabel("Context length (tokens)")
-    ax.set_title(f"Optimal KV tier — {MODEL_SLUG} (prefetch α={PREFETCH_ALPHA})\n"
-                 "GPU=P-HBM(Tier2)  RAM=DRAM(Tier3)  SSD(Tier4)  EVT=re-prefill")
+    ax.set_title(f"Optimal KV tier — {MODEL_SLUG} (prefetch α={PREFETCH_ALPHA})\n{legend}")
     for i, row in enumerate(map_grid):
         for j, t in enumerate(row):
             ax.text(j, i, t, ha="center", va="center", fontsize=9, color="white")
@@ -561,4 +579,89 @@ with open(out_json, "w") as f:
     }, f, indent=2, ensure_ascii=False)
 print(f"\n결과 저장: {out_json}")
 
-save_heatmap(results, map_prefetch, os.path.join(out_dir, "kv_breakeven_map.png"))
+save_heatmap(results, map_prefetch, os.path.join(out_dir, "kv_breakeven_map.png"),
+             tier_order=[TIER_GPU, TIER_RAM, TIER_SSD, TIER_EVT],
+             legend="GPU=P-HBM radix  RAM=DRAM  SSD  EVT=re-prefill")
+
+# ─── 3-tier map: T1(D-HBM proxy) / T2(P-HBM) / RAM(DRAM) / EVT ───────────────
+# research.md §2.9: 이 실행(PD)의 L1 = P radix hit + Mooncake 전송 = Tier 2,
+# 단일 서버(비-PD) 실행의 L1 = 전송·재계산 없는 hit = Tier 1(D-HBM 유지)의 proxy.
+# T1_REF_JSON에 단일 서버 결과를 주면 두 측정을 결합해 3-tier 맵을 만든다.
+TIER_T1, TIER_T2 = "T1", "T2"
+
+def build_3tier_rows(results: list[dict], ref_path: str) -> list[dict]:
+    ref = json.load(open(ref_path))
+    ref_by_chars = {m["chars"]: m for m in ref.get("lengths", [])}
+    rows = []
+    for m in results:
+        r = ref_by_chars.get(m["chars"])
+        if not (r and r.get("l1_baseline_ms") is not None
+                and m["l1_baseline_ms"] is not None):
+            print(f"  (3-tier: {m['chars']} chars — T1 ref 없음/측정 실패, 생략)")
+            continue
+        t1 = r["l1_baseline_ms"]
+        pen = lambda v: round(v - t1, 1) if v is not None else None
+        rows.append({
+            "chars":         m["chars"],
+            "tokens_est":    m["tokens_est"],
+            "kv_mb":         m["kv_mb"],
+            "t1_ms":         t1,                       # D-HBM 유지 proxy (1server L1)
+            "t2_ms":         m["l1_baseline_ms"],      # P-HBM radix hit (+transfer)
+            "t3_ms":         m["l2_first_miss_ms"],    # DRAM 복구
+            "cold_ttft_ms":  m["cold_ttft_ms"],
+            "penalty_t2_ms":    pen(m["l1_baseline_ms"]),
+            "penalty_t3_ms":    pen(m["l2_first_miss_ms"]),
+            "penalty_evict_ms": pen(m["cold_ttft_ms"]),
+        })
+    return rows
+
+def optimal_3tier(row: dict, budget_ms: float) -> str:
+    choice = TIER_T1
+    if row["penalty_t2_ms"] is not None and row["penalty_t2_ms"] <= budget_ms:
+        choice = TIER_T2
+    if row["penalty_t3_ms"] is not None and row["penalty_t3_ms"] <= budget_ms:
+        choice = TIER_RAM
+    evt_ok = (row["cold_ttft_ms"] is not None
+              and (row["t3_ms"] is None or row["cold_ttft_ms"] <= row["t3_ms"]))
+    if (row["penalty_evict_ms"] is not None
+            and row["penalty_evict_ms"] <= budget_ms and evt_ok):
+        choice = TIER_EVT
+    return choice
+
+if T1_REF_JSON:
+    rows3 = build_3tier_rows(results, T1_REF_JSON)
+    if rows3:
+        map3 = [[optimal_3tier(r, d * 1000 * PREFETCH_ALPHA) for d in DURATIONS_S]
+                for r in rows3]
+        print("\n" + "=" * 68)
+        print(f"3-TIER BREAK-EVEN MAP (α={PREFETCH_ALPHA})")
+        print("  T1=D-HBM 유지(proxy)  T2=P-HBM radix(+transfer)  RAM=DRAM  EVT=re-prefill")
+        print("=" * 68)
+        print(f"  {'tokens':>8} {'T1':>9} {'T2':>9} {'T3 RAM':>9} {'cold':>9}"
+              f" {'pen.T2':>8} {'pen.T3':>8}")
+        for r in rows3:
+            f = lambda v: f"{v:>9.1f}" if v is not None else f"{'—':>9}"
+            g = lambda v: f"{v:>8.1f}" if v is not None else f"{'—':>8}"
+            print(f"  {r['tokens_est']:>8,} {f(r['t1_ms'])} {f(r['t2_ms'])}"
+                  f" {f(r['t3_ms'])} {f(r['cold_ttft_ms'])}"
+                  f" {g(r['penalty_t2_ms'])} {g(r['penalty_t3_ms'])}")
+        print()
+        print_map(rows3, map3)
+
+        out3 = os.path.join(out_dir, "kv_breakeven_map_3tier.json")
+        with open(out3, "w") as f:
+            json.dump({
+                "summary": {**summary, "t1_ref_json": T1_REF_JSON,
+                            "tier_legend": {
+                                TIER_T1:  "keep in D-HBM (Tier 1, proxy = 1server L1)",
+                                TIER_T2:  "P-HBM radix (Tier 2, incl. P→D transfer)",
+                                TIER_RAM: "CPU DRAM (Tier 3)",
+                                TIER_EVT: "evict + re-prefill",
+                            }},
+                "lengths":       rows3,
+                "breakeven_map": map3,
+            }, f, indent=2, ensure_ascii=False)
+        print(f"\n3-tier 결과 저장: {out3}")
+        save_heatmap(rows3, map3, os.path.join(out_dir, "kv_breakeven_map_3tier.png"),
+                     tier_order=[TIER_T1, TIER_T2, TIER_RAM, TIER_EVT],
+                     legend="T1=D-HBM keep  T2=P-HBM radix  RAM=DRAM  EVT=re-prefill")
