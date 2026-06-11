@@ -116,31 +116,90 @@ _PROM_METRIC_RE = re.compile(
     re.MULTILINE,
 )
 
-# Map Prometheus metric names → data dict keys
+# Map Prometheus metric names → data dict keys.
+# SGLang uses either "sglang:" (older) or "sglang_" (newer) prefix.
+# Some versions also aggregate with _total or expose under different names.
 _PROM_FIELD_MAP = {
-    "sglang:num_used_tokens":  "num_used_tokens",
-    "sglang_num_used_tokens":  "num_used_tokens",
-    "sglang:token_usage":      "token_usage",
-    "sglang_token_usage":      "token_usage",
-    "sglang:num_running_reqs": "num_running_reqs",
-    "sglang_num_running_reqs": "num_running_reqs",
-    "sglang:num_queue_reqs":   "num_queue_reqs",
-    "sglang_num_queue_reqs":   "num_queue_reqs",
-    "sglang:num_waiting_tokens": "num_waiting_tokens",
-    "sglang_num_waiting_tokens": "num_waiting_tokens",
+    # running / queued requests
+    "sglang:num_running_reqs":           "num_running_reqs",
+    "sglang_num_running_reqs":           "num_running_reqs",
+    "sglang:running_reqs":               "num_running_reqs",
+    "sglang_running_reqs":               "num_running_reqs",
+    "sglang:num_running_requests":       "num_running_reqs",
+    "sglang_num_running_requests":       "num_running_reqs",
+    "sglang:num_queue_reqs":             "num_queue_reqs",
+    "sglang_num_queue_reqs":             "num_queue_reqs",
+    "sglang:num_waiting_reqs":           "num_queue_reqs",
+    "sglang_num_waiting_reqs":           "num_queue_reqs",
+    # token usage
+    "sglang:num_used_tokens":            "num_used_tokens",
+    "sglang_num_used_tokens":            "num_used_tokens",
+    "sglang:used_tokens":                "num_used_tokens",
+    "sglang_used_tokens":                "num_used_tokens",
+    "sglang:token_usage":                "token_usage",
+    "sglang_token_usage":                "token_usage",
+    "sglang:num_waiting_tokens":         "num_waiting_tokens",
+    "sglang_num_waiting_tokens":         "num_waiting_tokens",
+    # cache hit rate
+    "sglang:cache_hit_rate":             "cache_hit_rate",
+    "sglang_cache_hit_rate":             "cache_hit_rate",
+    "sglang:radix_cache_hit_rate":       "cache_hit_rate",
+    "sglang_radix_cache_hit_rate":       "cache_hit_rate",
+    "sglang:avg_cache_hit_rate":         "cache_hit_rate",
+    "sglang_avg_cache_hit_rate":         "cache_hit_rate",
+    "sglang:prefix_cache_hit_rate":      "cache_hit_rate",
+    "sglang_prefix_cache_hit_rate":      "cache_hit_rate",
 }
 
 
 def _enrich_from_native_metrics(port: int, data: dict) -> None:
-    """Augment *data* with values scraped from SGLang's native /metrics endpoint."""
+    """Augment *data* with values scraped from SGLang's native /metrics endpoint.
+
+    Parses Prometheus text format line-by-line to handle both:
+      metric_name{label="val",...} value [timestamp]
+      metric_name value [timestamp]
+    and both sglang: and sglang_ prefixes.
+    """
     try:
         r = requests.get(f"http://localhost:{port}/metrics", timeout=2.0)
         if r.status_code != 200 or not r.text.strip():
             return
-        for m in _PROM_METRIC_RE.finditer(r.text):
-            key = _PROM_FIELD_MAP.get(m.group("name"))
-            if key and key not in data:
-                data[key] = float(m.group("value"))
+        matched_any = False
+        for line in r.text.splitlines():
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            # Split metric_name{labels} value [timestamp]
+            parts = line.split(None, 2)  # max 3 parts: name+labels, value, rest
+            if len(parts) < 2:
+                continue
+            metric_with_labels, value_str = parts[0], parts[1]
+            # Strip label set: metric_name{...} → metric_name
+            brace = metric_with_labels.find('{')
+            metric_name = metric_with_labels[:brace] if brace >= 0 else metric_with_labels
+            key = _PROM_FIELD_MAP.get(metric_name)
+            if not key or key in data:
+                continue
+            try:
+                data[key] = float(value_str)
+                matched_any = True
+            except ValueError:
+                pass
+        # First call per port: stash ALL sglang metric names for diagnostics
+        if not matched_any and "_prom_names_logged" not in data:
+            data["_prom_names_logged"] = True
+            sglang_names = set()
+            for line in r.text.splitlines():
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                name = line.split(None, 1)[0]
+                brace = name.find('{')
+                name = name[:brace] if brace >= 0 else name
+                if name.startswith("sglang"):
+                    sglang_names.add(name)
+            if sglang_names:
+                data["_prom_sglang_names"] = sorted(sglang_names)
     except Exception:
         pass
 
@@ -433,6 +492,7 @@ class SGLangHiCachePoller(threading.Thread):
         # Static capacity recorded on first successful scrape
         self._token_capacity: dict[str, int] = {}
         self._kvcache_gb: dict[str, float] = {}
+        self._prom_names: dict[str, list[str]] = {}  # diagnostic
 
     def run(self):
         while not self._stop_event.wait(self.interval):
@@ -457,6 +517,10 @@ class SGLangHiCachePoller(threading.Thread):
                         kv = info.get("kvcache")
                         if kv:
                             self._kvcache_gb[label] = float(kv)
+                    if label not in self._prom_names:
+                        names = info.get("_prom_sglang_names")
+                        if names:
+                            self._prom_names[label] = names
 
     def stop(self):
         self._stop_event.set()
@@ -481,6 +545,8 @@ class SGLangHiCachePoller(threading.Thread):
                 result[label]["token_capacity"] = self._token_capacity[label]
             if label in self._kvcache_gb:
                 result[label]["kvcache_gb"] = self._kvcache_gb[label]
+            if label in self._prom_names:
+                result[label]["_prom_metric_names"] = self._prom_names[label]
         return result
 
 
