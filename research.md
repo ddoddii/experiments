@@ -135,6 +135,58 @@ Prefill은 context token을 병렬 처리하므로 context 2× = TTFT ≈ 1.5× 
 Decode는 autoregressive라 출력 길이에 선형.  
 → 짧은 context의 re-prefill은 상대적으로 저렴하다. **Placement policy의 eviction threshold는 context 길이와 re-prefill 비용 곡선에서 결정되어야 한다.**
 
+### 2.7 Break-even 맵 1차 측정 (2026-06-11) — 현 시스템의 중간 tier는 무가치
+
+§5.A 스크립트로 1P1D + hicache(file backend, /tmp = ext4 실디스크)에서 측정한
+tier ladder (Qwen3-14B, 단위 ms):
+
+| tokens | cold | L1 GPU | L2 first-miss | L3 first-miss | L1 이득 | L2 − cold | L3 − cold |
+|---|---|---|---|---|---|---|---|
+| 666 | 434 | 179 | 427 | 457 | **−59%** | −6 | **+24** |
+| 2,000 | 1,169 | 329 | 1,158 | 1,287 | **−72%** | −11 | **+118** |
+| 5,000 | 2,566 | 706 | 2,548 | 2,952 | **−72%** | −18 | **+385** |
+| 10,000 | 5,105 | 1,345 | 5,104 | 5,972 | **−74%** | −1 | **+867** |
+| 20,000 | 11,596 | 2,662 | 11,583 | 13,505 | **−77%** | −13 | **+1,910** |
+
+**관찰 3가지:**
+
+1. **L2 ≈ cold가 전 길이에서 0.1–1.5% 이내 일치** (10k: 5104.1 vs 5105.1, 1 ms 차).
+   DRAM hit이라면 PCIe ~20 GB/s 기준 5k tokens(781 MB)에서 ~750 ms가 나와야 하는데
+   2,548 ms → **L2 측정은 사실상 full re-prefill**.
+2. **L3는 cold보다 항상 느리고 초과분이 KV 크기에 비례** (+0.23 → +0.61 ms/MB).
+   유효 처리율 ~0.3–0.4 GB/s — re-prefill의 KV 생산 속도(~2,400 tok/s × 160 KB
+   ≈ 0.4 GB/s)보다도 느림.
+3. 방법론은 건강함: L1 분산 < 3%, L2/L3 재요청 median이 L1 수준으로 복귀
+   (eviction → re-hit 사이클 정상 동작).
+
+**결과**: break-even 맵이 "GPU 아니면 EVICT"로 퇴화 — RAM/SSD가 optimal인 칸이 0개.
+**현 SGLang hicache 메커니즘 하에서는 Continuum의 pin-or-evict가 사실상 최적**임을
+실측으로 확인한 셈.
+
+**원인 가설 2개** (→ §5.A 카운터 수집으로 판별):
+
+| 가설 | 근거 | 판별법 |
+|------|------|--------|
+| (a) hit 미발생 — 재계산 fallback | L2 = cold 정확 일치. 첫 iteration(666 tok)은 DRAM에 anchor가 분명 있어야 하는 상황(용량 충분)인데도 cold → 용량이 아닌 **hit 경로 문제**. 용의자: `hicache-write-policy` 기본값 selective(host에 안 써짐), `storage-prefetch-policy` best_effort(로드 포기 후 재계산) | first-miss 전후 `/server_info` 캐시 카운터 차분 — 카운터 무변화면 (a) |
+| (b) hit은 났지만 load가 병적으로 느림 | file backend의 페이지(64 tok) 단위 sync read면 0.3 GB/s대 가능 | hit 카운터 증가 + TTFT ≈ cold면 (b) |
+
+**기회 갭 정량화 (논문 framing)**: 측정된 유효 복구 대역폭 0.35–0.42 GB/s vs PCIe 실효
+~20 GB/s = **약 50×**. 하드웨어 속도라면 5k tokens의 L2 패널티는 1,842 ms → ~40 ms,
+L3는 ~260 ms가 되어 **맵의 중간 영역(d = 0.1–5 s) 전체가 RAM/SSD로 채워진다.**
+→ "측정된 맵(GPU/EVT뿐)" vs "하드웨어 한계 기준 잠재 맵(RAM/SSD 지배)" 두 장을 나란히
+놓는 것이 Figure 1의 강력한 형태.
+
+**현 SGLang PD의 D 노드 KV 처리 (메커니즘 정리)**:
+- hicache는 **P 노드 radix(prefix) cache의 확장**이라 P에만 의미가 있다. decode 모드
+  서버는 prefix matching을 하지 않으므로 hicache가 동작하지 않는다.
+- D 노드 HBM이 부족해지면 **offload가 아니라 retraction/preemption**(KV 폐기 후
+  re-queue)이 일어난다. PD에서는 retract된 요청의 re-prefill이 P에서 다시 필요
+  → 고동시성에서 관측한 KVTransferError/AbortReq(§2.4 성공률 저하)와 부합.
+- Turn 사이의 "session KV"는 사실상 P 노드 radix+hicache에 산다 (다음 turn prefill이
+  P에서 일어나므로). D 노드의 turn별 KV는 요청 종료와 함께 재사용 불가.
+- → 제안하는 Tier 1(D-HBM) 관리와 D→하위 tier offload는 **현재 존재하지 않는 경로**이며
+  시스템 기여 지점 (§3.4 구현 공수 행 참조).
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
@@ -307,6 +359,23 @@ Continuum과 동일 워크로드(BFCL + SWE-bench류)를 쓰면 비교 가능성
 bash scripts/sglang/start_1P_1D_breakeven.sh          # 1) 서버 시작 (1P+1D, hicache, router 8001)
 SERVER_URL=http://127.0.0.1:8001 \
   python benchmark/sglang_kv_breakeven_map.py          # 2) 벤치마크 (상세는 docstring 참조)
+```
+
+**1차 측정 결과 (2026-06-11)**: §2.7 참조 — 중간 tier(RAM/SSD)가 optimal인 칸 0개.
+L2 ≈ cold (hit 미발생 의심), L3 > cold (load가 재계산보다 느림). 후속 단계:
+
+```
+A-1. 가설 판별 재실행: 벤치마크가 first-miss 전후 /server_info 캐시 카운터 차분을
+     자동 수집하도록 수정됨. start 스크립트에 write_through + wait_complete 명시.
+     → 카운터 무변화 = hit 미발생(a) / hit 증가 + TTFT≈cold = 느린 load(b)
+
+A-2. 단일 서버(비-PD) 대조 실험: PD가 hit 경로를 깨는지 분리 확인.
+     bash scripts/sglang/start_single_hicache.sh
+     SERVER_URL=http://127.0.0.1:30000 P_NODE_URL=http://127.0.0.1:30000 \
+       python benchmark/sglang_kv_breakeven_map.py
+     → 단일 서버에서 L2/L3가 정상이면 "PD에서만 hicache 무력화" = 논문급 발견.
+       단일 서버 수치는 best-case hicache baseline으로도 사용 (transfer 비용이
+       다르므로 PD 수치의 대체재는 아님 — 대조군임에 유의)
 ```
 
 **측정 가능 범위 주의**: 현 SGLang 구조에서 실측 가능한 사다리는 P-HBM(radix L1) / DRAM(L2)

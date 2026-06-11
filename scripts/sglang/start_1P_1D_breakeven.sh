@@ -27,6 +27,16 @@ QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 
+# ─── HiCache 정책 (1차 측정에서 L2/L3 무이득 → 기본값 함정 배제용 명시) ──────
+# write_through        : 계산 즉시 host(DRAM)+SSD 기록 (selective는 재접근 prefix만 기록)
+# wait_complete        : storage 로드를 끝까지 기다림 (best_effort는 포기 후 재계산 fallback
+#                        → L2/L3 first-miss ≈ cold 패턴의 유력 용의자)
+# HICACHE_IO_BACKEND   : 빈 값이면 서버 기본값. 'direct' 지원 여부는 버전에 따라 다름
+# ※ 플래그 이름/지원 여부 확인: python3 -m sglang.launch_server --help | grep hicache
+HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through"}
+HICACHE_PREFETCH_POLICY=${HICACHE_PREFETCH_POLICY:-"wait_complete"}
+HICACHE_IO_BACKEND=${HICACHE_IO_BACKEND:-""}
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang_1p1d"
@@ -38,6 +48,8 @@ echo "=================================================="
 echo "Model    : $(basename $MODEL_PATH)"
 echo "Log dir  : $LOG_DIR"
 echo "Router   : http://127.0.0.1:8001"
+echo "HiCache  : write=$HICACHE_WRITE_POLICY  prefetch=$HICACHE_PREFETCH_POLICY"
+echo "           io=${HICACHE_IO_BACKEND:-(server default)}  ratio=$HICACHE_RATIO"
 echo ""
 
 # ─── /tmp 디스크 타입 확인 ─────────────────────────────────────────────────
@@ -80,6 +92,9 @@ CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --enable-hierarchical-cache \
   --hicache-storage-backend file \
   --hicache-ratio $HICACHE_RATIO \
+  --hicache-write-policy $HICACHE_WRITE_POLICY \
+  --hicache-storage-prefetch-policy $HICACHE_PREFETCH_POLICY \
+  ${HICACHE_IO_BACKEND:+--hicache-io-backend $HICACHE_IO_BACKEND} \
   --disaggregation-mode prefill \
   --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
