@@ -1,0 +1,52 @@
+{
+  "summary": {
+    "model": "Qwen3-14B",
+    "server_url": "http://127.0.0.1:8001",
+    "anchor_chars": 15000,
+    "anchor_tokens_est": 5000,
+    "anchor_kv_mb": 781.2,
+    "gpu_kv_gb": 18.0,
+    "dram_kv_gb": 21.6,
+    "kv_bytes_per_token": 163840,
+    "gpu_evict_n": 32,
+    "dram_evict_n": 38,
+    "repeat_n": 5,
+    "cold_ttft_ms": 1242.6,
+    "l1_mean_ms": 353.7,
+    "l2_mean_ms": 532.1,
+    "l3_mean_ms": 535.5,
+    "l2_overhead_ms": 178.4,
+    "l3_overhead_ms": 181.8,
+    "l3_vs_l2_ms": 3.3
+  },
+  "phases": {
+    "cold": {
+      "ttft_ms": 1242.6
+    },
+    "l1_gpu": {
+      "min_ms": 345.7,
+      "mean_ms": 353.7,
+      "median_ms": 348.6,
+      "max_ms": 376.5,
+      "samples": 5
+    },
+    "l2_dram": {
+      "min_ms": 349.4,
+      "mean_ms": 532.1,
+      "median_ms": 355.4,
+      "max_ms": 1250.1,
+      "samples": 5,
+      "gpu_evict_n": 32,
+      "evict_tokens": 128000
+    },
+    "l3_ssd": {
+      "min_ms": 352.3,
+      "mean_ms": 535.5,
+      "median_ms": 366.1,
+      "max_ms": 1233.9,
+      "samples": 5,
+      "total_evict_n": 70,
+      "evict_tokens": 280000
+    }
+  }
+}
