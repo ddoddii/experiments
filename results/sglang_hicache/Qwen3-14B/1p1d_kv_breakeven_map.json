@@ -1,0 +1,302 @@
+{
+  "summary": {
+    "model": "Qwen3-14B",
+    "server_url": "http://127.0.0.1:8001",
+    "kv_bytes_per_token": 163840,
+    "sweep_chars": [
+      2000,
+      6000,
+      15000,
+      30000,
+      60000
+    ],
+    "durations_s": [
+      0.1,
+      0.2,
+      0.5,
+      1.0,
+      2.0,
+      5.0,
+      10.0,
+      30.0,
+      60.0
+    ],
+    "prefetch_alpha": 1.0,
+    "slo_penalty_ms": 200.0,
+    "gpu_evict_n": 32,
+    "l3_flood_n": 20,
+    "repeat_n": 5,
+    "tier_legend": {
+      "GPU": "keep in GPU/P-HBM (Tier 1/2)",
+      "RAM": "CPU DRAM (Tier 3)",
+      "SSD": "SSD (Tier 4)",
+      "EVT": "evict + re-prefill"
+    }
+  },
+  "lengths": [
+    {
+      "chars": 2000,
+      "tokens_est": 666,
+      "kv_mb": 104.1,
+      "cold_ttft_ms": 426.9,
+      "l1_baseline_ms": 165.4,
+      "l2_first_miss_ms": 416.0,
+      "l3_first_miss_ms": 24312.5,
+      "penalty_l2_ms": 250.6,
+      "penalty_l3_ms": 24147.1,
+      "penalty_evict_ms": 261.5,
+      "phases": {
+        "l1": {
+          "min_ms": 165.4,
+          "mean_ms": 177.8,
+          "median_ms": 181.8,
+          "max_ms": 185.8,
+          "samples": 5
+        },
+        "l2": {
+          "min_ms": 178.4,
+          "mean_ms": 230.9,
+          "median_ms": 183.7,
+          "max_ms": 416.0,
+          "samples": 5
+        },
+        "l3": {
+          "min_ms": 188.3,
+          "mean_ms": 5017.3,
+          "median_ms": 195.3,
+          "max_ms": 24312.5,
+          "samples": 5
+        }
+      },
+      "counters_first_miss": {
+        "cold": {},
+        "l2": {},
+        "l3": {}
+      }
+    },
+    {
+      "chars": 6000,
+      "tokens_est": 2000,
+      "kv_mb": 312.5,
+      "cold_ttft_ms": 1159.8,
+      "l1_baseline_ms": 327.3,
+      "l2_first_miss_ms": 1164.9,
+      "l3_first_miss_ms": 18723.1,
+      "penalty_l2_ms": 837.6,
+      "penalty_l3_ms": 18395.8,
+      "penalty_evict_ms": 832.5,
+      "phases": {
+        "l1": {
+          "min_ms": 327.3,
+          "mean_ms": 332.8,
+          "median_ms": 333.5,
+          "max_ms": 335.9,
+          "samples": 5
+        },
+        "l2": {
+          "min_ms": 336.6,
+          "mean_ms": 503.2,
+          "median_ms": 338.6,
+          "max_ms": 1164.9,
+          "samples": 5
+        },
+        "l3": {
+          "min_ms": 370.2,
+          "mean_ms": 4044.5,
+          "median_ms": 377.6,
+          "max_ms": 18723.1,
+          "samples": 5
+        }
+      },
+      "counters_first_miss": {
+        "cold": {},
+        "l2": {},
+        "l3": {}
+      }
+    },
+    {
+      "chars": 15000,
+      "tokens_est": 5000,
+      "kv_mb": 781.2,
+      "cold_ttft_ms": 2554.3,
+      "l1_baseline_ms": 698.1,
+      "l2_first_miss_ms": 43116.6,
+      "l3_first_miss_ms": 126180.0,
+      "penalty_l2_ms": 42418.5,
+      "penalty_l3_ms": 125482.0,
+      "penalty_evict_ms": 1856.2,
+      "phases": {
+        "l1": {
+          "min_ms": 698.1,
+          "mean_ms": 719.4,
+          "median_ms": 725.3,
+          "max_ms": 728.3,
+          "samples": 5
+        },
+        "l2": {
+          "min_ms": 713.7,
+          "mean_ms": 9206.3,
+          "median_ms": 724.7,
+          "max_ms": 43116.6,
+          "samples": 5
+        },
+        "l3": {
+          "min_ms": 783.7,
+          "mean_ms": 25876.3,
+          "median_ms": 794.3,
+          "max_ms": 126180.0,
+          "samples": 5
+        }
+      },
+      "counters_first_miss": {
+        "cold": {},
+        "l2": {},
+        "l3": {}
+      }
+    },
+    {
+      "chars": 30000,
+      "tokens_est": 10000,
+      "kv_mb": 1562.5,
+      "cold_ttft_ms": 4979.5,
+      "l1_baseline_ms": 1382.9,
+      "l2_first_miss_ms": 65678.3,
+      "l3_first_miss_ms": 107424.5,
+      "penalty_l2_ms": 64295.5,
+      "penalty_l3_ms": 106041.7,
+      "penalty_evict_ms": 3596.6,
+      "phases": {
+        "l1": {
+          "min_ms": 1382.9,
+          "mean_ms": 1390.5,
+          "median_ms": 1389.3,
+          "max_ms": 1404.8,
+          "samples": 5
+        },
+        "l2": {
+          "min_ms": 1322.3,
+          "mean_ms": 14201.5,
+          "median_ms": 1333.8,
+          "max_ms": 65678.3,
+          "samples": 5
+        },
+        "l3": {
+          "min_ms": 1514.2,
+          "mean_ms": 22707.0,
+          "median_ms": 1528.4,
+          "max_ms": 107424.5,
+          "samples": 5
+        }
+      },
+      "counters_first_miss": {
+        "cold": {},
+        "l2": {},
+        "l3": {}
+      }
+    },
+    {
+      "chars": 60000,
+      "tokens_est": 20000,
+      "kv_mb": 3125.0,
+      "cold_ttft_ms": 11375.6,
+      "l1_baseline_ms": 2735.4,
+      "l2_first_miss_ms": 11524.4,
+      "l3_first_miss_ms": 13452.6,
+      "penalty_l2_ms": 8789.1,
+      "penalty_l3_ms": 10717.2,
+      "penalty_evict_ms": 8640.3,
+      "phases": {
+        "l1": {
+          "min_ms": 2735.4,
+          "mean_ms": 2790.5,
+          "median_ms": 2790.7,
+          "max_ms": 2838.2,
+          "samples": 5
+        },
+        "l2": {
+          "min_ms": 2736.0,
+          "mean_ms": 4522.2,
+          "median_ms": 2759.3,
+          "max_ms": 11524.4,
+          "samples": 5
+        },
+        "l3": {
+          "min_ms": 3174.4,
+          "mean_ms": 5278.5,
+          "median_ms": 3248.5,
+          "max_ms": 13452.6,
+          "samples": 5
+        }
+      },
+      "counters_first_miss": {
+        "cold": {},
+        "l2": {},
+        "l3": {}
+      }
+    }
+  ],
+  "breakeven_map": [
+    [
+      "GPU",
+      "GPU",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "GPU",
+      "GPU",
+      "GPU",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "GPU",
+      "EVT",
+      "EVT",
+      "EVT"
+    ]
+  ],
+  "breakeven_no_prefetch": [
+    "GPU",
+    "GPU",
+    "GPU",
+    "GPU",
+    "GPU"
+  ]
+}
