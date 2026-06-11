@@ -302,7 +302,12 @@ Continuum과 동일 워크로드(BFCL + SWE-bench류)를 쓰면 비교 가능성
   break-even 맵 (heatmap) + tier별 bandwidth 실측치 → §4.2 비용 모델의 원료
 ```
 
-**구현**: `benchmark/sglang_kv_breakeven_map.py` (작성 완료 — 사용법은 스크립트 docstring 참조)
+**구현** (작성 완료):
+```bash
+bash scripts/sglang/start_1P_1D_breakeven.sh          # 1) 서버 시작 (1P+1D, hicache, router 8001)
+SERVER_URL=http://127.0.0.1:8001 \
+  python benchmark/sglang_kv_breakeven_map.py          # 2) 벤치마크 (상세는 docstring 참조)
+```
 
 **측정 가능 범위 주의**: 현 SGLang 구조에서 실측 가능한 사다리는 P-HBM(radix L1) / DRAM(L2)
 / SSD(L3) / cold = **Tier 2/3/4 + EVICT**다. Tier 1(D-HBM 유지)은 D 노드 append-prefill
@@ -500,6 +505,7 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/vllm/bfcl_multiturn_results_vllm_tp4.json` | §2.1 Turn별 TTFT drop (−46%) |
 | `results/vllm-ppd/bfcl_multiturn_results_vllm_ppd_buf*_c*.json` | §2.4 Buffer sweep, context 길이 병목 |
 | `benchmark/sglang_kv_tier_latency.py` | §5.A 방법론 원형 (단일 길이 4-phase 측정) |
+| `scripts/sglang/start_1P_1D_breakeven.sh` | §5.A 서버 시작 (1P+1D + hicache + router 8001) |
 | `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 + 맵 생성 (신규) |
 | `results/sglang_hicache/{model}/kv_breakeven_map.json` | §5.A 결과 (실행 후 생성) |
 

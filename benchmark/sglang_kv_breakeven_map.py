@@ -31,18 +31,18 @@ Tier 매핑 주의 (research.md §5.A):
   Tier1(D-HBM 유지)은 D 노드 append-prefill 메커니즘 구현 전에는 측정 불가 —
   L1(GPU radix hit)이 "HBM hit"의 하한 근사.
 
-실험 조건 (원 스크립트와 동일):
-  - 모든 요청이 동일한 P 노드에서 처리되어야 한다 → 단일 P+D 라우터 사용 권장:
-      python -m sglang_router.launch_router \\
-        --pd-disaggregation \\
-        --prefill http://127.0.0.1:30000 8998 \\
-        --decode  http://127.0.0.1:30002 \\
-        --host 0.0.0.0 --port 8001
+실험 조건:
+  - 모든 요청이 동일한 P 노드에서 처리되어야 한다 (단일 P+D 라우터, port 8001)
+    → 서버 시작 스크립트: scripts/sglang/start_1P_1D_breakeven.sh
   - hicache SSD 경로가 실제 디스크인지 확인: df -T /tmp  (tmpfs면 L3 측정 무의미)
 
 예상 소요: 길이당 ~3–5분 (flood 지배적) × 5 lengths ≈ 20–30분
 
 Usage:
+  # 1) 서버 시작 (1P+1D + hicache + router 8001)
+  bash scripts/sglang/start_1P_1D_breakeven.sh
+
+  # 2) 벤치마크 실행
   SERVER_URL=http://127.0.0.1:8001 python benchmark/sglang_kv_breakeven_map.py
 
   # 길이/duration 격자 커스텀
