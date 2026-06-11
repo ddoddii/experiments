@@ -38,12 +38,24 @@ Tier 매핑 주의 (research.md §5.A):
 
 예상 소요: 길이당 ~3–5분 (flood 지배적) × 5 lengths ≈ 20–30분
 
+Hit/miss 가설 판별 (research.md §2.7):
+  각 phase의 첫 요청(tier miss) 전후로 P 노드 /server_info의 캐시 관련 숫자 필드
+  (hicache/storage/prefetch/hit/cache/evict/host 매칭)를 snapshot하고 차분을 출력·저장한다.
+  → L2/L3 first-miss에서 카운터가 안 움직이면 "hit 미발생(재계산 fallback)",
+    hit 카운터가 증가하는데도 TTFT ≈ cold면 "load 경로가 느림"으로 판별.
+  (/get_server_info는 deprecated — /server_info 우선, 실패 시 fallback)
+
 Usage:
   # 1) 서버 시작 (1P+1D + hicache + router 8001)
   bash scripts/sglang/start_1P_1D_breakeven.sh
 
   # 2) 벤치마크 실행
   SERVER_URL=http://127.0.0.1:8001 python benchmark/sglang_kv_breakeven_map.py
+
+  # 단일 서버(비-PD) 대조 실험 — PD가 hit 경로를 깨는지 분리 확인:
+  bash scripts/sglang/start_single_hicache.sh
+  SERVER_URL=http://127.0.0.1:30000 P_NODE_URL=http://127.0.0.1:30000 \\
+    python benchmark/sglang_kv_breakeven_map.py
 
   # 길이/duration 격자 커스텀
   SWEEP_CHARS=2000,6000,15000 DURATIONS=0.5,1,5,10 \\
@@ -71,6 +83,7 @@ Environment variables:
 
 import json
 import os
+import re
 import statistics
 import time
 
@@ -216,32 +229,78 @@ def do_request(messages: list, label: str = "") -> tuple[float | None, float | N
     e2e  = (t_last  - t0) if t_last  else None
     return ttft, e2e
 
-def get_cache_stats() -> dict:
-    try:
-        r = requests.get(f"{P_NODE_URL}/get_server_info", timeout=5)
-        info = r.json()
-        return {
-            "token_usage":       info.get("token_usage"),
-            "num_total_tokens":  info.get("num_total_tokens"),
-            "num_cached_tokens": info.get("num_cached_tokens"),
-        }
-    except Exception:
-        return {}
+def fetch_server_info() -> dict:
+    """P 노드 server info. /server_info 우선 (/get_server_info는 deprecated)."""
+    for ep in ("/server_info", "/get_server_info"):
+        try:
+            r = requests.get(f"{P_NODE_URL}{ep}", timeout=5)
+            if r.ok:
+                return r.json()
+        except Exception:
+            continue
+    return {}
 
 def print_cache_stats(label: str):
-    stats = get_cache_stats()
-    if stats.get("token_usage") is not None:
-        print(f"    [cache {label}] token_usage={stats['token_usage']:.3f}  "
-              f"cached={stats.get('num_cached_tokens')}/"
-              f"{stats.get('num_total_tokens')}")
+    info = fetch_server_info()
+    if info.get("token_usage") is not None:
+        print(f"    [cache {label}] token_usage={info['token_usage']:.3f}  "
+              f"cached={info.get('num_cached_tokens')}/"
+              f"{info.get('num_total_tokens')}")
+
+# ─── HiCache counter snapshot/diff (가설 판별용) ──────────────────────────────
+# server_info의 숫자 필드 중 캐시 관련 키만 추출해 요청 전후 차분을 본다.
+# 필드 이름이 SGLang 버전마다 달라서 정확한 키를 가정하지 않고 regex로 거른다.
+CACHE_KEY_RE = re.compile(r"hicache|storage|prefetch|hit|cache|evict|host", re.I)
+
+def _flatten_numeric(obj, prefix: str = "", out: dict | None = None) -> dict:
+    if out is None:
+        out = {}
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            _flatten_numeric(v, f"{prefix}{k}.", out)
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _flatten_numeric(v, f"{prefix}{i}.", out)
+    elif isinstance(obj, bool):
+        pass
+    elif isinstance(obj, (int, float)):
+        out[prefix[:-1]] = obj
+    return out
+
+def cache_snapshot() -> dict:
+    flat = _flatten_numeric(fetch_server_info())
+    return {k: v for k, v in flat.items() if CACHE_KEY_RE.search(k)}
+
+def counter_diff(before: dict, after: dict) -> dict:
+    """변화한 캐시 카운터만 {key: [before, after]}로 반환."""
+    return {k: [before.get(k), after[k]]
+            for k in after if after[k] != before.get(k)}
+
+def print_counter_diff(label: str, diff: dict):
+    if not diff:
+        print(f"    [counters {label}] 변화한 캐시 카운터 없음"
+              " (hicache hit/load가 안 일어났거나 server_info에 미노출)")
+        return
+    for k in sorted(diff)[:15]:
+        b, a = diff[k]
+        print(f"    [counters {label}] {k}: {b} → {a}")
+    if len(diff) > 15:
+        print(f"    [counters {label}] ... ({len(diff) - 15} more, JSON에 전체 저장)")
 
 # ─── Phase runner ────────────────────────────────────────────────────────────
-def measure_phase(label: str, messages: list) -> tuple[list[float], float | None]:
-    """Run REPEAT_N requests; return (ttft_list_ms, first_miss_ms)."""
+def measure_phase(label: str, messages: list) -> tuple[list[float], float | None, dict]:
+    """Run REPEAT_N requests; return (ttft_list_ms, first_miss_ms, counter_diff).
+
+    counter_diff = 첫 요청(tier miss) 전후 캐시 카운터 차분 — hit/miss 가설 판별용.
+    """
     ttfts = []
     first_miss: float | None = None
+    miss_counters: dict = {}
     for i in range(REPEAT_N):
+        snap_before = cache_snapshot() if i == 0 else None
         ttft, e2e = do_request(messages, label=f"{label}[{i}]")
+        if i == 0:
+            miss_counters = counter_diff(snap_before, cache_snapshot())
         if ttft is not None:
             ms = ttft * 1000
             ttfts.append(ms)
@@ -250,9 +309,11 @@ def measure_phase(label: str, messages: list) -> tuple[list[float], float | None
             marker = " ← tier miss" if i == 0 else ""
             print(f"    [{label} {i+1}/{REPEAT_N}]  TTFT={ms:7.1f} ms"
                   f"  e2e={e2e*1000:.1f} ms{marker}")
+            if i == 0:
+                print_counter_diff(f"{label}-miss", miss_counters)
         else:
             print(f"    [{label} {i+1}/{REPEAT_N}]  FAILED")
-    return ttfts, first_miss
+    return ttfts, first_miss, miss_counters
 
 def flood(desc: str, n: int):
     for _ in tqdm(range(n), desc=desc, leave=False):
@@ -288,13 +349,16 @@ def measure_length(chars: int) -> dict:
 
     # Phase 0: COLD (unique prefix → guaranteed miss)
     print("  [Phase 0] COLD")
+    snap_before = cache_snapshot()
     ttft_cold, _ = do_request(anchor, "COLD")
+    cold_counters = counter_diff(snap_before, cache_snapshot())
     cold_ms = ttft_cold * 1000 if ttft_cold else None
     print(f"    COLD TTFT = {cold_ms:.1f} ms" if cold_ms else "    COLD FAILED")
+    print_counter_diff("COLD", cold_counters)
 
     # Phase 1: L1 GPU hit
     print("  [Phase 1] L1 GPU")
-    ttfts_l1, _ = measure_phase("L1", anchor)
+    ttfts_l1, _, _ = measure_phase("L1", anchor)
     l1_baseline = min(ttfts_l1) if ttfts_l1 else None
 
     # Phase 2: evict anchor from GPU → DRAM hit
@@ -302,7 +366,7 @@ def measure_length(chars: int) -> dict:
           f"{GPU_EVICT_N*evict_tok_est/gpu_max_tokens*100:.0f}% of GPU KV)")
     flood("GPU evict", GPU_EVICT_N)
     print_cache_stats("after-GPU-flood")
-    ttfts_l2, l2_miss_ms = measure_phase("L2", anchor)
+    ttfts_l2, l2_miss_ms, l2_counters = measure_phase("L2", anchor)
 
     # Phase 3: overflow DRAM → pre-aged L3 anchor lands on SSD
     print(f"  [Phase 3] L3 SSD — DRAM overflow ({L3_FLOOD_N} reqs)")
@@ -310,7 +374,7 @@ def measure_length(chars: int) -> dict:
     print("    Waiting 5s for async SSD writes ...")
     time.sleep(5)
     print_cache_stats("after-L3-flood")
-    ttfts_l3, l3_miss_ms = measure_phase("L3", l3_anchor)
+    ttfts_l3, l3_miss_ms, l3_counters = measure_phase("L3", l3_anchor)
 
     # Sanity warnings (same thresholds as sglang_kv_tier_latency.py)
     if l1_baseline and l2_miss_ms and l2_miss_ms < l1_baseline + 50:
@@ -336,6 +400,12 @@ def measure_length(chars: int) -> dict:
             "l1": stats_dict(ttfts_l1),
             "l2": stats_dict(ttfts_l2),
             "l3": stats_dict(ttfts_l3),
+        },
+        # 첫 요청(tier miss) 전후 캐시 카운터 차분 — hit 미발생 vs 느린 load 판별 근거
+        "counters_first_miss": {
+            "cold": cold_counters,
+            "l2":   l2_counters,
+            "l3":   l3_counters,
         },
     }
 
