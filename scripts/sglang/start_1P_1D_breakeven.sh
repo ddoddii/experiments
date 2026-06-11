@@ -42,8 +42,17 @@ HICACHE_IO_BACKEND=${HICACHE_IO_BACKEND:-""}
 
 # ─── Decode 노드 KV offload (sglang 0.5.9, research.md §2.9) ────────────────
 # 1: decode 노드가 생성한 KV를 비동기로 storage에 기록 → P가 multi-turn에서 재사용
-#    = D→하위 tier 경로. ⚠ multi-turn 부하에서 CUDA error 보고됨 (sglang #11016)
+#    = D→하위 tier 경로.
+# ⚠ decode 서버에 --hicache-storage-backend가 반드시 함께 필요:
+#    DecodeKVCacheOffloadManager가 HiCacheController에 server_args.hicache_storage_backend를
+#    넘기는데, 미설정이면 storage thread가 안 떠서 ack_backup_queue AttributeError로 즉사
+#    (2026-06-11 실측). 같은 호스트라 file 백엔드(/tmp/hicache)를 P와 공유 → P가 D의
+#    offload KV를 읽을 수 있음. 멀티노드로 가면 양쪽 다 mooncake store로 전환.
+# ⚠ 동작해도 multi-turn 부하에서 CUDA illegal memory access 보고됨 (sglang #11016,
+#    transfer_kv_all_layer_lf_pf 커널). 재현 시 D_HICACHE_MEM_LAYOUT으로 layout을 바꿔
+#    다른 전송 커널 경로 시도.
 D_OFFLOAD_KVCACHE=${D_OFFLOAD_KVCACHE:-"0"}
+D_HICACHE_MEM_LAYOUT=${D_HICACHE_MEM_LAYOUT:-""}
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
@@ -119,7 +128,10 @@ CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode \
   --disaggregation-transfer-backend mooncake \
-  $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache") \
+  $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache \
+      --hicache-ratio $HICACHE_RATIO \
+      --hicache-storage-backend file \
+      ${D_HICACHE_MEM_LAYOUT:+--hicache-mem-layout $D_HICACHE_MEM_LAYOUT}") \
   --tool-call-parser $TOOL_CALL_PARSER \
   > "$LOG_DIR/d1.log" 2>&1 &
 echo "  PID: $!  log: $LOG_DIR/d1.log"

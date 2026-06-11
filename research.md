@@ -266,10 +266,26 @@ SSD(Tier 4)를 평가 범위에서 제외하고 **3-tier + EVICT**로 축소한�
 CUDA error 보고([#11016](https://github.com/sgl-project/sglang/issues/11016)) — 안정성 검증
 필요. 동작하면 Tier-1 관리의 구현 공수가 "scheduler 수정"에서 "기존 경로 + 정책"으로 급감.
 
+**D-offload 검증 메모 (2026-06-11, 1차 시도)**: decode 서버에 hicache storage 설정 없이
+플래그만 켜면 즉사 — `DecodeKVCacheOffloadManager`가 `HiCacheController`에
+`server_args.hicache_storage_backend`를 넘기는데, `ack_backup_queue`는 storage backend가
+설정된 경우(`_start_storage_threads`)에만 생성되므로 `check_offload_progress()`에서
+`AttributeError: 'HiCacheController' object has no attribute 'ack_backup_queue'`.
+→ **decode 서버에도 `--hicache-storage-backend` + `--hicache-ratio` 필요**
+([#11016](https://github.com/sgl-project/sglang/issues/11016) 보고자도 동일 구성:
+`--hicache-ratio 1.2 --hicache-storage-backend mooncake`). 단일 호스트에서는 file 백엔드로
+P와 `/tmp/hicache`를 공유하면 P가 D의 offload KV를 읽을 수 있음 (멀티노드는 mooncake store).
+스크립트 반영 완료 (`D_OFFLOAD_KVCACHE=1`이 decode에 storage 플래그 자동 부착).
+#11016의 본 크래시(CUDA illegal memory access, `transfer_kv_all_layer_lf_pf` 커널)는
+이후 부하 단계에서 재현 여부 관찰 — 재현 시 `D_HICACHE_MEM_LAYOUT`으로 layout을 바꿔
+다른 전송 커널 경로 시도.
+
 **다음 단계 (§5.A 후속과 통합):**
 ```
 1. D-offload 검증: D_OFFLOAD_KVCACHE=1 bash scripts/sglang/start_1P_1D_breakeven.sh
    → BFCL multi-turn + tool delay로 동작/안정성 확인 (#11016 재현 여부)
+   → 동작 확인 포인트: d1.log에 storage backend 생성 로그, decode 중 /tmp/hicache
+     파일 수 증가, turn N+1에서 P가 D의 생성 토큰 KV를 재사용하는지 (TTFT 비교)
 2. L2(DRAM) hit 살리기 — 단일 서버에서:
    HICACHE_RATIO=3.0 HICACHE_MEM_LAYOUT=page_first bash scripts/sglang/start_single_hicache.sh
    (대안: HICACHE_MEM_LAYOUT=page_first_direct HICACHE_IO_BACKEND=direct)
