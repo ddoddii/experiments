@@ -382,6 +382,44 @@ RAM으로 전환.) **"현재 맵(EVT 지배) vs 수리 후 맵(RAM 지배)" befo
 P 노드(30000)에 직접 보내면 standalone으로 처리되어 단일 서버와 동일한 수치가 나옴
 (전송 세금 미포함) — 1회 잘못 측정 후 재실행으로 확인.
 
+### 2.11 NVLink P2P 전송 실측 (2026-06-12) — 전송 세금 23× 감소, 맵 구조 전환
+
+§2.8(5)의 3-포인트 sweep 중 NVLink 포인트 실측: **NIXL 백엔드 + P=GPU0, D=GPU1 (NV4)**.
+결과: `results/sglang_hicache/Qwen3-14B/nixl_nvlink_kv_breakeven_map*.{json,png}`
+
+| tokens | T1 | T2 (NVLink) | T2 (TCP, §2.10) | pen.T2 NVLink | pen.T2 TCP | 환산 BW |
+|---|---|---|---|---|---|---|
+| 666 | 52 ms | 90 ms | 166 ms | **38 ms** | 114 ms | 2.7 GB/s |
+| 2,000 | 55 ms | 94 ms | 326 ms | **39 ms** | 271 ms | 7.9 GB/s |
+| 5,000 | 62 ms | 112 ms | 672 ms | **50 ms** | 610 ms | 15.4 GB/s |
+| 10,000 | 75 ms | 137 ms | 1,325 ms | **62 ms** | 1,250 ms | 24.7 GB/s |
+| 20,000 | 96 ms | 200 ms | 2,562 ms | **105 ms** | 2,466 ms | **29.1 GB/s** |
+
+**관찰:**
+
+1. **NVLink P2P 동작 확인**: 대형 전송에서 유효 29.1 GB/s — PCIe 4.0 x16 실효(~25 GB/s)를
+   초과하므로 NVLink 경로가 실제 사용됨이 증명됨 (NV4 단방향 피크 ~56 GB/s의 52%).
+2. **전송 비용 구조 = 고정 오버헤드 ~38 ms + 크기/BW**: 소형 전송은 latency 지배
+   (666 tok에 2.7 GB/s), 대형은 bandwidth 지배. pen.T2가 20k에서 2,466 → 105 ms (**23×**).
+3. **맵 구조 전환 (예측대로)**: T1 영역이 사실상 소멸 (20k @ d=0.1 한 칸), T2가 d=0.1부터
+   전 길이 지배. NVLink same-node에서는 **P-HBM 유지가 거의 무료** — 0.1 s tool call에도
+   전송이 숨겨짐.
+4. **DRAM tier는 여전히 사망**: T3 ≈ cold (2k–20k에서 ±0.5% 이내). 666 row의 RAM 칸은
+   cold 단일 샘플 변동(402 vs l2 332 — l2가 재계산 수준) 아티팩트로 판정.
+5. T2의 절대값(90–200 ms)은 T1 proxy(52–96 ms)의 1.4–2.1× — 무부하 기준으로는 근접.
+
+**함의 (정직한 업데이트):**
+
+- 전송 세금이 배포 의존적임이 **양 끝점 실측**으로 확정 (TCP 1.2 ↔ NVLink 29 GB/s).
+  → T1(D-HBM 유지)의 가치는 deployment의 함수: TCP/no-RDMA/혼잡 환경에서 크고,
+  NVLink same-node 무부하에서는 작다. **placement policy가 transfer bandwidth를
+  입력 feature로 가져야 한다**는 적응형 policy 논거가 오히려 강화됨 (§4.2 f5와 합류).
+- 남은 T1 논거: ① 고정 ~38 ms 오버헤드 + ② 부하 시 전송 경합 (§2.4 buffer 병목 —
+  NIXL에서 동시성 sweep으로 검증 필요) + ③ 멀티노드/비-NVLink 배포.
+- 다음: (a) PCIe 포인트 (D_GPU=2, RUN_TAG=nixl_pcie)로 3-포인트 완성,
+  (b) NIXL + C=4~16 동시성에서 pen.T2 경합 곡선, (c) L2 살리기 (§2.9 step 2 — 여전히
+  RAM 영역의 gating item).
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
