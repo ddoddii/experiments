@@ -232,6 +232,32 @@ storage prefetch 대기/타임아웃 스톨 유발. → **PD에서는 best_effor
 VmRSS/du로 우회 추정하는 것과 같은 이유). 결정적 판별은 서버 로그 grep으로 수행:
 `grep -iE "hicache|prefetch|storage" logs/sglang_single/server.log`
 
+**(5) 전송 세금의 정체 규명 (2026-06-12).** 1.2 GB/s는 하드웨어 한계가 아니라
+**전송 스택의 산물**임을 확인:
+
+- 서버 로그: `No RDMA devices found ... Found 0 HCAs → TcpTransport: listen on ...`
+  — RDMA NIC 부재로 Mooncake가 **TCP loopback fallback**. 경로:
+  GPU(P) → host memcpy → TCP socket → host memcpy → GPU(D). NVLink/PCIe P2P 미사용.
+- `nvidia-smi topo -m`: NVLink 쌍은 **GPU0↔GPU1, GPU2↔GPU3 (NV4)**, 그 외는
+  NODE(PCIe host bridge 경유). 기존 구성(P=GPU0, D=GPU2)은 NVLink 쌍을 가로지름 —
+  물리적으로도 NVLink 경로가 아니었음. (2P2D 구성 P={0,1}/D={2,3}은 가능한 P→D
+  조합 4개 전부 NVLink 밖.)
+
+→ **같은 머신에서 전송 대역폭 3-포인트 sweep이 가능**:
+
+| 구성 | 경로 | 대역폭 | pen.T2 @20k 예상 |
+|---|---|---|---|
+| mooncake (TCP fallback) | GPU→host→TCP→host→GPU | **1.2 GB/s (실측)** | 2,466 ms (실측) |
+| nixl + P=0, D=2 | PCIe P2P (NODE) | ~12–20 GB/s | ~160–260 ms |
+| nixl + P=0, D=1 | **NVLink NV4** | ~40–50 GB/s | ~60–80 ms |
+
+→ 대역폭 파라미터별 break-even 맵을 전부 실측으로 확보 가능 (robustness 섹션 재료).
+스크립트 노브: `P_GPU` / `D_GPU` / `TRANSFER_BACKEND`, 결과 구분: `RUN_TAG`.
+**함의**: 전송 세금은 배포 의존적이지만, 어떤 스택에서도 context 비례 + 부하 시
+경합(§2.4)이므로 sub-second tool call 영역에서 T1(D-HBM 유지)의 가치는 유지된다.
+단, T1 영역의 경계(= pen.T2)는 대역폭에 따라 좌우로 이동 — 논문에서는 bandwidth를
+파라미터로 제시할 것.
+
 ### 2.9 설계 결정: 3-tier 축소 (D-HBM / P-HBM / CPU DRAM) + EVICT
 
 SSD(Tier 4)를 평가 범위에서 제외하고 **3-tier + EVICT**로 축소한다. 근거:
