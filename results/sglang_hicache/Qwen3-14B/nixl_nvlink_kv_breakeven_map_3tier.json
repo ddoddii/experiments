@@ -1,0 +1,157 @@
+{
+  "summary": {
+    "model": "Qwen3-14B",
+    "run_tag": "nixl_nvlink",
+    "server_url": "http://127.0.0.1:8001",
+    "kv_bytes_per_token": 163840,
+    "sweep_chars": [
+      2000,
+      6000,
+      15000,
+      30000,
+      60000
+    ],
+    "durations_s": [
+      0.1,
+      0.2,
+      0.5,
+      1.0,
+      2.0,
+      5.0,
+      10.0,
+      30.0,
+      60.0
+    ],
+    "prefetch_alpha": 1.0,
+    "slo_penalty_ms": 200.0,
+    "gpu_evict_n": 32,
+    "l3_flood_n": 20,
+    "repeat_n": 5,
+    "tier_legend": {
+      "T1": "keep in D-HBM (Tier 1, proxy = 1server L1)",
+      "T2": "P-HBM radix (Tier 2, incl. P→D transfer)",
+      "RAM": "CPU DRAM (Tier 3)",
+      "EVT": "evict + re-prefill"
+    },
+    "t1_ref_json": "results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json"
+  },
+  "lengths": [
+    {
+      "chars": 2000,
+      "tokens_est": 666,
+      "kv_mb": 104.1,
+      "t1_ms": 52.4,
+      "t2_ms": 90.0,
+      "t3_ms": 331.9,
+      "cold_ttft_ms": 402.2,
+      "penalty_t2_ms": 37.6,
+      "penalty_t3_ms": 279.5,
+      "penalty_evict_ms": 349.8
+    },
+    {
+      "chars": 6000,
+      "tokens_est": 2000,
+      "kv_mb": 312.5,
+      "t1_ms": 54.9,
+      "t2_ms": 93.5,
+      "t3_ms": 903.0,
+      "cold_ttft_ms": 886.1,
+      "penalty_t2_ms": 38.6,
+      "penalty_t3_ms": 848.1,
+      "penalty_evict_ms": 831.2
+    },
+    {
+      "chars": 15000,
+      "tokens_est": 5000,
+      "kv_mb": 781.2,
+      "t1_ms": 62.2,
+      "t2_ms": 111.7,
+      "t3_ms": 2068.5,
+      "cold_ttft_ms": 2043.8,
+      "penalty_t2_ms": 49.5,
+      "penalty_t3_ms": 2006.3,
+      "penalty_evict_ms": 1981.6
+    },
+    {
+      "chars": 30000,
+      "tokens_est": 10000,
+      "kv_mb": 1562.5,
+      "t1_ms": 75.1,
+      "t2_ms": 136.8,
+      "t3_ms": 4353.2,
+      "cold_ttft_ms": 4360.0,
+      "penalty_t2_ms": 61.7,
+      "penalty_t3_ms": 4278.1,
+      "penalty_evict_ms": 4284.9
+    },
+    {
+      "chars": 60000,
+      "tokens_est": 20000,
+      "kv_mb": 3125.0,
+      "t1_ms": 95.5,
+      "t2_ms": 200.4,
+      "t3_ms": 10023.0,
+      "cold_ttft_ms": 10012.9,
+      "penalty_t2_ms": 104.9,
+      "penalty_t3_ms": 9927.5,
+      "penalty_evict_ms": 9917.4
+    }
+  ],
+  "breakeven_map": [
+    [
+      "T2",
+      "T2",
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM",
+      "RAM"
+    ],
+    [
+      "T2",
+      "T2",
+      "T2",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "T2",
+      "T2",
+      "T2",
+      "T2",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "T2",
+      "T2",
+      "T2",
+      "T2",
+      "T2",
+      "EVT",
+      "EVT",
+      "EVT",
+      "EVT"
+    ],
+    [
+      "T1",
+      "T2",
+      "T2",
+      "T2",
+      "T2",
+      "T2",
+      "EVT",
+      "EVT",
+      "EVT"
+    ]
+  ]
+}
