@@ -27,6 +27,19 @@ QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 
+# ─── GPU 배치 / 전송 백엔드 (research.md §2.8 — 전송 세금의 정체) ────────────
+# server17 토폴로지 (nvidia-smi topo -m):
+#   GPU0↔GPU1 NV4, GPU2↔GPU3 NV4, 그 외 NODE(PCIe host bridge 경유)
+#   → NVLink 경로 실험: P_GPU=0 D_GPU=1  /  PCIe 경로 실험: P_GPU=0 D_GPU=2
+# TRANSFER_BACKEND:
+#   mooncake : 이 머신은 RDMA NIC 없음 → TCP loopback fallback (~1.2 GB/s 실측,
+#              GPU 배치와 무관하게 NVLink/P2P 미사용)
+#   nixl     : UCX 기반 — same-node에서 CUDA IPC/P2P (NVLink/PCIe) 사용 가능.
+#              사전 설치 필요: pip install nixl
+P_GPU=${P_GPU:-"0"}
+D_GPU=${D_GPU:-"1"}
+TRANSFER_BACKEND=${TRANSFER_BACKEND:-"mooncake"}
+
 # ─── HiCache 정책 ────────────────────────────────────────────────────────────
 # write_through        : 계산 즉시 host(DRAM)+SSD 기록 (selective는 재접근 prefix만 기록)
 # prefetch=best_effort : 기본값 복귀. ⚠ wait_complete는 PD에서 24–126s 스톨 실측
@@ -65,6 +78,8 @@ echo "=================================================="
 echo "Model    : $(basename $MODEL_PATH)"
 echo "Log dir  : $LOG_DIR"
 echo "Router   : http://127.0.0.1:8001"
+echo "GPUs     : P=GPU$P_GPU  D=GPU$D_GPU  (0-1/2-3 = NVLink NV4, cross = PCIe)"
+echo "Transfer : $TRANSFER_BACKEND"
 echo "HiCache  : write=$HICACHE_WRITE_POLICY  prefetch=$HICACHE_PREFETCH_POLICY"
 echo "           layout=${HICACHE_MEM_LAYOUT:-(server default)}  io=${HICACHE_IO_BACKEND:-(server default)}  ratio=$HICACHE_RATIO"
 echo "D-offload: ${D_OFFLOAD_KVCACHE} (1=decode KV→storage, sglang #11016 주의)"
@@ -94,17 +109,25 @@ if [ -d "/tmp/hicache" ]; then
     rm -rf /tmp/hicache
 fi
 
-# ─── Mooncake metadata server ─────────────────────────────────────────────
-echo "[1/5] Starting Mooncake metadata server..."
-python -m mooncake.http_metadata_server > "$LOG_DIR/mooncake.log" 2>&1 &
-echo "  PID: $!  log: $LOG_DIR/mooncake.log"
-sleep 2
+# ─── Transfer backend 준비 ────────────────────────────────────────────────
+if [ "$TRANSFER_BACKEND" = "nixl" ] && ! python3 -c "import nixl" 2>/dev/null; then
+  echo "✗ nixl python package 미설치 — 'pip install nixl' 후 재실행하세요."
+  exit 1
+fi
 
-export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
+if [ "$TRANSFER_BACKEND" = "mooncake" ]; then
+  echo "[1/5] Starting Mooncake metadata server..."
+  python -m mooncake.http_metadata_server > "$LOG_DIR/mooncake.log" 2>&1 &
+  echo "  PID: $!  log: $LOG_DIR/mooncake.log"
+  sleep 2
+  export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
+else
+  echo "[1/5] Skipping Mooncake metadata server (backend=$TRANSFER_BACKEND)"
+fi
 
 # ─── Prefill server P1 (GPU 0) ────────────────────────────────────────────
-echo "[2/5] Starting Prefill P1 (GPU 0, port 30000)..."
-CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
+echo "[2/5] Starting Prefill P1 (GPU $P_GPU, port 30000)..."
+CUDA_VISIBLE_DEVICES=$P_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30000 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache \
@@ -115,19 +138,19 @@ CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   ${HICACHE_MEM_LAYOUT:+--hicache-mem-layout $HICACHE_MEM_LAYOUT} \
   ${HICACHE_IO_BACKEND:+--hicache-io-backend $HICACHE_IO_BACKEND} \
   --disaggregation-mode prefill \
-  --disaggregation-transfer-backend mooncake \
+  --disaggregation-transfer-backend $TRANSFER_BACKEND \
   --disaggregation-bootstrap-port 8998 \
   > "$LOG_DIR/p1.log" 2>&1 &
 echo "  PID: $!  log: $LOG_DIR/p1.log"
 sleep 3
 
 # ─── Decode server D1 (GPU 2) ─────────────────────────────────────────────
-echo "[3/5] Starting Decode D1 (GPU 2, port 30002)..."
-CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
+echo "[3/5] Starting Decode D1 (GPU $D_GPU, port 30002)..."
+CUDA_VISIBLE_DEVICES=$D_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30002 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode \
-  --disaggregation-transfer-backend mooncake \
+  --disaggregation-transfer-backend $TRANSFER_BACKEND \
   $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache \
       --hicache-ratio $HICACHE_RATIO \
       --hicache-storage-backend file \

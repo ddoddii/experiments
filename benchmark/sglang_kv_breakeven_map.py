@@ -122,6 +122,9 @@ MAX_TOKENS_OUT = int(os.environ.get("MAX_TOKENS_OUT", "16"))
 # 3-tier 모드 (research.md §2.9): SSD tier 측정 생략 + D-HBM(T1) proxy 결합
 SKIP_L3        = os.environ.get("SKIP_L3", "0") == "1"
 T1_REF_JSON    = os.environ.get("T1_REF_JSON", "")
+# 결과 파일 prefix (예: RUN_TAG=nixl_nvlink → nixl_nvlink_kv_breakeven_map.json)
+# 구성별 결과가 서로 덮어쓰지 않게 하는 용도
+RUN_TAG        = os.environ.get("RUN_TAG", "")
 # EVICT 동률 마진: 가장 깊은 tier의 fetch가 재계산과 이 범위 내 동률이면 EVICT 우선
 # (fetch ≈ recompute 노이즈 동률에서 맵 칸이 코인플립되는 것 방지 — 동률이면 캐시를
 #  안 쓰는 쪽이 단순하므로 EVICT로 판정)
@@ -554,9 +557,11 @@ print("-" * 68)
 # ─── Save results ─────────────────────────────────────────────────────────────
 out_dir = _p(f"results/sglang_hicache/{MODEL_SLUG}")
 os.makedirs(out_dir, exist_ok=True)
+_prefix = f"{RUN_TAG}_" if RUN_TAG else ""
 
 summary = {
     "model":              MODEL_SLUG,
+    "run_tag":            RUN_TAG or None,
     "server_url":         SERVER_URL,
     "kv_bytes_per_token": KV_BYTES_PER_TOKEN,
     "sweep_chars":        SWEEP_CHARS,
@@ -573,7 +578,7 @@ summary = {
         TIER_EVT: "evict + re-prefill",
     },
 }
-out_json = os.path.join(out_dir, "kv_breakeven_map.json")
+out_json = os.path.join(out_dir, f"{_prefix}kv_breakeven_map.json")
 with open(out_json, "w") as f:
     json.dump({
         "summary":              summary,
@@ -583,7 +588,7 @@ with open(out_json, "w") as f:
     }, f, indent=2, ensure_ascii=False)
 print(f"\n결과 저장: {out_json}")
 
-save_heatmap(results, map_prefetch, os.path.join(out_dir, "kv_breakeven_map.png"),
+save_heatmap(results, map_prefetch, os.path.join(out_dir, f"{_prefix}kv_breakeven_map.png"),
              tier_order=[TIER_GPU, TIER_RAM, TIER_SSD, TIER_EVT],
              legend="GPU=P-HBM radix  RAM=DRAM  SSD  EVT=re-prefill")
 
@@ -653,7 +658,7 @@ if T1_REF_JSON:
         print()
         print_map(rows3, map3)
 
-        out3 = os.path.join(out_dir, "kv_breakeven_map_3tier.json")
+        out3 = os.path.join(out_dir, f"{_prefix}kv_breakeven_map_3tier.json")
         with open(out3, "w") as f:
             json.dump({
                 "summary": {**summary, "t1_ref_json": T1_REF_JSON,
@@ -667,6 +672,6 @@ if T1_REF_JSON:
                 "breakeven_map": map3,
             }, f, indent=2, ensure_ascii=False)
         print(f"\n3-tier 결과 저장: {out3}")
-        save_heatmap(rows3, map3, os.path.join(out_dir, "kv_breakeven_map_3tier.png"),
+        save_heatmap(rows3, map3, os.path.join(out_dir, f"{_prefix}kv_breakeven_map_3tier.png"),
                      tier_order=[TIER_T1, TIER_T2, TIER_RAM, TIER_EVT],
                      legend="T1=D-HBM keep  T2=P-HBM radix  RAM=DRAM  EVT=re-prefill")
