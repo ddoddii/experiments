@@ -130,6 +130,7 @@ echo "[2/5] Starting Prefill P1 (GPU $P_GPU, port 30000)..."
 CUDA_VISIBLE_DEVICES=$P_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30000 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
+  --enable-metrics \
   --enable-hierarchical-cache \
   --hicache-storage-backend file \
   --hicache-ratio $HICACHE_RATIO \
@@ -149,6 +150,7 @@ echo "[3/5] Starting Decode D1 (GPU $D_GPU, port 30002)..."
 CUDA_VISIBLE_DEVICES=$D_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30002 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
+  --enable-metrics \
   --disaggregation-mode decode \
   --disaggregation-transfer-backend $TRANSFER_BACKEND \
   $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache \
