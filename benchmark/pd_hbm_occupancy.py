@@ -28,10 +28,18 @@ P→D 전송 시점 추정 (3가지 신호, 강건한 순):
 (turn 사이 KV 미보존). 세션 KV 지속은 P node radix/hicache 쪽 → "P-HBM as Tier2"
 설계의 근거.
 
+⚠ live used_tokens 읽기: SGLang은 enable_metrics=False면 /metrics가 비어 있어
+  HTTP로 used_tokens/usage를 못 읽는다(capacity만 나옴). 두 가지 중 하나 필요:
+    (a) 서버를 --enable-metrics로 재시작 (start 스크립트에 반영됨), 또는
+    (b) D_LOG/P_LOG로 decode/prefill 로그를 넘기면 batch 라인에서 live 점유를 추출
+        (재시작 불필요; 단 tool-call idle 중엔 batch 출력이 없어 값이 잠시 고정).
+  → 가능하면 (a)+(b) 둘 다. (a)는 idle 중에도 폴링되고, (b)는 #transfer-req 신호 제공.
+
 Usage:
-  # 1) 서버 (1P1D, NVLink 권장): scripts/sglang/start_1P_1D_breakeven.sh
+  # 1) 서버 (1P1D, NVLink 권장): scripts/sglang/start_1P_1D_breakeven.sh  (--enable-metrics 포함)
   # 2-A) 합성 multi-turn 부하를 직접 구동하며 모니터 (자체 완결, 권장)
   DRIVE=1 NUM_TURNS=8 TOOL_DELAY_SEC=10 OUT_TAG=nvlink_c1 \
+  D_LOG=logs/sglang_1p1d/d1.log P_LOG=logs/sglang_1p1d/p1.log \
     python benchmark/pd_hbm_occupancy.py
 
   # 2-B) 외부 벤치마크와 병행 (별 터미널에서 BFCL multi-turn 실행, 여기선 폴링만)
@@ -172,26 +180,44 @@ _QUEUE_RE = re.compile(r"(queue|waiting)_req")
 _XFER_RE  = re.compile(r"transfer.*req|num_transfer")
 _PRE_RE   = re.compile(r"prealloc")
 
-def scrape_node(base: str) -> dict:
-    """한 노드의 KV 점유 스냅샷."""
+def scrape_node(base: str, node: str) -> dict:
+    """한 노드의 KV 점유 스냅샷. HTTP(/server_info + /metrics)에 로그 fallback 병합.
+
+    enable_metrics=False면 /metrics가 비어 used/usage가 None → 로그 batch 라인에서
+    추출한 latest_log[node]로 채운다. capacity는 /server_info에서 항상 얻을 수 있다.
+    """
     info = _server_info(base)
     metrics = _scrape_metrics(base)
+    log = latest_log.get(node, {})
+
     cap = (info.get("token_capacity") or info.get("num_total_tokens")
            or _norm(re.compile(r"token_capacity|max_total_num_tokens"), metrics))
+    cap = float(cap) if cap is not None else None
+    # used/usage: HTTP metrics 우선, 없으면 로그, 그래도 없으면 usage×capacity 역산
     used = (info.get("num_used_tokens") or info.get("used_token_num")
             or _norm(_USED_RE, metrics))
-    usage = info.get("token_usage") or _norm(_USAGE_RE, metrics)
-    if (usage in (None, 0.0)) and cap and used is not None and float(cap) > 0:
-        usage = float(used) / float(cap)
+    used = float(used) if used is not None else log.get("used_tokens")
+    usage = info.get("token_usage") or _norm(_USAGE_RE, metrics) or log.get("usage")
+    if (used is None) and (usage is not None) and cap:
+        used = float(usage) * cap
+    if (usage in (None, 0.0)) and used is not None and cap and cap > 0:
+        usage = used / cap
+
+    running  = _norm(_RUN_RE, metrics) or info.get("num_running_reqs") or log.get("running")
+    queue    = _norm(_QUEUE_RE, metrics) or info.get("num_queue_reqs") or log.get("queue")
+    transfer = _norm(_XFER_RE, metrics)
+    transfer = transfer if transfer is not None else log.get("transfer_req")
+    prealloc = _norm(_PRE_RE, metrics)
+    prealloc = prealloc if prealloc is not None else log.get("prealloc_req")
     return {
-        "capacity":     float(cap)  if cap  is not None else None,
+        "capacity":     cap,
         "used_tokens":  float(used) if used is not None else None,
         "usage":        float(usage) if usage is not None else None,
-        "running":      _norm(_RUN_RE, metrics) or info.get("num_running_reqs"),
-        "queue":        _norm(_QUEUE_RE, metrics) or info.get("num_queue_reqs"),
-        "transfer_req": _norm(_XFER_RE, metrics),
-        "prealloc_req": _norm(_PRE_RE, metrics),
-        "disagg_raw":   {k: v for k, v in metrics.items() if _DISAGG_RE.search(k)},
+        "running":      running,
+        "queue":        queue,
+        "transfer_req": transfer,
+        "prealloc_req": prealloc,
+        "src_log":      bool(log) and (_norm(_USED_RE, metrics) is None),
     }
 
 def used_gb(used_tokens):
@@ -202,6 +228,10 @@ def used_gb(used_tokens):
 # ─── Shared state ─────────────────────────────────────────────────────────────
 rows: list[dict] = []          # 폴링 시계열
 events: list[dict] = []        # 전송/turn/tool 마커
+# 로그 batch 라인에서 추출한 최신 live 상태 (enable_metrics=False여도 동작).
+# SGLang은 enable_metrics 없이도 decode/prefill batch 라인을 항상 출력하므로,
+# HTTP /metrics가 비어도 여기서 used_tokens/usage/transfer_req를 얻는다.
+latest_log: dict = {"P": {}, "D": {}}
 _stop = threading.Event()
 _t0 = time.time()
 def now() -> float: return time.time() - _t0
@@ -216,8 +246,8 @@ def poller():
           f"{'D_run':>6} {'D_xfer':>6}  event")
     while not _stop.is_set():
         t = now()
-        P = scrape_node(P_NODE_URL)
-        D = scrape_node(D_NODE_URL)
+        P = scrape_node(P_NODE_URL, "P")
+        D = scrape_node(D_NODE_URL, "D")
         row = {
             "t": round(t, 3),
             "p_used_tokens": P["used_tokens"], "p_usage": P["usage"],
@@ -251,32 +281,56 @@ def poller():
               f"{f(D['running'],6)} {f(D['transfer_req'],6)}  {ev_mark}")
         _stop.wait(POLL_INTERVAL)
 
-# ─── Log tailer (optional) — #transfer-req / #prealloc-req 직접 캡처 ──────────
-_LOG_RE = re.compile(r"#transfer-req:\s*(\d+).*?#retracted-req", re.S)
-_PRE_LOG_RE = re.compile(r"#prealloc-req:\s*(\d+)")
+# ─── Log tailer — batch 라인에서 live 점유 + 전송 신호 추출 ────────────────────
+# decode batch 예: "Decode batch, #running-req: 1, #token: 3792, token usage: 0.02,
+#   pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, ..., #queue-req: 0"
+# prefill batch 예: "Prefill batch, #new-seq: 1, #new-token: 4096, ..., token usage: 0.05, ..."
+def _grab(pat: str, line: str):
+    m = re.search(pat, line)
+    return float(m.group(1)) if m else None
+
+def _parse_batch_line(line: str) -> dict | None:
+    if "batch" not in line.lower():
+        return None
+    usage = _grab(r"token usage:\s*([0-9.]+)", line)
+    tok   = _grab(r"#token:\s*(\d+)", line)
+    if usage is None and tok is None:
+        return None
+    return {
+        "used_tokens":  tok,
+        "usage":        usage,
+        "running":      _grab(r"#running-req:\s*(\d+)", line),
+        "queue":        _grab(r"#queue-req:\s*(\d+)", line),
+        "transfer_req": _grab(r"#transfer-req:\s*(\d+)", line),
+        "prealloc_req": _grab(r"#prealloc-req:\s*(\d+)", line),
+    }
 
 def log_tailer(path: str, node: str):
-    """decode/prefill 로그를 tail하며 transfer-req>0 구간을 이벤트로 기록."""
+    """decode/prefill 로그를 tail하며 batch 라인을 latest_log[node]에 반영하고,
+    transfer-req>0 / prealloc-req>0 구간을 이벤트로 기록."""
     try:
         f = open(path, "r")
     except OSError:
         print(f"  (log tailer: {path} 열 수 없음 — 건너뜀)")
         return
     f.seek(0, os.SEEK_END)
-    last_xfer = 0
+    last_xfer = 0.0
     while not _stop.is_set():
         line = f.readline()
         if not line:
             _stop.wait(0.2)
             continue
-        m = _LOG_RE.search(line)
-        if m:
-            xfer = int(m.group(1))
-            if xfer > 0 and last_xfer == 0:
-                add_event("transfer_req_start", now(), node=node, n=xfer)
-            elif xfer == 0 and last_xfer > 0:
-                add_event("transfer_req_end", now(), node=node)
-            last_xfer = xfer
+        st = _parse_batch_line(line)
+        if st is None:
+            continue
+        # capacity는 HTTP에서 오므로 여기선 used_tokens가 None이고 usage만 있으면 유지
+        latest_log[node] = {k: v for k, v in st.items() if v is not None}
+        xfer = st.get("transfer_req") or 0.0
+        if xfer > 0 and last_xfer == 0:
+            add_event("transfer_req_start", now(), node=node, n=int(xfer))
+        elif xfer == 0 and last_xfer > 0:
+            add_event("transfer_req_end", now(), node=node)
+        last_xfer = xfer
 
 # ─── Synthetic multi-turn agent driver (optional) ─────────────────────────────
 def _filler(nchars: int, seed: int) -> str:
@@ -450,12 +504,19 @@ def main():
     print("=" * 68)
 
     # 노드 도달성 점검
+    http_live = True
     for name, base in (("P", P_NODE_URL), ("D", D_NODE_URL)):
-        s = scrape_node(base)
+        s = scrape_node(base, name)
         cap = f"{s['capacity']:,.0f} tok" if s["capacity"] else "capacity 미상"
         print(f"  {name} node reachable: used={s['used_tokens']} cap={cap}")
         if s["capacity"] is None and s["used_tokens"] is None:
             print(f"  ⚠ {name} node({base})에서 KV 지표를 못 읽음 — URL/포트 확인")
+        if s["used_tokens"] is None:
+            http_live = False
+    if not http_live and not (D_LOG or P_LOG):
+        print("\n  ⚠ HTTP /metrics에서 live used_tokens를 못 읽음 (enable_metrics=False?).")
+        print("    → 서버를 --enable-metrics로 재시작하거나, D_LOG/P_LOG로 로그를 넘기세요:")
+        print("      D_LOG=logs/sglang_1p1d/d1.log P_LOG=logs/sglang_1p1d/p1.log ...")
 
     threads = [threading.Thread(target=poller, daemon=True)]
     if D_LOG:
