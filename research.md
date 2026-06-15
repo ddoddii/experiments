@@ -472,6 +472,61 @@ for C in 4 8 16; do
 done
 ```
 
+**Sweep 결과 (2026-06-15) — H1 확인: 전제 성립.**
+`results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}`
+
+| C | D running | D peak 점유 | **D peak 순간 P** | P peak (별도 시점) | corr(P,D) |
+|---|---|---|---|---|---|
+| 4 | 4 (큐 0) | 46% | **9.9%** | 11.5% @t=68s | +0.14 |
+| 8 | 8 (큐 0) | **91%** | **9.9%** | 11.5% @t=89s | +0.44 |
+| 16 | 16 (큐 0) | **94%** | **17.4%** | 23.2% @t=223s | +0.20 |
+
+전 구간 세션 100% 완료(C=16: 128/128 turn), D running이 4→8→16으로 큐잉 없이 붙음
+(측정 아티팩트 없음).
+
+**결정적 관찰**: D가 포화되는 순간(C=8: 91%, C=16: 94% — KV를 내보내고 싶은 바로 그 순간)
+**P는 9.9~17.4%만 차 있어 HBM의 83~90%가 비어 있음.** Tier2가 필요한 시점에 정확히 가용.
+
+1. **D는 C=8에서 이미 포화(91%)**: multi-turn 세션이 KV를 누적 보존 → modest 동시성에서
+   memory-pressure 영역 도달 = motivation 실재.
+2. **P는 sub-linear 증가**(11.5→11.5→23.2%), D보다 항상 4× 낮음. P가 차는 이유는 동시
+   세션 수만큼 radix가 서로 다른 prefix를 보존하기 때문.
+3. **P·D peak이 다른 시점**(C=8: P peak일 때 D 18%, D peak일 때 P 9.9%) — prefill 버스트와
+   decode 누적의 위상차. 약한 양의 상관(+0.14~0.44)은 전체 누적 추세 탓이지 peak이 겹치는 게 아님.
+
+**정직한 단서 (발표/리뷰 대비)**:
+- C=16에서 P가 23%로 오른 것은 mild correlated demand 신호. 극단 부하(C=32+)/세션 수백 개에선
+  P radix도 차오를 수 있음. **반론**: P radix는 prefill 캐시라 공격적 evict 가능(KV가 이미 D로
+  전송됐거나 재계산 가능) → P-HBM을 Tier2로 비우는 게 D-HBM 비우기보다 훨씬 쌈.
+- **"D를 늘리거나 P:D 비율 재조정하면?"**: 이 imbalance는 워크로드 의존적(decode-heavy
+  multi-turn이라 D-bound). 정적 재배치는 turn-by-turn tool-call 패턴을 못 따라감. NVLink로
+  붙은 P idle HBM(이미 있고 공짜)을 tool-call-aware하게 쓰는 게 정적 프로비저닝이 못 하는 것
+  = 본 연구 포지셔닝.
+
+**판정**: 전제 성립. "D 포화 압박 시 P-HBM 83~90% idle"이 C=4/8/16 전부 실측,
+D는 modest 동시성에서 이미 포화. P 23% vs D 94%(C=16)의 격차 = tiering이 활용할 headroom.
+
+**다음 단계**:
+```
+(a) 한계 탐색 — C=32 (이상): P radix가 언제 차는지. P 사용률이 D에 근접하는 동시성이
+    Tier2 전략의 손익분기. correlated-demand가 깨지는 지점 식별.
+    DRIVE=1 CONCURRENCY=32 NUM_TURNS=8 TOOL_DELAY_SEC=10 OUT_TAG=nvlink_c32 \
+      python benchmark/pd_hbm_occupancy.py
+    (주의: C=16에서 D 94% 포화 → C=32는 D retraction/abort 발생 예상. 세션 완료율,
+     D_queue, abort를 함께 봐야 P 거동 해석 가능. mem_fraction 조정으로 D pool을 키워
+     "P만 차는" 영역을 분리하는 것도 방법.)
+
+(b) P radix evict 비용 측정 — Tier2(P-HBM)를 비우는 실제 비용.
+    P-HBM을 Tier2로 쓰려면 D의 KV를 받기 위해 P가 자기 radix를 evict해야 할 수 있음.
+    그 비용 = (i) evict된 prefix를 다음 turn에 재계산하는 re-prefill TTFT 증가
+            (ii) host(DRAM)로 write-back하는 비용 (write_through면 이미 host에 있어 0)
+    측정: P radix를 강제 evict(flood)한 뒤 같은 세션 다음 turn의 TTFT vs evict 안 한 경우.
+    → "P-HBM Tier2 비우기 비용"을 §2.10 break-even 비용 모델에 입력으로 추가.
+    핵심 가설: write_through라 evict는 거의 무료(host에 복제본 존재) → P-HBM은 D-HBM보다
+    훨씬 싼 양보 자원임을 정량화.
+```
+
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
@@ -856,6 +911,7 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 (`SKIP_L3`, `T1_REF_JSON` 3-tier 모드) |
 | `benchmark/pd_hbm_occupancy.py` | §2.12 P/D HBM 점유 동시 폴링 + P→D 전송 감지 (`CONCURRENCY` sweep) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
+| `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
 | `results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json` | §2.8 단일 서버 대조군 = T1 proxy 소스 |
 
