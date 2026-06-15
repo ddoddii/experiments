@@ -526,6 +526,78 @@ D는 modest 동시성에서 이미 포화. P 23% vs D 94%(C=16)의 격차 = tier
     훨씬 싼 양보 자원임을 정량화.
 ```
 
+### 2.13 SGLang 메모리 압박 처리 메커니즘 — 본 연구 mechanism이 들어갈 자리
+
+서버 인자 덤프 + 로그 + upstream 이슈로 확인한 SGLang decode의 압박 처리 **3단계**
+(`radix_eviction_policy='lru'`, `total_retractions` 추적 확인):
+
+1. **LRU radix eviction** [기본 동작]: ref_count=0인 캐시 KV(= turn 사이/tool-call 중인
+   idle 세션 KV)를 LRU로 버림. 1차 방어선.
+2. **Retraction (preemption)**: 부족하면 *실행 중* 요청의 KV를 회수→큐로 되돌림.
+   abort 아님, **re-prefill로 재개**. `#retracted-req`/`total_retractions`로 추적.
+   경로: `release_req → offload_kv_cache → get_cpu_copy` (회수 KV를 CPU로 offload).
+3. **Abort**: 특정 실패만 — PD `KVTransferError: Aborted by AbortReq` (KV 전송 후 decode
+   OOM, prealloc 큐 정체). 고동시성 PD 알려진 버그: [#6857](https://github.com/sgl-project/sglang/issues/6857),
+   [#9266](https://github.com/sgl-project/sglang/issues/9266), [#10111](https://github.com/sgl-project/sglang/issues/10111).
+
+**실측 정합**: §2.12 C=16은 D 94%에도 `#retracted-req=0`, `D_queue=0`, 128/128 완료
+(tool window가 KV를 풀어줘 retraction 없이 버팀). C=32는 retraction부터 시작, 더 밀면 위 버그.
+→ C=32 한계 실험은 `mem_fraction`↑로 D 포화를 미뤄 "P만 차는 영역"을 abort와 분리해야 함.
+
+**본 연구 mechanism의 통합 지점 (핵심)**: LRU evict의 결과는 "버림→다음 turn re-prefill".
+본 연구는 LRU를 *대체하지 않고*, **LRU가 고른 demote 대상의 목적지를 바꾼다**:
+
+| | 기존 SGLang | 본 연구 |
+|---|---|---|
+| WHAT을 demote | LRU가 idle 세션 KV 선택 | 동일 — LRU를 trigger로 재사용 |
+| WHERE로 | 버림 → re-prefill (cold TTFT) | **P-HBM (Tier2, NVLink)** → migrate (pen.T2) |
+
+→ contribution = "evict-to-recompute"를 **"LRU-triggered migration to Tier2"**로 전환.
+그리고 retraction의 `offload_kv_cache → get_cpu_copy` hook(= `--disaggregation-decode-enable-
+offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리다이렉트**하면 됨 —
+밑바닥 구현이 아니라 destination 교체 (§3.4 "구현 공수 완화"의 구체화).
+
+### 2.14 주장 보강용 추가 실험 설계 (2026-06-15)
+
+§2.12가 "P idle 가용"을 보였다면, 아래는 **마이그레이션이 실제로 이득인가**를 직접 증명.
+
+**E1. Tier2 migration의 end-to-end 이득 [최우선 — 핵심 주장의 직접 증거]**
+- 목적: "tool-call 중 idle KV를 P-HBM에 두면 LRU evict(=re-prefill) 대비 TTFT 이득" 정량화.
+- 설계: D 포화(C=8~16)에서 multi-turn 진행. 두 조건 비교:
+  - baseline: 압박 시 LRU evict → 다음 turn TTFT (= cold re-prefill, §2.10 cold)
+  - 제안: idle 세션 KV를 P-HBM 유지 → 다음 turn TTFT (= pen.T2, §2.11 NVLink ~38–105ms)
+- 메커니즘 미구현 단계에서는 **emulation**: P radix에 prefix를 유지(evict 막기) vs 강제 evict
+  후 같은 turn 재요청. TTFT 차이 = migration이 숨기는 비용.
+- 산출: turn별 ΔTTFT(evict − migrate) × context 길이 → "절감 곡선". §2.10/2.11 데이터로
+  이미 부분 예측됨(evict pen.EVT vs migrate pen.T2). E1은 실 워크로드에서 직접 측정.
+
+**E2. P radix evict 비용 측정 (= §2.12 다음단계 b 구체화) [정직성 방어]**
+- 목적: P-HBM을 Tier2로 비우는 실제 비용 → "P 양보가 D 양보보다 싸다" 정량화.
+- 설계: P radix를 flood로 강제 evict한 뒤 같은 세션 다음 turn TTFT vs evict 안 한 경우.
+  write_through면 host에 복제본 존재 → evict 후 host hit으로 복구(≈0) 기대.
+- 산출: P evict 비용 ≈ 0 확인 시, §2.12 correlated-demand 단서(C=16 P 23%)가 무력화됨
+  ("P가 좀 차도 거의 공짜로 비울 수 있다").
+
+**E3. Migration vs Retraction 직접 대결 [reorder 대신 migration의 핵심]**
+- 목적: 차별점 [D]("preemption 없이 migration으로 진행")의 직접 증거.
+- 설계: D를 포화시켜 retraction 유발(C=24~32, mem_fraction 낮춰 강제). 측정:
+  - baseline: SGLang 기본 → `#retracted-req`, 재개 지연, 영향받은 요청 TTFT/goodput
+  - 제안(emul): 포화 직전 idle 세션 KV를 P-HBM으로 선제 migration → retraction 회피율
+- 산출: "migration이 retraction을 N% 제거 → P99 TTFT/goodput 개선". reorder/preempt 대비
+  migration이 1차 해결책임을 시연.
+
+**E4. Tool-duration × pressure 2D 운영점 [정책의 필요성]**
+- 목적: §2.10 break-even 맵을 *실제 부하*와 결합 → "언제 migrate가 evict보다 이득인가".
+- 설계: (tool_delay ∈ {0.5,2,10,30s}) × (concurrency ∈ {4,8,16}) 격자에서 E1 반복.
+- 산출: migrate 우세 / evict 우세 영역 맵. 짧은 tool+저부하=keep, 긴 tool+고부하=migrate
+  등 정책 결정 경계. duration 예측이 필요한 이유를 운영점으로 제시.
+
+**E5. 전송 대역폭 파라미터화 (TCP/PCIe/NVLink) [일반성]**
+- §2.8(5)/2.11의 3-포인트(1.2/~20/29 GB/s)에 E1을 얹어 "migration 이득이 interconnect에
+  따라 어떻게 변하나" → NVLink 없는 배포에서도 이득 영역이 존재함을 보이거나, 한계 명시.
+
+**우선순위**: E1(핵심 증거) → E2(정직성) → E3(차별점 D) → E4(정책) → E5(일반성).
+E1·E2는 §2.10/2.11/2.12 기존 데이터+emulation으로 시스템 구현 전에 가능 → go/no-go 게이트.
 
 ---
 
