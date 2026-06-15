@@ -420,6 +420,58 @@ P 노드(30000)에 직접 보내면 standalone으로 처리되어 단일 서버�
   (b) NIXL + C=4~16 동시성에서 pen.T2 경합 곡선, (c) L2 살리기 (§2.9 step 2 — 여전히
   RAM 영역의 gating item).
 
+### 2.12 P/D HBM 점유 시계열 (2026-06-15) — "P node idle HBM" 전제 1차 검증
+
+NVLink 1P1D + `--enable-metrics`로 합성 multi-turn agent(8 turn, tool 10s, C=1)를
+구동하며 P/D KV 점유를 0.5s 간격 동시 폴링. 도구: `benchmark/pd_hbm_occupancy.py`,
+결과: `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}`.
+
+**측정 셋업 교훈 (시행착오)**:
+- SGLang은 `enable_metrics=False`(기본)면 `/metrics`가 비어 live `num_used_tokens`/
+  `token_usage`를 HTTP로 못 읽음 → 정적 capacity만 나옴. **start 스크립트에 `--enable-metrics`
+  필수** (반영 완료). 1차 실행은 이게 빠져 로그 기반 거친 데이터였음(P distinct 5개).
+- metric 이름: `sglang:num_used_tokens`, `sglang:token_usage` (`pending_prealloc_token_usage`,
+  `swa_token_usage`와 혼동 주의 → 파서 앵커링).
+
+**관측 (C=1)**:
+
+| | capacity | peak used | 사용률 |
+|---|---|---|---|
+| P node | 14.0 GB (85,172 tok) | 1.29 GB | **9.2%** |
+| D node | 14.0 GB | 1.50 GB | 10.8% |
+
+1. **P HBM은 8 turn 끝까지 pool의 9.2%만 사용 → 90%+ idle.** "P node idle HBM을 Tier2로"
+   전제가 C=1에서 수치로 성립.
+2. **P 점유가 turn마다 증가**(0.2→0.39→0.93→1.11→1.29 GB)하는 것은 버그 아님 —
+   `write_through` hicache + radix cache가 누적 prefix KV를 P에 보존하기 때문(62s에서
+   radix LRU eviction으로 0으로 떨어졌다 재성장). 증가해도 여전히 <10%.
+3. **P→D 전송은 incremental**: turn마다 +967 tok(~0.15 GB)만 전송(전체 context 재전송 아님).
+   D는 누적 성장(0.24→1.5 GB). → **P·D 양쪽이 세션 prefix를 보존하고 새 토큰만 이동.**
+   (이전 §2.8/v1의 "D가 turn마다 0으로 비운다" 해석은 노이즈 로그의 stale 아티팩트 — 정정.)
+4. **P가 이미 prefill prefix를 보유** → "Tier2(P-HBM)가 부분적으로 무료"; novel 전송 대상은
+   D의 **생성 토큰 KV**(P가 가진 적 없는 부분). 마이그레이션 볼륨을 줄이는 설계 포인트.
+
+**측정 한계 (정직)**: P·D **gauge는 engine이 idle하면 forward pass가 없어 갱신을 멈춤**
+(마지막 값 유지). 따라서 tool-idle 구간의 평탄 부분은 "실제 보존"과 "gauge freeze"가 섞임 —
+gauge만으로 "tool call 중 free 여부"를 깨끗이 못 읽음. incremental 전송(+967) 증거상 보존이
+우세하나, 엄밀히는 메모리 풀 allocator 직접 probe 필요. (C>1에서는 세션 tool window가
+겹쳐 항상 누군가 active → freeze 완화되는 부수 효과.)
+
+**다음 (진행 중): Concurrency sweep C=4/8/16** — correlated-demand 리스크 검증.
+`CONCURRENCY` 노브로 C개 세션 병렬 구동, 각 C의 P peak 점유% 비교.
+- 가설 H1(전제 성립): D가 prefill+decode로 바쁜 고동시성에서도 P는 prefill 버스트만
+  처리하므로 P 점유가 낮게 유지(음의/무 상관) → Tier2 가용.
+- 가설 H2(전제 약화): C↑로 P의 prefill 부하가 누적돼 P도 차오름(양의 상관) → "D 압박 =
+  P도 압박"이면 Tier2가 필요한 순간에 비어있지 않음. 이 경우 "tool-call 세션은 active
+  prefill이 아니므로 위상차가 있다"는 더 정교한 논거 필요.
+```
+for C in 4 8 16; do
+  DRIVE=1 CONCURRENCY=$C NUM_TURNS=8 TOOL_DELAY_SEC=10 OUT_TAG=nvlink_c$C \
+  D_LOG=logs/sglang_1p1d/d1.log P_LOG=logs/sglang_1p1d/p1.log \
+    python benchmark/pd_hbm_occupancy.py
+done
+```
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
@@ -802,6 +854,8 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `scripts/sglang/start_1P_1D_breakeven.sh` | §5.A 서버 시작 (1P+1D + hicache + router 8001, `D_OFFLOAD_KVCACHE` 노브) |
 | `scripts/sglang/start_single_hicache.sh` | §2.8 대조군 / §2.9 L2 살리기 (ratio/layout/io/prefetch 노브) |
 | `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 (`SKIP_L3`, `T1_REF_JSON` 3-tier 모드) |
+| `benchmark/pd_hbm_occupancy.py` | §2.12 P/D HBM 점유 동시 폴링 + P→D 전송 감지 (`CONCURRENCY` sweep) |
+| `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
 | `results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json` | §2.8 단일 서버 대조군 = T1 proxy 소스 |
 

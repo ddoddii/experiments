@@ -42,6 +42,13 @@ Usage:
   D_LOG=logs/sglang_1p1d/d1.log P_LOG=logs/sglang_1p1d/p1.log \
     python benchmark/pd_hbm_occupancy.py
 
+  # 2-C) Concurrency sweep (correlated-demand 검증): C개 세션 병렬 구동
+  for C in 4 8 16; do
+    DRIVE=1 CONCURRENCY=$C NUM_TURNS=8 TOOL_DELAY_SEC=10 OUT_TAG=nvlink_c$C \
+      python benchmark/pd_hbm_occupancy.py
+  done
+  # → 각 C에서 P peak 점유%를 비교. D 바쁠 때 P도 차면(양의 상관) Tier2 전제 약화.
+
   # 2-B) 외부 벤치마크와 병행 (별 터미널에서 BFCL multi-turn 실행, 여기선 폴링만)
   DRIVE=0 DURATION_SEC=300 OUT_TAG=bfcl_c8 \
   D_LOG=logs/sglang_1p1d/d1.log P_LOG=logs/sglang_1p1d/p1.log \
@@ -59,6 +66,7 @@ Environment variables:
   D_LOG / P_LOG       decode/prefill 로그 경로 (transfer-req tailing, optional)
   ── drive 모드 ──
   DRIVE              1이면 합성 multi-turn 구동 (default: 0)
+  CONCURRENCY        병렬 세션 수 (default: 1; sweep은 4/8/16)
   MODEL              모델 이름        (default: /home/uhmturks/hf_models/Qwen3-14B)
   NUM_TURNS          turn 수          (default: 8)
   TOOL_DELAY_SEC     turn 사이 tool idle 초 (default: 10)
@@ -97,6 +105,7 @@ D_LOG         = os.environ.get("D_LOG", "")
 P_LOG         = os.environ.get("P_LOG", "")
 
 DRIVE             = os.environ.get("DRIVE", "0") == "1"
+CONCURRENCY       = int(os.environ.get("CONCURRENCY", "1"))  # 병렬 세션 수 (sweep용)
 MODEL             = os.environ.get("MODEL", "/home/uhmturks/hf_models/Qwen3-14B")
 NUM_TURNS         = int(os.environ.get("NUM_TURNS", "8"))
 TOOL_DELAY_SEC    = float(os.environ.get("TOOL_DELAY_SEC", "10"))
@@ -349,20 +358,18 @@ def _filler(nchars: int, seed: int) -> str:
     unit = f"context-segment-{seed:04d} the agent observed state and planned actions. "
     return (unit * (nchars // len(unit) + 1))[:nchars]
 
-def driver():
-    """context가 turn마다 누적 증가하는 multi-turn 대화를 router로 구동."""
+def _run_session(sid: int):
+    """단일 multi-turn agent 세션. context가 turn마다 누적 증가.
+    세션마다 다른 filler seed로 cross-session prefix 공유를 피한다(점유 왜곡 방지)."""
+    base = sid * 1000
     history = [{"role": "system",
-                "content": "You are an agent. " + _filler(INIT_PROMPT_CHARS, 0)}]
-    print(f"\n[driver] {NUM_TURNS} turns, tool_delay={TOOL_DELAY_SEC}s, "
-          f"growth={TURN_GROWTH_CHARS} chars/turn\n")
+                "content": f"You are agent {sid}. " + _filler(INIT_PROMPT_CHARS, base)}]
     for turn in range(NUM_TURNS):
         if _stop.is_set():
             break
-        # 사용자/tool 결과 입력 (turn마다 누적 → context 성장)
         history.append({"role": "user",
-                        "content": f"[turn {turn}] " + _filler(TURN_GROWTH_CHARS, turn + 1)})
-        add_event("turn_start", now(), turn=turn)
-        # streaming 요청 → decode output 수집
+                        "content": f"[s{sid} turn {turn}] " + _filler(TURN_GROWTH_CHARS, base + turn + 1)})
+        add_event("turn_start", now(), sid=sid, turn=turn)
         payload = {"model": MODEL, "messages": history,
                    "max_tokens": TURN_OUTPUT_TOKENS, "temperature": 0, "stream": True}
         text, t_first = "", None
@@ -385,19 +392,31 @@ def driver():
                 if delta:
                     if t_first is None:
                         t_first = now()
-                        add_event("first_token", t_first, turn=turn)
+                        add_event("first_token", t_first, sid=sid, turn=turn)
                     text += delta
         except Exception as e:
-            print(f"  [driver turn {turn}] ERR {e}")
-        add_event("decode_done", now(), turn=turn, out_chars=len(text))
-        # 응답 누적 (context 성장) + tool 결과
+            print(f"  [driver s{sid} turn {turn}] ERR {e}")
+        add_event("decode_done", now(), sid=sid, turn=turn, out_chars=len(text))
         history.append({"role": "assistant", "content": text or "(no output)"})
         # tool call idle window
-        add_event("tool_start", now(), turn=turn)
+        add_event("tool_start", now(), sid=sid, turn=turn)
         _stop.wait(TOOL_DELAY_SEC)
-        add_event("tool_end", now(), turn=turn)
+        add_event("tool_end", now(), sid=sid, turn=turn)
         history.append({"role": "user",
-                        "content": f"[tool result {turn}] " + _filler(TURN_GROWTH_CHARS // 2, 900 + turn)})
+                        "content": f"[s{sid} tool {turn}] " + _filler(TURN_GROWTH_CHARS // 2, base + 900 + turn)})
+
+def driver():
+    """CONCURRENCY개 multi-turn 세션을 병렬 구동 (correlated-demand sweep)."""
+    print(f"\n[driver] C={CONCURRENCY} sessions × {NUM_TURNS} turns, "
+          f"tool_delay={TOOL_DELAY_SEC}s, growth={TURN_GROWTH_CHARS} chars/turn\n")
+    sessions = []
+    for sid in range(CONCURRENCY):
+        th = threading.Thread(target=_run_session, args=(sid,), daemon=True)
+        th.start()
+        sessions.append(th)
+        _stop.wait(0.25)  # 살짝 stagger → 초기 thundering-herd 완화
+    for th in sessions:
+        th.join()
     # 마지막 tool window 후 잠깐 더 폴링하고 종료
     _stop.wait(3)
     _stop.set()
@@ -416,11 +435,26 @@ def save_outputs():
     with open(ev_path, "w") as f:
         json.dump({"events": events, "config": {
             "p_node": P_NODE_URL, "d_node": D_NODE_URL, "drive": DRIVE,
+            "concurrency": CONCURRENCY,
             "num_turns": NUM_TURNS, "tool_delay_sec": TOOL_DELAY_SEC,
             "jump_threshold": JUMP_THRESHOLD, "kv_bytes_per_token": KV_BYTES_PER_TOKEN,
         }}, f, indent=2)
     n_xfer = sum(1 for e in events if e["kind"] == "p2d_transfer")
     print(f"이벤트 JSON 저장: {ev_path}  (P→D 전송 감지 {n_xfer}건)")
+
+    # ── peak 점유 요약 (concurrency sweep 핵심 지표) ──
+    def _peak(key):
+        vals = [r[key] for r in rows if isinstance(r.get(key), (int, float))]
+        return max(vals) if vals else None
+    pcap = next((r["p_capacity"] for r in rows if r.get("p_capacity")), None)
+    dcap = next((r["d_capacity"] for r in rows if r.get("d_capacity")), None)
+    p_peak_tok, d_peak_tok = _peak("p_used_tokens"), _peak("d_used_tokens")
+    print(f"\n[C={CONCURRENCY}] peak 점유 (correlated-demand 판정용):")
+    if p_peak_tok is not None and pcap:
+        print(f"  P node: {used_gb(p_peak_tok):.2f} GB  = {p_peak_tok/pcap*100:.1f}% of pool"
+              f"  (idle 여유 {100-p_peak_tok/pcap*100:.1f}%)")
+    if d_peak_tok is not None and dcap:
+        print(f"  D node: {used_gb(d_peak_tok):.2f} GB  = {d_peak_tok/dcap*100:.1f}% of pool")
 
     # ── 전송 감지 요약 (multi-turn: turn마다 점프 크기 증가 기대) ──
     xfers = [e for e in events if e["kind"] == "p2d_transfer"]
@@ -454,13 +488,14 @@ def _plot():
     ax1.plot(ts, dg, label="D node KV (GB)", color="#4575b4", lw=1.8)
     ax1.set_ylabel("KV cache (GB)")
     ax1.set_title(f"P/D node KV occupancy — {MODEL_SLUG}"
-                  f"{'  [drive: '+str(NUM_TURNS)+' turns, tool '+str(TOOL_DELAY_SEC)+'s]' if DRIVE else ''}")
-    # tool call idle window 음영
-    tool_starts = {e["turn"]: e["t"] for e in events if e["kind"] == "tool_start"}
-    for e in events:
-        if e["kind"] == "tool_end" and e["turn"] in tool_starts:
-            ax1.axvspan(tool_starts[e["turn"]], e["t"], color="#ffe08a", alpha=0.35,
-                        label="_tool call idle")
+                  f"{'  [drive: C='+str(CONCURRENCY)+'×'+str(NUM_TURNS)+' turns, tool '+str(TOOL_DELAY_SEC)+'s]' if DRIVE else ''}")
+    # tool call idle window 음영 — C=1일 때만 (다중 세션은 창이 겹쳐 지저분)
+    if CONCURRENCY == 1:
+        tool_starts = {e.get("turn"): e["t"] for e in events if e["kind"] == "tool_start"}
+        for e in events:
+            if e["kind"] == "tool_end" and e.get("turn") in tool_starts:
+                ax1.axvspan(tool_starts[e["turn"]], e["t"], color="#ffe08a", alpha=0.35,
+                            label="_tool call idle")
     # P→D 전송 마커
     for e in events:
         if e["kind"] == "p2d_transfer":
@@ -478,7 +513,8 @@ def _plot():
     seen = dict(zip(l, h))
     # tool 음영 범례 1개만
     from matplotlib.patches import Patch
-    seen["tool call idle"] = Patch(facecolor="#ffe08a", alpha=0.35)
+    if CONCURRENCY == 1:
+        seen["tool call idle"] = Patch(facecolor="#ffe08a", alpha=0.35)
     seen["P→D transfer"] = plt.Line2D([], [], color="#1a9850", ls="--")
     ax1.legend(seen.values(), seen.keys(), loc="upper left", fontsize=8)
     ax1.grid(alpha=0.3)
@@ -512,7 +548,7 @@ def main():
     print(f"  D node : {D_NODE_URL}")
     print(f"  poll   : {POLL_INTERVAL}s   KV/token: {KV_BYTES_PER_TOKEN/1024:.0f} KB"
           f"   jump≥{JUMP_THRESHOLD} tok")
-    print(f"  mode   : {'DRIVE (synthetic multi-turn)' if DRIVE else 'observe-only'}")
+    print(f"  mode   : {'DRIVE (synthetic multi-turn, C='+str(CONCURRENCY)+')' if DRIVE else 'observe-only'}")
     print("=" * 68)
 
     # 노드 도달성 점검
