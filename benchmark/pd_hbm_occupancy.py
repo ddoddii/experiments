@@ -174,11 +174,16 @@ def _norm(name_re, metrics: dict):
     return None
 
 _USED_RE  = re.compile(r"num_used_tokens|used_tokens")
-_USAGE_RE = re.compile(r"token_usage")
+# token_usage는 prealloc/swa 변종(pending_prealloc_token_usage, swa_token_usage)과
+# 헷갈리지 않게 prefix 직후로 앵커.
+_USAGE_RE = re.compile(r"^sglang[:_]token_usage$")
 _RUN_RE   = re.compile(r"running_req")
 _QUEUE_RE = re.compile(r"(queue|waiting)_req")
 _XFER_RE  = re.compile(r"transfer.*req|num_transfer")
-_PRE_RE   = re.compile(r"prealloc")
+_PRE_RE   = re.compile(r"prealloc.*req|num_prealloc")
+# decode쪽 pending_prealloc_token_usage > 0 = P→D 전송 위해 D가 KV 슬롯 예약 중
+# (전송 in-flight 신호; #transfer-req 로그보다 폴링으로 더 잘 잡힘).
+_PREALLOC_USAGE_RE = re.compile(r"pending_prealloc_token_usage")
 
 def scrape_node(base: str, node: str) -> dict:
     """한 노드의 KV 점유 스냅샷. HTTP(/server_info + /metrics)에 로그 fallback 병합.
@@ -209,6 +214,7 @@ def scrape_node(base: str, node: str) -> dict:
     transfer = transfer if transfer is not None else log.get("transfer_req")
     prealloc = _norm(_PRE_RE, metrics)
     prealloc = prealloc if prealloc is not None else log.get("prealloc_req")
+    prealloc_usage = _norm(_PREALLOC_USAGE_RE, metrics)
     return {
         "capacity":     cap,
         "used_tokens":  float(used) if used is not None else None,
@@ -217,6 +223,7 @@ def scrape_node(base: str, node: str) -> dict:
         "queue":        queue,
         "transfer_req": transfer,
         "prealloc_req": prealloc,
+        "prealloc_usage": prealloc_usage,  # >0 = P→D 전송 in-flight (D측)
         "src_log":      bool(log) and (_norm(_USED_RE, metrics) is None),
     }
 
@@ -257,10 +264,13 @@ def poller():
             "d_used_gb": used_gb(D["used_tokens"]), "d_running": D["running"],
             "d_queue": D["queue"], "d_capacity": D["capacity"],
             "d_transfer_req": D["transfer_req"], "d_prealloc_req": D["prealloc_req"],
+            "d_prealloc_usage": D["prealloc_usage"],
         }
         rows.append(row)
 
-        # ── P→D 전송 감지: D.used_tokens 양의 점프 ≥ JUMP_THRESHOLD ──
+        # ── P→D 전송 감지 ──
+        # (1) D.used_tokens 양의 점프 ≥ JUMP_THRESHOLD = 전송 완료(KV 도착)
+        # (2) D.pending_prealloc_token_usage > 0 = 전송 in-flight (예약 중)
         ev_mark = ""
         du = D["used_tokens"]
         if du is not None and prev_d_used is not None:
@@ -271,8 +281,10 @@ def poller():
                 ev_mark = f"← P→D xfer +{int(delta)} tok ({used_gb(delta):.2f} GB)"
         if du is not None:
             prev_d_used = du
-        # transfer_req metric이 있으면 in-flight도 표시
-        if D["transfer_req"]:
+        if D["prealloc_usage"] and D["prealloc_usage"] > 0:
+            add_event("prealloc_inflight", t, usage=round(D["prealloc_usage"], 4))
+            ev_mark = ev_mark or f"(D prealloc {D['prealloc_usage']*100:.1f}% — transfer in-flight)"
+        elif D["transfer_req"]:
             ev_mark = ev_mark or f"(D transfer-req={D['transfer_req']:.0f})"
 
         def f(x, w=8, p=0): return f"{x:>{w}.{p}f}" if isinstance(x, (int, float)) else f"{'—':>{w}}"
