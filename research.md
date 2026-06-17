@@ -570,6 +570,36 @@ offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리�
   후 같은 turn 재요청. TTFT 차이 = migration이 숨기는 비용.
 - 산출: turn별 ΔTTFT(evict − migrate) × context 길이 → "절감 곡선". §2.10/2.11 데이터로
   이미 부분 예측됨(evict pen.EVT vs migrate pen.T2). E1은 실 워크로드에서 직접 측정.
+- 구현: `benchmark/e1_emulation.py` (EVICT=tool window에 `/flush_cache`, RETAIN=idle,
+  migrate=RETAIN+pen.T2 합성). 서버: NVLink 1P1D(`start_1P_1D_breakeven.sh`).
+
+**E1 실측 결과 (2026-06-15)** — NVLink, 8 turn, tool 6s, evict=flush, pen.T2=38+3.35/1k tok.
+결과: `results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.{json,png}` (ms):
+
+| turn | ctx tok | EVICT(=cold) | RETAIN(=warm) | migrate*(=RETAIN+penT2) | benefit |
+|---|---|---|---|---|---|
+| 0 | 1,548 | 627 | 670 | 713 | −87 |
+| 1 | 2,971 | 1,138 | 726 | 774 | 364 |
+| 2 | 4,394 | 1,645 | 880 | 932 | 713 |
+| 3 | 5,817 | 1,931 | 1,004 | 1,062 | 869 |
+| 4 | 7,240 | 2,470 | 1,142 | 1,205 | 1,265 |
+| 5 | 8,663 | 2,936 | 1,338 | 1,405 | 1,531 |
+| 6 | 10,086 | 3,362 | 1,412 | 1,484 | 1,878 |
+| 7 | 11,509 | 3,988 | 1,600 | 1,677 | **2,311** |
+
+**해석**:
+1. **turn0은 양쪽 cold로 동일**(627 vs 713, migrate가 살짝 비싼 건 pen.T2 오버레이 탓 —
+   첫 turn은 보존할 KV가 없어 이득 없음이 정상). **turn1부터 격차가 열리고 context 누적에
+   따라 단조 증가** → migration 이득은 대화가 길어질수록 커짐(핵심 주장 직접 입증).
+2. **마지막 turn(11.5k tok): EVICT 3,988ms → migrate 1,677ms = 2.4× 단축, 절감 2,311ms.**
+   turn1+ 평균 이득 1,276ms (2.0× 단축).
+3. **이득이 EVICT−RETAIN(re-prefill 회피)에서 오고 pen.T2(평균 60ms)는 미미** — NVLink 전송
+   비용은 re-prefill 비용 대비 무시할 수준. §2.11 "전송 거의 무료"가 E2E로 확인됨.
+4. **주의(정직)**: 이번 측정은 C=1(단일 세션)이라 EVICT를 `/flush_cache`로 강제했다.
+   re-prefill 비용(EVICT)이 §2.10 cold 사다리보다 완만한 건(11.5k에서 11s가 아닌 4s) —
+   §2.10은 단발 15k-char anchor, E1은 누적 multi-turn이라 chunked-prefill/부분 prefix
+   차이일 수 있음. 절대값보다 **추세(context↑ → 이득↑)와 2.4× 비율**이 결론.
+   다음: C=8~16 부하에서 자연 LRU eviction으로 재현(flush 대신) → 실 압박 하의 이득.
 
 **E2. P radix evict 비용 측정 (= §2.12 다음단계 b 구체화) [정직성 방어]**
 - 목적: P-HBM을 Tier2로 비우는 실제 비용 → "P 양보가 D 양보보다 싸다" 정량화.
@@ -982,6 +1012,8 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `scripts/sglang/start_single_hicache.sh` | §2.8 대조군 / §2.9 L2 살리기 (ratio/layout/io/prefetch 노브) |
 | `benchmark/sglang_kv_breakeven_map.py` | §5.A break-even 맵 측정 (`SKIP_L3`, `T1_REF_JSON` 3-tier 모드) |
 | `benchmark/pd_hbm_occupancy.py` | §2.12 P/D HBM 점유 동시 폴링 + P→D 전송 감지 (`CONCURRENCY` sweep) |
+| `benchmark/e1_emulation.py` | §2.14 E1 migration 이득 emulation (EVICT/RETAIN/migrate, `REPLOT_JSON`) |
+| `results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.{json,png}` | §2.14 E1 실측 (2.4× 단축) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
