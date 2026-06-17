@@ -45,6 +45,11 @@ Usage:
   ROUTER_URL=http://127.0.0.1:8001/v1/chat/completions OUT_TAG=nvlink \
     python benchmark/e1_emulation.py
 
+  # 실험 재실행 없이 기존 JSON으로 PNG만 다시 그리기 (figure 수정용):
+  REPLOT_JSON=results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.json \
+    python benchmark/e1_emulation.py
+  # 플롯 텍스트는 영문만 사용 — matplotlib 기본 폰트에 한글 글리프가 없어 tofu(네모) 발생.
+
 Environment variables:
   ROUTER_URL        chat 요청 경로 (PD via router)  (default: .../8001/v1/chat/completions)
   P_NODE_URL        P node (flush 대상)            (default: http://127.0.0.1:30000)
@@ -104,6 +109,50 @@ _prefix    = f"{OUT_TAG}_" if OUT_TAG else ""
 def pen_t2_ms(tokens: float) -> float:
     """§2.11 fit: NVLink fetch 비용 = 고정 오버헤드 + 토큰 비례."""
     return PENT2_FIXED_MS + (tokens / 1000.0) * PENT2_MS_PER_KTOK
+
+def make_plot(plot_rows: list[dict]):
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("  (matplotlib not installed — skipping plot)")
+        return
+    # 플롯 텍스트는 영문만 사용 (matplotlib 기본 폰트에 한글 글리프 없음 → tofu 방지)
+    turns = [r["turn"] for r in plot_rows]
+    ev = [r["evict_ttft_ms"] for r in plot_rows]
+    rt = [r["retain_ttft_ms"] for r in plot_rows]
+    mig = [r["migrate_est_ms"] for r in plot_rows]
+    fig, ax = plt.subplots(figsize=(11, 6))
+    ax.plot(turns, ev, "-o", color="#d73027", label="EVICT (no migration -> re-prefill)")
+    ax.plot(turns, mig, "-s", color="#1a9850", label="migrate* (RETAIN + NVLink pen.T2)")
+    ax.plot(turns, rt, "--^", color="#4575b4", label="RETAIN (KV preserved, benefit upper bound)")
+    ax.fill_between(turns, mig, ev, where=[(e or 0) >= (m or 0) for e, m in zip(ev, mig)],
+                    color="#1a9850", alpha=0.12, label="migration benefit")
+    ax.set_xlabel("turn (context accumulates ->)")
+    ax.set_ylabel("next-turn TTFT (ms)")
+    ax.set_title(f"E1: Tier2 migration benefit (emul) — {MODEL_SLUG}\n"
+                 f"evict={EVICT_METHOD}, pen.T2={PENT2_FIXED_MS}+{PENT2_MS_PER_KTOK}/1k tok (sec 2.11)")
+    ax.legend(fontsize=9)
+    ax.grid(alpha=0.3)
+    # context tokens as secondary x labels
+    for r in plot_rows:
+        ax.annotate(f"{r['ctx_tokens']//1000}k", (r["turn"], 0), textcoords="offset points",
+                    xytext=(0, -16), ha="center", fontsize=7, color="gray")
+    fig.tight_layout()
+    png = os.path.join(OUT_DIR, f"{_prefix}e1_migration_benefit.png")
+    fig.savefig(png, dpi=150)
+    plt.close(fig)
+    print(f"plot saved: {png}")
+
+# REPLOT 모드: 기존 JSON으로 PNG만 재생성 (실험 재실행 없이 figure 수정용)
+#   REPLOT_JSON=results/.../nvlink_e1_migration_benefit.json python benchmark/e1_emulation.py
+_REPLOT = os.environ.get("REPLOT_JSON", "")
+if _REPLOT:
+    _d = json.load(open(_REPLOT))
+    print(f"[REPLOT] {_REPLOT} → PNG 재생성")
+    make_plot(_d["composed"])
+    raise SystemExit(0)
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 def _filler(nchars: int, seed: int) -> str:
@@ -275,39 +324,4 @@ with open(out_json, "w") as f:
         "retain": retain, "evict": evict, "composed": rows}, f, indent=2, ensure_ascii=False)
 print(f"\n결과 저장: {out_json}")
 
-def _plot():
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("  (matplotlib 미설치 — 플롯 생략)")
-        return
-    turns = [r["turn"] for r in rows]
-    ev = [r["evict_ttft_ms"] for r in rows]
-    rt = [r["retain_ttft_ms"] for r in rows]
-    mig = [r["migrate_est_ms"] for r in rows]
-    fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(turns, ev, "-o", color="#d73027", label="EVICT (no migration → re-prefill)")
-    ax.plot(turns, mig, "-s", color="#1a9850", label="migrate* (RETAIN + NVLink pen.T2)")
-    ax.plot(turns, rt, "--^", color="#4575b4", label="RETAIN (KV 보존, 이득 상한)")
-    # benefit 음영
-    ax.fill_between(turns, mig, ev, where=[ (e or 0)>=(m or 0) for e,m in zip(ev,mig)],
-                    color="#1a9850", alpha=0.12, label="migration benefit")
-    ax.set_xlabel("turn (context 누적 →)")
-    ax.set_ylabel("next-turn TTFT (ms)")
-    ax.set_title(f"E1: Tier2 migration benefit (emul) — {MODEL_SLUG}\n"
-                 f"evict={EVICT_METHOD}, pen.T2={PENT2_FIXED_MS}+{PENT2_MS_PER_KTOK}/1k tok (§2.11)")
-    ax.legend(fontsize=9)
-    ax.grid(alpha=0.3)
-    # context 토큰을 x축 보조 라벨로
-    for r in rows:
-        ax.annotate(f"{r['ctx_tokens']//1000}k", (r["turn"], 0), textcoords="offset points",
-                    xytext=(0, -16), ha="center", fontsize=7, color="gray")
-    fig.tight_layout()
-    png = os.path.join(OUT_DIR, f"{_prefix}e1_migration_benefit.png")
-    fig.savefig(png, dpi=150)
-    plt.close(fig)
-    print(f"플롯 저장: {png}")
-
-_plot()
+make_plot(rows)
