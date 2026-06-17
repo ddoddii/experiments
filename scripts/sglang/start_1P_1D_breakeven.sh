@@ -131,6 +131,7 @@ CUDA_VISIBLE_DEVICES=$P_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30000 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-metrics \
+  --enable-cache-report \
   --enable-hierarchical-cache \
   --hicache-storage-backend file \
   --hicache-ratio $HICACHE_RATIO \
@@ -151,6 +152,7 @@ CUDA_VISIBLE_DEVICES=$D_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30002 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-metrics \
+  --enable-cache-report \
   --disaggregation-mode decode \
   --disaggregation-transfer-backend $TRANSFER_BACKEND \
   $([ "$D_OFFLOAD_KVCACHE" = "1" ] && echo "--disaggregation-decode-enable-offload-kvcache \
