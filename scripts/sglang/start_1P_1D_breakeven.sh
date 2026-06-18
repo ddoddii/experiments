@@ -27,6 +27,13 @@ QUANTIZATION=${QUANTIZATION:-""}
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 
+# ─── KV pool 크기 (research.md §2.14 E1b — 자연 eviction regime 제어) ────────
+# 빈 값 = 서버 기본(mem_fraction_static≈0.861, KV pool ~85k tok/14GB).
+# 낮추면(예: 0.6) KV pool 축소 → 낮은 C에서도 메모리 압박/자연 LRU eviction 유발.
+#   D pool이 핵심(세션 KV 누적 위치). P/D 둘 다 적용하되 D_MEM_FRACTION으로 D만 따로 조절 가능.
+MEM_FRACTION=${MEM_FRACTION:-""}
+D_MEM_FRACTION=${D_MEM_FRACTION:-"$MEM_FRACTION"}
+
 # ─── GPU 배치 / 전송 백엔드 (research.md §2.8 — 전송 세금의 정체) ────────────
 # server17 토폴로지 (nvidia-smi topo -m):
 #   GPU0↔GPU1 NV4, GPU2↔GPU3 NV4, 그 외 NODE(PCIe host bridge 경유)
@@ -80,6 +87,7 @@ echo "Log dir  : $LOG_DIR"
 echo "Router   : http://127.0.0.1:8001"
 echo "GPUs     : P=GPU$P_GPU  D=GPU$D_GPU  (0-1/2-3 = NVLink NV4, cross = PCIe)"
 echo "Transfer : $TRANSFER_BACKEND"
+echo "MemFrac  : P=${MEM_FRACTION:-(server default)}  D=${D_MEM_FRACTION:-(server default)}"
 echo "HiCache  : write=$HICACHE_WRITE_POLICY  prefetch=$HICACHE_PREFETCH_POLICY"
 echo "           layout=${HICACHE_MEM_LAYOUT:-(server default)}  io=${HICACHE_IO_BACKEND:-(server default)}  ratio=$HICACHE_RATIO"
 echo "D-offload: ${D_OFFLOAD_KVCACHE} (1=decode KV→storage, sglang #11016 주의)"
@@ -130,6 +138,7 @@ echo "[2/5] Starting Prefill P1 (GPU $P_GPU, port 30000)..."
 CUDA_VISIBLE_DEVICES=$P_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30000 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
+  ${MEM_FRACTION:+--mem-fraction-static $MEM_FRACTION} \
   --enable-metrics \
   --enable-cache-report \
   --enable-hierarchical-cache \
@@ -151,6 +160,7 @@ echo "[3/5] Starting Decode D1 (GPU $D_GPU, port 30002)..."
 CUDA_VISIBLE_DEVICES=$D_GPU python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port 30002 \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
+  ${D_MEM_FRACTION:+--mem-fraction-static $D_MEM_FRACTION} \
   --enable-metrics \
   --enable-cache-report \
   --disaggregation-mode decode \
