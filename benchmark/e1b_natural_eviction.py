@@ -24,8 +24,9 @@ evictable. 다른 세션들이 pool을 쓰면 idle 세션 prefix가 자연 evict
   (3) migration 효과 합성: MISS turn의 TTFT를 (warm_ref + pen.T2)로 치환하면
       mean/P95 TTFT가 얼마나 개선되는가 = "migration이 자연 cold re-prefill을 제거".
 
-warm_ref(ctx): 같은 부하의 HIT turn들로 선형 fit (큐잉 효과 포함 → self-contained).
-  migration_ttft(MISS) = warm_ref(ctx) + pen.T2(ctx)   [§2.11 fit]
+warm_ref: 같은 turn(=같은 ctx·부하단계)의 HIT median (robust; 큐잉 효과 포함, self-contained).
+  migration_ttft(MISS) = warm_ref(turn) + pen.T2(ctx)   [§2.11 fit]
+  ⚠ 고동시성에선 TTFT가 큐잉 지배라 cold/warm 분리가 흐려질 수 있음 → turn별 분리도 함께 출력.
   improvement = measured − migration_ttft  (MISS turn에만 적용; HIT은 그대로)
 
 정직성: cached_tokens는 prefix-cache 적중을 직접 보고하므로 TTFT 임계 추정보다 rigorous.
@@ -164,19 +165,6 @@ def run_session(sid: int):
         history.append({"role": "user",
                         "content": f"[s{sid} tool {turn}] " + _filler(TURN_GROWTH_CHARS // 2, sid * 100 + 500 + turn)})
 
-# ─── Linear fit warm_ref(ctx) on HIT turns ───────────────────────────────────
-def linfit(xs: list[float], ys: list[float]) -> tuple[float, float] | None:
-    n = len(xs)
-    if n < 2:
-        return None
-    mx = sum(xs) / n; my = sum(ys) / n
-    den = sum((x - mx) ** 2 for x in xs)
-    if den == 0:
-        return None
-    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den
-    a = my - b * mx
-    return a, b
-
 def pct(vals: list[float], q: float) -> float:
     if not vals:
         return float("nan")
@@ -213,15 +201,27 @@ hits = [s for s in analyz if s["hit_ratio"] >= HIT_THRESHOLD]
 misses = [s for s in analyz if s["hit_ratio"] < HIT_THRESHOLD]
 miss_rate = len(misses) / len(analyz) if analyz else float("nan")
 
-# warm_ref fit on HIT turns
-fit = linfit([s["ctx_tokens"] for s in hits], [s["ttft_ms"] for s in hits]) if len(hits) >= 2 else None
-def warm_ref(ctx: float) -> float:
-    if fit:
-        a, b = fit
-        return max(a + b * ctx, 0.0)
-    # fallback: median HIT TTFT (또는 전체 median)
-    pool = hits or analyz
-    return statistics.median([s["ttft_ms"] for s in pool]) if pool else 0.0
+# ─── Robust warm_ref: MISS turn을 같은 turn(=같은 ctx·부하단계)의 HIT median으로 매칭 ──
+# (이전 global linear fit은 고-ctx HIT의 큐잉 노이즈에 기울기가 부풀려져 절편 음수 등
+#  비현실적 warm_ref를 만들었음 — research.md §2.14 E1b 메모. turn-matched median이 robust.)
+from collections import defaultdict as _dd
+_hit_ttft_by_turn = _dd(list)
+for _s in hits:
+    _hit_ttft_by_turn[_s["turn"]].append(_s["ttft_ms"])
+_hit_med_by_turn = {t: statistics.median(v) for t, v in _hit_ttft_by_turn.items()}
+_global_hit_med = statistics.median([s["ttft_ms"] for s in hits]) if hits else (
+    statistics.median([s["ttft_ms"] for s in analyz]) if analyz else 0.0)
+
+def warm_ref_for(s: dict) -> float:
+    """그 MISS turn이 HIT였다면 가졌을 TTFT 추정 (같은 turn HIT median, 없으면 인접/전역)."""
+    t = s["turn"]
+    if t in _hit_med_by_turn:
+        return _hit_med_by_turn[t]
+    # 인접 turn HIT median (ctx 비슷)
+    near = [tt for tt in _hit_med_by_turn if abs(tt - t) <= 1]
+    if near:
+        return statistics.median([_hit_med_by_turn[tt] for tt in near])
+    return _global_hit_med
 
 # baseline vs migration TTFT (turn>=1)
 baseline_ttft = [s["ttft_ms"] for s in analyz]
@@ -230,7 +230,7 @@ for s in analyz:
     if s["hit_ratio"] >= HIT_THRESHOLD:
         migration_ttft.append(s["ttft_ms"])           # 이미 warm → 변화 없음
     else:
-        migration_ttft.append(warm_ref(s["ctx_tokens"]) + pen_t2_ms(s["ctx_tokens"]))
+        migration_ttft.append(warm_ref_for(s) + pen_t2_ms(s["ctx_tokens"]))
 
 def stat(v): return {"mean": round(statistics.mean(v), 1), "p50": round(pct(v, 0.5), 1),
                      "p95": round(pct(v, 0.95), 1), "max": round(max(v), 1)} if v else {}
@@ -247,9 +247,24 @@ if misses:
     print(f"  MISS turn TTFT: mean={statistics.mean([s['ttft_ms'] for s in misses]):.0f}ms (cold, n={len(misses)})")
 if hits and misses:
     gap = statistics.mean([s['ttft_ms'] for s in misses]) - statistics.mean([s['ttft_ms'] for s in hits])
-    print(f"  → cold−warm 격차: {gap:.0f}ms  (E1과 동일 현상이 자연 발생으로 재현)")
-if fit:
-    print(f"  warm_ref fit: {fit[0]:.0f} + {fit[1]*1000:.1f}ms/1k tok")
+    print(f"  → cold−warm 격차(aggregate): {gap:.0f}ms")
+
+# per-turn HIT vs MISS median (큐잉 지배 여부 진단 — turn별 cold/warm 분리도 확인)
+_miss_by_turn = _dd(list)
+for _s in misses:
+    _miss_by_turn[_s["turn"]].append(_s["ttft_ms"])
+print(f"\n  turn별 HIT/MISS median (분리도 점검):")
+print(f"    {'turn':>4} {'ctx':>6} {'HITmed':>8} {'MISSmed':>8} {'gap':>7} {'nH/nM':>7}")
+turn_table = []
+for t in sorted(set([s["turn"] for s in analyz])):
+    h = _hit_med_by_turn.get(t); m = statistics.median(_miss_by_turn[t]) if _miss_by_turn.get(t) else None
+    ctx = next((s["ctx_tokens"] for s in analyz if s["turn"] == t), 0)
+    gap = f"{m-h:>7.0f}" if (h and m) else f"{'—':>7}"
+    turn_table.append({"turn": t, "ctx": ctx, "hit_med": h, "miss_med": m,
+                       "n_hit": len(_hit_ttft_by_turn.get(t, [])), "n_miss": len(_miss_by_turn.get(t, []))})
+    print(f"    {t:>4} {ctx:>6} {h if h else '—':>8} {m if m else '—':>8} {gap} "
+          f"{len(_hit_ttft_by_turn.get(t,[])):>3}/{len(_miss_by_turn.get(t,[])):<3}")
+
 print(f"\n  TTFT 분포          {'baseline':>10} {'migration':>10}  개선")
 for k in ("mean", "p50", "p95", "max"):
     if base_s.get(k) and mig_s.get(k):
@@ -265,7 +280,8 @@ with open(out_json, "w") as f:
                           "pent2_fixed_ms": PENT2_FIXED_MS, "pent2_ms_per_ktok": PENT2_MS_PER_KTOK},
                "summary": {"miss_rate": miss_rate, "n_analyzed": len(analyz),
                            "n_hit": len(hits), "n_miss": len(misses),
-                           "warm_fit": fit, "baseline_ttft": base_s, "migration_ttft": mig_s},
+                           "warm_med_by_turn": _hit_med_by_turn, "per_turn": turn_table,
+                           "baseline_ttft": base_s, "migration_ttft": mig_s},
                "samples": samples}, f, indent=2, ensure_ascii=False)
 print(f"\n결과 저장: {out_json}")
 
@@ -284,10 +300,13 @@ def make_plot():
     mx = [s["ctx_tokens"] for s in misses]; my = [s["ttft_ms"] for s in misses]
     ax.scatter(hx, hy, c="#4575b4", s=28, alpha=0.7, label=f"HIT / warm (retained, n={len(hits)})")
     ax.scatter(mx, my, c="#d73027", s=28, alpha=0.7, label=f"MISS / cold re-prefill (evicted, n={len(misses)})")
-    if fit:
-        xs = sorted(set([s["ctx_tokens"] for s in analyz]))
-        ax.plot(xs, [warm_ref(x) for x in xs], "--", color="#4575b4", lw=1.5, label="warm_ref fit (HIT)")
-        ax.plot(xs, [warm_ref(x) + pen_t2_ms(x) for x in xs], "-", color="#1a9850", lw=1.8,
+    # turn-matched warm_ref median + migration overlay (robust; no linear fit)
+    tt = sorted(t for t in _hit_med_by_turn)
+    if tt:
+        wx = [next((s["ctx_tokens"] for s in analyz if s["turn"] == t), 0) for t in tt]
+        wy = [_hit_med_by_turn[t] for t in tt]
+        ax.plot(wx, wy, "--o", color="#4575b4", lw=1.5, ms=5, label="warm_ref (HIT median / turn)")
+        ax.plot(wx, [y + pen_t2_ms(x) for x, y in zip(wx, wy)], "-s", color="#1a9850", lw=1.8, ms=5,
                 label="migration* = warm_ref + pen.T2")
     ax.set_xlabel("context tokens")
     ax.set_ylabel("next-turn TTFT (ms)")
