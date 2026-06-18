@@ -601,6 +601,40 @@ offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리�
    차이일 수 있음. 절대값보다 **추세(context↑ → 이득↑)와 2.4× 비율**이 결론.
    다음: C=8~16 부하에서 자연 LRU eviction으로 재현(flush 대신) → 실 압박 하의 이득.
 
+**E1b 실측: 자연 LRU eviction (flush 없이) — 4개 operating point (2026-06-15~18)**
+도구: `benchmark/e1b_natural_eviction.py`. C개 세션 병렬 구동, tool window에 idle →
+자연 압박으로 LRU evict 유발, cached_tokens로 turn별 HIT(warm)/MISS(cold) 분류.
+결과: `results/sglang_hicache/Qwen3-14B/*_e1b_natural_eviction.{json,png}`.
+
+| run | C | pool(mem_frac) | tool delay | 자연 MISS율 | 결과 |
+|---|---|---|---|---|---|
+| nvlink_c8 | 8 | 기본(0.861) | 6s | **0%** | pool이 다 담음 — eviction 없음 |
+| nvlink_c16 | 16 | 기본 | 6s | **28%** | eviction ✓ 단 **thrashing**(MISS 22–35s, HIT p95 22s) |
+| memfrac06_c8 | 8 | 0.6 | 6s | — | **decode OOM hang** (#6857) — KV pool ~1GB |
+| memfrac075_td20 | 8 | 0.75 | 20s | **27%** | eviction ✓ hang 없음, 단 **큐잉 지배** |
+| clean_c4_td30 | 4 | 0.70 | 30s | **0%** | pool 여유 — eviction 없음 (그래도 p95 12.5s 큐잉) |
+
+**핵심 결론 (정직):**
+1. **자연 eviction은 재현됨**: C=16(28%)·C=8/0.75(27%)에서 flush 없이 idle 세션 KV가
+   LRU로 축출 → "압박 시 idle KV가 버려진다"는 전제가 자연 발생으로 입증. aggregate로
+   MISS가 HIT보다 2.1×(C=8/0.75)~3.7×(C=16) 느림.
+2. **그러나 migration 이득의 깨끗한 격리는 이 하드웨어에서 어렵다**: A6000+14B는 KV pool이
+   ~14GB뿐이라 (가중치가 0.6 차지), eviction을 유발하는 압박 영역이 항상
+   **thrashing(C=16) / hang(0.6) / 큐잉 지배(0.75) / pool 여유(0.70)** 중 하나로 빠진다.
+   eviction은 일어나되 TTFT가 re-prefill에 지배되는 "깨끗한 창"이 매우 좁음.
+   → **깨끗한 migration 이득 수치는 controlled E1(C=1, flush)의 2.4×가 결론**, E1b는
+   "자연 발생 + 압박 영역의 시스템 거동(thrashing/hang)"을 보이는 역할.
+3. **hang(#6857) 자체가 motivation**: SGLang PD는 이 워크로드가 만든 메모리 압박을
+   graceful하게 못 풀고 decode OOM hang. 본 연구의 migration(idle KV를 P-HBM으로 빼
+   D-OOM 자체를 방지)이 이걸 해결 → §2.13 "압박 처리 실패"의 실증.
+
+**방법론 교훈 (재현용)**:
+- `mem_fraction_static`은 (가중치+KV) 총 비율 — 14B/49GB는 floor ~0.6 (그 아래 서버 즉사).
+  KV pool ≈ (frac×49−30)GB. 자연-eviction 영역 0.68~0.72, 0.6은 hang.
+- 고동시성에선 TTFT가 큐잉 지배 → cold/warm 분리가 흐려짐(turn 6–7에서 HIT가 MISS보다
+  느린 역전 관측). warm_ref는 turn-matched HIT median으로(선형 fit은 절편 음수로 왜곡).
+- 깨끗한 격리는 더 큰 KV pool(H100) 또는 더 작은 모델에서 가능할 것 — 향후 과제.
+
 **E2. P radix evict 비용 측정 (= §2.12 다음단계 b 구체화) [정직성 방어]**
 - 목적: P-HBM을 Tier2로 비우는 실제 비용 → "P 양보가 D 양보보다 싸다" 정량화.
 - 설계: P radix를 flood로 강제 evict한 뒤 같은 세션 다음 turn TTFT vs evict 안 한 경우.
@@ -1014,6 +1048,8 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `benchmark/pd_hbm_occupancy.py` | §2.12 P/D HBM 점유 동시 폴링 + P→D 전송 감지 (`CONCURRENCY` sweep) |
 | `benchmark/e1_emulation.py` | §2.14 E1 migration 이득 emulation (EVICT/RETAIN/migrate, `REPLOT_JSON`) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.{json,png}` | §2.14 E1 실측 (2.4× 단축) |
+| `benchmark/e1b_natural_eviction.py` | §2.14 E1b 자연 LRU eviction (cached_tokens HIT/MISS 분류, `CONCURRENCY`/`MEM_FRACTION`) |
+| `results/sglang_hicache/Qwen3-14B/*_e1b_natural_eviction.{json,png}` | §2.14 E1b 4 operating point (nvlink_c8/c16, memfrac075_td20, clean_c4_td30) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
