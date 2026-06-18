@@ -28,9 +28,14 @@ TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"hermes"}
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 
 # ─── KV pool 크기 (research.md §2.14 E1b — 자연 eviction regime 제어) ────────
-# 빈 값 = 서버 기본(mem_fraction_static≈0.861, KV pool ~85k tok/14GB).
-# 낮추면(예: 0.6) KV pool 축소 → 낮은 C에서도 메모리 압박/자연 LRU eviction 유발.
-#   D pool이 핵심(세션 KV 누적 위치). P/D 둘 다 적용하되 D_MEM_FRACTION으로 D만 따로 조절 가능.
+# ⚠ mem_fraction_static = (모델 가중치 + KV pool)이 차지하는 GPU 총 비율 (KV pool 비율 아님!).
+#   Qwen3-14B 가중치 ~29.6GB = 49GB의 ~0.60 → 이게 floor. 아래로 가면 가중치도 못 올려 서버 즉사
+#   (0.5 = "Not enough memory" 에러, 2026-06-18 실측).
+#   KV pool ≈ (mem_fraction × 49GB) − 가중치(~30GB) − cuda graph(~1.5GB):
+#     0.861(기본) → ~13.6GB(85k tok)   0.75 → ~8.7GB(53k tok)
+#     0.70 → ~6.3GB(40k tok)           0.68 → ~5.3GB(34k tok)   0.65 → ~3.9GB(25k tok)
+#   ⚠ 0.6은 KV ~1GB라 부하 시 즉시 decode OOM hang(#6857). 자연 eviction regime은 0.68~0.72 권장.
+#   D pool이 핵심(세션 KV 누적 위치). P/D 둘 다 적용, D_MEM_FRACTION으로 D만 따로 조절 가능.
 MEM_FRACTION=${MEM_FRACTION:-""}
 D_MEM_FRACTION=${D_MEM_FRACTION:-"$MEM_FRACTION"}
 
