@@ -11,7 +11,9 @@ E2: P-radix vs D-HBM concession cost asymmetry   — research.md §2.14 E2
 
   warm       : anchor를 즉시 재요청 → GPU L1 hit (복원 없음, 기준선)
   P_restore  : GPU pool을 flood해 anchor를 GPU radix에서 evict (write_through라
-               host 복제본은 유지) → 재요청 → host→GPU 복원 비용
+               host 복제본은 유지) → 재요청 *첫 요청(first-miss)* = host→GPU 복원 비용
+               ⚠ 첫 요청이 anchor를 GPU로 되돌리므로 median(여러 요청)을 쓰면 host 복원이
+                 씻겨 항상 ≈warm이 되는 버그(2026-06-18 발견). 반드시 first-miss 측정.
   cold       : fresh anchor 첫 요청 → 어디에도 없음 → full re-prefill
 
   D 양보 비용 = cold − warm     (D가 세션 KV evict → 다음 turn full re-prefill)
@@ -128,6 +130,19 @@ def med(label: str, msgs: list) -> float | None:
     vals = [v for v in (do_request(msgs) for _ in range(REPEAT_N)) if v is not None]
     return statistics.median(vals) if vals else None
 
+def restore_first_miss(msgs: list) -> float | None:
+    """flood로 anchor를 GPU에서 evict한 뒤 *첫 요청*(first-miss)만 측정.
+    ⚠ 첫 요청이 anchor를 GPU로 되돌리므로 2번째부터는 warm hit → median을 쓰면
+    host 복원 비용이 씻겨 항상 ≈warm이 됨(초기 버그). 매 반복마다 re-flood 후 first-miss.
+    breakeven L2 first-miss와 동일한 의미."""
+    misses = []
+    for _ in range(REPEAT_N):
+        flood()
+        v = do_request(msgs)   # 첫 요청 = tier miss (host→GPU 복원 또는 재계산)
+        if v is not None:
+            misses.append(v)
+    return statistics.median(misses) if misses else None
+
 # ─── per-length measurement ───────────────────────────────────────────────────
 def measure(chars: int, idx: int) -> dict:
     tok = int(chars / CHARS_PER_TOKEN)
@@ -141,11 +156,10 @@ def measure(chars: int, idx: int) -> dict:
     # warm: 즉시 재요청 (GPU L1)
     warm = med("warm", anchor)
     print(f"  warm (GPU L1)       : {warm:.1f} ms" if warm else "  warm FAILED")
-    # P_restore: GPU flood로 evict (host 유지) → 재요청
-    print(f"  flood GPU ({GPU_EVICT_N} reqs) → evict anchor from GPU radix ...")
-    flood()
-    p_restore = med("P_restore", anchor)
-    print(f"  P_restore (host→GPU): {p_restore:.1f} ms" if p_restore else "  P_restore FAILED")
+    # P_restore: 매 반복 re-flood 후 첫 요청(first-miss)만 측정 (median 아님!)
+    print(f"  flood GPU ({GPU_EVICT_N} reqs)×{REPEAT_N} → evict anchor, measure first-miss ...")
+    p_restore = restore_first_miss(anchor)
+    print(f"  P_restore (host→GPU first-miss): {p_restore:.1f} ms" if p_restore else "  P_restore FAILED")
 
     d_cost = round(cold - warm, 1) if (cold and warm) else None
     p_cost = round(p_restore - warm, 1) if (p_restore and warm) else None
