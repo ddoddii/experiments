@@ -645,35 +645,38 @@ offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리�
   warm(GPU L1) / P_restore(GPU flood로 evict, write_through host 복제본 유지 → host→GPU
   복원) / cold(fresh anchor = full re-prefill). D양보=cold−warm, P양보=P_restore−warm.
 
-**E2 실측 결과 (2026-06-18, L2-revival 설정: `page_first` + `ratio 3.0`)** — 가설 성립.
-결과: `results/sglang_hicache/Qwen3-14B/revival_e2_concession_cost.{json,png}` (ms):
+**E2 1차 결과 (2026-06-18) — ❌ 측정 버그로 철회.**
+`revival_e2_concession_cost.{json,png}`의 "P_restore ≈ warm, P 양보 59× 쌈, DRAM tier
+부활"은 **거짓**으로 판명. 원인: `P_restore`를 flood 후 *3 요청의 median*으로 측정했는데,
+첫 요청이 anchor를 GPU로 되돌리므로 2·3번째가 warm hit → `median([first-miss, warm, warm])
+= warm`. host 복원이 작동하든 깨졌든 항상 ≈warm을 반환하는 측정 버그. 코드 수정:
+`restore_first_miss()`가 매 반복 re-flood 후 *첫 요청(first-miss)*만 측정 (breakeven L2와 동일).
 
-| tok | cold(D양보 원천) | warm | P_restore | **D 양보** | **P 양보** | D/P |
-|---|---|---|---|---|---|---|
-| 666 | 473 | 256 | 262 | 216 | **5** | 42× |
-| 2,000 | 1,304 | 478 | 478 | 825 | **0** | — |
-| 5,000 | 2,956 | 867 | 947 | 2,089 | **80** | 26× |
-| 10,000 | 6,266 | 1,693 | 1,770 | 4,573 | **77** | 59× |
+**교차 검증 — breakeven 맵이 정답 (§2.10 재측정 2026-06-18, revival 설정 확인됨):**
+`revival_kv_breakeven_map.json` (page_first+ratio3.0, 서버 args로 설정 확인):
 
-**해석 — "P 양보 ≪ D 양보" 입증:**
-1. **P_restore ≈ warm** (전 길이에서 +0~80ms). 즉 P가 자기 radix를 evict해도 host에서
-   거의 즉시 복원. **P 양보 비용 = 0~80ms** (context 무관, 평평).
-2. **D 양보 = full re-prefill = 216~4573ms** (context 비례). 10k tok에서 **D양보 4573ms
-   vs P양보 77ms = 59× 비대칭** (median 50×). → "P 양보가 D 양보보다 훨씬 싸다" 정량 확인.
-3. **host 복원이 PCIe 속도(19.8 GB/s @10k)로 작동** — §2.8의 깨진 0.35 GB/s 대비 ~57×.
-   → §2.12 correlated-demand 단서(C=16에서 P 23%) **닫힘**: P가 차서 radix를 비워야 해도
-   그 비용(host 복원 77ms)은 그렇게 해서 회피하는 D re-prefill(4573ms)의 1/59에 불과.
+| tok | cold | L1 | L2 first-miss | L2/cold |
+|---|---|---|---|---|
+| 666 | 386 | 169 | 380 | 0.98 |
+| 5,000 | 2,215 | 693 | 2,225 | 1.00 |
+| 10,000 | 4,406 | 1,374 | 4,540 | 1.03 |
 
-**⚠ BIG BONUS — DRAM tier(Tier 3) 부활 = §2.9 step 2 완료:**
-이 결과는 §2.8/§2.10에서 "죽었다"고 판정한 host(L2/DRAM) 복원이 사실은 **설정 문제**였음을
-증명한다. `--hicache-mem-layout page_first --hicache-ratio 3.0`이 host→GPU 복원을 PCIe
-속도로 살림. 함의:
-- §2.10 break-even 맵은 DRAM이 죽어 "GPU 아니면 EVICT"로 퇴화했는데, 이 설정으로
-  **재측정하면 §2.10에서 예측한 "RAM 지배 맵"이 실현**될 것 (재실행 권장).
-- 제안 4-tier(D-HBM/P-HBM/DRAM/SSD)의 **Tier 3(DRAM)가 실제로 저렴한 tier로 동작** 확인.
+→ **L2 first-miss ≈ cold (L2/cold ≈ 1.0)**. page_first+ratio3.0에서도 **host(DRAM) 복원은
+여전히 깨져 있음** — 재측정 break-even 맵에도 RAM 칸 0개(GPU/EVT 그대로). 즉:
+- **§2.9 step 2(L2 revival) 미해결** — page_first+ratio3.0로도 안 살아남.
+- **§2.10 "수리 후 RAM 지배 맵"은 여전히 예측(미실현)**. DRAM tier는 현 SGLang(0.5.9)
+  hicache 복원 경로에서 동작 안 함이 재확인됨.
+- §2.8의 "L2 ≈ cold" 결론이 옳았음 (E2 1차의 반박은 무효).
 
-**다음**: 이 설정으로 (a) §2.10 break-even 맵 재측정(RAM 영역 출현 확인),
-(b) E2 default(layer_first) 대조군으로 §2.8 ≈cold 재확인해 before/after 쌍 완성.
+**E2 재측정 필요 (코드 수정 후)**: first-miss 기준으로 P_restore를 다시 재면 ≈cold로 나올
+것으로 예상 → recovery-cost 비대칭(host 복원이 싸다)은 **성립 안 함**. 따라서 §2.12
+correlated-demand 단서는 recovery-cost가 아니라 **opportunity-cost 비대칭**으로 닫아야 함:
+P-HBM은 83–90% idle(§2.12)이라 P 양보의 기회비용 ≈ 0; P 양보는 active decode 방해 안 함
+(future prefix-miss일 뿐), D 양보는 active 세션 재계산 + hang 유발(§2.14 memfrac06) —
+이 비대칭은 hicache 복원 작동 여부와 무관하게 robust.
+
+**측정 교훈**: "evict 후 복원" 비용은 반드시 **first-miss**로 측정 (median은 첫 요청이
+캐시를 데워서 복원 비용을 씻어냄). breakeven 맵 방식이 정답.
 
 **E3. Migration vs Retraction 직접 대결 [reorder 대신 migration의 핵심]**
 - 목적: 차별점 [D]("preemption 없이 migration으로 진행")의 직접 증거.
