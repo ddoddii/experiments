@@ -177,7 +177,16 @@ for r in rows:
 # 판정
 asyms = [r["asymmetry"] for r in rows if r["asymmetry"]]
 pr_vs_cold = [(r["p_restore_ms"], r["cold_ms"]) for r in rows if r["p_restore_ms"] and r["cold_ms"]]
+# P양보가 0 근처면 D/P가 폭발(아티팩트) → median + 절대값으로 보고
+d_costs = [r["d_concession_ms"] for r in rows if r["d_concession_ms"] is not None]
+p_costs = [r["p_concession_ms"] for r in rows if r["p_concession_ms"] is not None]
 print()
+if d_costs and p_costs:
+    print(f"  D 양보(cold−warm)   : {min(d_costs):.0f}–{max(d_costs):.0f} ms (context 비례)")
+    print(f"  P 양보(P_rest−warm) : {min(p_costs):.0f}–{max(p_costs):.0f} ms (거의 평평)")
+    if asyms:
+        print(f"  비대칭 D/P (median) : {statistics.median(asyms):.0f}×  "
+              f"(P양보≈0 케이스는 div 폭발이라 median 사용)")
 if pr_vs_cold:
     ratios = [pr / cd for pr, cd in pr_vs_cold]
     avg_pr_cold = statistics.mean(ratios)

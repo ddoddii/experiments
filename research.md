@@ -641,6 +641,39 @@ offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리�
   write_through면 host에 복제본 존재 → evict 후 host hit으로 복구(≈0) 기대.
 - 산출: P evict 비용 ≈ 0 확인 시, §2.12 correlated-demand 단서(C=16 P 23%)가 무력화됨
   ("P가 좀 차도 거의 공짜로 비울 수 있다").
+- 구현: `benchmark/e2_concession_cost.py`. anchor 하나를 context별 3 상태 측정 —
+  warm(GPU L1) / P_restore(GPU flood로 evict, write_through host 복제본 유지 → host→GPU
+  복원) / cold(fresh anchor = full re-prefill). D양보=cold−warm, P양보=P_restore−warm.
+
+**E2 실측 결과 (2026-06-18, L2-revival 설정: `page_first` + `ratio 3.0`)** — 가설 성립.
+결과: `results/sglang_hicache/Qwen3-14B/revival_e2_concession_cost.{json,png}` (ms):
+
+| tok | cold(D양보 원천) | warm | P_restore | **D 양보** | **P 양보** | D/P |
+|---|---|---|---|---|---|---|
+| 666 | 473 | 256 | 262 | 216 | **5** | 42× |
+| 2,000 | 1,304 | 478 | 478 | 825 | **0** | — |
+| 5,000 | 2,956 | 867 | 947 | 2,089 | **80** | 26× |
+| 10,000 | 6,266 | 1,693 | 1,770 | 4,573 | **77** | 59× |
+
+**해석 — "P 양보 ≪ D 양보" 입증:**
+1. **P_restore ≈ warm** (전 길이에서 +0~80ms). 즉 P가 자기 radix를 evict해도 host에서
+   거의 즉시 복원. **P 양보 비용 = 0~80ms** (context 무관, 평평).
+2. **D 양보 = full re-prefill = 216~4573ms** (context 비례). 10k tok에서 **D양보 4573ms
+   vs P양보 77ms = 59× 비대칭** (median 50×). → "P 양보가 D 양보보다 훨씬 싸다" 정량 확인.
+3. **host 복원이 PCIe 속도(19.8 GB/s @10k)로 작동** — §2.8의 깨진 0.35 GB/s 대비 ~57×.
+   → §2.12 correlated-demand 단서(C=16에서 P 23%) **닫힘**: P가 차서 radix를 비워야 해도
+   그 비용(host 복원 77ms)은 그렇게 해서 회피하는 D re-prefill(4573ms)의 1/59에 불과.
+
+**⚠ BIG BONUS — DRAM tier(Tier 3) 부활 = §2.9 step 2 완료:**
+이 결과는 §2.8/§2.10에서 "죽었다"고 판정한 host(L2/DRAM) 복원이 사실은 **설정 문제**였음을
+증명한다. `--hicache-mem-layout page_first --hicache-ratio 3.0`이 host→GPU 복원을 PCIe
+속도로 살림. 함의:
+- §2.10 break-even 맵은 DRAM이 죽어 "GPU 아니면 EVICT"로 퇴화했는데, 이 설정으로
+  **재측정하면 §2.10에서 예측한 "RAM 지배 맵"이 실현**될 것 (재실행 권장).
+- 제안 4-tier(D-HBM/P-HBM/DRAM/SSD)의 **Tier 3(DRAM)가 실제로 저렴한 tier로 동작** 확인.
+
+**다음**: 이 설정으로 (a) §2.10 break-even 맵 재측정(RAM 영역 출현 확인),
+(b) E2 default(layer_first) 대조군으로 §2.8 ≈cold 재확인해 before/after 쌍 완성.
 
 **E3. Migration vs Retraction 직접 대결 [reorder 대신 migration의 핵심]**
 - 목적: 차별점 [D]("preemption 없이 migration으로 진행")의 직접 증거.
@@ -1050,6 +1083,8 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.{json,png}` | §2.14 E1 실측 (2.4× 단축) |
 | `benchmark/e1b_natural_eviction.py` | §2.14 E1b 자연 LRU eviction (cached_tokens HIT/MISS 분류, `CONCURRENCY`/`MEM_FRACTION`) |
 | `results/sglang_hicache/Qwen3-14B/*_e1b_natural_eviction.{json,png}` | §2.14 E1b 4 operating point (nvlink_c8/c16, memfrac075_td20, clean_c4_td30) |
+| `benchmark/e2_concession_cost.py` | §2.14 E2 P vs D 양보 비용 비대칭 (warm/P_restore/cold, `RUN_TAG`) |
+| `results/sglang_hicache/Qwen3-14B/revival_e2_concession_cost.{json,png}` | §2.14 E2 실측 (page_first+ratio3.0: P양보 59× 쌈, DRAM tier 부활) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
