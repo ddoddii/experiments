@@ -1,0 +1,16 @@
+{
+  "config": {
+    "server": "http://127.0.0.1:8001",
+    "run_tag": "revival_fixed",
+    "note": "first-miss P_restore (median bug fixed); server: page_first + ratio 3.0; reconstructed from stdout (disk-full prevented in-run save)",
+    "sweep_chars": [2000, 6000, 15000, 30000],
+    "gpu_evict_n": 32,
+    "repeat_n": 3
+  },
+  "lengths": [
+    {"chars": 2000,  "tokens": 666,   "kv_mb": 104.1,  "cold_ms": 485.9,  "warm_ms": 256.1,  "p_restore_ms": 577.6,  "d_concession_ms": 229.8,  "p_concession_ms": 321.5,  "asymmetry": 0.71},
+    {"chars": 6000,  "tokens": 2000,  "kv_mb": 312.5,  "cold_ms": 1325.4, "warm_ms": 478.1,  "p_restore_ms": 1336.6, "d_concession_ms": 847.3,  "p_concession_ms": 858.5,  "asymmetry": 0.99},
+    {"chars": 15000, "tokens": 5000,  "kv_mb": 781.2,  "cold_ms": 2820.7, "warm_ms": 909.4,  "p_restore_ms": 2830.9, "d_concession_ms": 1911.3, "p_concession_ms": 1921.5, "asymmetry": 0.99},
+    {"chars": 30000, "tokens": 10000, "kv_mb": 1562.5, "cold_ms": 6038.7, "warm_ms": 1854.7, "p_restore_ms": 5975.6, "d_concession_ms": 4184.0, "p_concession_ms": 4120.9, "asymmetry": 1.02}
+  ]
+}

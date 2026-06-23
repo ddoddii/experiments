@@ -175,6 +175,37 @@ print("=" * 70)
 print(f"E2: P-radix vs D-HBM concession cost  [{RUN_TAG or 'default'}]")
 print("=" * 70)
 print(f"  server={CHAT_URL}  lengths={SWEEP_CHARS}  repeat={REPEAT_N}")
+
+# ─── 디스크 가드 ──────────────────────────────────────────────────────────────
+# write_through hicache가 flood KV를 모두 /tmp/hicache(SSD)에 기록 → 누적 시 디스크 폭주.
+# flood 총량 ≈ GPU_EVICT_N × REPEAT_N × Σ(evict_tokens) × 160KB. 시작 전 여유 확인 +
+# CLEAN_HICACHE=1이면 측정 전 비움(서버가 필요시 재생성하므로 안전).
+HICACHE_PATH = os.environ.get("HICACHE_PATH", "/tmp/hicache")
+def _free_gb(path):
+    try:
+        st = os.statvfs(path); return st.f_bavail * st.f_frsize / 1024**3
+    except Exception:
+        return float("inf")
+def _dir_gb(path):
+    t = 0
+    for r, _d, fs in os.walk(path):
+        for f in fs:
+            try: t += os.path.getsize(os.path.join(r, f))
+            except OSError: pass
+    return t / 1024**3
+if os.environ.get("CLEAN_HICACHE") == "1" and os.path.isdir(HICACHE_PATH):
+    import shutil
+    used = _dir_gb(HICACHE_PATH)
+    shutil.rmtree(HICACHE_PATH, ignore_errors=True); os.makedirs(HICACHE_PATH, exist_ok=True)
+    print(f"  CLEAN_HICACHE: {HICACHE_PATH} 비움 ({used:.0f} GB 해제)")
+free = _free_gb("/tmp")
+flood_gb = GPU_EVICT_N * REPEAT_N * (EVICT_CHARS / CHARS_PER_TOKEN) * len(SWEEP_CHARS) * KV_BYTES_PER_TOKEN / 1024**3
+print(f"  disk /tmp free: {free:.0f} GB   예상 flood 기록량 ≈ {flood_gb:.0f} GB"
+      f"   (hicache 현재 {_dir_gb(HICACHE_PATH):.0f} GB)")
+if free < flood_gb * 1.2:
+    print(f"  ⚠ 디스크 여유 부족 — CLEAN_HICACHE=1로 비우거나 서버 재시작(start 스크립트가 비움) 후 재실행.")
+    print(f"    또는 SWEEP_CHARS/GPU_EVICT_N/REPEAT_N를 줄이세요.")
+    raise SystemExit(1)
 print("=" * 70)
 rows = [measure(c, i) for i, c in enumerate(SWEEP_CHARS)]
 
