@@ -702,6 +702,43 @@ P-HBM은 83–90% idle(§2.12)이라 P 양보의 기회비용 ≈ 0; P 양보는
   - 제안(emul): 포화 직전 idle 세션 KV를 P-HBM으로 선제 migration → retraction 회피율
 - 산출: "migration이 retraction을 N% 제거 → P99 TTFT/goodput 개선". reorder/preempt 대비
   migration이 1차 해결책임을 시연.
+- 구현: `benchmark/e3_migration_vs_retraction.py`. D-HBM을 active(#token) vs
+  idle(token_usage×cap−#token) 분해 + `#retracted-req` 포착.
+
+**⚠ E3 실측 결과 (2026-06-18) — 전제 무효, narrative 수정 필요.**
+`mf072_c12_e3_migration_vs_retraction.{json,png}` (D pool 6.8GB, C=12, tool 10s):
+
+| 지표 | 값 |
+|---|---|
+| D peak total | 6.42 GB (94%) |
+| D peak **active** | 6.44 GB (94%) ← total과 거의 동일 |
+| D peak **idle** | **0.03 GB (0.5%)** (median 0) |
+| retractions | **0** |
+| TTFT P50 / **P99** | 10.4 s / **48 s** |
+| 완료 | 84/84 (100%) |
+
+**D total ≈ D active, idle ≈ 0.** → **SGLang PD는 D가 세션 KV를 turn 종료 즉시 free하고
+idle하게 보관하지 않는다** (sessions가 tool call로 빠지면 total/active가 같이 6.4→1.7GB로
+하락 = D가 idle KV를 풂). 함의:
+
+1. **"D의 idle KV를 P-HBM으로 migration"은 옮길 대상이 없음** — D idle ≈ 0. retraction도 0
+   (압박은 idle 누적이 아니라 **active 동시 decode** 94%에서 옴). E3 설계의 전제가 SGLang에
+   성립 안 함.
+2. **§2.3 motivation("tool call 중 D 노드 KV 17% idle 점유")은 vllm-ppd 것 — SGLang에 transfer
+   안 됨.** SGLang PD는 idle을 free. 이 모티베이션을 SGLang 결과로 못 씀.
+3. **진짜 비효율**: D가 매 turn 세션 KV(특히 **생성 토큰** KV)를 버림 → 다음 turn P가 이전
+   assistant 응답까지 re-prefill (P radix엔 prompt prefix만, 생성 KV는 D가 버려서 없음).
+   P99 = 48 s가 그 비용(re-prefill + 전송 + 큐잉). cf. `--disaggregation-decode-enable-
+   offload-kvcache`(#11016)가 정확히 이 생성 KV를 P로 보내려는 기능 (불안정).
+
+**Narrative pivot (정직)**: 핵심 기회는 "idle KV 이동"이 아니라 **"버려지는 생성 KV 보존"**.
+- 현 SGLang PD = turn 끝 → D가 생성 KV free → 다음 turn 재계산 (E1의 EVICT 경로).
+- 제안(수정) = tool call 동안 생성 KV를 **warm 유지**(짧으면 D-HBM, 압박이면 P-HBM/host) →
+  재계산 회피 (E1의 RETAIN = **2.4×**, §2.14 E1).
+→ **E1/break-even 맵(§2.10)이 측정한 게 진짜 contribution**. "D idle KV migration"은 SGLang에
+성립 안 하는 곁가지였고 E3가 일찍 잡음 (리뷰 전 발견이 다행).
+→ 가능한 후속: decode radix retention(D가 idle 보관하게)을 켜면 E3 전제가 살아나는지 확인,
+  또는 decode-offload-kvcache로 생성 KV를 P로 보내는 경로 검증(§2.9 D_OFFLOAD).
 
 **E4. Tool-duration × pressure 2D 운영점 [정책의 필요성]**
 - 목적: §2.10 break-even 맵을 *실제 부하*와 결합 → "언제 migrate가 evict보다 이득인가".
@@ -1103,8 +1140,10 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/sglang_hicache/Qwen3-14B/nvlink_e1_migration_benefit.{json,png}` | §2.14 E1 실측 (2.4× 단축) |
 | `benchmark/e1b_natural_eviction.py` | §2.14 E1b 자연 LRU eviction (cached_tokens HIT/MISS 분류, `CONCURRENCY`/`MEM_FRACTION`) |
 | `results/sglang_hicache/Qwen3-14B/*_e1b_natural_eviction.{json,png}` | §2.14 E1b 4 operating point (nvlink_c8/c16, memfrac075_td20, clean_c4_td30) |
-| `benchmark/e2_concession_cost.py` | §2.14 E2 P vs D 양보 비용 비대칭 (warm/P_restore/cold, `RUN_TAG`) |
-| `results/sglang_hicache/Qwen3-14B/revival_e2_concession_cost.{json,png}` | §2.14 E2 실측 (page_first+ratio3.0: P양보 59× 쌈, DRAM tier 부활) |
+| `benchmark/e2_concession_cost.py` | §2.14 E2 P vs D 양보 비용 (warm/P_restore first-miss/cold, 디스크 가드) |
+| `results/sglang_hicache/Qwen3-14B/revival_fixed_e2_concession_cost.json` | §2.14 E2 수정판 (P_restore≈cold, recovery 비대칭 없음) |
+| `benchmark/e3_migration_vs_retraction.py` | §2.14 E3 D active/idle 분해 + retraction 포착 |
+| `results/sglang_hicache/Qwen3-14B/mf072_c12_e3_migration_vs_retraction.{json,png}` | §2.14 E3 실측 (D idle≈0.5% → 전제 무효, narrative pivot) |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c1_v2_pd_hbm_occupancy.{csv,png}` | §2.12 C=1 점유 시계열 |
 | `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
