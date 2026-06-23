@@ -668,12 +668,29 @@ offload-kvcache`가 쓰는 경로)의 **목적지를 CPU 대신 P-HBM으로 리�
   hicache 복원 경로에서 동작 안 함이 재확인됨.
 - §2.8의 "L2 ≈ cold" 결론이 옳았음 (E2 1차의 반박은 무효).
 
-**E2 재측정 필요 (코드 수정 후)**: first-miss 기준으로 P_restore를 다시 재면 ≈cold로 나올
-것으로 예상 → recovery-cost 비대칭(host 복원이 싸다)은 **성립 안 함**. 따라서 §2.12
-correlated-demand 단서는 recovery-cost가 아니라 **opportunity-cost 비대칭**으로 닫아야 함:
+**E2 재측정 완료 (2026-06-18, first-miss 수정판)** — recovery-cost 비대칭 **없음 확정**.
+`revival_fixed_e2_concession_cost.json` (page_first+ratio3.0, first-miss 측정):
+
+| tok | cold | warm | P_restore(first-miss) | P_restore/cold | D양보 | P양보 | D/P |
+|---|---|---|---|---|---|---|---|
+| 666 | 486 | 256 | 578 | 1.19 | 230 | 322 | 0.7× |
+| 2,000 | 1,325 | 478 | 1,337 | 1.01 | 847 | 859 | 1.0× |
+| 5,000 | 2,821 | 909 | 2,831 | 1.00 | 1,911 | 1,922 | 1.0× |
+| 10,000 | 6,039 | 1,855 | 5,976 | 0.99 | 4,184 | 4,121 | 1.0× |
+
+→ **P_restore ≈ cold (ratio ≈ 1.0), P양보 ≈ D양보 (D/P ≈ 1×).** breakeven 맵과 일치.
+host 복원이 깨져 있으니 "P radix evict가 host 덕에 싸다"는 가설은 **거짓 확정**.
+→ §2.12 correlated-demand 단서는 recovery-cost가 아니라 **opportunity-cost 비대칭**으로 닫음:
 P-HBM은 83–90% idle(§2.12)이라 P 양보의 기회비용 ≈ 0; P 양보는 active decode 방해 안 함
 (future prefix-miss일 뿐), D 양보는 active 세션 재계산 + hang 유발(§2.14 memfrac06) —
 이 비대칭은 hicache 복원 작동 여부와 무관하게 robust.
+
+**운영 이슈 (2026-06-18)**: write_through hicache가 flood KV를 모두 `/tmp/hicache`(SSD)에
+기록 → E2 한 run에 ~234GB 기록(GPU_EVICT_N×REPEAT_N×Σevict×160KB). 여러 run 누적으로
+`/tmp` 디스크 풀(~400GB) → 결과 저장 실패. 대응: 벤치마크에 디스크 가드 추가(시작 전 여유
+확인·`CLEAN_HICACHE=1`로 비움), 그리고 run 사이 서버 재시작(start 스크립트가 `/tmp/hicache`
+비움) 또는 `rm -rf /tmp/hicache/*`. eviction 실험은 write_through SSD 기록이 비싸므로
+`HICACHE_WRITE_POLICY=write_back`도 고려(SSD 기록량 대폭 감소).
 
 **측정 교훈**: "evict 후 복원" 비용은 반드시 **first-miss**로 측정 (median은 첫 요청이
 캐시를 데워서 복원 비용을 씻어냄). breakeven 맵 방식이 정답.
