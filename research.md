@@ -3,8 +3,130 @@
 > **연구 주제**: P-D disaggregation 환경에서 multi-turn agent의 tool call duration을 예측해
 > KV cache를 **4-tier storage (D-HBM / P-HBM / CPU DRAM / SSD)** 중 어디에 둘지 결정하고,
 > tool call 종료 전에 prefetch해 복구 latency를 숨기는 **placement policy** 설계.
+>
+> ⚠ 아래 **PAPER DRAFT**가 2026-06-18 기준 정제된 최신 종합이다. §1–§7은 상세 실험 로그
+> (evidence appendix)이며, 일부 초기 가설(4-tier, DRAM/SSD tier, "D idle KV migration")은
+> 실험으로 기각/축소되었다 — PAPER DRAFT의 scope가 현행 결론이다.
 
 ---
+
+# PAPER DRAFT — Preserving Session KV under Pressure in Disaggregated Multi-Turn Serving
+
+*(synthesis of §2.1–§2.15, 2026-06-18. 하드웨어: server17, A6000×4, Qwen3-14B, SGLang 0.5.9 + Mooncake/NIXL)*
+
+## Abstract (요지)
+
+Multi-turn agentic LLM serving을 prefill-decode(PD) disaggregation으로 운영할 때, **메모리
+압박 하에서 prefill 노드의 prefix(radix) 캐시가 대화 중간에 축출되면 이후 모든 turn이 전체
+대화 history를 재계산(re-prefill)하게 되어 TTFT가 catastrophic하게 폭증한다** (실측: 단일
+세션 ~1.3 s → 고동시성 ~74 s, §Fig 1). 우리는 PD 환경의 비대칭 — **decode 노드가 포화
+(91–94%)되는 순간에도 prefill 노드 HBM은 83–90% idle** (§Fig 2) 하고, P↔D NVLink가 빠르다
+(29 GB/s, §2.11) — 를 활용해, **tool-call idle window 동안 축출 위험에 처한 세션 KV를 P 노드
+HBM에 보존**하는 것을 제안한다. controlled 측정에서 보존(warm) vs 재계산(re-prefill)은
+다음 turn TTFT를 **2.4× 단축**한다 (§Fig 3). 본 문서는 이 문제·기회·접근을 실측으로
+정립하고, 시스템 구현 전 단계의 한계를 정직하게 명시한다.
+
+## 1. Problem & Motivation
+
+**대상 워크로드**: multi-turn agent — turn마다 (이전 prompt + 모델 출력 + tool 결과)가
+누적되어 context가 단조 증가하고, turn 사이에 tool call(외부 API) idle window가 존재한다.
+
+**PD multi-turn의 KV 수명 (실측, §2.12/§2.14-E3)**:
+- 세션 prefix KV는 **P 노드 radix 캐시**에 존재 (turn 간 지속, 축출 가능).
+- decode 노드는 **turn 종료 시 KV를 즉시 free** (idle KV 보관 ≈ 0.5%, §2.14-E3) — D는 active
+  decode만 보유.
+- 다음 turn: P가 radix 적중분을 재사용하고 나머지를 prefill → 전체 context를 D로 (재)전송.
+
+**핵심 문제 — 압박 시 re-prefill 폭발 (§2.15 E4, Fig 1)**:
+- **저압(C=1)**: P radix가 prefix를 유지 → 매 turn 새 내용(~1.4k tok)만 재계산,
+  recompute 비율 48%→**10%로 감소**. 시스템이 효율적.
+- **고압(C=16, pool 축소)**: turn 5 부근에서 radix가 **축출**(cached 5,577→**5 tok**) →
+  이후 모든 turn이 recompute 비율 **100%**(전체 history 8.3k–11k tok 재계산) →
+  **TTFT 1.3 s → 49–74 s 폭증.**
+- 이는 문헌의 "multi-turn에서 prefill 비용의 최대 99%가 historical token 재계산"
+  ([PPD, arXiv:2603.13358]; SGLang Global Cache Reuse RFC #7746)과 일치하며, 우리 셋업에서
+  직접 재현됐다. **저압은 문제 없음 → 문제는 pressure-specific.**
+
+**기회 — PD의 idle 자원 (§2.12, Fig 2)**:
+- C=4/8/16 sweep에서 **D 노드가 91–94%로 포화되는 순간에도 P 노드는 9–17%만 사용**
+  (idle 83–90%). P/D peak이 시간상 어긋남(prefill 버스트 vs decode 누적). C=16에서도 P는
+  23%까지만 상승.
+- **P↔D NVLink P2P = 29 GB/s 실측** (§2.11; PCIe 초과로 NVLink 사용 입증). 20k-token KV를
+  ~105 ms에 전송. (RDMA 없는 TCP fallback은 1.2 GB/s — 전송 비용은 배포 의존.)
+
+→ **압박받는 D가 세션 KV를 버리는 바로 그 순간, 옆의 P는 비어 있고 빠른 링크로 연결돼 있다.**
+
+## 2. Approach
+
+**Tool-call-aware preservation**: 세션이 tool call로 진입(idle)할 때, 그 세션 KV가 압박으로
+**축출되어 다음 turn에 재계산될 위험**이면, free/evict 대신 **P 노드 HBM(Tier 2)에 보존**하고
+tool call 종료 직전 D로 prefetch한다. 보존 tier는 tool duration·압박·context로 결정:
+- 짧은 tool call·저압 → D-HBM 유지 (전송도 불필요)
+- 긴 tool call·D 압박 → P-HBM 보존 (NVLink로 저렴하게 resume)
+- (DRAM/SSD tier는 현 SGLang hicache에서 복원이 깨져 있어 — §2.8/E2 — 제외, §5 한계)
+
+## 3. Preliminary Evaluation (측정 vs 합성)
+
+메커니즘 미구현 단계에서, 측정된 조각으로 이득을 정립:
+- **보존 vs 재계산 = 2.4× (E1, §2.14, Fig 3)**: controlled multi-turn에서 다음 turn TTFT,
+  EVICT(=re-prefill, 11.5k tok에 3,988 ms) vs migrate(=warm+NVLink pen.T2, 1,677 ms).
+  turn1+ 평균 2.0×. 이득은 re-prefill 회피에서 오고 NVLink 전송 비용(평균 ~60 ms)은 미미.
+- **자연 축출 27–28% (E1b, §2.14)**: flush 강제 없이 C=8(pool↓)/C=16에서 idle 세션 KV가
+  LRU 축출되어 cold re-prefill 발생 — 보존이 회피할 대상의 발생률.
+- **P 양보의 정당성 (§2.12)**: P가 보존을 위해 자기 radix를 비워야 할 때도 P는 비병목
+  (idle 83–90%)이고 active decode를 방해하지 않음 (opportunity-cost 비대칭).
+
+## 4. Selected Motivation Figures (논문 채택)
+
+| Fig | 내용 | 소스 PNG | 메시지 |
+|---|---|---|---|
+| **Fig 1** | re-prefill 폭발 (저압 vs 고압) | `c1_e4_reprefill_cost.png` + `c16_e4_reprefill_cost.png` (나란히) | 압박 시 cache 축출 → recompute 100% → TTFT 74 s. **핵심 문제.** |
+| **Fig 2** | P idle vs D 포화 | `nvlink_c16_pd_hbm_occupancy.png` (또는 §2.12 sweep 표) | D 94% 포화 시 P 17% — **놀고 있는 자원.** |
+| **Fig 3** | 보존 vs 재계산 = 2.4× | `nvlink_e1_migration_benefit.png` | 보존하면 다음 turn TTFT 2.4× 단축. **이득.** |
+| (supp) | NVLink 29 GB/s | §2.11 표 | 전송이 저렴 — 보존지로 P가 타당. |
+
+**Fig 1이 메인.** Fig 2가 "왜 P인가", Fig 3가 "그래서 이득이 얼마". 나머지(break-even
+맵, E2/E3 등)는 motivation에서 **제외** (§6 참조).
+
+## 5. Limitations & Honest Assessment (허점 점검)
+
+1. **메커니즘 미구현**: 모든 이득은 측정 조각의 emulation/합성 (E1의 RETAIN/EVICT,
+   §2.11 전송). 실제 D→P-HBM migration 시스템·end-to-end는 미구축. (다음 단계: SGLang
+   수정, §2.13 코드 위치.)
+2. **단일 하드웨어**: A6000+14B는 KV pool ~14 GB로 좁아, eviction을 유발하면 thrashing
+   /hang(#6857)과 분리가 어렵다. 고압 E1b/E3는 큐잉·hang에 confound. 깨끗한 격리는 controlled
+   E1과 E4 c1/c16 대비에 의존.
+3. **유효 tier는 사실상 2개**: hicache의 host(DRAM)·SSD 복원이 현 SGLang에서 깨져
+   (§2.8, E2 first-miss로 재확인 — L2≈cold) DRAM/SSD를 싼 tier로 주장 못 함. "4-tier"는
+   **D-HBM 유지 / P-HBM 보존(+EVICT)**의 사실상 2-tier로 축소.
+4. **합성 워크로드**: filler 텍스트·합성 tool delay. 실제 agent trace·tool latency 분포
+   미반영 (motivation 수치의 외적 타당성 제한).
+5. **decode-offload 기존 해법은 clean case에서 무이득** (E5, §2.15) — P radix가 이미 처리.
+   압박 하에서의 효과는 미검증(+ storage 복원 깨짐).
+6. **correlated demand**: C=16에서 P가 23%로 상승. 더 극단적 부하에서 P도 찰 수 있음
+   (반론: P radix는 evict해도 비파괴적·저렴 — opportunity-cost로 방어).
+
+## 6. Ruled Out / Retracted (실험으로 기각)
+
+- **"D의 idle KV를 migration"** — D는 idle KV를 ≈0 보유(즉시 free, E3). 원안의 핵심 전제
+  무효 → "버려질 KV 보존"으로 재정의.
+- **"P 양보가 recovery-cost로 싸다 (host 복제본)"** — host 복원이 깨져 P_restore≈cold
+  (E2 first-miss). recovery-cost 비대칭 없음 → opportunity-cost 논거로 전환.
+- **DRAM/SSD를 동작하는 cheap tier로** — hicache 복원 깨짐(§2.8). page_first+ratio3.0
+  "부활"은 median 측정 버그였음(E2 정정).
+- **break-even 맵의 RAM 영역** — 위로 인해 미실현(여전히 예측).
+- **§2.3 "tool call 중 D idle KV 17%"** — vllm-ppd 측정, SGLang에 transfer 안 됨.
+
+## 7. Next (코드 작업)
+
+SGLang 클론 후: 생성/세션 KV의 free/offload 지점(`disaggregation/decode.py`,
+`decode_kvcache_offload_manager.py`)에서 **목적지를 host/SSD 대신 P-HBM으로, tool-duration-
+aware trigger로** 수정 → E1의 2.4× emulation을 실제 end-to-end로 검증. 그 전 motivation은
+Fig 1–3로 확정.
+
+---
+
+
 
 ## 1. Problem Statement
 
@@ -809,6 +931,25 @@ E4·E5 모두 "단일 P+단일 세션+radix 유지면 시스템이 이미 효율
   motivation이고 §2.14 E1(2.4×)/E1b(27% MISS) 압박 영역과 연결됨.
 → E5도 압박 하 재측정 필요(offload-on이 evicted KV를 storage 복원으로 살리는지 — 단 §2.8
   복원 깨짐 + #11016 위험). 다음 액션: E4/E5를 C=16+mem_fraction↓로 재실행.
+
+**E4 고압 실측 (2026-06-18, C=16, D_MEM_FRACTION=0.72)** — re-prefill 폭발 재현 (= Fig 1 고압).
+`c16_e4_reprefill_cost.json` vs `c1_e4_reprefill_cost.json`:
+
+| turn | C=1 recomp% | C=1 TTFT | C=16 recomp% | C=16 cached | C=16 recomp tok | C=16 TTFT |
+|---|---|---|---|---|---|---|
+| 1 | 48% | 660 | 48% | 1,470 | 1,369 | 1,336 |
+| 4 | 20% | 1,042 | 20% | 5,577 | 1,369 | 31,589 |
+| 5 | 16% | 1,174 | **100%** | **5** | **8,310** | **49,436** |
+| 6 | 14% | 1,309 | **100%** | **5** | **9,679** | **61,881** |
+| 7 | 12% | 1,430 | **100%** | **5** | **11,048** | **74,158** |
+
+- **C=1**: recompute_frac 48%→10% 하락 (radix 유지, §위). **C=16**: turn 5에서 radix **축출**
+  (cached 5,577→**5 tok**) → 이후 recompute_frac **100%**(전체 history 재계산) → TTFT
+  1.3 s → **74 s 폭증**.
+- **이 c1 vs c16 대비가 Fig 1 (논문 핵심 motivation)**: "저압은 효율적, 압박에선 cache 축출로
+  전체 history를 매 turn 재계산 → catastrophic." §2.14 E1(2.4×)/E1b(27% 축출)과 연결.
+- 주의: C=16은 큐잉도 섞임(TTFT 절대값에 큐 대기 포함). 핵심 신호는 **recompute_frac 10%↔100%
+  전환과 cached_tokens 붕괴(→5 tok)** — 이건 큐잉과 무관한 cache-축출의 직접 증거.
 
 **E5-offload. decode-offload-kvcache on/off baseline** [기존 부분 해법 대비선].
 - 목적: `--disaggregation-decode-enable-offload-kvcache`(D 생성 KV→storage→P 재사용)가
