@@ -755,6 +755,49 @@ E1·E2는 §2.10/2.11/2.12 기존 데이터+emulation으로 시스템 구현 전
 
 ---
 
+### 2.15 Narrative pivot 후 motivation 실험 (2026-06-18) — re-prefill 비효율 정량화
+
+§2.14 E3에서 "D는 idle KV를 안 들고 있다(즉시 free)"가 확인되며 narrative가
+**"D idle KV migration" → "버려지는 생성 KV 보존(re-prefill 회피)"**로 pivot됨.
+검색으로 SGLang 자체가 이 문제를 인정함을 확인: multi-turn에서 P가 전체 history(이전 출력
+포함)를 재계산, **prefill 비용의 최대 99%가 historical token 재계산**
+([SGLang PD docs / PPD arXiv:2603.13358](https://arxiv.org/pdf/2603.13358), Global KV Cache
+Reuse 개발 중 [RFC #7746](https://github.com/sgl-project/sglang/issues/7746)).
+→ 문제 실재·acknowledged. pivot 후 motivation을 코드 변경 없이 정량화하는 두 실험:
+
+**E4-reprefill. 재계산/재전송 비용 turn별 측정** [motivation Figure] — 코드 변경 없음.
+- 구현: `benchmark/e4_reprefill_cost.py`. 단일/다중 세션 multi-turn에서 turn별
+  `prompt_tokens` vs `cached_tokens`(`--enable-cache-report`) → `recompute = prompt − cached`,
+  `recompute_frac`. 재전송량 = D free(E3)로 매 turn 전체 prompt KV 재전송 ≈
+  prompt_tokens × 160KB (§2.11 전송 모델).
+- 산출: "turn이 깊을수록 재계산 누적", "재계산이 prefill의 X%" → 논문 motivation Figure
+  (cached vs recompute stacked bar + TTFT/전송 추정).
+- 실행: `CONCURRENCY=1 NUM_TURNS=10 OUT_TAG=c1 python benchmark/e4_reprefill_cost.py`
+
+**E5-offload. decode-offload-kvcache on/off baseline** [기존 부분 해법 대비선].
+- 목적: `--disaggregation-decode-enable-offload-kvcache`(D 생성 KV→storage→P 재사용)가
+  재계산을 줄이고 turn2+ TTFT를 낮추는지(또는 #11016 CUDA error/hang으로 불안정한지) 측정.
+  이게 우리 제안(생성 KV를 P-HBM에 tool-call-aware 보존)이 넘어야 할 선.
+- 구현: `benchmark/e5_decode_offload.py`. off/on 각각 측정(서버 `D_OFFLOAD_KVCACHE` 토글)
+  + `COMPARE` 모드로 두 JSON diff. cached_tokens↑ / recompute↓ / turn2+ TTFT↓ 여부 +
+  안정성(request 실패, hang, D_LOG의 `#retracted-req`/CUDA error = #11016 신호) 포착.
+- 실행:
+  ```
+  D_OFFLOAD_KVCACHE=0 bash scripts/sglang/start_1P_1D_breakeven.sh
+  RUN_TAG=offload_off python benchmark/e5_decode_offload.py
+  D_OFFLOAD_KVCACHE=1 bash scripts/sglang/start_1P_1D_breakeven.sh
+  RUN_TAG=offload_on D_LOG=logs/sglang_1p1d/d1.log python benchmark/e5_decode_offload.py
+  COMPARE=results/.../offload_off_e5_decode_offload.json,results/.../offload_on_e5_decode_offload.json \
+    python benchmark/e5_decode_offload.py
+  ```
+
+**다음(코드 작업)**: SGLang 클론 후 생성 KV의 offload 목적지를 host/SSD 대신 **P-HBM**으로,
+**tool-duration-aware** trigger로 수정. 코드 위치: `python/sglang/srt/disaggregation/`
+(decode.py = turn 끝 KV free 지점, decode_kvcache_offload_manager.py), `mem_cache/`(radix,
+HiCache), transfer connector. E4/E5가 그 이득의 baseline·motivation을 먼저 못박음.
+
+---
+
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
 
 ### 3.1 경쟁 연구 비교
