@@ -774,6 +774,42 @@ Reuse 개발 중 [RFC #7746](https://github.com/sgl-project/sglang/issues/7746))
   (cached vs recompute stacked bar + TTFT/전송 추정).
 - 실행: `CONCURRENCY=1 NUM_TURNS=10 OUT_TAG=c1 python benchmark/e4_reprefill_cost.py`
 
+**E4 실측 (2026-06-18, C=1 단일 세션)** — clean case에선 re-prefill 지배 안 함.
+`c1_e4_reprefill_cost.json`:
+
+| turn | prompt | cached | recompute | recompute% | TTFT | xfer_est |
+|---|---|---|---|---|---|---|
+| 1 | 2,839 | 1,470 | 1,369 | 48% | 660 | 48 |
+| 5 | 8,315 | 6,946 | 1,369 | 16% | 1,174 | 66 |
+| 9 | 13,791 | 12,422 | 1,369 | 10% | 1,723 | 84 |
+
+- **recompute_tokens = 1,369로 일정** (turn 깊어져도 안 늚), **recompute_frac 48%→10% 하락**.
+  → 단일 P+단일 세션+radix 유지면 **P radix가 prefix 재사용 → 매 turn 새 내용(1369 tok)만
+  재계산**. 문헌의 "99% history 재계산"은 이 clean case에선 **안 일어남**. 생성 토큰(256/turn)은
+  다음 turn 한 번 재계산 후 캐시.
+- **TTFT는 583→1723ms로 성장하지만 재계산(일정)·전송(43→84ms, 작음) 탓이 아니라
+  커지는 context에 대한 attention 비용** (새 토큰이 누적 캐시 전부에 attend). prefix를 완벽
+  캐시해도 multi-turn TTFT는 context와 함께 성장.
+
+**E5 실측 (2026-06-18, C=1)** — decode-offload는 clean case에서 ~0 이득.
+`offload_{off,on}_e5_decode_offload.json`:
+- cached_tokens가 off/on **완전 동일**(1470/2839/…), recompute_frac 동일, **ΔTTFT=−14ms
+  (노이즈 수준)**. decode-offload가 cached를 안 늘림 — P radix가 이미 다 캐시하므로 D 생성
+  KV를 storage로 보내도 고칠 게 없음. 안정성: fails=0, hang=False, **cuda_errors=0** (이번엔
+  #11016 미발현).
+
+**종합 — 기회는 clean case가 아니라 압박 영역**:
+E4·E5 모두 "단일 P+단일 세션+radix 유지면 시스템이 이미 효율적"을 보임. re-prefill 문제
+(migration/offload 기회)는 **radix가 evict되는 압박 영역**에서만 발현:
+- 고동시성 → radix eviction (E1b: C=16에서 **27% MISS** = cold re-prefill)
+- 다중 P 라우팅 → turn마다 다른 P → 캐시 미스
+- 긴 대화 → prefix evict
+→ **motivation Figure는 E4를 저압(C=1) vs 고압(C=16, mem_fraction↓)으로 대비**해야 함:
+  저압 recompute_frac 10% (양호) vs 고압 recompute_frac 급등(eviction→cold). 그게 정직한
+  motivation이고 §2.14 E1(2.4×)/E1b(27% MISS) 압박 영역과 연결됨.
+→ E5도 압박 하 재측정 필요(offload-on이 evicted KV를 storage 복원으로 살리는지 — 단 §2.8
+  복원 깨짐 + #11016 위험). 다음 액션: E4/E5를 C=16+mem_fraction↓로 재실행.
+
 **E5-offload. decode-offload-kvcache on/off baseline** [기존 부분 해법 대비선].
 - 목적: `--disaggregation-decode-enable-offload-kvcache`(D 생성 KV→storage→P 재사용)가
   재계산을 줄이고 turn2+ TTFT를 낮추는지(또는 #11016 CUDA error/hang으로 불안정한지) 측정.
