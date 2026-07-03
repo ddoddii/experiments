@@ -48,7 +48,7 @@ def per_turn_ttft(bench):
     return {k: round(acc[k] / cnt[k], 4) for k in sorted(acc) if cnt[k]}
 
 
-def collect(outdir, results_dir):
+def collect(outdir, results_dir, config_prefix="phase0"):
     rows = []
     delta_files = glob.glob(os.path.join(outdir, "metrics_*_delta.json"))
     modes = []
@@ -62,7 +62,7 @@ def collect(outdir, results_dir):
     for mode in modes:
         delta = load_json(os.path.join(outdir, f"metrics_{mode}_delta.json")) or {}
         summ = delta.get("summary", {})
-        bench = load_json(os.path.join(results_dir, f"bfcl_multiturn_results_phase0_{mode}.json")) or {}
+        bench = load_json(os.path.join(results_dir, f"bfcl_multiturn_results_{config_prefix}_{mode}.json")) or {}
         bsum = bench.get("summary", {})
         rows.append({
             "mode": mode,
@@ -95,9 +95,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="results/phase0")
     ap.add_argument("--results-dir", default="results")
+    ap.add_argument("--config-prefix", default="phase0",
+                    help="벤치 결과 파일명 접두사: bfcl_multiturn_results_<prefix>_<mode>.json")
     args = ap.parse_args()
 
-    rows = collect(args.outdir, args.results_dir)
+    rows = collect(args.outdir, args.results_dir, args.config_prefix)
     if not rows:
         print("no phase0 delta files found in", args.outdir)
         return
