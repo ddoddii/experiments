@@ -90,6 +90,7 @@ CUDA_VISIBLE_DEVICES=${PREFILL_GPU} python3 -m sglang.launch_server \
   --disaggregation-mode prefill --disaggregation-transfer-backend ${XFER} \
   --disaggregation-bootstrap-port ${BOOTSTRAP_PORT} \
   > logs/p1.log 2>&1 &
+P1_PID=$!
 sleep 3
 
 echo "[3/5] Decode  (GPU ${DECODE_GPU}, port ${DECODE_PORT})  args: ${DECODE_CACHE_ARGS}"
@@ -99,20 +100,30 @@ CUDA_VISIBLE_DEVICES=${DECODE_GPU} python3 -m sglang.launch_server \
   ${DECODE_CACHE_ARGS} \
   --disaggregation-mode decode --disaggregation-transfer-backend ${XFER} \
   > logs/d1.log 2>&1 &
+D1_PID=$!
 sleep 3
 
 echo "[4/5] Waiting for servers to be ready..."
-for pair in "p1:${PREFILL_PORT}" "d1:${DECODE_PORT}"; do
-  name=${pair%%:*}
+# 실패 판정은 로그 문자열이 아니라 "프로세스 생존 여부 + 타임아웃"으로 한다.
+# (sglang은 기동 중 "Ignore import error when loading ..." 같은 양성 경고를 찍으므로
+#  'error' 문자열 매칭은 오탐을 낸다. RDMA 미탐지 → mooncake TCP 폴백도 정상.)
+READY_TIMEOUT=${READY_TIMEOUT:-900}
+wait_ready() {
+  local name=$1 pid=$2 elapsed=0
   echo -n "  ${name}..."
   while ! grep -q "ready to roll" logs/${name}.log 2>/dev/null; do
-    if grep -qiE "error|traceback|exception" logs/${name}.log 2>/dev/null; then
-      echo " FAILED — see logs/${name}.log"; tail -20 logs/${name}.log; exit 1
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo " FAILED (process exited) — see logs/${name}.log"; tail -30 logs/${name}.log; return 1
     fi
-    sleep 3; echo -n "."
+    if [ "$elapsed" -ge "$READY_TIMEOUT" ]; then
+      echo " TIMEOUT after ${READY_TIMEOUT}s — see logs/${name}.log"; tail -30 logs/${name}.log; return 1
+    fi
+    sleep 3; elapsed=$((elapsed + 3)); echo -n "."
   done
-  echo " OK"
-done
+  echo " OK (${elapsed}s)"
+}
+wait_ready p1 "$P1_PID"
+wait_ready d1 "$D1_PID"
 
 echo "[5/5] Starting Router (port ${ROUTER_PORT})..."
 python -m sglang_router.launch_router \
