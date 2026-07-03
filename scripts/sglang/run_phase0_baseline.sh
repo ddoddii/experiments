@@ -49,8 +49,10 @@ for MODE in $MODES; do
   echo "# Phase 0 mode: ${MODE}"
   echo "############################################################"
 
-  CACHE_MODE=$MODE bash scripts/sglang/start_1P_1D.sh
-  wait_router || { echo "router not ready, skip ${MODE}"; continue; }
+  if ! CACHE_MODE=$MODE bash scripts/sglang/start_1P_1D.sh; then
+    echo ">> start failed for ${MODE}, skipping"; bash scripts/sglang/stop_1P_1D.sh || true; sleep 5; continue
+  fi
+  wait_router || { echo "router not ready, skip ${MODE}"; bash scripts/sglang/stop_1P_1D.sh || true; sleep 5; continue; }
   sleep 5   # 안정화
 
   BEFORE="$OUTDIR/metrics_${MODE}_before.json"
