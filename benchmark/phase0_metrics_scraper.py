@@ -117,26 +117,37 @@ def compute_delta(before, after):
             delta["nodes"][role] = {"error": a.get("error") or b.get("error") or "missing"}
             continue
         nd = {}
+        # counter: after에만 있으면 before를 0으로 간주 (Prometheus는 값이 0인 카운터를
+        # 관측 전까지 노출하지 않을 수 있어, before에 키가 없는 경우가 정상이다).
         for m in COUNTERS:
-            if m in a and m in b:
-                nd[m + "_delta"] = a[m] - b[m]
+            if m in a:
+                nd[m + "_delta"] = a[m] - b.get(m, 0.0)
         for m in GAUGES:
             if m in a:
                 nd[m] = a[m]
         for m in HISTOGRAMS:
             s, c = m + "_sum", m + "_count"
-            if s in a and c in a and s in b and c in b:
-                dc = a[c] - b[c]
-                ds = a[s] - b[s]
+            if s in a and c in a:
+                dc = a[c] - b.get(c, 0.0)
+                ds = a[s] - b.get(s, 0.0)
                 nd[m + "_avg"] = (ds / dc) if dc > 0 else None
         delta["nodes"][role] = nd
 
-    # --- 재계산 vs fetch 요약 (prefill 노드 기준) ---
-    p = delta["nodes"].get("prefill", {})
-    prompt = p.get("sglang:prompt_tokens_total_delta")
-    cached = p.get("sglang:cached_tokens_total_delta")
-    prefetched = p.get("sglang:prefetched_tokens_total_delta", 0.0)
-    if prompt and prompt > 0 and cached is not None:
+    # --- 재계산 vs fetch 요약 ---
+    # PD disagg에서 prompt/cached는 prefill·decode 양쪽에 동일하게 찍히고,
+    # TTFT는 decode 노드에만, hicache host(L2)는 hierarchical을 켠 노드에만 찍힌다.
+    # → 두 노드에서 병합 조회한다.
+    def pick(key, default=None):
+        for role in ("prefill", "decode"):
+            v = delta["nodes"].get(role, {}).get(key)
+            if v is not None:
+                return v
+        return default
+
+    prompt = pick("sglang:prompt_tokens_total_delta")
+    if prompt and prompt > 0:
+        cached = pick("sglang:cached_tokens_total_delta", 0.0)          # 캐시 없으면 0 = reuse 0
+        prefetched = pick("sglang:prefetched_tokens_total_delta", 0.0)  # L3 storage fetch
         uncached = prompt - cached
         delta["summary"] = {
             "prompt_tokens": prompt,
@@ -146,9 +157,9 @@ def compute_delta(before, after):
             "recompute_ratio": round(uncached / prompt, 4),
             "L3_prefetched_tokens (storage fetch)": prefetched,
             "L3_share_of_reuse": round(prefetched / cached, 4) if cached else 0.0,
-            "cache_hit_rate_gauge": p.get("sglang:cache_hit_rate"),
-            "hicache_host_used_tokens (L2)": p.get("sglang:hicache_host_used_tokens"),
-            "ttft_avg_s": p.get("sglang:time_to_first_token_seconds_avg"),
+            "cache_hit_rate_gauge": pick("sglang:cache_hit_rate"),
+            "hicache_host_used_tokens (L2)": pick("sglang:hicache_host_used_tokens"),
+            "ttft_avg_s": pick("sglang:time_to_first_token_seconds_avg"),
         }
     return delta
 

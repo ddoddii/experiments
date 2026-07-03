@@ -2,6 +2,7 @@
   "nodes": {
     "prefill": {
       "sglang:prompt_tokens_total_delta": 3837478.0,
+      "sglang:cached_tokens_total_delta": 2859360.0,
       "sglang:generation_tokens_total_delta": 745.0,
       "sglang:cache_hit_rate": 0.0,
       "sglang:num_used_tokens": 0.0,
@@ -9,6 +10,7 @@
     },
     "decode": {
       "sglang:prompt_tokens_total_delta": 3837478.0,
+      "sglang:cached_tokens_total_delta": 2859360.0,
       "sglang:generation_tokens_total_delta": 29702.0,
       "sglang:cache_hit_rate": 0.0,
       "sglang:num_used_tokens": 5386.0,
@@ -16,5 +18,16 @@
       "sglang:time_to_first_token_seconds_avg": 0.587553076776082
     }
   },
-  "summary": {}
+  "summary": {
+    "prompt_tokens": 3837478.0,
+    "cached_tokens (reuse/fetch)": 2859360.0,
+    "uncached_tokens (recompute)": 978118.0,
+    "reuse_ratio": 0.7451,
+    "recompute_ratio": 0.2549,
+    "L3_prefetched_tokens (storage fetch)": 0.0,
+    "L3_share_of_reuse": 0.0,
+    "cache_hit_rate_gauge": 0.0,
+    "hicache_host_used_tokens (L2)": null,
+    "ttft_avg_s": 0.587553076776082
+  }
 }

@@ -33,16 +33,19 @@ def load_json(path):
 
 
 def per_turn_ttft(bench):
-    """벤치마크 결과에서 turn 인덱스별 평균 TTFT 집계 (context 성장 → TTFT 성장 관찰용)."""
+    """벤치마크 결과에서 turn 인덱스별 평균 TTFT 집계 (context 성장 → TTFT 성장 관찰용).
+
+    스키마: results[].turns[] = [{"turn": idx, "ttft_s": float, ...}, ...]
+    """
     acc, cnt = {}, {}
     for item in bench.get("results", []):
-        tb = item.get("ttft_by_turn") or {}
-        for k, v in tb.items():
-            if v is None:
+        for t in item.get("turns", []):
+            k, v = t.get("turn"), t.get("ttft_s")
+            if k is None or v is None:
                 continue
             acc[k] = acc.get(k, 0.0) + float(v)
             cnt[k] = cnt.get(k, 0) + 1
-    return {int(k): round(acc[k] / cnt[k], 4) for k in sorted(acc, key=lambda x: int(x)) if cnt[k]}
+    return {k: round(acc[k] / cnt[k], 4) for k in sorted(acc) if cnt[k]}
 
 
 def collect(outdir, results_dir):
