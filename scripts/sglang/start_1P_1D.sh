@@ -34,6 +34,7 @@ PREFILL_PORT=${PREFILL_PORT:-30000}
 DECODE_PORT=${DECODE_PORT:-30001}
 BOOTSTRAP_PORT=${BOOTSTRAP_PORT:-8998}
 ROUTER_PORT=${ROUTER_PORT:-8000}
+ROUTER_PROM_PORT=${ROUTER_PROM_PORT:-29000}   # sgl-router Prometheus exporter (기본 29000)
 XFER=${XFER:-mooncake}                # disaggregation transfer backend
 
 mkdir -p logs
@@ -72,7 +73,7 @@ echo "[0/5] Stopping existing processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
 pkill -9 -f "mooncake.http_metadata_server" 2>/dev/null || true
 pkill -9 -f "sglang_router.launch_router" 2>/dev/null || true
-for port in $BOOTSTRAP_PORT $PREFILL_PORT $DECODE_PORT $ROUTER_PORT 8080; do
+for port in $BOOTSTRAP_PORT $PREFILL_PORT $DECODE_PORT $ROUTER_PORT $ROUTER_PROM_PORT 8080; do
   fuser -k ${port}/tcp 2>/dev/null || true
 done
 sleep 5
@@ -131,8 +132,13 @@ python -m sglang_router.launch_router \
   --prefill http://127.0.0.1:${PREFILL_PORT} ${BOOTSTRAP_PORT} \
   --decode http://127.0.0.1:${DECODE_PORT} \
   --host 0.0.0.0 --port ${ROUTER_PORT} \
+  --prometheus-port ${ROUTER_PROM_PORT} \
   > logs/router.log 2>&1 &
-sleep 3
+ROUTER_PID=$!
+sleep 5
+if ! kill -0 "$ROUTER_PID" 2>/dev/null; then
+  echo "  Router FAILED to start — see logs/router.log"; tail -20 logs/router.log; exit 1
+fi
 
 echo ""
 echo "Ready. CACHE_MODE=${CACHE_MODE}"
