@@ -36,6 +36,10 @@ BOOTSTRAP_PORT=${BOOTSTRAP_PORT:-8998}
 ROUTER_PORT=${ROUTER_PORT:-8000}
 ROUTER_PROM_PORT=${ROUTER_PROM_PORT:-29000}   # sgl-router Prometheus exporter (기본 29000)
 XFER=${XFER:-mooncake}                # disaggregation transfer backend
+# 압박(pressure) knob: prefill KV pool을 작게 잡아 radix eviction을 유발한다.
+# (빈 값이면 미적용 = 기본 대용량 pool). 값 예: 30000, 20000
+PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
+DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 
 mkdir -p logs
 
@@ -68,6 +72,14 @@ case "$CACHE_MODE" in
     exit 1
     ;;
 esac
+
+# 압박 knob 적용 (prefill radix eviction 유발용)
+if [ -n "$PREFILL_MAX_TOTAL_TOKENS" ]; then
+  PREFILL_CACHE_ARGS="${PREFILL_CACHE_ARGS} --max-total-tokens ${PREFILL_MAX_TOTAL_TOKENS}"
+fi
+if [ -n "$DECODE_MAX_TOTAL_TOKENS" ]; then
+  DECODE_CACHE_ARGS="${DECODE_CACHE_ARGS} --max-total-tokens ${DECODE_MAX_TOTAL_TOKENS}"
+fi
 
 echo "[0/5] Stopping existing processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
