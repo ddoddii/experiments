@@ -15,10 +15,10 @@
 
 # Model path - set MODEL_PATH env var before sourcing this file
 # Default: Qwen3.6-27B (requires fp8 quantization to fit in 49GB VRAM)
-export MODEL_PATH="${MODEL_PATH:-/home/uhmturks/hf_models/Qwen3.6-27B}"
+export MODEL_PATH="${MODEL_PATH:-/home/uhmturks/hf_models/Qwen3-14B}"
 
 # Model name for pkill (derived from MODEL_PATH if not set)
-export MODEL_NAME="${MODEL_NAME:-Qwen3.6-27B}"
+export MODEL_NAME="${MODEL_NAME:-Qwen3-14B}"
 
 # Model settings (support environment variable override)
 export MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
@@ -26,7 +26,7 @@ export GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.85}"
 
 # Quantization: fp8 lets Qwen3.6-27B (~54GB BF16) fit in a single 49GB A6000
 # Set to "" to disable (e.g., for smaller models that fit without quantization)
-export QUANTIZATION="${QUANTIZATION:-fp8}"
+# export QUANTIZATION="${QUANTIZATION:-fp8}"
 
 # Tool call parser: hermes for Qwen models; llama3_json for Llama-3.x
 export TOOL_CALL_PARSER="${TOOL_CALL_PARSER:-hermes}"
