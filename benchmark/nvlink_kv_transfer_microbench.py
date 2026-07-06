@@ -42,18 +42,21 @@ TOKEN_COUNTS = [int(x) for x in os.environ.get("TOKENS", "512,1024,2048,4096").s
 RECOMPUTE_REF_MS = float(os.environ.get("RECOMPUTE_REF_MS", "0"))  # 0=표시안함
 
 
+def _sync(*tensors):
+    for t in tensors:
+        if t.device.type == "cuda":
+            torch.cuda.synchronize(t.device)
+
+
 def time_copy(dst, src, iters, warmup):
-    """dst.copy_(src) 평균 시간(ms). 양쪽 device의 event로 측정."""
-    # warmup
+    """dst.copy_(src) 평균 시간(ms). CUDA device만 동기화 (host tensor 안전)."""
     for _ in range(warmup):
         dst.copy_(src)
-    torch.cuda.synchronize(src.device)
-    torch.cuda.synchronize(dst.device)
+    _sync(src, dst)
     t0 = time.perf_counter()
     for _ in range(iters):
         dst.copy_(src)
-    torch.cuda.synchronize(src.device)
-    torch.cuda.synchronize(dst.device)
+    _sync(src, dst)
     return (time.perf_counter() - t0) / iters * 1000.0
 
 
