@@ -73,6 +73,12 @@ case "$CACHE_MODE" in
     ;;
 esac
 
+# Idle KV parking (Phase 1). IDLE_KV_PARKING=1이면 P/D 양쪽에 플래그 추가.
+if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
+  PREFILL_CACHE_ARGS="${PREFILL_CACHE_ARGS} --disaggregation-enable-idle-kv-parking"
+  DECODE_CACHE_ARGS="${DECODE_CACHE_ARGS} --disaggregation-enable-idle-kv-parking"
+fi
+
 # 압박 knob 적용 (prefill radix eviction 유발용)
 if [ -n "$PREFILL_MAX_TOTAL_TOKENS" ]; then
   PREFILL_CACHE_ARGS="${PREFILL_CACHE_ARGS} --max-total-tokens ${PREFILL_MAX_TOTAL_TOKENS}"
