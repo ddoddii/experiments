@@ -33,6 +33,10 @@ CONCURRENCY = int(os.environ.get("CONCURRENCY", "16"))
 MAX_ITEMS = int(os.environ.get("MAX_ITEMS", "0"))  # 0 = 전체
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT = int(os.environ.get("TIMEOUT", "120"))
+# tool-call 유휴시간(think-time) 모사. 턴 사이에 이 시간만큼 쉰다.
+# >0이면 낮은 동시성으로도 "유휴 중 타세션이 내 prefix를 evict"하는 상황이 생겨,
+# radix(재계산) vs hicache(fetch)의 TTFT 차이가 queueing 없이 드러난다.
+TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "0"))
 
 CLASS_TO_FILE = {
     "GorillaFileSystem": "multi_turn_func_doc/gorilla_file_system.json",
@@ -150,6 +154,9 @@ def process_item(item):
     conversation = [{"role": "system", "content": system_content}]
     turn_metrics = []
     for turn_idx, turn in enumerate(item["question"]):
+        # tool-call 유휴시간 모사: 이전 턴(assistant/tool) 이후 다음 유저 턴까지의 gap.
+        if TOOL_DELAY > 0 and turn_idx > 0:
+            time.sleep(TOOL_DELAY)
         conversation.append(turn[0])
         try:
             m, assistant_content, tool_calls = run_turn(conversation, tools)
@@ -194,6 +201,7 @@ def main():
     summary = {
         "config": CONFIG,
         "concurrency": CONCURRENCY,
+        "tool_delay_s": TOOL_DELAY,
         "total_items": len(results),
         "success_items": len(valid),
         "error_items": len(results) - len(valid),
