@@ -30,8 +30,11 @@ MODES=${MODES:-"radix hicache_host hicache_file"}
 PREFILL_PORT=${PREFILL_PORT:-30000}
 DECODE_PORT=${DECODE_PORT:-30001}
 ROUTER_PORT=${ROUTER_PORT:-8000}
-OUTDIR=${OUTDIR:-results/phase0_pressure}
-CONFIG_PREFIX=${CONFIG_PREFIX:-phase0p}
+# 결과를 (pool, C, items)별로 자동 분리 저장해 knee 스윕이 서로 덮어쓰지 않게 한다.
+TAG="p${PREFILL_MAX_TOTAL_TOKENS}_c${CONCURRENCY}"
+[ "$MAX_ITEMS" != "0" ] && TAG="${TAG}_n${MAX_ITEMS}"
+OUTDIR=${OUTDIR:-results/phase0_pressure/${TAG}}
+CONFIG_PREFIX=${CONFIG_PREFIX:-phase0p_${TAG}}
 mkdir -p "$OUTDIR"
 
 SCRAPER="benchmark/phase0_metrics_scraper.py"
