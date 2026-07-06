@@ -25,6 +25,7 @@ ROOT=$(pwd)
 export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-30000}  # 기본 pool(~245k)보다 훨씬 작게 → eviction
 export CONCURRENCY=${CONCURRENCY:-16}
 export MAX_ITEMS=${MAX_ITEMS:-0}     # 0=전체 200
+export TOOL_DELAY=${TOOL_DELAY:-0}   # tool-call 유휴시간(초). >0이면 유휴 중 eviction을 낮은 C로도 유발
 
 MODES=${MODES:-"radix hicache_host hicache_file"}
 PREFILL_PORT=${PREFILL_PORT:-30000}
@@ -32,6 +33,7 @@ DECODE_PORT=${DECODE_PORT:-30001}
 ROUTER_PORT=${ROUTER_PORT:-8000}
 # 결과를 (pool, C, items)별로 자동 분리 저장해 knee 스윕이 서로 덮어쓰지 않게 한다.
 TAG="p${PREFILL_MAX_TOTAL_TOKENS}_c${CONCURRENCY}"
+[ "$TOOL_DELAY" != "0" ] && TAG="${TAG}_d${TOOL_DELAY}"
 [ "$MAX_ITEMS" != "0" ] && TAG="${TAG}_n${MAX_ITEMS}"
 OUTDIR=${OUTDIR:-results/phase0_pressure/${TAG}}
 CONFIG_PREFIX=${CONFIG_PREFIX:-phase0p_${TAG}}
