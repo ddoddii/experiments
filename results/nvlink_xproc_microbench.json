@@ -1,0 +1,46 @@
+{
+  "config": {
+    "src_gpu": 1,
+    "dst_gpu": 0,
+    "bytes_per_token": 131072,
+    "iters": 50
+  },
+  "rows": [
+    {
+      "tokens": 512,
+      "size_mb": 67.1,
+      "p2p": true,
+      "xproc_p2p_ms": 1.285,
+      "xproc_p2p_GBps": 52.2,
+      "ipc_setup_ms": 164.01,
+      "correct": true
+    },
+    {
+      "tokens": 1024,
+      "size_mb": 134.2,
+      "p2p": true,
+      "xproc_p2p_ms": 2.554,
+      "xproc_p2p_GBps": 52.6,
+      "ipc_setup_ms": 133.74,
+      "correct": true
+    },
+    {
+      "tokens": 2048,
+      "size_mb": 268.4,
+      "p2p": true,
+      "xproc_p2p_ms": 5.093,
+      "xproc_p2p_GBps": 52.7,
+      "ipc_setup_ms": 150.42,
+      "correct": true
+    },
+    {
+      "tokens": 4096,
+      "size_mb": 536.9,
+      "p2p": true,
+      "xproc_p2p_ms": 10.172,
+      "xproc_p2p_GBps": 52.8,
+      "ipc_setup_ms": 149.87,
+      "correct": true
+    }
+  ]
+}
