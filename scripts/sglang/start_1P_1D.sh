@@ -73,10 +73,20 @@ case "$CACHE_MODE" in
     ;;
 esac
 
+# GPU 배치: 기본은 CUDA_VISIBLE_DEVICES로 격리.
+PREFILL_CVD="${PREFILL_GPU}"; DECODE_CVD="${DECODE_GPU}"
+PREFILL_GPU_ARG=""; DECODE_GPU_ARG=""
+
 # Idle KV parking (Phase 1). IDLE_KV_PARKING=1이면 P/D 양쪽에 플래그 추가.
 if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   PREFILL_CACHE_ARGS="${PREFILL_CACHE_ARGS} --disaggregation-enable-idle-kv-parking"
   DECODE_CACHE_ARGS="${DECODE_CACHE_ARGS} --disaggregation-enable-idle-kv-parking"
+  # CUDA IPC는 각 프로세스가 상대 GPU를 "볼 수" 있어야 한다. 격리(CUDA_VISIBLE_DEVICES=단일GPU)
+  # 대신 두 GPU를 모두 보이게 하고 --base-gpu-id로 배치한다.
+  PARK_VISIBLE=${PARK_VISIBLE:-"${PREFILL_GPU},${DECODE_GPU}"}
+  PREFILL_CVD="$PARK_VISIBLE"; DECODE_CVD="$PARK_VISIBLE"
+  PREFILL_GPU_ARG="--base-gpu-id ${PREFILL_GPU}"
+  DECODE_GPU_ARG="--base-gpu-id ${DECODE_GPU}"
 fi
 
 # 압박 knob 적용 (prefill radix eviction 유발용)
@@ -102,8 +112,8 @@ sleep 2
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
 echo "[2/5] Prefill (GPU ${PREFILL_GPU}, port ${PREFILL_PORT})  args: ${PREFILL_CACHE_ARGS}"
-CUDA_VISIBLE_DEVICES=${PREFILL_GPU} python3 -m sglang.launch_server \
-  --model-path "$MODEL_PATH" --tp 1 --port ${PREFILL_PORT} \
+CUDA_VISIBLE_DEVICES=${PREFILL_CVD} python3 -m sglang.launch_server \
+  --model-path "$MODEL_PATH" --tp 1 --port ${PREFILL_PORT} ${PREFILL_GPU_ARG} \
   --enable-metrics \
   ${PREFILL_CACHE_ARGS} \
   --disaggregation-mode prefill --disaggregation-transfer-backend ${XFER} \
@@ -113,8 +123,8 @@ P1_PID=$!
 sleep 3
 
 echo "[3/5] Decode  (GPU ${DECODE_GPU}, port ${DECODE_PORT})  args: ${DECODE_CACHE_ARGS}"
-CUDA_VISIBLE_DEVICES=${DECODE_GPU} python3 -m sglang.launch_server \
-  --model-path "$MODEL_PATH" --tp 1 --port ${DECODE_PORT} \
+CUDA_VISIBLE_DEVICES=${DECODE_CVD} python3 -m sglang.launch_server \
+  --model-path "$MODEL_PATH" --tp 1 --port ${DECODE_PORT} ${DECODE_GPU_ARG} \
   --enable-metrics \
   ${DECODE_CACHE_ARGS} \
   --disaggregation-mode decode --disaggregation-transfer-backend ${XFER} \
