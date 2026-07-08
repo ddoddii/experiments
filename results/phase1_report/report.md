@@ -5,7 +5,7 @@ decode 노드의 세션 KV를 **유휴 GPU에 park 했다가 다음 turn에 fetc
 피할 수 있는가?
 
 > **결론(TL;DR)**: fetch-on-hit까지 end-to-end로 구현·측정한 결과, **이 2×A6000 단일 노드에선
-> 어떤 압박 수준에서도 park+fetch가 baseline(radix, 재계산)을 이기지 못했다.** 원인은 구현
+> 어떤 압박 수준에서도 park+fetch가 baseline(radix = GPU prefix cache)을 이기지 못했다.** 원인은 구현
 > 디테일이 아니라 구조적 **catch-22**: 파킹이 이득을 주는 조건(압박→축출)과 fetch한 KV를 되돌릴
 > 자리가 있는 조건(여유)이 **동시에 성립하지 않는다.** 저장은 유휴 자원으로 offload되지만
 > **restore는 병목(P GPU)을 다시 점유**해야 하기 때문이며, 이는 인터커넥트(NVLink) 속도와
@@ -28,8 +28,14 @@ decode 노드의 세션 KV를 **유휴 GPU에 park 했다가 다음 turn에 fetc
   200 items, 동시성 8, tool-call 유휴 3s.
 - 구현(SGLang): D→P **CUDA IPC + P2P** 채널, turn 종료 시 프롬프트 KV park, 다음 요청 prefill 직전
   `maybe_fetch()`가 최장 parked prefix를 GPU2→GPU0 복사 + radix insert → prefix-hit.
-- 3-arm 비교: **radix**(GPU-only, =재계산 baseline) / **hicache**(host-DRAM fetch, 기존 방식) /
-  **park**(GPU2 fetch, 본 연구). P GPU 풀 크기(=압박)를 40k→120k로 스윕.
+- 3-arm 비교: **radix**(GPU RadixAttention prefix cache — recovery tier 없음) /
+  **hicache**(host-DRAM fetch) / **park**(GPU2 fetch, 본 연구). P GPU 풀 크기(=압박)를 40k→120k 스윕.
+
+> **주의 — radix는 "재계산 baseline"이 아니다.** radix도 RadixAttention prefix cache라 GPU에
+> 남아있는 prefix는 hit한다(reuse 0.39~0.74). radix가 recompute하는 건 **hit하지 못한 토큰뿐**:
+> ① 매 turn 새로 생기는 토큰(새 user 메시지 + tool 결과, **어떤 캐시도 못 피하는 ~26% floor**) +
+> ② **압박으로 축출된 prefix**. parking/hicache가 fetch로 회피하려는 대상은 **②뿐**이며, ②는
+> 강압박(pool 40k)에서만 존재한다(pool≥60k에선 축출이 없어 radix reuse가 이미 hicache와 동일 0.74).
 
 ## 3. 결과
 

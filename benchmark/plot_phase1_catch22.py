@@ -68,7 +68,7 @@ def fig1_pressure(rows):
                                    gridspec_kw={"hspace": 0.16})
 
     # ---- 상단: reuse ----
-    for arm, c, lbl, lw in [("radix", C_RADIX, "radix (recompute)", 2.0),
+    for arm, c, lbl, lw in [("radix", C_RADIX, "radix (GPU prefix cache)", 2.0),
                             ("hicache", C_HICACHE, "hicache (host-DRAM fetch)", 2.0),
                             ("park", C_PARK, "park (GPU2 fetch, 본 연구)", 2.6)]:
         y = series(rows, arm, "reuse_ratio")

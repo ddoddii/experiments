@@ -117,7 +117,7 @@ def main():
         sign = "개선" if (d_ttft is not None and d_ttft < 0) else "악화/무변화"
         print(f"  {arm:<8} TTFT {fmt(d_ttft,1)}% ({sign}), throughput {fmt(d_tput,1)}% vs radix")
 
-    # --- 핵심 질문 1: park(fetch) 가 radix(recompute) 를 이기는가 ---
+    # --- 핵심 질문 1: park(fetch) 가 radix(GPU prefix cache) 를 이기는가 ---
     rx, pk = by.get("radix", {}), by.get("park", {})
     hi = by.get("hicache", {})
     rr = rx.get("reuse_ratio")
@@ -126,9 +126,9 @@ def main():
     if rx.get("avg_ttft_s") and pk.get("avg_ttft_s"):
         gap_rx = pct_delta(rx["avg_ttft_s"], pk["avg_ttft_s"])  # -면 park가 더 빠름
         verdict["park_vs_radix_ttft_pct"] = gap_rx
-        print("\n핵심 결론 1 — park(fetch) vs radix(recompute):")
+        print("\n핵심 결론 1 — park(fetch) vs radix(GPU prefix cache, 축출분만 recompute):")
         print(f"  park TTFT {fmt(pk['avg_ttft_s'])}s  vs  radix TTFT {fmt(rx['avg_ttft_s'])}s "
-              f"→ park는 radix 대비 {fmt(gap_rx,1)}% ({'개선=recompute 이김' if (gap_rx or 0)<0 else '무개선'})")
+              f"→ park는 radix 대비 {fmt(gap_rx,1)}% ({'개선' if (gap_rx or 0)<0 else '무개선'})")
         print(f"  reuse_ratio: radix={fmt(rr)}  park={fmt(pr)}"
               + (f"  hicache={fmt(hr)}" if hr is not None else ""))
         if pr is not None and rr is not None:

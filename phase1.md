@@ -153,7 +153,7 @@ KV는 attention이 읽으려면 **압박받는 P GPU 풀에 다시 넣어야** �
 ## 6. 종합 결론 — catch-22 (idle KV parking은 단일 노드에서 실익 없음)
 
 전송(2a)·용량(4a)·저장(3)·**fetch(4b)** 파이프라인을 정확성까지 완비했으나, park+fetch는 **어떤
-operating point에서도 radix(recompute)를 유의미하게 이기지 못했다.** 원인은 구현 디테일이 아니라
+operating point에서도 radix(GPU prefix cache)를 유의미하게 이기지 못했다.** 원인은 구현 디테일이 아니라
 구조적 **catch-22**:
 
 1. **파킹이 가치 있는 구간 = 강압박(pool 40000)뿐** — 여기서만 radix가 evict해 reuse 0.39로
