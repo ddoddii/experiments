@@ -76,6 +76,7 @@ esac
 # GPU 배치: 기본은 CUDA_VISIBLE_DEVICES로 격리.
 PREFILL_CVD="${PREFILL_GPU}"; DECODE_CVD="${DECODE_GPU}"
 PREFILL_GPU_ARG=""; DECODE_GPU_ARG=""
+PREFILL_ENV=""
 
 # Idle KV parking (Phase 1). IDLE_KV_PARKING=1이면 P/D 양쪽에 플래그 추가.
 if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
@@ -84,6 +85,12 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   # CUDA IPC는 각 프로세스가 상대 GPU를 "볼 수" 있어야 한다. 격리(CUDA_VISIBLE_DEVICES=단일GPU)
   # 대신 두 GPU를 모두 보이게 하고 --base-gpu-id로 배치한다.
   PARK_VISIBLE=${PARK_VISIBLE:-"${PREFILL_GPU},${DECODE_GPU}"}
+  # slice 4: 전용 유휴 GPU park 풀. PARK_GPU 지정 시 가시성에 포함 + prefill에 env 전달.
+  if [ -n "${PARK_GPU:-}" ]; then
+    PARK_VISIBLE="${PARK_VISIBLE},${PARK_GPU}"
+    PREFILL_ENV="SGLANG_KV_PARK_GPU=${PARK_GPU}"
+    [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
+  fi
   PREFILL_CVD="$PARK_VISIBLE"; DECODE_CVD="$PARK_VISIBLE"
   PREFILL_GPU_ARG="--base-gpu-id ${PREFILL_GPU}"
   DECODE_GPU_ARG="--base-gpu-id ${DECODE_GPU}"
@@ -112,7 +119,7 @@ sleep 2
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
 echo "[2/5] Prefill (GPU ${PREFILL_GPU}, port ${PREFILL_PORT})  args: ${PREFILL_CACHE_ARGS}"
-CUDA_VISIBLE_DEVICES=${PREFILL_CVD} python3 -m sglang.launch_server \
+CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port ${PREFILL_PORT} ${PREFILL_GPU_ARG} \
   --enable-metrics \
   ${PREFILL_CACHE_ARGS} \
