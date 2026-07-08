@@ -74,13 +74,6 @@ def fig1_pressure(rows):
         y = series(rows, arm, "reuse_ratio")
         axr.plot(x, y, "-o", color=c, lw=lw, ms=7, label=lbl, zorder=3,
                  mec="white", mew=1.2)
-    # 회수 여지(=radix가 hicache보다 낮은 구간)만 pool40k. 강조.
-    axr.annotate("회수 여지\n(radix가 evict → 재계산 발생)", xy=(0, 0.565),
-                 xytext=(0.35, 0.52), fontsize=9.5, color=INK, ha="left",
-                 arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
-    axr.annotate("세 방식 수렴 (evict 없음 → 회수 대상 없음)", xy=(2, 0.744),
-                 xytext=(1.15, 0.63), fontsize=9.5, color=INK,
-                 arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
     axr.set_ylabel("KV reuse ratio\n(cached / prompt tokens)")
     axr.set_ylim(0.30, 0.82)
     axr.grid(True, axis="y", color=GRID, lw=0.8, zorder=0)
@@ -94,13 +87,6 @@ def fig1_pressure(rows):
                        ("park", C_PARK, 2.6)]:
         y = series(rows, arm, "avg_ttft_s")
         axt.plot(x, y, "-o", color=c, lw=lw, ms=7, zorder=3, mec="white", mew=1.2)
-    # 직접 라벨: hicache는 분리돼 있어 개별 라벨, radix+park는 겹치므로 하나로 묶어 표기.
-    axt.annotate("hicache", xy=(x[-1], series(rows, "hicache", "avg_ttft_s")[-1]),
-                 xytext=(6, 0), textcoords="offset points", color=C_HICACHE,
-                 fontsize=10, va="center", fontweight="bold")
-    axt.annotate("park ≈ radix", xy=(x[-1], series(rows, "park", "avg_ttft_s")[-1]),
-                 xytext=(6, -1), textcoords="offset points", color=C_PARK,
-                 fontsize=10, va="center", fontweight="bold")
     axt.set_ylabel("평균 TTFT (s)  ↓ 낮을수록 좋음")
     axt.set_xticks(x)
     axt.set_xticklabels(XL)
@@ -109,20 +95,9 @@ def fig1_pressure(rows):
     axt.set_ylim(1.10, 1.92)
     axt.grid(True, axis="y", color=GRID, lw=0.8, zorder=0)
     axt.set_axisbelow(True)
-    # 주석은 상단 여백(y>1.5, x 0.6~2.6)에 배치 — 데이터 마크와 겹치지 않게.
-    axt.annotate("park ≈ radix (전 구간)\nfetch가 순 TTFT 이득을 못 만듦",
-                 xy=(1, series(rows, "park", "avg_ttft_s")[1]),
-                 xytext=(0.55, 1.60), fontsize=9.5, color=C_PARK, ha="left",
-                 arrowprops=dict(arrowstyle="-", color=C_PARK, lw=0.8))
-    axt.annotate("hicache: 강압박(40k)에서만 이득\n저압박에선 순수 오버헤드",
-                 xy=(2.55, 1.383), xytext=(2.0, 1.70), fontsize=9.5, color=C_HICACHE,
-                 ha="left", arrowprops=dict(arrowstyle="-", color=C_HICACHE, lw=0.8))
+    axt.legend(["radix", "hicache", "park"], loc="upper right", frameon=False, fontsize=9.5)
 
-    fig.text(0.065, 0.012,
-             "핵심: '회수 가치 있음'(강압박)과 '회수 자리 있음'(저압박)이 공존하지 않는다 "
-             "→ park은 어느 pool에서도 radix를 못 이긴다.",
-             fontsize=9, color=MUTED, ha="left")
-    fig.subplots_adjust(left=0.115, right=0.93, top=0.92, bottom=0.10)
+    fig.subplots_adjust(left=0.115, right=0.93, top=0.92, bottom=0.09)
     fig.savefig(f"{OUT}/catch22_pressure.png", dpi=200, facecolor="white")
     print(f"[saved] {OUT}/catch22_pressure.png")
 
