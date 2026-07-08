@@ -1,0 +1,60 @@
+{
+  "config": {
+    "server": "http://127.0.0.1:8001",
+    "run_tag": "revival",
+    "sweep_chars": [
+      2000,
+      6000,
+      15000,
+      30000
+    ],
+    "gpu_evict_n": 32,
+    "repeat_n": 3
+  },
+  "lengths": [
+    {
+      "chars": 2000,
+      "tokens": 666,
+      "kv_mb": 104.1,
+      "cold_ms": 472.8,
+      "warm_ms": 256.5,
+      "p_restore_ms": 261.6,
+      "d_concession_ms": 216.3,
+      "p_concession_ms": 5.2,
+      "asymmetry": 41.6
+    },
+    {
+      "chars": 6000,
+      "tokens": 2000,
+      "kv_mb": 312.5,
+      "cold_ms": 1303.7,
+      "warm_ms": 478.3,
+      "p_restore_ms": 478.4,
+      "d_concession_ms": 825.3,
+      "p_concession_ms": 0.1,
+      "asymmetry": 8253.0
+    },
+    {
+      "chars": 15000,
+      "tokens": 5000,
+      "kv_mb": 781.2,
+      "cold_ms": 2956.0,
+      "warm_ms": 866.6,
+      "p_restore_ms": 947.2,
+      "d_concession_ms": 2089.3,
+      "p_concession_ms": 80.5,
+      "asymmetry": 25.95
+    },
+    {
+      "chars": 30000,
+      "tokens": 10000,
+      "kv_mb": 1562.5,
+      "cold_ms": 6266.3,
+      "warm_ms": 1693.2,
+      "p_restore_ms": 1770.3,
+      "d_concession_ms": 4573.1,
+      "p_concession_ms": 77.2,
+      "asymmetry": 59.24
+    }
+  ]
+}
