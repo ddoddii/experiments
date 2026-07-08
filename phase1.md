@@ -126,41 +126,60 @@ back-to-back**(cross-run drift 제거)으로 못박음. `scripts/sglang/run_head
 | radix (GPU only) | 0.257 | 2.85M | 2.40s |
 | **hicache_host** | **0.743** | 0.98M | **1.45s** |
 
-**Head-to-head (pool 40000, C=8, delay 3s, 200 items)**:
+**Slice 4b — fetch-on-hit 추가**: 4a는 GPU2에 저장만 했다(reuse=radix, 무이득). "PCIe라도
+recompute보다 빠르다"는 가설을 실측하려고 **읽기 경로**를 구현했다: prefill이 요청을 큐에 넣기
+직전(`scheduler._add_request_to_queue`), `maybe_fetch(req)`가 요청의 최장 parked prefix를 찾아
+GPU2→GPU0로 복사 + radix insert → 다음 `match_prefix`가 prefix-hit. (초기 버그: `origin_input_ids +
+output_ids`를 key로 저장 → tool-call turn에서 재렌더링과 어긋나 거의 miss. **fix: 프롬프트
+`origin_input_ids`만 park** — 다음 turn의 token-exact prefix.)
 
-| arm | TTFT | throughput | reuse_ratio | vs radix | vs hicache |
-|---|---|---|---|---|---|
-| radix | 1.767s | 64.2 tok/s | **0.399** | — | |
-| **hicache** ✅ | **1.333s** | 66.7 tok/s | **0.744** | −24.6% | 승자 |
-| park (4a) | 1.856s | 62.4 tok/s | **0.390** | **+5.0%** | **+39.2% 느림** |
+**Head-to-head + 압박 완화 스윕 (C=8, delay 3s, 200 items)**:
 
-**해석 (예측 그대로)**:
-- `park.reuse(0.390) ≈ radix.reuse(0.399)` ≠ hicache(0.744) → park은 KV를 GPU2에 **저장만**
-  하고 prefill이 읽는 **fetch-on-hit이 없어 prefix-hit을 못 만든다.**
-- park은 radix보다도 **+5% 느림** — D→GPU2 복사가 읽는 쪽 없는 **순손실**.
-- **병목은 대역폭이 아니라 fetch 통합.** 통합된 fetch 경로를 가진 host-DRAM hicache가 명확히 승.
+| pool | radix TTFT / reuse | hicache TTFT / reuse | park(4b) TTFT / reuse | park vs radix |
+|---|---|---|---|---|
+| 40000 (강압박) | 1.83 / **0.39** | 1.38 / **0.74** | 1.83 / 0.45 | +0.2% |
+| 60000 | 1.27 / **0.74** | 1.38 / 0.74 | 1.19 / 0.74 | −6.3%\* |
+| 80000 | 1.17 / **0.74** | 1.38 / 0.75 | 1.19 / 0.74 | +1.0% |
+| 120000 | 1.15 / **0.74** | 1.27 / 0.75 | 1.15 / 0.74 | +0.4% |
+
+\* pool-60000 −6.3%는 radix-60000 TTFT outlier에 의한 착시(reuse 동일 → fetch 무의미). 노이즈.
+
+**pool 40000 DIAG**: `FETCH: hits=26 miss=206 already=278 nospace=237 (of 747), avg=235.8ms`.
+fetch는 실제로 동작(reuse 0.39→0.45, +217k 토큰 fetch)하나 성공률 3.5%. **nospace 32%**: fetch한
+KV는 attention이 읽으려면 **압박받는 P GPU 풀에 다시 넣어야** 하는데 pool 40000이 꽉 차 실패.
 
 ---
 
-## 6. 종합 결론
+## 6. 종합 결론 — catch-22 (idle KV parking은 단일 노드에서 실익 없음)
 
-**"유휴 자원으로 KV parking"의 두 축을 각각 검증했으나, 이 2×A6000(쌍별 NVLink) 토폴로지에선
-한 경로에서 결합되지 않는다:**
+전송(2a)·용량(4a)·저장(3)·**fetch(4b)** 파이프라인을 정확성까지 완비했으나, park+fetch는 **어떤
+operating point에서도 radix(recompute)를 유의미하게 이기지 못했다.** 원인은 구현 디테일이 아니라
+구조적 **catch-22**:
+
+1. **파킹이 가치 있는 구간 = 강압박(pool 40000)뿐** — 여기서만 radix가 evict해 reuse 0.39로
+   떨어지고 재계산이 발생. **그런데 이 구간은 nospace 32%** — fetch한 KV가 병목 P GPU에 자리를 못 잡음.
+2. **restore 자리가 있는 구간 = pool ≥60000** — 그런데 여기선 radix가 evict를 안 해 reuse가 이미
+   0.74 = hicache와 동일 → **되찾을 게 없음.** 세 arm 모두 reuse 0.74로 수렴.
+3. → **"restore가 가치 있다"(evict)와 "restore가 자리 있다"(P 여유)가 결코 공존하지 않는다.**
+
+**근본 이유**: 저장은 유휴 GPU로 offload되지만, **fetch한 KV는 attention이 읽으려면 병목 P GPU를
+점유해야 한다.** 이 restore-병목은 **transfer 속도(NVLink)와 무관 = 토폴로지 독립적.** hicache가
+강압박에서 이기는 건(0.74) 같은 제약을 **evict-to-room + async**로 관리하기 때문이며, park을 그렇게
+엔지니어링해도 이 토폴로지선 GPU2→GPU0=PCIe(host DRAM 동속)·26GB<125GB라 **hicache 재현이 상한.**
+(부가: pool ≥60000에선 evict가 없어 hicache조차 순수 오버헤드로 radix보다 +8~10% 느림.)
 
 | 전제 | 검증 결과 |
 |---|---|
 | ① 전송 싸다 (NVLink) | ✅ P↔D(GPU0-1) 52 GB/s — 단 NVLink **쌍**에만 |
-| ② P에 여유 있다 | ⚠️ Design A는 압박 시 P 포화(alloc 88% 실패). 전용 GPU2로 용량은 100% survival 검증 |
-| ③ 보존이 재계산 이긴다 | ❌ fetch-on-hit 미통합 → park.reuse ≈ radix, hicache에 −24.6% 뒤짐 |
+| ② P에 여유 있다 | ⚠️ 저장은 유휴 GPU2로 해결(survival 100%), 그러나 **restore는 병목 P GPU 점유(nospace 32%)** |
+| ③ fetch가 재계산 이긴다 | ⚠️ reuse 레벨은 참(0.39→0.45)이나 **순 TTFT 무승부** — catch-22로 회수량 제한 |
 
-- NVLink는 P-D에만, 여유 GPU는 PCIe로만 접근 → 전송 이점과 용량 이점이 만나지 않음.
-- fetch(P GPU2→GPU0)를 붙여도 PCIe라 host-DRAM hicache 동률이 상한이고, 용량도 26GB < 125GB로 열위.
-- **아이디어가 실익을 내려면**: all-to-all NVLink(NVSwitch/DGX), **여유 GPU가 P와 NVLink-paired인
-  배치**, 혹은 **진짜 multi-node**(aggregate GPU memory ≫ single host).
-- 파이프라인 코드(IPC / P2P gather-copy / radix insert, 슬라이스 2a~4a)는 그런 환경의 재사용 자산.
+**아이디어가 실익을 내려면**: (1) attention이 remote KV를 직접 읽는 **disaggregated/remote
+attention**(restore가 P GPU를 점유 안 해도 됨), 또는 (2) host DRAM이 유일 로컬 tier이고 원격 GPU
+합산 용량이 host를 압도하는 **진짜 multi-node.** 단일 노드·단일 GPU-tier로는 hicache가 이미 상한.
+파이프라인 코드(2a~4b: IPC/P2P/park/fetch)는 그런 환경의 재사용 자산으로 남긴다.
 
-이 발견은 `research.md` §2.11/§2.12 motivation의 **정직한 경계조건**이기도 하다 — NVLink 이점과
-P-idle 용량이 **동시에 성립하는 환경**을 전제로 한다.
+이 발견은 `research.md` §2.11/§2.12 motivation의 **정직한 경계조건**이다.
 
 ---
 
