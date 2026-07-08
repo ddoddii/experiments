@@ -111,6 +111,10 @@ pkill -9 -f "sglang_router.launch_router" 2>/dev/null || true
 for port in $BOOTSTRAP_PORT $PREFILL_PORT $DECODE_PORT $ROUTER_PORT $ROUTER_PROM_PORT 8080; do
   fuser -k ${port}/tcp 2>/dev/null || true
 done
+# Idle KV parking rendezvous is shared via /dev/shm. Stale IPC handles from a prior
+# run point at dead GPU memory (CUDA "invalid resource handle" -> parking setup fails),
+# so wipe the rendezvous dir on every restart.
+rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
 sleep 5
 
 echo "[1/5] Starting Mooncake metadata server..."
