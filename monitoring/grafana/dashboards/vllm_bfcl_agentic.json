@@ -9,582 +9,1957 @@
       "pluginName": "Prometheus"
     }
   ],
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "description": "vLLM / SGLang agentic workload profiling with BFCL multi-turn benchmark",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "links": [],
   "panels": [
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
-      "id": 100, "title": "📊 Summary Stats", "type": "row" },
-
     {
-      "id": 1, "type": "stat",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "title": "📊 Summary Stats",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "type": "stat",
       "title": "TTFT P50",
       "description": "Median time-to-first-token (server-side)",
-      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none", "textMode": "auto" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "s", "decimals": 3,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 2.0}
-          ]},
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2.0
+              }
+            ]
+          },
           "mappings": []
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "histogram_quantile(0.50, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
-        "legendFormat": "P50 TTFT", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
+          "legendFormat": "P50 TTFT",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 2, "type": "stat",
+      "id": 2,
+      "type": "stat",
       "title": "TTFT P99",
       "description": "P99 time-to-first-token",
-      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "s", "decimals": 3,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 1.0}, {"color": "red", "value": 5.0}
-          ]}
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1.0
+              },
+              {
+                "color": "red",
+                "value": 5.0
+              }
+            ]
+          }
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "histogram_quantile(0.99, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
-        "legendFormat": "P99 TTFT", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.99, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
+          "legendFormat": "P99 TTFT",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 3, "type": "stat",
+      "id": 3,
+      "type": "stat",
       "title": "TPOT P50",
       "description": "Median time-per-output-token (decode speed)",
-      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "s", "decimals": 4,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 0.05}, {"color": "red", "value": 0.1}
-          ]}
+          "unit": "s",
+          "decimals": 4,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.05
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          }
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
-        "legendFormat": "P50 TPOT", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[2m])) by (le))",
+          "legendFormat": "P50 TPOT",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 4, "type": "stat",
+      "id": 4,
+      "type": "stat",
       "title": "Generation Throughput",
       "description": "Output tokens/sec (avg over 1min)",
-      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
           "displayName": "tok/s",
           "decimals": 1,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "red", "value": null}, {"color": "yellow", "value": 20}, {"color": "green", "value": 50}
-          ]}
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "green",
+                "value": 50
+              }
+            ]
+          }
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[1m]))",
-        "legendFormat": "tok/s", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[1m]))",
+          "legendFormat": "tok/s",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 5, "type": "stat",
+      "id": 5,
+      "type": "stat",
       "title": "GPU KV Cache Usage",
       "description": "GPU KV cache block utilization",
-      "gridPos": {"h": 4, "w": 4, "x": 16, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none", "orientation": "auto" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "auto"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit", "decimals": 1,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}
-          ]}
+          "unit": "percentunit",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "avg(vllm:kv_cache_usage_perc{job=~\"$job\"})",
-        "legendFormat": "Cache", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"$job\"})",
+          "legendFormat": "Cache",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 6, "type": "stat",
+      "id": 6,
+      "type": "stat",
       "title": "Prefix Cache Hit Rate",
       "description": "GPU KV prefix cache hit rate (requires prefix caching enabled)",
-      "gridPos": {"h": 4, "w": 4, "x": 20, "y": 1},
-      "options": { "reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit", "decimals": 2,
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "red", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "green", "value": 0.6}
-          ]}
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.3
+              },
+              {
+                "color": "green",
+                "value": 0.6
+              }
+            ]
+          }
         }
       },
-      "targets": [{
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-        "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[2m]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[2m]), 0.001)",
-        "legendFormat": "Hit Rate", "refId": "A"
-      }],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[2m]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[2m]), 0.001)",
+          "legendFormat": "Hit Rate",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
-      "id": 101, "title": "⏱ Latency — TTFT & TPOT", "type": "row" },
-
     {
-      "id": 10, "type": "timeseries",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 101,
+      "title": "⏱ Latency — TTFT & TPOT",
+      "type": "row"
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
       "title": "TTFT — Time To First Token (percentiles)",
       "description": "Time-to-first-token histograms from vLLM server. For agentic multi-turn, TTFT tends to grow as context length increases.",
-      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 6},
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
       "options": {
-        "tooltip": {"mode": "multi", "sort": "desc"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s", "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true} },
-        "overrides": [
-          {"matcher": {"id": "byName", "options": "P50"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]},
-          {"matcher": {"id": "byName", "options": "P90"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]},
-          {"matcher": {"id": "byName", "options": "P99"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]}
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.50, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P50", "refId": "A"
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.90, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P90", "refId": "B"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.99, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P99", "refId": "C"
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 11, "type": "timeseries",
-      "title": "TPOT — Time Per Output Token (percentiles)",
-      "description": "Decode speed. Lower is faster. For disaggregated (PPD), should be lower than standard since decode-only GPUs don't share compute with prefill.",
-      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 6},
-      "options": {
-        "tooltip": {"mode": "multi", "sort": "desc"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s", "decimals": 4, "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true} },
-        "overrides": [
-          {"matcher": {"id": "byName", "options": "P50"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]},
-          {"matcher": {"id": "byName", "options": "P90"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]},
-          {"matcher": {"id": "byName", "options": "P99"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]}
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P50", "refId": "A"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.90, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P90", "refId": "B"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "histogram_quantile(0.99, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
-          "legendFormat": "P99", "refId": "C"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15},
-      "id": 102, "title": "🚀 Throughput & Queue", "type": "row" },
-
-    {
-      "id": 20, "type": "timeseries",
-      "title": "Token Throughput",
-      "description": "Generation and prompt tokens per second. Agentic workloads have high prompt token rates due to growing conversation context.",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "reqps", "custom": {"lineWidth": 2, "fillOpacity": 8, "spanNulls": true} }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[$__rate_interval]))",
-          "legendFormat": "Generation tok/s", "refId": "A"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(rate(vllm:prompt_tokens_total{job=~\"$job\"}[$__rate_interval]))",
-          "legendFormat": "Prompt tok/s", "refId": "B"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 21, "type": "timeseries",
-      "title": "Request Queue",
-      "description": "Running = actively being processed. Waiting = queued. For sequential BFCL benchmark this should be 0-1 running, 0 waiting.",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "short", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 15, "spanNulls": true} },
-        "overrides": [
-          {"matcher": {"id": "byName", "options": "Running"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]},
-          {"matcher": {"id": "byName", "options": "Waiting"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
-        ]
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(vllm:num_requests_running{job=~\"$job\"})",
-          "legendFormat": "Running", "refId": "A"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "sum(vllm:num_requests_waiting{job=~\"$job\"})",
-          "legendFormat": "Waiting", "refId": "B"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
-      "id": 103, "title": "💾 Memory", "type": "row" },
-
-    {
-      "id": 30, "type": "timeseries",
-      "title": "GPU KV Cache Usage",
-      "description": "GPU KV cache block utilization per instance. For PPD: P nodes fill KV fast, D nodes hold it.",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "custom": {"lineWidth": 2, "fillOpacity": 20, "spanNulls": true},
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}
-          ]}
-        }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:kv_cache_usage_perc{job=~\"$job\"}",
-          "legendFormat": "{{job}} GPU cache", "refId": "A"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
-          "legendFormat": "{{job}} prefix hit rate", "refId": "B"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 31, "type": "timeseries",
-      "title": "Prefix Cache Hit Rate",
-      "description": "KV prefix cache effectiveness. For BFCL multi-turn: system prompt + tool defs = large repeated prefix → should get high hit rate across turns.",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "custom": {"lineWidth": 2, "fillOpacity": 15, "spanNulls": true}
-        }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
-          "legendFormat": "{{job}} prefix hit rate", "refId": "A"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 33},
-      "id": 104, "title": "🔬 BFCL Per-Turn Agentic Metrics (Pushgateway)", "type": "row" },
-
-    {
-      "id": 40, "type": "timeseries",
-      "title": "Client-side TTFT per turn (agentic context growth)",
-      "description": "TTFT measured by the benchmark script per conversation turn. In multi-turn agentic workloads, TTFT should increase as conversation context grows. Pushed via Pushgateway.",
-      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 34},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s", "custom": {"lineWidth": 1, "fillOpacity": 5, "spanNulls": false, "pointSize": 4, "showPoints": "auto"} }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "bfcl_turn_ttft_seconds{config=~\"$config\"}",
-          "legendFormat": "{{item_id}} t{{turn}}", "refId": "A"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 41, "type": "timeseries",
-      "title": "Client-side TPOT per turn",
-      "description": "TPOT per turn from benchmark script. Should remain stable across turns (decode speed is independent of context length, unlike TTFT).",
-      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 34},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "s", "decimals": 4, "custom": {"lineWidth": 1, "fillOpacity": 5, "spanNulls": false, "pointSize": 4, "showPoints": "auto"} }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "bfcl_turn_tpot_seconds{config=~\"$config\"}",
-          "legendFormat": "{{item_id}} t{{turn}}", "refId": "A"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 42, "type": "timeseries",
-      "title": "Conversation Context Length per Turn",
-      "description": "How much input context each turn sends. Grows with each turn as conversation history accumulates. Pushed via Pushgateway.",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 43},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "short", "custom": {"lineWidth": 1, "fillOpacity": 5, "spanNulls": false} }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "bfcl_turn_context_chars{config=~\"$config\"}",
-          "legendFormat": "{{item_id}} ctx chars", "refId": "A"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    {
-      "id": 43, "type": "timeseries",
-      "title": "Benchmark Progress",
-      "description": "Number of BFCL items completed over time. Pushed via Pushgateway.",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 43},
-      "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "short", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true} }
-      },
-      "targets": [
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "bfcl_items_completed{config=~\"$config\"}",
-          "legendFormat": "{{config}} completed", "refId": "A"
-        }
-      ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-    },
-
-    { "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 51},
-      "id": 105, "title": "🔬 P vs D Node KV Cache — vllm-ppd 2P2D", "type": "row" },
-
-    {
-      "id": 50, "type": "timeseries",
-      "title": "P Node KV Cache vs D Node KV Cache (vllm-ppd 2P2D)",
-      "description": "KV cache utilization per node role in disaggregated prefill-decode setup.\n\n• P nodes (prefill): spike briefly per request as the prompt is processed, then drop to near-zero after KV transfer to D.\n• D nodes (decode): accumulate KV blocks across multi-turn turns — each new tool call adds to the KV already held. Watch for gradual ramp-up: this is the \"D node KV accumulation\" pattern in agentic workloads.\n\nScrape targets in prometheus.yml: vllm-ppd-prefill-1 (8100), vllm-ppd-prefill-2 (8101), vllm-ppd-decode-1 (8200), vllm-ppd-decode-2 (8201).",
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 52},
-      "options": {
-        "tooltip": {"mode": "multi", "sort": "desc"},
-        "legend": {"displayMode": "table", "placement": "bottom", "showLegend": true,
-                   "calcs": ["lastNotNull", "max", "mean"]}
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1, "decimals": 2,
-          "custom": {"lineWidth": 2, "fillOpacity": 15, "spanNulls": true},
-          "thresholds": { "mode": "absolute", "steps": [
-            {"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}
-          ]}
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
         },
         "overrides": [
           {
-            "matcher": {"id": "byFrameRefID", "options": "A"},
-            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [0, 0]}},
-                           {"id": "displayName", "value": "P1 (prefill, GPU0)"}]
+            "matcher": {
+              "id": "byName",
+              "options": "P50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "B"},
-            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [0, 0]}},
-                           {"id": "displayName", "value": "P2 (prefill, GPU1)"}]
+            "matcher": {
+              "id": "byName",
+              "options": "P90"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "C"},
-            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [5, 5]}},
-                           {"id": "displayName", "value": "D1 (decode, GPU2)"}]
-          },
-          {
-            "matcher": {"id": "byFrameRefID", "options": "D"},
-            "properties": [{"id": "custom.lineStyle", "value": {"fill": "solid", "dash": [5, 5]}},
-                           {"id": "displayName", "value": "D2 (decode, GPU3)"}]
+            "matcher": {
+              "id": "byName",
+              "options": "P99"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
           }
         ]
       },
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-1\"}",
-          "legendFormat": "P1 prefill (GPU0)", "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P50",
+          "refId": "A"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-2\"}",
-          "legendFormat": "P2 prefill (GPU1)", "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.90, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P90",
+          "refId": "B"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-1\"}",
-          "legendFormat": "D1 decode (GPU2)", "refId": "C"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-2\"}",
-          "legendFormat": "D2 decode (GPU3)", "refId": "D"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.99, sum(rate(vllm:time_to_first_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P99",
+          "refId": "C"
         }
       ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 51, "type": "timeseries",
-      "title": "P Node avg vs D Node avg KV Cache",
-      "description": "Average KV cache usage across all P nodes vs all D nodes. Makes it easy to compare roles at a glance without per-instance noise.",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 62},
+      "id": 11,
+      "type": "timeseries",
+      "title": "TPOT — Time Per Output Token (percentiles)",
+      "description": "Decode speed. Lower is faster. For disaggregated (PPD), should be lower than standard since decode-only GPUs don't share compute with prefill.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
       "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "custom": {"lineWidth": 2, "fillOpacity": 20, "spanNulls": true}
+          "unit": "s",
+          "decimals": 4,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
         },
         "overrides": [
-          {"matcher": {"id": "byName", "options": "P nodes (avg)"},
-           "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]},
-          {"matcher": {"id": "byName", "options": "D nodes (avg)"},
-           "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P90"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P99"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
         ]
       },
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-prefill-.*\"})",
-          "legendFormat": "P nodes (avg)", "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P50",
+          "refId": "A"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-decode-.*\"})",
-          "legendFormat": "D nodes (avg)", "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.90, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P90",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.99, sum(rate(vllm:request_time_per_output_token_seconds_bucket{job=~\"$job\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P99",
+          "refId": "C"
         }
       ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
     },
-
     {
-      "id": 52, "type": "timeseries",
-      "title": "D Node Running Requests (decode 노드 부하)",
-      "description": "Number of requests actively running on D (decode) nodes. In multi-turn tool-call workloads each request holds KV blocks for its entire conversation — even while waiting between turns. Compare with D node KV cache usage above to see correlation.",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 62},
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 102,
+      "title": "🚀 Throughput & Queue",
+      "type": "row"
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Token Throughput",
+      "description": "Generation and prompt tokens per second. Agentic workloads have high prompt token rates due to growing conversation context.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
       "options": {
-        "tooltip": {"mode": "multi"},
-        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short", "min": 0,
-          "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": true}
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": true
+          }
         }
       },
       "targets": [
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-decode-.*\"}",
-          "legendFormat": "{{job}} running", "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(rate(vllm:generation_tokens_total{job=~\"$job\"}[$__rate_interval]))",
+          "legendFormat": "Generation tok/s",
+          "refId": "A"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
-          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-prefill-.*\"}",
-          "legendFormat": "{{job}} running", "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(rate(vllm:prompt_tokens_total{job=~\"$job\"}[$__rate_interval]))",
+          "legendFormat": "Prompt tok/s",
+          "refId": "B"
         }
       ],
-      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Request Queue",
+      "description": "Running = actively being processed. Waiting = queued. For sequential BFCL benchmark this should be 0-1 running, 0 waiting.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Running"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Waiting"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(vllm:num_requests_running{job=~\"$job\"})",
+          "legendFormat": "Running",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(vllm:num_requests_waiting{job=~\"$job\"})",
+          "legendFormat": "Waiting",
+          "refId": "B"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 103,
+      "title": "💾 Memory",
+      "type": "row"
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "GPU KV Cache Usage",
+      "description": "GPU KV cache block utilization per instance. For PPD: P nodes fill KV fast, D nodes hold it.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:kv_cache_usage_perc{job=~\"$job\"}",
+          "legendFormat": "{{job}} GPU cache",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
+          "legendFormat": "{{job}} prefix hit rate",
+          "refId": "B"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Prefix Cache Hit Rate",
+      "description": "KV prefix cache effectiveness. For BFCL multi-turn: system prompt + tool defs = large repeated prefix → should get high hit rate across turns.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(vllm:prefix_cache_hits_total{job=~\"$job\"}[$__rate_interval]) / clamp_min(rate(vllm:prefix_cache_queries_total{job=~\"$job\"}[$__rate_interval]), 0.001)",
+          "legendFormat": "{{job}} prefix hit rate",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 104,
+      "title": "🔬 BFCL Per-Turn Agentic Metrics (Pushgateway)",
+      "type": "row"
+    },
+    {
+      "id": 40,
+      "type": "timeseries",
+      "title": "Client-side TTFT per turn (agentic context growth)",
+      "description": "TTFT measured by the benchmark script per conversation turn. In multi-turn agentic workloads, TTFT should increase as conversation context grows. Pushed via Pushgateway.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "spanNulls": false,
+            "pointSize": 4,
+            "showPoints": "auto"
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "bfcl_turn_ttft_seconds{config=~\"$config\"}",
+          "legendFormat": "{{item_id}} t{{turn}}",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 41,
+      "type": "timeseries",
+      "title": "Client-side TPOT per turn",
+      "description": "TPOT per turn from benchmark script. Should remain stable across turns (decode speed is independent of context length, unlike TTFT).",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 4,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "spanNulls": false,
+            "pointSize": 4,
+            "showPoints": "auto"
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "bfcl_turn_tpot_seconds{config=~\"$config\"}",
+          "legendFormat": "{{item_id}} t{{turn}}",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 42,
+      "type": "timeseries",
+      "title": "Conversation Context Length per Turn",
+      "description": "How much input context each turn sends. Grows with each turn as conversation history accumulates. Pushed via Pushgateway.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 43
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "spanNulls": false
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "bfcl_turn_context_chars{config=~\"$config\"}",
+          "legendFormat": "{{item_id}} ctx chars",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 43,
+      "type": "timeseries",
+      "title": "Benchmark Progress",
+      "description": "Number of BFCL items completed over time. Pushed via Pushgateway.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 43
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "bfcl_items_completed{config=~\"$config\"}",
+          "legendFormat": "{{config}} completed",
+          "refId": "A"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 105,
+      "title": "🔬 P vs D Node KV Cache — vllm-ppd 2P2D",
+      "type": "row"
+    },
+    {
+      "id": 50,
+      "type": "timeseries",
+      "title": "P Node KV Cache vs D Node KV Cache (vllm-ppd 2P2D)",
+      "description": "KV cache utilization per node role in disaggregated prefill-decode setup.\n\n• P nodes (prefill): spike briefly per request as the prompt is processed, then drop to near-zero after KV transfer to D.\n• D nodes (decode): accumulate KV blocks across multi-turn turns — each new tool call adds to the KV already held. Watch for gradual ramp-up: this is the \"D node KV accumulation\" pattern in agentic workloads.\n\nScrape targets in prometheus.yml: vllm-ppd-prefill-1 (8100), vllm-ppd-prefill-2 (8101), vllm-ppd-decode-1 (8200), vllm-ppd-decode-2 (8201).",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 2,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "spanNulls": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid",
+                  "dash": [
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "P1 (prefill, GPU0)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid",
+                  "dash": [
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "P2 (prefill, GPU1)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid",
+                  "dash": [
+                    5,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "D1 (decode, GPU2)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid",
+                  "dash": [
+                    5,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "D2 (decode, GPU3)"
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-1\"}",
+          "legendFormat": "P1 prefill (GPU0)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-prefill-2\"}",
+          "legendFormat": "P2 prefill (GPU1)",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-1\"}",
+          "legendFormat": "D1 decode (GPU2)",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:kv_cache_usage_perc{job=\"vllm-ppd-decode-2\"}",
+          "legendFormat": "D2 decode (GPU3)",
+          "refId": "D"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 51,
+      "type": "timeseries",
+      "title": "P Node avg vs D Node avg KV Cache",
+      "description": "Average KV cache usage across all P nodes vs all D nodes. Makes it easy to compare roles at a glance without per-instance noise.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 62
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P nodes (avg)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "D nodes (avg)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-prefill-.*\"})",
+          "legendFormat": "P nodes (avg)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "avg(vllm:kv_cache_usage_perc{job=~\"vllm-ppd-decode-.*\"})",
+          "legendFormat": "D nodes (avg)",
+          "refId": "B"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 52,
+      "type": "timeseries",
+      "title": "D Node Running Requests (decode 노드 부하)",
+      "description": "Number of requests actively running on D (decode) nodes. In multi-turn tool-call workloads each request holds KV blocks for its entire conversation — even while waiting between turns. Compare with D node KV cache usage above to see correlation.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 62
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-decode-.*\"}",
+          "legendFormat": "{{job}} running",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "vllm:num_requests_running{job=~\"vllm-ppd-prefill-.*\"}",
+          "legendFormat": "{{job}} running",
+          "refId": "B"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 70
+      },
+      "id": 106,
+      "title": "🧊 SGLang hicache — 3-Tier KV Cache (P vs D)",
+      "type": "row"
+    },
+    {
+      "id": 60,
+      "type": "timeseries",
+      "title": "L1 GPU KV Cache Usage — SGLang 2P2D (≈0 with write_through)",
+      "description": "각 SGLang 인스턴스의 GPU KV 캐시 점유율 (동적). hicache_write_policy='write_through' 로 인해 KV block이 즉시 SSD로 evict되어 steady-state에서 ≈0%가 정상 동작임. 실제 할당된 GPU 메모리는 sglang_kvcache_allocated_gb 패널 참조.",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*p1.*|.*p2.*|.*prefill.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*d1.*|.*d2.*|.*decode.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_token_usage{node=\"p1\"}",
+          "legendFormat": "P1 prefill (GPU0)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_token_usage{node=\"p2\"}",
+          "legendFormat": "P2 prefill (GPU1)",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_token_usage{node=\"d1\"}",
+          "legendFormat": "D1 decode (GPU2)",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_token_usage{node=\"d2\"}",
+          "legendFormat": "D2 decode (GPU3)",
+          "refId": "D"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "L2 CPU DRAM hicache — SGLang (VmRSS 기반 추정)",
+      "description": "각 SGLang 인스턴스 프로세스의 VmRSS. hicache L2 (CPU DRAM) 사용 증가 시 상승함. 단, 모델 파라미터·코드 RSS도 포함되므로 absolute 값보다 추세(trend) 관찰.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 81
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l2_dram_mb{node=\"p1\"}",
+          "legendFormat": "P1 DRAM",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l2_dram_mb{node=\"p2\"}",
+          "legendFormat": "P2 DRAM",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l2_dram_mb{node=\"d1\"}",
+          "legendFormat": "D1 DRAM",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l2_dram_mb{node=\"d2\"}",
+          "legendFormat": "D2 DRAM",
+          "refId": "D"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 62,
+      "type": "timeseries",
+      "title": "L3 SSD hicache File Backend — SGLang",
+      "description": "hicache --hicache-storage-backend file 디렉토리 크기(du). KV 블록이 SSD로 evict될수록 증가. 0이면 디렉토리 미발견 — HICACHE_DIRS 환경변수로 경로 지정 필요.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 81
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"p1\"}",
+          "legendFormat": "P1 SSD",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"p2\"}",
+          "legendFormat": "P2 SSD",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"d1\"}",
+          "legendFormat": "D1 SSD",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_hicache_l3_ssd_mb{node=\"d2\"}",
+          "legendFormat": "D2 SSD",
+          "refId": "D"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 63,
+      "type": "timeseries",
+      "title": "SGLang Active Requests per Instance",
+      "description": "인스턴스별 현재 처리중인 요청 수. P노드에서 prefill 중, D노드에서 decode 중인 동시요청 비교.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 89
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_num_running_reqs{node=\"p1\"}",
+          "legendFormat": "P1 running",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_num_running_reqs{node=\"p2\"}",
+          "legendFormat": "P2 running",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_num_running_reqs{node=\"d1\"}",
+          "legendFormat": "D1 running",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_num_running_reqs{node=\"d2\"}",
+          "legendFormat": "D2 running",
+          "refId": "D"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 64,
+      "type": "timeseries",
+      "title": "SGLang Prefix Cache Hit Rate",
+      "description": "SGLang 스케줄러 로그(logs/{p1,p2}.log)에서 파싱한 prefix cache hit rate. SGLang은 주기적으로 'cache hit rate: XX.XX%' 통계를 출력함. D 노드는 prefill을 담당하지 않으므로 p1/p2만 유의미한 값.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 89
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": true
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_cache_hit_rate{node=\"p1\"}",
+          "legendFormat": "P1 hit rate",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_cache_hit_rate{node=\"p2\"}",
+          "legendFormat": "P2 hit rate",
+          "refId": "B"
+        }
+      ],
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      }
+    },
+    {
+      "id": 65,
+      "type": "timeseries",
+      "title": "L1 GPU KV Cache Allocated (GB) — SGLang static config",
+      "description": "GPU에 할당된 KV cache 총 크기 (GB). memory_usage.kvcache from /get_server_info internal_states. 이 값은 서버 시작 시 고정되며, write_through 모드에서도 변하지 않음.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 97
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_kvcache_allocated_gb{node=\"p1\"}",
+          "legendFormat": "P1 prefill (GPU0)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_kvcache_allocated_gb{node=\"p2\"}",
+          "legendFormat": "P2 prefill (GPU1)",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_kvcache_allocated_gb{node=\"d1\"}",
+          "legendFormat": "D1 decode (GPU2)",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sglang_kvcache_allocated_gb{node=\"d2\"}",
+          "legendFormat": "D2 decode (GPU3)",
+          "refId": "D"
+        }
+      ]
     }
-
   ],
-
   "refresh": "5s",
   "schemaVersion": 38,
-  "tags": ["vllm", "sglang", "bfcl", "llm", "agentic"],
+  "tags": [
+    "vllm",
+    "sglang",
+    "bfcl",
+    "llm",
+    "agentic"
+  ],
   "templating": {
     "list": [
       {
@@ -600,7 +1975,10 @@
       },
       {
         "current": {},
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "definition": "label_values(vllm:num_requests_running, job)",
         "hide": 0,
         "includeAll": true,
@@ -618,7 +1996,10 @@
       },
       {
         "current": {},
-        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "definition": "label_values(bfcl_items_completed, config)",
         "hide": 0,
         "includeAll": true,
@@ -634,10 +2015,13 @@
       }
     ]
   },
-  "time": {"from": "now-30m", "to": "now"},
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "vLLM BFCL Agentic Workload",
   "uid": "vllm-bfcl-agentic-v1",
-  "version": 3
+  "version": 5
 }

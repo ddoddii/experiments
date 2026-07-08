@@ -1,33 +1,45 @@
 import json
 import os
+import re
 import time
 import requests
 from tqdm import tqdm
 
-ROUTER_URL = "http://127.0.0.1:8000/v1/chat/completions"
-MODEL = "meta-llama/Llama-3.1-8B-Instruct"
-CONFIG = os.environ.get("CONFIG", "2P_2D_sglang")
+SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+def _p(rel): return os.path.join(PROJECT_ROOT, rel)
+
+ROUTER_URL = os.environ.get("SGLANG_URL", "http://127.0.0.1:8000/v1/chat/completions")
+# SGLang served_model_name defaults to model path; check with: curl http://localhost:30000/v1/models
+MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Qwen3-14B")
+CONFIG     = os.environ.get("CONFIG", "sglang_2p2d")
+MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
+TIMEOUT    = int(os.environ.get("TIMEOUT", "120"))
+
+MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
+
+PUSHGATEWAY_URL = os.environ.get("PUSHGATEWAY_URL", "http://localhost:9091")
 
 CLASS_TO_FILE = {
-    "GorillaFileSystem": "multi_turn_func_doc/gorilla_file_system.json",
-    "TicketAPI":         "multi_turn_func_doc/ticket_api.json",
-    "MessageAPI":        "multi_turn_func_doc/message_api.json",
-    "MathAPI":           "multi_turn_func_doc/math_api.json",
-    "TradingBot":        "multi_turn_func_doc/trading_bot.json",
-    "TwitterAPI":        "multi_turn_func_doc/posting_api.json",
-    "TravelAPI":         "multi_turn_func_doc/travel_booking.json",
-    "VehicleControlAPI": "multi_turn_func_doc/vehicle_control.json",
+    "GorillaFileSystem": _p("data/multi_turn_func_doc/gorilla_file_system.json"),
+    "TicketAPI":         _p("data/multi_turn_func_doc/ticket_api.json"),
+    "MessageAPI":        _p("data/multi_turn_func_doc/message_api.json"),
+    "MathAPI":           _p("data/multi_turn_func_doc/math_api.json"),
+    "TradingBot":        _p("data/multi_turn_func_doc/trading_bot.json"),
+    "TwitterAPI":        _p("data/multi_turn_func_doc/posting_api.json"),
+    "TravelAPI":         _p("data/multi_turn_func_doc/travel_booking.json"),
+    "VehicleControlAPI": _p("data/multi_turn_func_doc/vehicle_control.json"),
 }
 
 TYPE_MAP = {
-    "float": "number",
-    "integer": "integer",  # 이건 유효하긴 한데 명시
-    "dict": "object",
-    "list": "array",
-    "tuple": "array",
-    "str": "string",
-    "bool": "boolean",
-    "none": "null",
+    "float":   "number",
+    "integer": "integer",
+    "dict":    "object",
+    "list":    "array",
+    "tuple":   "array",
+    "str":     "string",
+    "bool":    "boolean",
+    "none":    "null",
 }
 
 def dict_to_object(obj):
@@ -50,8 +62,52 @@ def load_func_doc(path):
         cleaned.append(doc)
     return cleaned
 
+def push_metric(metric: str, value: float, labels: dict):
+    """Pushgateway에 단일 gauge 메트릭 전송."""
+    job = labels.pop("job", CONFIG)
+    label_str = ",".join(f'{k}="{v}"' for k, v in labels.items())
+    body = f"# TYPE {metric} gauge\n{metric}{{{label_str}}} {value}\n"
+    try:
+        requests.post(f"{PUSHGATEWAY_URL}/metrics/job/{job}", data=body, timeout=2)
+    except Exception:
+        pass
+
+_PYTHON_TAG_RE = re.compile(r'<\|python_tag\|>(.*)', re.DOTALL)
+
+def _parse_python_tag(content: str) -> dict | None:
+    """Parse Llama3 <|python_tag|> tool call from raw text content (fallback when server has no tool parser)."""
+    m = _PYTHON_TAG_RE.search(content)
+    if not m:
+        return None
+    try:
+        raw = m.group(1).strip()
+        data = json.loads(raw)
+        name = data.get("name", "")
+        params = data.get("parameters", data.get("arguments", {}))
+        return {
+            "id": f"call_{name}",
+            "type": "function",
+            "function": {"name": name, "arguments": json.dumps(params)},
+        }
+    except Exception:
+        return None
+
+# ── SGLang hicache 모니터링 (exporter가 떠있으면 자동 수집) ──────────────────
+from sglang_hicache_exporter import SGLangHiCachePoller
+
+poller = SGLangHiCachePoller()
+poller.start()
+
+print(f"Config     : {CONFIG}")
+print(f"URL        : {ROUTER_URL}")
+print(f"Model      : {MODEL_SLUG}")
+print(f"Items      : 200")
+print(f"PushGW     : {PUSHGATEWAY_URL}")
+print("=" * 60)
+
+# ── 데이터 로드 ──────────────────────────────────────────────────────────────
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
-items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
+items = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
 results = []
 
 t_experiment_start = time.perf_counter()
@@ -77,27 +133,31 @@ for item in tqdm(items, desc="items"):
     for turn_idx, turn in enumerate(item["question"]):
         user_msg = turn[0]
         conversation.append(user_msg)
-        tqdm.write(f"  [turn {turn_idx}] user: {user_msg['content'][:80]}...")
+        ctx_chars = sum(len(str(m.get("content", ""))) for m in conversation)
+        tqdm.write(f"  [turn {turn_idx}] ctx={ctx_chars}ch  user: {user_msg['content'][:80]}...")
 
         payload = {
             "model": MODEL,
             "messages": conversation,
             "tools": tools,
             "tool_choice": "auto",
-            "max_tokens": 512,
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0,
             "stream": True,
+            "stream_options": {"include_usage": True},
         }
 
         try:
             t_request = time.perf_counter()
-            resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=120)
+            resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
             resp.raise_for_status()
 
             t_first_token = None
             t_last_token = None
             token_count = 0
             assistant_content = ""
-            tool_calls_map = {}  # index → accumulated tool_call
+            tool_calls_map = {}
+            server_completion_tokens = None
 
             for line in resp.iter_lines():
                 if not line:
@@ -110,6 +170,10 @@ for item in tqdm(items, desc="items"):
                     break
 
                 chunk = json.loads(data)
+                if chunk.get("usage"):
+                    server_completion_tokens = chunk["usage"].get("completion_tokens")
+                if not chunk.get("choices"):
+                    continue
                 delta = chunk["choices"][0]["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
@@ -137,21 +201,37 @@ for item in tqdm(items, desc="items"):
 
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] if tool_calls_map else []
 
-            ttft = (t_first_token - t_request) if t_first_token else None
-            e2e = (t_last_token - t_request) if t_last_token else None
-            decode_time = (t_last_token - t_first_token) if (t_last_token and token_count > 1) else None
-            tpot = (decode_time / (token_count - 1)) if (decode_time and token_count > 1) else None
-            # per-turn throughput: decode 구간 기준 (prefill 제외)
-            turn_throughput = ((token_count - 1) / decode_time) if (decode_time and token_count > 1) else None
+            # Fallback: parse <|python_tag|> from text content if no structured tool_calls
+            if not tool_calls_result and "<|python_tag|>" in assistant_content:
+                tc = _parse_python_tag(assistant_content)
+                if tc:
+                    tool_calls_result = [tc]
+                    assistant_content = ""
 
-            total_output_tokens += token_count
+            actual_tokens = server_completion_tokens if server_completion_tokens is not None else token_count
+
+            ttft = (t_first_token - t_request) if t_first_token else None
+            e2e  = (t_last_token  - t_request) if t_last_token  else None
+            decode_time = (t_last_token - t_first_token) if (t_last_token and token_count > 1) else None
+            tpot = (decode_time / (actual_tokens - 1)) if (decode_time and actual_tokens > 1) else None
+            turn_throughput = ((actual_tokens - 1) / decode_time) if (decode_time and actual_tokens > 1) else None
+
+            total_output_tokens += actual_tokens
 
             tqdm.write(
                 f"    → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
-                f"tokens={token_count}  throughput={turn_throughput:.1f} tok/s"
+                f"tokens={actual_tokens}  throughput={turn_throughput:.1f} tok/s"
                 if (ttft and tpot and turn_throughput) else
-                f"    → ttft={ttft}  tokens={token_count}"
+                f"    → ttft={ttft}  tokens={actual_tokens}"
             )
+
+            # Pushgateway에 per-turn 지표 전송
+            lbl = {"config": CONFIG, "turn": str(turn_idx), "item_id": item["id"]}
+            if ttft:
+                push_metric("bfcl_turn_ttft_seconds", ttft, {**lbl})
+            if tpot:
+                push_metric("bfcl_turn_tpot_seconds", tpot, {**lbl})
+            push_metric("bfcl_turn_context_chars", ctx_chars, {**lbl})
 
             turn_metrics.append({
                 "turn": turn_idx,
@@ -160,12 +240,12 @@ for item in tqdm(items, desc="items"):
                 "tool_calls": tool_calls_result if tool_calls_result else None,
                 "ttft_s": round(ttft, 4) if ttft else None,
                 "tpot_s": round(tpot, 4) if tpot else None,
-                "output_tokens": token_count,
+                "output_tokens": actual_tokens,
                 "e2e_latency_s": round(e2e, 4) if e2e else None,
                 "throughput_tok_per_s": round(turn_throughput, 2) if turn_throughput else None,
+                "ctx_chars": ctx_chars,
             })
 
-            # Llama3 chat template은 tool_call 1개만 허용
             conversation.append({
                 "role": "assistant",
                 "content": assistant_content or None,
@@ -186,15 +266,21 @@ for item in tqdm(items, desc="items"):
         "avg_tpot_s": round(sum(t["tpot_s"] for t in valid_turns if t.get("tpot_s")) / max(1, sum(1 for t in valid_turns if t.get("tpot_s"))), 4) if valid_turns else None,
         "avg_throughput_tok_per_s": round(sum(t["throughput_tok_per_s"] for t in valid_turns if t.get("throughput_tok_per_s")) / max(1, sum(1 for t in valid_turns if t.get("throughput_tok_per_s"))), 2) if valid_turns else None,
         "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
+        "ttft_by_turn": {str(t["turn"]): t["ttft_s"] for t in valid_turns},
     })
+
+    push_metric("bfcl_items_completed", len(results), {"config": CONFIG})
 
 t_experiment_end = time.perf_counter()
 total_wall_time = t_experiment_end - t_experiment_start
 
-# 전체 요약
+poller.stop()
+kv_stats = poller.stats()
+
 valid = [r for r in results if r.get("avg_ttft_s")]
 summary = {
     "config": CONFIG,
+    "model": MODEL,
     "total_items": len(results),
     "success_items": len(valid),
     "error_items": len(results) - len(valid),
@@ -204,16 +290,18 @@ summary = {
     "avg_ttft_s": round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4) if valid else None,
     "avg_tpot_s": round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
     "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / len(valid), 2) if valid else None,
+    "kv_cache_stats": kv_stats,  # token_usage per instance
 }
 
 output = {"summary": summary, "results": results}
 
-shm_path = f"/dev/shm/bfcl_multiturn_results_{CONFIG}.json"
-out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"
+import shutil
+out_dir  = _p(f"results/sglang_hicache/{MODEL_SLUG}")
+os.makedirs(out_dir, exist_ok=True)
+out_path = os.path.join(out_dir, f"bfcl_multiturn_{CONFIG}.json")
+shm_path = f"/dev/shm/bfcl_sglang_{MODEL_SLUG}_{CONFIG}.json"
 with open(shm_path, "w") as f:
     json.dump(output, f, indent=2, ensure_ascii=False)
-
-import shutil
 shutil.copy(shm_path, out_path)
 
 print(f"\n{'='*60}")
@@ -224,4 +312,9 @@ print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT: {summary['avg_ttft_s']}s")
 print(f"평균 TPOT: {summary['avg_tpot_s']}s")
 print(f"평균 per-request throughput: {summary['avg_throughput_tok_per_s']} tok/s")
-print(f"결과 저장: {out_path}")
+print(f"\n[SGLang hicache KV stats]")
+for inst, s in kv_stats.items():
+    if s:
+        print(f"  {inst}: token_usage max={s['token_usage']['max']:.3f}  "
+              f"mean={s['token_usage']['mean']:.3f}  samples={s['token_usage']['samples']}")
+print(f"\n결과 저장: {out_path}")
