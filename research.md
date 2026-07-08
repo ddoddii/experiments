@@ -117,12 +117,22 @@ tool call 종료 직전 D로 prefetch한다. 보존 tier는 tool duration·압�
 - **break-even 맵의 RAM 영역** — 위로 인해 미실현(여전히 예측).
 - **§2.3 "tool call 중 D idle KV 17%"** — vllm-ppd 측정, SGLang에 transfer 안 됨.
 
-## 7. Next (코드 작업)
+## 7. Next (코드 작업) → 실행됨 (2026-07, §2.16)
 
 SGLang 클론 후: 생성/세션 KV의 free/offload 지점(`disaggregation/decode.py`,
 `decode_kvcache_offload_manager.py`)에서 **목적지를 host/SSD 대신 P-HBM으로, tool-duration-
 aware trigger로** 수정 → E1의 2.4× emulation을 실제 end-to-end로 검증. 그 전 motivation은
 Fig 1–3로 확정.
+
+**결과 (§2.16, 브랜치 `claude/youthful-knuth-det52g`)**: D→P-HBM parking을 구현·측정했으나
+이 **2×A6000(쌍별 NVLink) 하드웨어에선 host-DRAM hicache를 이기지 못했다.** head-to-head
+(동일 세션): park TTFT 1.856s(reuse 0.390) vs hicache 1.333s(0.744) — **+39.2% 느림**, radix
+보다도 +5%. 두 실패 원인: ① Design A(P GPU park)는 압박 시 P 풀 포화로 alloc 88% 실패·
+survival 0% — "P idle" 전제가 압박과 상충. ② 전용 유휴 GPU2 풀(4a)은 용량은 100% survival로
+검증했으나 GPU0↔GPU2가 **PCIe**(NVLink 쌍은 0-1,2-3뿐)라 host-DRAM 대비 대역폭 이점 없음.
+**핵심 교훈: 저장 티어 추가만으로는 무이득 — 병목은 대역폭이 아니라 fetch-on-hit 통합.**
+아이디어는 all-to-all NVLink(NVSwitch/DGX)·NVLink-paired 여유 GPU·진짜 multi-node에서만 실현.
+파이프라인 코드(IPC/P2P/insert)는 재사용 자산으로 보존.
 
 ---
 
@@ -973,6 +983,75 @@ E4·E5 모두 "단일 P+단일 세션+radix 유지면 시스템이 이미 효율
 (decode.py = turn 끝 KV free 지점, decode_kvcache_offload_manager.py), `mem_cache/`(radix,
 HiCache), transfer connector. E4/E5가 그 이득의 baseline·motivation을 먼저 못박음.
 
+### 2.16 "Idle KV Parking" 구현 및 검증 (2026-07, Phase 0~1) — 저장 티어만으로는 무이득, 병목은 fetch 통합
+
+§2.15/§7의 "코드 작업"을 실제로 구현하고 end-to-end로 측정했다. **결론: 이 2×A6000(쌍별
+NVLink) 하드웨어에서 D→P-HBM parking은 기존 host-DRAM hicache를 이기지 못하며, 그 이유가
+대역폭이 아니라 fetch 통합의 부재임을 메커니즘까지 규명했다.** (SGLang 브랜치 `claude/
+youthful-knuth-det52g`, 설계·데이터 상세는 그 repo의 `docs/developer_guide/idle_kv_parking_
+design.md` §9–§10.)
+
+**구현물 (SGLang)**: `--disaggregation-enable-idle-kv-parking` 플래그(`server_args.py`) +
+신규 모듈 `disaggregation/idle_kv_parking.py`(D→P **CUDA IPC 역방향 채널**, ZMQ 제어,
+P2P gather-copy, radix insert) + scheduler 배선. turn 종료 시(`scheduler_output_processor_
+mixin.py`) decode가 세션 KV를 P로 park, prefill이 event loop에서 `poll_incoming`으로 수신.
+
+**Phase 0 baseline (recompute vs fetch, pool 40000·C=8·delay 3s)** — §2.5/§2.15와 정합:
+LRU 축출을 유발하면 계층 캐시가 실제로 돈다. host-DRAM(L2)이 evict된 prefix를 담아 되가져와
+reuse를 **2.9× 끌어올린다** → 이것이 이겨야 할 incumbent.
+
+| mode | reuse_ratio | recompute tok | avg TTFT |
+|---|---|---|---|
+| radix (GPU only) | 0.257 | 2.85M | 2.40s |
+| **hicache_host** (L2 host DRAM) | **0.743** | 0.98M | **1.45s** |
+| hicache_file (+L3) | 0.743 | 0.98M | 1.50s |
+
+**Phase 1 — Design A (D→P GPU radix park)는 1P1D에서 실패**: 파이프라인 정확성은 완비(IPC
+52 GB/s, gather-copy MATCH, insert 200/200)했으나 이득은 0. park OFF(reuse 0.392, TTFT
+1.848s) ≈ park ON(0.375, 1.838s). DIAG로 원인 확정: `recv=246 processed=30 survival=0%` —
+**압박 상태에서 P KV 풀이 꽉 차 park alloc 88% 실패, 복사된 소수도 hit 전 즉시 evict.**
+→ **"유휴 P GPU" 전제가 압박과 모순한다**: P가 evict할 만큼 압박받는 그 순간(parking이
+필요한 때) P GPU엔 여유가 없다. (이는 §2.12의 "P idle 83–90%"가 *자연 동시성*에서 측정된
+반면, parking 유발엔 `--max-total-tokens`로 **P 풀을 인위 축소**해 eviction을 강제한 데서
+온다 — 유휴와 축출은 같은 자원을 두고 상충.)
+
+**Slice 4a — 전용 유휴 GPU2 park 풀**: Design A의 P-GPU 병목을 우회하려 별도 GPU2(26GB 풀)에
+park. 두 실패모드가 모두 사라짐:
+
+| | Design A (P GPU) | 4a (GPU2 전용 풀) |
+|---|---|---|
+| 드롭(alloc-fail) | 88% (recv246→proc30) | **0%** (recv260→proc260) |
+| survival | 0% | **100% (32/32)** |
+
+→ **용량 전제는 검증.** 그러나 `nvidia-smi topo -m`: GPU0(P)↔GPU2(park)=PCIe. NVLink 쌍은
+(0-1),(2-3)뿐 → park↔fetch 경로가 host-DRAM과 동일 속도. (마이크로벤치: NVLink 쌍 P2P
+**52 GB/s** vs host-DRAM PCIe **26 GB/s**, 4×; 단 그 52 GB/s는 P–D(GPU0-1)에만, 여유 GPU2엔
+해당 없음.)
+
+**Head-to-head (결정적, 3-arm 동일 세션 back-to-back, pool 40000·C=8·delay 3s·200 items)**:
+
+| arm | TTFT | throughput | reuse_ratio | vs radix | vs hicache |
+|---|---|---|---|---|---|
+| radix | 1.767s | 64.2 tok/s | **0.399** | — | |
+| **hicache** ✅ | **1.333s** | 66.7 tok/s | **0.744** | −24.6% | 승자 |
+| park (4a) | 1.856s | 62.4 tok/s | **0.390** | **+5.0%** | **+39.2% 느림** |
+
+→ **예측 그대로**: `park.reuse(0.390) ≈ radix.reuse(0.399)` ≠ hicache(0.744). park은 KV를
+GPU2에 **저장만** 하고 prefill이 읽는 **fetch-on-hit이 없어 prefix-hit을 못 만든다.** park은
+radix보다도 +5% 느림 — D→GPU2 복사가 읽는 쪽 없는 순손실. **병목은 대역폭이 아니라 fetch
+통합**이고, 통합된 fetch 경로를 가진 host-DRAM hicache가 명확히 이긴다.
+
+**Phase 1 종합 결론**: "유휴 자원으로 KV parking" 아이디어의 두 축 — (1) 전송(NVLink P↔D
+52 GB/s), (2) 용량(유휴 GPU 100% survival) — 은 각각 검증됐으나 **이 2×A6000 토폴로지에선 한
+경로에서 결합되지 않는다**: NVLink는 P-D에만, 여유 GPU는 PCIe로만 접근. 실익을 내려면
+**all-to-all NVLink(NVSwitch/DGX)**, **여유 GPU가 P와 NVLink-paired인 배치**, 혹은 **진짜
+multi-node(aggregate GPU memory ≫ single host)** 가 필요하다. 파이프라인 코드(IPC/P2P/insert,
+2a~4a)는 그런 환경의 재사용 자산으로 남긴다. (이 발견은 §2.11/§2.12 motivation의 정직한
+경계조건이기도 하다 — NVLink 이점과 P-idle 용량이 동시에 성립하는 환경이 전제.)
+
+**재현**: `PREFILL_MAX_TOTAL_TOKENS=40000 CONCURRENCY=8 TOOL_DELAY=3 ./scripts/sglang/run_
+head_to_head.sh` → `benchmark/head_to_head_analyze.py`가 3-arm 표 + `park vs hicache` 판정 출력.
+
 ---
 
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
@@ -1368,6 +1447,12 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/sglang_hicache/Qwen3-14B/nvlink_c{4,8,16}_pd_hbm_occupancy.{csv,png}` | §2.12 concurrency sweep (correlated-demand) |
 | `results/sglang_hicache/Qwen3-14B/1p1d_kv_breakeven_map.json` | §2.8 2차 PD 측정 (wait_complete) |
 | `results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json` | §2.8 단일 서버 대조군 = T1 proxy 소스 |
+| `scripts/sglang/run_head_to_head.sh` | §2.16 3-arm(radix/hicache/park) 동일 세션 head-to-head 러너 |
+| `benchmark/head_to_head_analyze.py` | §2.16 head-to-head 표+판정 (park.reuse≈radix 진단) |
+| `results/head_to_head/h2h_p40000_c8_d3/` | §2.16 head-to-head 실측 (park +39.2% vs hicache) + reuse delta |
+| `results/bfcl_multiturn_results_{A_nopark,B_park}.json` | §2.16 Design A 파킹 OFF/ON 대조 (무이득) |
+| `results/nvlink_microbench.json`, `results/nvlink_xproc_microbench.json` | §2.16 NVLink 52 vs PCIe 26 GB/s, cross-proc IPC 검증 |
+| SGLang `docs/developer_guide/idle_kv_parking_design.md` | §2.16 idle-KV-parking 설계·구현·Phase1 결론 (브랜치 `youthful-knuth-det52g`) |
 
 ## 9. References
 
