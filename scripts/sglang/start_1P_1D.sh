@@ -119,7 +119,7 @@ sleep 2
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
 echo "[2/5] Prefill (GPU ${PREFILL_GPU}, port ${PREFILL_PORT})  args: ${PREFILL_CACHE_ARGS}"
-CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_server \
+env CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port ${PREFILL_PORT} ${PREFILL_GPU_ARG} \
   --enable-metrics \
   ${PREFILL_CACHE_ARGS} \
