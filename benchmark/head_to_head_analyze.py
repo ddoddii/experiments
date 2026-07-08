@@ -117,21 +117,35 @@ def main():
         sign = "개선" if (d_ttft is not None and d_ttft < 0) else "악화/무변화"
         print(f"  {arm:<8} TTFT {fmt(d_ttft,1)}% ({sign}), throughput {fmt(d_tput,1)}% vs radix")
 
-    # --- park vs hicache 직접 비교 (핵심 결론) ---
-    hi, pk = by.get("hicache", {}), by.get("park", {})
+    # --- 핵심 질문 1: park(fetch) 가 radix(recompute) 를 이기는가 ---
+    rx, pk = by.get("radix", {}), by.get("park", {})
+    hi = by.get("hicache", {})
+    rr = rx.get("reuse_ratio")
+    pr = pk.get("reuse_ratio")
+    hr = hi.get("reuse_ratio")
+    if rx.get("avg_ttft_s") and pk.get("avg_ttft_s"):
+        gap_rx = pct_delta(rx["avg_ttft_s"], pk["avg_ttft_s"])  # -면 park가 더 빠름
+        verdict["park_vs_radix_ttft_pct"] = gap_rx
+        print("\n핵심 결론 1 — park(fetch) vs radix(recompute):")
+        print(f"  park TTFT {fmt(pk['avg_ttft_s'])}s  vs  radix TTFT {fmt(rx['avg_ttft_s'])}s "
+              f"→ park는 radix 대비 {fmt(gap_rx,1)}% ({'개선=recompute 이김' if (gap_rx or 0)<0 else '무개선'})")
+        print(f"  reuse_ratio: radix={fmt(rr)}  park={fmt(pr)}"
+              + (f"  hicache={fmt(hr)}" if hr is not None else ""))
+        if pr is not None and rr is not None:
+            if pr - rr > 0.03:
+                print("  → park reuse > radix reuse: fetch-on-hit 이 실제로 prefix-hit 을 "
+                      "만들어 recompute 를 대체함. (fetch 동작 확인)")
+            elif abs(pr - rr) <= 0.03:
+                print("  → park reuse ≈ radix reuse: fetch 가 prefix-hit 을 못 만듦 "
+                      "(park 미동작/미적중). p 로그의 GPU-fetch DIAG 확인 필요.")
+
+    # --- 핵심 질문 2: park(fetch) vs hicache(host-DRAM fetch) ---
     if hi.get("avg_ttft_s") and pk.get("avg_ttft_s"):
-        gap = pct_delta(hi["avg_ttft_s"], pk["avg_ttft_s"])
-        verdict["park_vs_hicache_ttft_pct"] = gap
-        print("\n핵심 결론 (park vs hicache):")
+        gap_hi = pct_delta(hi["avg_ttft_s"], pk["avg_ttft_s"])
+        verdict["park_vs_hicache_ttft_pct"] = gap_hi
+        print("\n핵심 결론 2 — park(GPU-fetch, PCIe) vs hicache(host-DRAM fetch, PCIe):")
         print(f"  park TTFT {fmt(pk['avg_ttft_s'])}s  vs  hicache TTFT {fmt(hi['avg_ttft_s'])}s "
-              f"→ park는 hicache 대비 {fmt(gap,1)}% (+면 더 느림)")
-        # reuse 통합 여부 진단
-        pr, hr = pk.get("reuse_ratio"), hi.get("reuse_ratio")
-        rr = by.get("radix", {}).get("reuse_ratio")
-        print(f"  reuse_ratio: radix={fmt(rr)}  park={fmt(pr)}  hicache={fmt(hr)}")
-        if pr is not None and rr is not None and abs(pr - rr) < 0.02:
-            print("  → park reuse ≈ radix reuse: 파킹은 저장만 하고 fetch 통합이 없어 "
-                  "prefix-hit 을 만들지 못함 (예상과 일치).")
+              f"→ park는 hicache 대비 {fmt(gap_hi,1)}% (+면 더 느림, ≈0이면 동률)")
 
     out = os.path.join(args.outdir, "head_to_head_summary.json")
     json.dump(verdict, open(out, "w"), indent=2, ensure_ascii=False)

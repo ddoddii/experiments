@@ -9,15 +9,16 @@
 #     end-to-end BFCL 워크로드에서 실제로 이득이 있는가?"를 수치로 결론낸다.
 #
 # 세 팔(arm)을 동일 압박(pressure)에서 back-to-back 측정한다 (cross-run drift 제거):
-#   radix     GPU-only prefix cache            = park의 현실적 base (fetch 통합 없음)
-#   hicache   + host-DRAM L2 (통합된 fetch 경로) = 이겨야 할 incumbent
-#   park      radix + 전용 유휴 GPU park 풀(4a)  = fetch 통합 없는 저장 티어
+#   radix     GPU-only prefix cache            = recompute baseline (이겨야 할 대상)
+#   hicache   + host-DRAM L2 (PCIe fetch)      = 기존 incumbent
+#   park      radix + 전용 유휴 GPU 풀 + 4b fetch-on-hit = D→GPU2 저장 후 다음 turn에 GPU2→P fetch
 #
 # 해석 축:
 #   - avg_ttft_s        : 낮을수록 좋음 (prefix 재사용이 재계산을 줄임)
-#   - reuse_ratio       : cached/prompt. hicache는 높고, park는 fetch 미통합이라 radix와 같아야 함
+#   - reuse_ratio       : cached/prompt. fetch가 동작하면 park > radix (recompute 대체)
 #   - overall throughput: tok/s
-# 예상: park ≈ radix < hicache. 즉 저장만으로는 이득 없음 → fetch 통합이 병목이지 대역폭이 아님.
+# 핵심 질문: (1) park(fetch)가 radix(recompute)를 이기는가?  (2) hicache와 얼마나 차이나는가?
+#   (park는 slice 4b fetch-on-hit 구현됨 — GPU2에 저장한 prefix를 다음 turn prefill 전에 P로 당겨옴)
 #
 # 사용:
 #   ./scripts/sglang/run_head_to_head.sh
