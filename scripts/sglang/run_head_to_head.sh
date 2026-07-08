@@ -122,9 +122,9 @@ for ARM in $ARMS; do
   echo ">> reuse-vs-recompute summary (${ARM}):"
   python "$SCRAPER" --delta "$BEFORE" "$AFTER" --out "$DELTA" || true
 
-  # park 팔이면 P 로그에서 park diag(recv/processed/survival)도 남긴다.
+  # park 팔이면 P 로그에서 park manager 출력(init/setup/park/fetch/DIAG/error)을 남긴다.
   if [ "$ARM" = "park" ]; then
-    grep -E "idle_kv_park|park-diag|survival" logs/p1.log 2>/dev/null | tail -20 \
+    grep -iE "idle kv parking|GPU[0-9]+-(park|fetch)|DIAG|park.*fail|park.*error" logs/p1.log 2>/dev/null \
       > "$OUTDIR/park_diag_${ARM}.txt" || true
   fi
 
