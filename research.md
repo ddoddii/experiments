@@ -124,16 +124,15 @@ SGLang 클론 후: 생성/세션 KV의 free/offload 지점(`disaggregation/decod
 aware trigger로** 수정 → E1의 2.4× emulation을 실제 end-to-end로 검증. 그 전 motivation은
 Fig 1–3로 확정.
 
-**결과 (§2.16, 브랜치 `claude/youthful-knuth-det52g`)**: D→P-HBM parking을 **fetch-on-hit(4b)까지
-end-to-end로 구현·측정**했으나 이 **2×A6000 단일 노드에선 어떤 pool에서도 radix를 유의미하게 못
-이겼다.** 근본 원인은 구조적 **catch-22**: ① 파킹이 가치 있는 구간=강압박(pool 40000, radix reuse
-0.39)인데 여기선 **fetch한 KV가 병목 P GPU에 자리를 못 잡음(DIAG nospace 32%)**; ② restore 자리가
-생기는 pool ≥60000에선 radix가 evict를 안 해 reuse 이미 0.74 → 되찾을 게 없음(세 arm 수렴).
-"restore가 가치 있다"와 "restore가 자리 있다"가 공존 불가. **핵심 교훈: 저장은 유휴 자원으로
-offload되나 fetch한 KV는 attention이 읽으려면 병목 P GPU를 점유해야 함 — transfer 속도(NVLink)와
-무관, 토폴로지 독립적.** hicache는 같은 제약을 evict-to-room+async로 관리해 강압박에서만 승; park을
-그렇게 만들어도 PCIe·26GB<125GB라 hicache 재현이 상한. 실익 조건: **disaggregated/remote
-attention** 또는 **진짜 multi-node**. 파이프라인(2a~4b) 코드는 재사용 자산으로 보존.
+**결과 (§2.16, 브랜치 `claude/youthful-knuth-det52g`)**: D→P/유휴-GPU parking을 **fetch-on-hit +
+evict-to-room + async까지 end-to-end로 구현·측정**했고, **동작한다.** 강압박(pool 40k)에서 park이
+축출된 prefix를 되찾아 **reuse 0.38→0.74, TTFT −26% vs radix**, 성숙한 host-DRAM hicache(−24%)와
+**대등**(park −2.5%). 모든 pool에서 **park ≈ hicache**(차이 ~1~3.5%) — 유휴 GPU를 host DRAM 대신
+L2 복구 tier로 써도 동등함을 증명. 단 **복구 tier는 압박-조건부**: 무압박(pool≥60k)에선 축출이 없어
+park·hicache 모두 순수 오버헤드로 radix보다 +11~17% 느림. park의 *우위*(대등이 아닌)는 NVLink-paired
+유휴 GPU 또는 host-DRAM 부족 환경에서만. **정정**: 초기엔 "catch-22라 실익 없음"이라 결론냈으나 이는
+evict-to-room 부재 + stale-IPC 버그로 파킹이 죽어있던 탓이었고, 수정 후 park은 설계대로 동작.
+파이프라인(2a~4b) 코드는 재사용 자산.
 
 ---
 
@@ -984,7 +983,7 @@ E4·E5 모두 "단일 P+단일 세션+radix 유지면 시스템이 이미 효율
 (decode.py = turn 끝 KV free 지점, decode_kvcache_offload_manager.py), `mem_cache/`(radix,
 HiCache), transfer connector. E4/E5가 그 이득의 baseline·motivation을 먼저 못박음.
 
-### 2.16 "Idle KV Parking" 구현 및 검증 (2026-07, Phase 0~1) — end-to-end(fetch까지) 실패, catch-22 실증
+### 2.16 "Idle KV Parking" 구현 및 검증 (2026-07, Phase 0~1) — 동작 확인, park ≈ host-DRAM hicache
 
 §2.15/§7의 "코드 작업"을 실제로 구현하고 end-to-end로 측정했다. **결론: 이 2×A6000(쌍별
 NVLink) 하드웨어에서 D→P-HBM parking은 기존 host-DRAM hicache를 이기지 못하며, 그 이유가
@@ -1035,31 +1034,36 @@ recompute보다 빠르다"를 실측하려 **읽기 경로**를 붙였다: prefi
 radix insert → prefix-hit. (버그 fix: park key를 `origin_input_ids`만으로 — output_ids는
 재렌더링과 어긋나 매칭 실패했음.)
 
-**Head-to-head + 압박 완화 스윕 (C=8·delay 3s·200 items)**:
+**4b 동작에 필수였던 것**: (i) **evict-to-room** — fetch가 P GPU 자리를 못 잡으면(nospace) hicache처럼
+`tree_cache.evict(n)`(LRU)로 콜드 축출 후 복원; (ii) **async fetch** — 복사를 default stream에 올리고
+host-sync 제거(forward가 `forward_stream.wait_stream(default)` 하므로 정확); (iii) **stale-IPC 버그**
+수정(이전 run의 죽은 decode 핸들 → 파킹 setup이 조용히 죽음). 셋을 고치자 park이 hicache처럼 동작.
 
-| pool | radix TTFT/reuse | hicache TTFT/reuse | park(4b) TTFT/reuse | park vs radix |
-|---|---|---|---|---|
-| 40000 (강압박) | 1.83 / **0.39** | 1.38 / **0.74** | 1.83 / 0.45 | +0.2% |
-| 60000 | 1.27 / **0.74** | 1.38 / 0.74 | 1.19 / 0.74 | −6.3%\* |
-| 80000 | 1.17 / **0.74** | 1.38 / 0.75 | 1.19 / 0.74 | +1.0% |
-| 120000 | 1.15 / **0.74** | 1.27 / 0.75 | 1.15 / 0.74 | +0.4% |
+**Head-to-head + 압박 스윕 (수정된 파킹, C=8·delay 3s·200 items)**:
 
-\* pool-60000 −6.3%는 radix-60000 outlier 착시(reuse 동일 → fetch 무의미). pool-40000 DIAG:
-`FETCH hits=26 nospace=237 (of 747), avg 235ms` — fetch는 동작(reuse 0.39→0.45)하나 **nospace 32%**.
+| pool | radix TTFT/reuse | hicache TTFT/reuse | park(4b) TTFT/reuse | park vs radix | park vs hicache |
+|---|---|---|---|---|---|
+| 40000 (강압박) | 1.83 / **0.38** | 1.38 / 0.74 | **1.35 / 0.74** | **−26%** | −2.5% |
+| 60000 | 1.20 / 0.74 | 1.34 / 0.74 | 1.36 / 0.74 | +13% | +1.2% |
+| 80000 | 1.22 / 0.74 | 1.32 / 0.74 | 1.35 / 0.74 | +11% | +2.9% |
+| 120000 | 1.12 / 0.74 | 1.27 / 0.75 | 1.31 / 0.74 | +17% | +3.4% |
 
-**Phase 1 종합 결론 — catch-22**: park+fetch는 **어떤 pool에서도 radix를 유의미하게 못 이긴다.**
-① 파킹이 가치 있는 구간 = 강압박(pool 40000, radix reuse 0.39)뿐인데 **여기선 fetch한 KV가 병목
-P GPU에 자리를 못 잡음(nospace 32%)**. ② restore 자리가 생기는 pool ≥60000에선 radix가 evict를
-안 해 reuse가 이미 0.74 → **되찾을 게 없음**(세 arm 수렴). **"restore가 가치 있다"와 "restore가
-자리 있다"가 공존하지 않는다.** 근본 이유: 저장은 유휴 GPU로 offload되나 **fetch한 KV는 attention이
-읽으려면 병목 P GPU를 점유해야 함 — transfer 속도(NVLink)와 무관, 토폴로지 독립적.** hicache가
-강압박에서 이기는 건 같은 제약을 evict-to-room+async로 관리하기 때문이며, park을 그렇게 만들어도
-이 토폴로지선 GPU2→GPU0=PCIe·26GB<125GB라 **hicache 재현이 상한.** (pool ≥60000에선 hicache조차
-순수 오버헤드로 radix보다 느림.) → 실익 조건: **disaggregated/remote attention**(restore가 P GPU
-비점유) 또는 **진짜 multi-node.** 파이프라인 코드(2a~4b)는 재사용 자산.
+강압박 DIAG(성공): `opened peer KV pool ... MATCH 52.8 GB/s → GPU2-park → GPU2-fetch pulled 5355 tok
+in 50.6ms(첫)→3.1ms(async)`, nospace≈0.
 
-**재현**: `POOLS="60000 80000 120000" ./scripts/sglang/run_head_to_head_pool_sweep.sh` →
-`benchmark/head_to_head_pool_compare.py`가 pool별 3-arm 표 출력.
+**Phase 1 종합 결론 — park은 동작하며 hicache와 대등, 복구 tier는 압박-조건부**:
+① **강압박(40k)**: park이 축출 prefix를 되찾아 reuse 0.38→0.74, **TTFT −26% vs radix**, host-DRAM
+hicache(−24%)와 **대등**(park −2.5%). ② **무압박(≥60k)**: 축출이 없어 되찾을 게 없음 → radix가 이미
+0.74, park·hicache는 순수 오버헤드로 radix보다 +11~17% 느림. → **복구 tier는 압박이 있을 때만
+이득**이고, **park ≈ hicache**(모든 pool 차이 ~1~3.5%). **유휴 GPU를 host DRAM 대신 L2 복구 tier로
+써도 동등**함을 end-to-end 검증. park의 *우위*는 NVLink-paired 유휴 GPU 또는 host-DRAM 부족 환경에서만.
+
+> **정정(중요)**: 이전 버전은 "catch-22라 park이 근본적으로 실익 없음"이라 결론냈으나 **틀렸다.** 그건
+> evict-to-room 부재 + stale-IPC 버그로 파킹이 죽어있던 탓. 수정 후 park은 설계대로(hicache 대등)
+> 동작. §2.11/§2.12 motivation(NVLink 이점 + P-idle 용량)은 유효하다.
+
+**재현**: `POOLS="40000 60000 80000 120000" ./scripts/sglang/run_head_to_head_pool_sweep.sh` →
+`benchmark/plot_phase1_catch22.py`(그림). 상세 로그·그림: `results/phase1_report/report.md`.
 
 ---
 
@@ -1458,7 +1462,8 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 | `results/sglang_hicache/Qwen3-14B/1server_kv_breakeven_map.json` | §2.8 단일 서버 대조군 = T1 proxy 소스 |
 | `scripts/sglang/run_head_to_head.sh` | §2.16 3-arm(radix/hicache/park) 동일 세션 head-to-head 러너 |
 | `benchmark/head_to_head_analyze.py` | §2.16 head-to-head 표+판정 (park.reuse≈radix 진단) |
-| `results/head_to_head/h2h_p{40000,60000,80000,120000}_c8_d3/` | §2.16 head-to-head 압박 스윕 (park vs radix vs hicache, catch-22) |
+| `results/head_to_head/h2h_p{40000,60000,80000,120000}_c8_d3/` | §2.16 head-to-head 압박 스윕 (park ≈ hicache, 압박서 −26% vs radix) |
+| `results/phase1_report/` | §2.16 보고서(report.md) + 그림(catch22_pressure.png 스윕, pressure_win_40k.png) |
 | `scripts/sglang/run_head_to_head_pool_sweep.sh`, `benchmark/head_to_head_pool_compare.py` | §2.16 압박 완화 스윕 러너 + pool 간 비교표 |
 | `results/bfcl_multiturn_results_{A_nopark,B_park}.json` | §2.16 Design A 파킹 OFF/ON 대조 (무이득) |
 | `results/nvlink_microbench.json`, `results/nvlink_xproc_microbench.json` | §2.16 NVLink 52 vs PCIe 26 GB/s, cross-proc IPC 검증 |
