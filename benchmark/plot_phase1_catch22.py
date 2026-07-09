@@ -79,8 +79,8 @@ def fig1_pressure(rows):
     axr.grid(True, axis="y", color=GRID, lw=0.8, zorder=0)
     axr.set_axisbelow(True)
     axr.legend(loc="lower right", frameon=False, fontsize=9.5)
-    axr.set_title("Idle KV parking의 catch-22 — 압박(P GPU pool) 스윕, BFCL C=8",
-                  fontsize=12.5, fontweight="bold", color=INK, pad=10, loc="left")
+    axr.set_title("Spare-GPU parking ≈ host-DRAM hicache — 압박(P GPU pool) 스윕, BFCL C=8",
+                  fontsize=12, fontweight="bold", color=INK, pad=10, loc="left")
 
     # ---- 하단: TTFT ----
     for arm, c, lw in [("radix", C_RADIX, 2.0), ("hicache", C_HICACHE, 2.0),
@@ -102,42 +102,45 @@ def fig1_pressure(rows):
     print(f"[saved] {OUT}/catch22_pressure.png")
 
 
-def fig2_fetch(rows):
-    # pool 40000 park DIAG: hits=26 already=278 miss=206 nospace=237 (of 747)
-    # 좌→우 서사: 성공(hits) → fetch 불필요/불가한 정상 사유 → 병목(nospace, 빨강 펀치라인).
-    cats = [("hits", 26, "#009E73", "fetch 성공", "white"),
-            ("already", 278, "#9ca3af", "already\nP가 이미 보유 (정상)", INK),
-            ("miss", 206, "#cbd5e1", "miss\nparked 없음", INK),
-            ("nospace", 237, "#D55E00", "nospace\nP GPU 자리 없음", "white")]
-    total = sum(c[1] for c in cats)
-    fig, ax = plt.subplots(figsize=(8.6, 2.7))
-    left = 0
-    for name, n, color, lbl, txtc in cats:
-        ax.barh(0, n, left=left, color=color, height=0.6, zorder=3,
-                edgecolor="white", linewidth=2.0)
-        pct = n / total * 100
-        if n > 60:
-            ax.text(left + n / 2, 0, f"{lbl}\n{n}  ({pct:.0f}%)", ha="center",
-                    va="center", fontsize=10, color=txtc, fontweight="bold")
-        else:  # hits: 작은 조각은 막대 아래에 라벨
-            ax.text(left + n / 2, -0.45, f"{name} {n}\n({pct:.1f}%)", ha="center",
-                    va="top", fontsize=9, color="#047857", fontweight="bold")
-        left += n
-    ax.set_xlim(0, total)
-    ax.set_ylim(-0.95, 0.55)
-    ax.axis("off")
-    ax.set_title("강압박(pool 40k): fetch 시도 747건의 결과 — nospace 32%가 restore를 막는다",
+def fig2_pressure_win(rows):
+    """강압박(pool 40k) 결정 케이스: park/hicache가 축출된 prefix를 되찾아 radix를 이긴다."""
+    r = rows[40000]
+    arms = [("radix", C_RADIX, "radix (GPU prefix cache)"),
+            ("hicache", C_HICACHE, "hicache (host-DRAM fetch)"),
+            ("park", C_PARK, "park (GPU2 fetch, 본 연구)")]
+    ys = list(range(len(arms)))[::-1]  # radix on top
+    fig, ax = plt.subplots(figsize=(8.6, 3.2))
+    for y, (arm, c, lbl) in zip(ys, arms):
+        ttft = r[arm]["avg_ttft_s"]
+        reuse = r[arm]["reuse_ratio"]
+        ax.barh(y, ttft, color=c, height=0.62, zorder=3, edgecolor="white", linewidth=2)
+        ax.text(ttft - 0.03, y, f"{ttft:.2f}s", ha="right", va="center",
+                fontsize=11, color="white", fontweight="bold")
+        ax.text(0.02, y + 0.34, lbl, ha="left", va="bottom", fontsize=10, color=INK)
+        ax.text(ttft + 0.03, y, f"reuse {reuse:.2f}", ha="left", va="center",
+                fontsize=9.5, color=MUTED)
+    rd = r["radix"]["avg_ttft_s"]
+    for arm, c in [("hicache", C_HICACHE), ("park", C_PARK)]:
+        d = (r[arm]["avg_ttft_s"] - rd) / rd * 100
+        y = ys[[a[0] for a in arms].index(arm)]
+        ax.text(r[arm]["avg_ttft_s"] + 0.42, y, f"({d:+.0f}% vs radix)",
+                ha="left", va="center", fontsize=9.5, color=c, fontweight="bold")
+    ax.set_xlim(0, rd * 1.28)
+    ax.set_ylim(-0.5, len(arms) - 0.2)
+    ax.set_yticks([])
+    ax.set_xlabel("평균 TTFT (s)  ↓ 낮을수록 좋음", fontsize=10)
+    for s in ("top", "right", "left"):
+        ax.spines[s].set_visible(False)
+    ax.grid(True, axis="x", color=GRID, lw=0.8, zorder=0)
+    ax.set_axisbelow(True)
+    ax.set_title("강압박(pool 40k): park·hicache가 축출된 prefix를 되찾아 radix를 26% 이긴다",
                  fontsize=12, fontweight="bold", color=INK, loc="left", pad=10)
-    fig.text(0.02, 0.05,
-             "핵심: fetch한 KV는 attention용으로 병목 P GPU를 다시 점유해야 함 "
-             "→ 압박 구간엔 자리가 없다(nospace 32%). 저장은 offload돼도 restore는 병목이다.",
-             fontsize=9, color=MUTED, ha="left")
-    fig.subplots_adjust(left=0.02, right=0.985, top=0.82, bottom=0.14)
-    fig.savefig(f"{OUT}/catch22_fetch_nospace.png", dpi=200, facecolor="white")
-    print(f"[saved] {OUT}/catch22_fetch_nospace.png")
+    fig.subplots_adjust(left=0.02, right=0.985, top=0.85, bottom=0.16)
+    fig.savefig(f"{OUT}/pressure_win_40k.png", dpi=200, facecolor="white")
+    print(f"[saved] {OUT}/pressure_win_40k.png")
 
 
 if __name__ == "__main__":
     rows = load()
     fig1_pressure(rows)
-    fig2_fetch(rows)
+    fig2_pressure_win(rows)

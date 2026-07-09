@@ -133,53 +133,56 @@ GPU2→GPU0로 복사 + radix insert → 다음 `match_prefix`가 prefix-hit. (�
 output_ids`를 key로 저장 → tool-call turn에서 재렌더링과 어긋나 거의 miss. **fix: 프롬프트
 `origin_input_ids`만 park** — 다음 turn의 token-exact prefix.)
 
-**Head-to-head + 압박 완화 스윕 (C=8, delay 3s, 200 items)**:
+**4b가 동작하려면 두 가지가 더 필요했다** (초기엔 없어서 무이득처럼 보였다):
+- **evict-to-room**: fetch가 P GPU 자리를 못 잡으면(초기 DIAG `nospace 32%`) 포기했음 → hicache처럼
+  `tree_cache.evict(n)`(LRU)로 콜드 축출 후 복원. (축출 KV는 park 풀에 안전.)
+- **async fetch**: GPU2→GPU0 복사를 default stream에 올리고 host-sync 제거(SGLang이 forward 전
+  `forward_stream.wait_stream(default)` 하므로 정확). 스케줄러 235ms 블로킹 제거.
+- (+ **stale-IPC 버그** 수정: prefill이 이전 run의 죽은 decode IPC 핸들을 열어 파킹 setup이 조용히
+  죽던 문제 → fresh-ts 검증 + `/dev/shm` 정리.)
 
-| pool | radix TTFT / reuse | hicache TTFT / reuse | park(4b) TTFT / reuse | park vs radix |
-|---|---|---|---|---|
-| 40000 (강압박) | 1.83 / **0.39** | 1.38 / **0.74** | 1.83 / 0.45 | +0.2% |
-| 60000 | 1.27 / **0.74** | 1.38 / 0.74 | 1.19 / 0.74 | −6.3%\* |
-| 80000 | 1.17 / **0.74** | 1.38 / 0.75 | 1.19 / 0.74 | +1.0% |
-| 120000 | 1.15 / **0.74** | 1.27 / 0.75 | 1.15 / 0.74 | +0.4% |
+**Head-to-head + 압박 스윕 (수정된 파킹, C=8, delay 3s, 200 items)**:
 
-\* pool-60000 −6.3%는 radix-60000 TTFT outlier에 의한 착시(reuse 동일 → fetch 무의미). 노이즈.
+| pool | radix TTFT / reuse | hicache TTFT / reuse | park(4b) TTFT / reuse | park vs radix | park vs hicache |
+|---|---|---|---|---|---|
+| 40000 (강압박) | 1.83 / **0.38** | 1.38 / 0.74 | **1.35 / 0.74** | **−26%** | −2.5% |
+| 60000 | 1.20 / 0.74 | 1.34 / 0.74 | 1.36 / 0.74 | +13% | +1.2% |
+| 80000 | 1.22 / 0.74 | 1.32 / 0.74 | 1.35 / 0.74 | +11% | +2.9% |
+| 120000 | 1.12 / 0.74 | 1.27 / 0.75 | 1.31 / 0.74 | +17% | +3.4% |
 
-**pool 40000 DIAG**: `FETCH: hits=26 miss=206 already=278 nospace=237 (of 747), avg=235.8ms`.
-fetch는 실제로 동작(reuse 0.39→0.45, +217k 토큰 fetch)하나 성공률 3.5%. **nospace 32%**: fetch한
-KV는 attention이 읽으려면 **압박받는 P GPU 풀에 다시 넣어야** 하는데 pool 40000이 꽉 차 실패.
+**강압박 DIAG (성공)**: `opened peer KV pool ... MATCH 52.8 GB/s` → `GPU2-park` → `GPU2-fetch:
+pulled 5355 tok (P had 87 of 5442) in 50.6ms`(첫) → 다음 3.1ms(async). `nospace≈0`(evict-to-room).
 
 ---
 
-## 6. 종합 결론 — catch-22 (idle KV parking은 단일 노드에서 실익 없음)
+## 6. 종합 결론 — park은 동작하며 hicache와 대등하다 (복구 tier는 압박-조건부 이득)
 
-전송(2a)·용량(4a)·저장(3)·**fetch(4b)** 파이프라인을 정확성까지 완비했으나, park+fetch는 **어떤
-operating point에서도 radix(GPU prefix cache)를 유의미하게 이기지 못했다.** 원인은 구현 디테일이 아니라
-구조적 **catch-22**:
+전송(2a)·저장(3/4a)·**fetch(4b)+evict-to-room+async** 파이프라인을 완비하자, park은 **설계대로
+동작했다**:
 
-1. **파킹이 가치 있는 구간 = 강압박(pool 40000)뿐** — 여기서만 radix가 evict해 reuse 0.39로
-   떨어지고 재계산이 발생. **그런데 이 구간은 nospace 32%** — fetch한 KV가 병목 P GPU에 자리를 못 잡음.
-2. **restore 자리가 있는 구간 = pool ≥60000** — 그런데 여기선 radix가 evict를 안 해 reuse가 이미
-   0.74 = hicache와 동일 → **되찾을 게 없음.** 세 arm 모두 reuse 0.74로 수렴.
-3. → **"restore가 가치 있다"(evict)와 "restore가 자리 있다"(P 여유)가 결코 공존하지 않는다.**
+1. **강압박(pool 40k)**: park이 축출된 prefix를 되찾아 **reuse 0.38→0.74**로 복구, **TTFT −26% vs
+   radix**. 성숙한 host-DRAM hicache(−24%)와 **대등**(park −2.5% vs hicache).
+2. **무압박(pool ≥60k)**: 축출이 없어 되찾을 게 없음 → radix가 이미 reuse 0.74. park·hicache는
+   **순수 오버헤드**로 radix보다 +11~17% 느림(복구 tier의 상시 비용).
+3. → **복구 tier(park/hicache)는 "압박이 있을 때만" 이득**이고, park은 host-DRAM hicache와 **거의
+   완전히 겹쳐 움직인다**(모든 pool에서 차이 ~1~3.5%).
 
-**근본 이유**: 저장은 유휴 GPU로 offload되지만, **fetch한 KV는 attention이 읽으려면 병목 P GPU를
-점유해야 한다.** 이 restore-병목은 **transfer 속도(NVLink)와 무관 = 토폴로지 독립적.** hicache가
-강압박에서 이기는 건(0.74) 같은 제약을 **evict-to-room + async**로 관리하기 때문이며, park을 그렇게
-엔지니어링해도 이 토폴로지선 GPU2→GPU0=PCIe(host DRAM 동속)·26GB<125GB라 **hicache 재현이 상한.**
-(부가: pool ≥60000에선 evict가 없어 hicache조차 순수 오버헤드로 radix보다 +8~10% 느림.)
+**park ≈ hicache**: 강압박에선 park이 근소하게 빠르고(GPU-P2P fetch vs host-DRAM load), 무압박에선
+근소하게 느리다(park은 완료 요청을 매번 GPU2로 복사하는 상시 오버헤드). → **유휴 GPU를 host DRAM
+대신 L2 복구 tier로 써도 동등**하다는 end-to-end 증명.
 
 | 전제 | 검증 결과 |
 |---|---|
-| ① 전송 싸다 (NVLink) | ✅ P↔D(GPU0-1) 52 GB/s — 단 NVLink **쌍**에만 |
-| ② P에 여유 있다 | ⚠️ 저장은 유휴 GPU2로 해결(survival 100%), 그러나 **restore는 병목 P GPU 점유(nospace 32%)** |
-| ③ fetch가 재계산 이긴다 | ⚠️ reuse 레벨은 참(0.39→0.45)이나 **순 TTFT 무승부** — catch-22로 회수량 제한 |
+| ① 전송 싸다 | ✅ P↔D(GPU0-1) NVLink 52 GB/s; GPU2 fetch는 PCIe지만 TTFT의 작은 부분이라 hicache와 동속 |
+| ② P에 여유 있다 | ✅ 유휴 GPU2 저장 + **evict-to-room으로 restore 자리 확보**(hicache와 동일 로직) |
+| ③ fetch가 재계산 이긴다 | ✅ 강압박서 reuse 0.38→0.74, **TTFT −26%** — 가설 성립 |
 
-**아이디어가 실익을 내려면**: (1) attention이 remote KV를 직접 읽는 **disaggregated/remote
-attention**(restore가 P GPU를 점유 안 해도 됨), 또는 (2) host DRAM이 유일 로컬 tier이고 원격 GPU
-합산 용량이 host를 압도하는 **진짜 multi-node.** 단일 노드·단일 GPU-tier로는 hicache가 이미 상한.
-파이프라인 코드(2a~4b: IPC/P2P/park/fetch)는 그런 환경의 재사용 자산으로 남긴다.
+**park의 *우위*(대등이 아닌)가 나려면**: (a) GPU2가 P와 **NVLink-paired**(전송 2×), 또는 (b) **host
+DRAM 부족/경합**으로 유휴 GPU 용량이 실제로 필요한 상황. 이 단일 노드·PCIe 셋업에선 동률.
 
-이 발견은 `research.md` §2.11/§2.12 motivation의 **정직한 경계조건**이다.
+> **정정**: 앞서 이 문서는 "catch-22라 park이 근본적으로 안 된다"고 결론냈으나 **틀렸다.** 그건
+> evict-to-room 부재 + stale-IPC 버그로 파킹이 죽어있던 탓이었다. 수정 후 park은 hicache와 대등하게
+> 동작한다. (`research.md` §2.16 참조.)
 
 ---
 
