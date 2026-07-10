@@ -147,6 +147,17 @@ def main():
         print(f"  park TTFT {fmt(pk['avg_ttft_s'])}s  vs  hicache TTFT {fmt(hi['avg_ttft_s'])}s "
               f"→ park는 hicache 대비 {fmt(gap_hi,1)}% (+면 더 느림, ≈0이면 동률)")
 
+    # --- 핵심 질문 3: park(GEN=1, GPU) vs decode_offload(생성 KV를 host/disk로) ---
+    do = by.get("decode_offload", {})
+    if do.get("avg_ttft_s") and pk.get("avg_ttft_s"):
+        gap_do = pct_delta(do["avg_ttft_s"], pk["avg_ttft_s"])
+        verdict["park_vs_decode_offload_ttft_pct"] = gap_do
+        print("\n핵심 결론 3 — park(생성 KV→GPU2) vs decode_offload(생성 KV→host/disk):")
+        print(f"  reuse: park={fmt(pk.get('reuse_ratio'))}  decode_offload={fmt(do.get('reuse_ratio'))}"
+              f"  (둘 다 생성 KV 잡으면 비슷해야)")
+        print(f"  park TTFT {fmt(pk['avg_ttft_s'])}s  vs  decode_offload TTFT {fmt(do['avg_ttft_s'])}s "
+              f"→ park는 {fmt(gap_do,1)}% (≈0이면 성능 대등 → park의 이점 = host RAM 0)")
+
     out = os.path.join(args.outdir, "head_to_head_summary.json")
     json.dump(verdict, open(out, "w"), indent=2, ensure_ascii=False)
     print(f"\n[saved] {out}")
