@@ -51,7 +51,7 @@ OUTDIR=${OUTDIR:-results/head_to_head/${TAG}}
 mkdir -p "$OUTDIR"
 
 SCRAPER="benchmark/phase0_metrics_scraper.py"
-BENCH="benchmark/sglang_BFCL_multi_turn_concurrent.py"
+BENCH="${BENCH:-benchmark/sglang_BFCL_multi_turn_concurrent.py}"
 
 echo "================================================================"
 echo " HEAD-TO-HEAD  pool=${PREFILL_MAX_TOTAL_TOKENS} C=${CONCURRENCY} delay=${TOOL_DELAY}s"
@@ -83,8 +83,14 @@ start_arm() {
     park)
       # radix base + 전용 유휴 GPU park 풀 (4a). start 스크립트가 --base-gpu-id +
       # 가시성(0,1,PARK_GPU) + SGLANG_KV_PARK_GPU 전달을 처리한다.
+      # SGLANG_KV_PARK_GEN=1(기본)이면 생성 KV까지 park (decode-offload와 대등 비교용).
       CACHE_MODE=radix IDLE_KV_PARKING=1 PARK_GPU=${PARK_GPU} \
         PARK_POOL_TOKENS=${PARK_POOL_TOKENS} bash scripts/sglang/start_1P_1D.sh
+      ;;
+    decode_offload)
+      # SGLang 내장 decode-KV-offload (Full HiCache): decode 생성 KV를 host DRAM→storage(file)로
+      # offload, 다음 prefill이 prefetch. park(GEN=1)과 같은 "생성 KV 재사용"을 host/disk로 하는 것.
+      CACHE_MODE=hicache_file_decode_offload bash scripts/sglang/start_1P_1D.sh
       ;;
     *)
       echo "ERROR: unknown arm '${arm}'" >&2; return 1
@@ -103,6 +109,12 @@ for ARM in $ARMS; do
   fi
   wait_router || { echo "router not ready, skip ${ARM}"; bash scripts/sglang/stop_1P_1D.sh || true; sleep 5; continue; }
   sleep 5
+
+  # host RAM used (MB) at server-ready. park/radix는 host pool 안 씀; decode_offload/hicache는
+  # host DRAM에 KV pool을 잡으므로 arm 간 차이 ≈ 서빙이 쓴 host RAM (park 차별점 정량화).
+  HOSTMEM=$(free -m | awk '/^Mem:/{print $3}' 2>/dev/null || echo "?")
+  echo "$HOSTMEM" > "$OUTDIR/hostmem_${ARM}.txt"
+  echo "  host RAM used: ${HOSTMEM} MB"
 
   BEFORE="$OUTDIR/metrics_${ARM}_before.json"
   AFTER="$OUTDIR/metrics_${ARM}_after.json"
@@ -137,4 +149,10 @@ echo "############################################################"
 echo "# Head-to-head analysis"
 echo "############################################################"
 python benchmark/head_to_head_analyze.py --outdir "$OUTDIR" --tag "$TAG" --arms "$ARMS" || true
+
+echo ""
+echo ">> host RAM used (MB) at server-ready (park/radix=GPU-only, decode_offload/hicache=host pool):"
+for ARM in $ARMS; do
+  [ -f "$OUTDIR/hostmem_${ARM}.txt" ] && echo "   ${ARM}: $(cat "$OUTDIR/hostmem_${ARM}.txt") MB"
+done
 echo "Results in $OUTDIR/"
