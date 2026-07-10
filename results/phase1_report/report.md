@@ -118,17 +118,34 @@ park를 prompt prefix뿐 아니라 **decode-생성 KV(assistant 응답)까지** 
 (`SGLANG_KV_PARK_GEN`), 다음 turn이 그 응답 KV를 재계산 대신 fetch하는지 측정했다. 무압박
 (pool 120k)에서 재면 축출 효과가 없어 **생성-KV 기여만 isolate**된다 (GEN=0 = prefix만).
 
-| 워크로드 | GEN=0 reuse | GEN=1 reuse | Δreuse | ΔTTFT | 순효과 |
-|---|---|---|---|---|---|
-| **BFCL** (tool-call, 짧은 응답) | 0.744 | 0.750 | **+0.6pp** | +4% | 손해 |
-| **ShareGPT** (chat, 긴 응답) | 0.619 | **0.936** | **+31.7pp** | **−8%** | **이득** |
+**7-1. 워크로드 의존성 (BFCL vs ShareGPT)** — 생성-KV 재사용은 assistant 응답이 길고 verbatim일 때만 큼:
 
-- **ShareGPT**: 생성-KV 파킹이 recompute를 **38%→6% (−83%)** 로 줄이고 TTFT **−8%**. assistant
-  응답이 길고 **평문 verbatim**으로 다음 turn에 재등장하므로, decode가 만든 KV를 다음 prefill이
-  통째로 재사용. **radix·hicache_host(prefill-only)는 생성 KV를 못 잡아 ~0.62에 머무는데, park
-  (GEN=1)만 0.94 달성** = 차별점.
-- **BFCL**: 응답이 짧은 tool-call + 재직렬화 토큰 불일치로 기여 +0.6pp뿐, 파킹 오버헤드로 net 손해.
-- **결론**: 생성-KV 파킹의 이득은 **assistant 응답 길이 × verbatim 재사용률**에 비례. chat/코딩류
-  long-response 워크로드에서 크고, tool-heavy 워크로드에선 미미. → **워크로드 감지 기반으로 켜는
-  적응형**이 맞다. (측정: `BENCH=benchmark/sglang_sharegpt_multi_turn_concurrent.py
-  ./scripts/sglang/run_park_gen_ab.sh`, `SGLANG_KV_PARK_GEN` 0/1.)
+| 워크로드 | park GEN=0 reuse | park GEN=1 reuse | Δreuse |
+|---|---|---|---|
+| **BFCL** (tool-call, 짧은 응답) | 0.744 | 0.750 | **+0.6pp** (미미) |
+| **ShareGPT** (chat, 긴 응답) | 0.618 | **0.932** | **+31.4pp** (큼) |
+
+BFCL은 응답이 짧은 tool-call + 재직렬화 토큰 불일치로 기여 미미. ShareGPT는 assistant 응답이
+길고 평문 verbatim으로 다음 turn에 재등장 → decode 생성 KV를 다음 prefill이 통째로 재사용.
+
+**7-2. park(GEN=1) vs SGLang decode-offload — 3-arm (ShareGPT, pool 120k, 200 items)**:
+
+| arm | reuse | recompute tok | L3 prefetched | **host RAM** | TTFT |
+|---|---|---|---|---|---|
+| radix | 0.618 | 344k | 0 | 22.4 GB | 0.229s |
+| **park (GEN=1)** | **0.932** | 62k | 0 | **22.9 GB** (≈0 추가) | 0.236s |
+| decode_offload | 0.622 | 343k | 3,064 | **105.9 GB** (+83 GB) | 0.245s |
+
+- **park만 생성-KV 재사용을 실제로 잡는다 (0.93). decode_offload는 못 잡는다 (0.62 = radix).**
+  decode_offload는 생성 KV를 host DRAM→disk(file, L3)로 offload하지만 **async best-effort prefetch가
+  3s tool-delay 멀티턴 루프에서 제때 못 읽어옴** (L3_prefetched 3,064 토큰뿐) → 재계산. park는 GPU2
+  상주 + 동기 fetch라 확실히 hit.
+- **host RAM**: park ~0 추가 vs decode_offload **+83 GB**. park는 이득 0.93을 host RAM 없이, decode_
+  offload는 83GB 태우고 이득 0.
+- **차별점 확정**: park은 decode-offload가 의도한 "생성-KV 재사용"을 *실제로* 달성하고, **host RAM은 0**.
+
+**7-3. 정직한 한계 — reuse 이득은 무압박에선 latent**: pool 120k(무압박)에선 park의 reuse 0.93 vs
+radix 0.62 차이가 **TTFT/throughput으로 안 나타난다** (park TTFT +3% vs radix, wash). 아낀 prefill
+연산이 idle 상태라 병목이 아니기 때문. 이득은 **압박/고부하**(prefill 연산이 병목)에서 발현될 것 →
+다음: ShareGPT를 pool 40k(압박)/고동시성에서 재서 park의 reuse가 TTFT 이득으로 전환되는지 확인.
+(decode_offload 기본 설정의 저조는 prefetch policy 튜닝으로 개선될 여지 있으나, host RAM 소모는 불변.)
