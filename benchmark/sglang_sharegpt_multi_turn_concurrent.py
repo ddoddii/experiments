@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""
+SGLang ShareGPT multi-turn 벤치마크 — 동시성(concurrent) 버전.
+
+목적: "긴 assistant 응답을 다음 turn이 그대로 재사용" 가설을 재는 워크로드.
+BFCL(짧은 tool-call, 재직렬화로 토큰 불일치)과 달리, ShareGPT는 응답이 길고 평문이라
+다음 turn 프롬프트에 verbatim으로 들어간다 → decode가 생성한 KV를 다음 prefill이 재사용 가능.
+park의 SGLANG_KV_PARK_GEN(생성 KV 파킹) 기여를 여기서 크게 볼 수 있는지 측정한다.
+
+핵심 설계:
+  - 데이터셋에서는 **human(user) turn만** 가져온다.
+  - assistant 응답은 **모델이 생성**하고, 그 출력을 대화에 **verbatim으로 append**한다
+    (dataset의 gpt 응답이 아니라 모델 자기 출력 → 다음 turn 토큰이 생성분과 일치 → 생성 KV 재사용).
+  - turn 사이에 TOOL_DELAY(think-time)만큼 쉬어 idle-gap eviction을 모사(BFCL과 동일).
+
+출력 스키마는 BFCL 동시성 러너와 동일 → phase0_metrics_scraper.py / run_park_gen_ab.sh 그대로 물림.
+
+데이터 준비 (한 번, server17에서):
+  # 표준 ShareGPT (vLLM 벤치가 쓰는 파일)
+  cd ~/experiments/data
+  wget https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json
+
+환경변수:
+  DATA_PATH     ShareGPT json 경로 (기본 data/ShareGPT_V3_unfiltered_cleaned_split.json)
+  CONFIG        결과 태그 (기본 sharegpt)
+  CONCURRENCY   동시 대화 수 (기본 8)
+  MAX_ITEMS     처리할 대화 수 (기본 200)
+  MIN_TURNS     포함할 최소 user turn 수 (기본 3) — 멀티턴만
+  MAX_TURNS     대화당 user turn 상한 (기본 6) — 길이 bound
+  MAX_TOKENS    응답 최대 토큰 (기본 512; 길수록 생성-KV 재사용 효과↑)
+  MAX_PROMPT_CHARS  첫 user turn이 이보다 길면 스킵 (기본 6000, context 폭주 방지)
+  TOOL_DELAY    turn 사이 think-time 초 (기본 3)
+  ROUTER_URL / MODEL / TIMEOUT
+"""
+import json
+import os
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
+from tqdm import tqdm
+
+ROUTER_URL = os.environ.get("ROUTER_URL", "http://127.0.0.1:8000/v1/chat/completions")
+MODEL = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct")
+CONFIG = os.environ.get("CONFIG", "sharegpt")
+CONCURRENCY = int(os.environ.get("CONCURRENCY", "8"))
+MAX_ITEMS = int(os.environ.get("MAX_ITEMS", "200"))
+MIN_TURNS = int(os.environ.get("MIN_TURNS", "3"))
+MAX_TURNS = int(os.environ.get("MAX_TURNS", "6"))
+MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
+MAX_PROMPT_CHARS = int(os.environ.get("MAX_PROMPT_CHARS", "6000"))
+TIMEOUT = int(os.environ.get("TIMEOUT", "180"))
+TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "3"))
+DATA_PATH = os.environ.get("DATA_PATH", "data/ShareGPT_V3_unfiltered_cleaned_split.json")
+SYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT", "You are a helpful assistant.")
+
+_ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assistant",
+         "system": "system", "bard": "assistant", "assistant": "assistant"}
+
+
+def load_conversations(path):
+    """ShareGPT json -> 각 대화의 ordered user(human) turn 리스트만 추출.
+
+    응답(gpt)은 버린다 (모델이 직접 생성). 멀티턴(>=MIN_TURNS user)만, 첫 turn이 너무 길면 스킵.
+    """
+    with open(path) as f:
+        raw = json.load(f)
+    items = []
+    for conv in raw:
+        turns = conv.get("conversations") or conv.get("conversation") or []
+        user_turns = []
+        for t in turns:
+            role = _ROLE.get(str(t.get("from", "")).lower())
+            val = (t.get("value") or "").strip()
+            if role == "user" and val:
+                user_turns.append(val)
+        if len(user_turns) < MIN_TURNS:
+            continue
+        if len(user_turns[0]) > MAX_PROMPT_CHARS:
+            continue
+        items.append({"id": conv.get("id", f"conv_{len(items)}"),
+                      "user_turns": user_turns[:MAX_TURNS]})
+        if len(items) >= MAX_ITEMS:
+            break
+    return items
+
+
+def run_turn(conversation):
+    """한 turn 요청(스트리밍) → (metrics, assistant_content)."""
+    payload = {
+        "model": MODEL, "messages": conversation,
+        "max_tokens": MAX_TOKENS, "stream": True, "temperature": 0.0,
+    }
+    t_request = time.perf_counter()
+    resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
+    resp.raise_for_status()
+
+    t_first = t_last = None
+    token_count = 0
+    content = ""
+    for line in resp.iter_lines():
+        if not line:
+            continue
+        line = line.decode("utf-8")
+        if not line.startswith("data: "):
+            continue
+        data = line[len("data: "):]
+        if data == "[DONE]":
+            break
+        try:
+            chunk = json.loads(data)
+        except json.JSONDecodeError:
+            continue
+        delta = chunk["choices"][0]["delta"]
+        piece = delta.get("content")
+        if piece:
+            if t_first is None:
+                t_first = time.perf_counter()
+            token_count += 1
+            t_last = time.perf_counter()
+            content += piece
+
+    ttft = (t_first - t_request) if t_first else None
+    e2e = (t_last - t_request) if t_last else None
+    decode_time = (t_last - t_first) if (t_last and token_count > 1) else None
+    tpot = (decode_time / (token_count - 1)) if (decode_time and token_count > 1) else None
+    tput = ((token_count - 1) / decode_time) if (decode_time and token_count > 1) else None
+    return ({
+        "ttft_s": round(ttft, 4) if ttft else None,
+        "tpot_s": round(tpot, 4) if tpot else None,
+        "output_tokens": token_count,
+        "e2e_latency_s": round(e2e, 4) if e2e else None,
+        "throughput_tok_per_s": round(tput, 2) if tput else None,
+    }, content)
+
+
+def process_item(item):
+    conversation = [{"role": "system", "content": SYSTEM_PROMPT}] if SYSTEM_PROMPT else []
+    turn_metrics = []
+    for turn_idx, user_msg in enumerate(item["user_turns"]):
+        # tool-call 유휴시간 모사: 이전 assistant 이후 다음 user turn까지의 gap.
+        if TOOL_DELAY > 0 and turn_idx > 0:
+            time.sleep(TOOL_DELAY)
+        conversation.append({"role": "user", "content": user_msg})
+        try:
+            m, assistant_content = run_turn(conversation)
+            m["turn"] = turn_idx
+            turn_metrics.append(m)
+            # 모델의 생성 출력을 verbatim으로 append (다음 turn이 이 토큰을 그대로 재사용).
+            conversation.append({"role": "assistant", "content": assistant_content or ""})
+        except Exception as e:  # noqa: BLE001
+            turn_metrics.append({"turn": turn_idx, "error": str(e)})
+            break
+
+    valid = [t for t in turn_metrics if t.get("ttft_s")]
+    return {
+        "id": item["id"],
+        "num_turns": len(item["user_turns"]),
+        "turns": turn_metrics,
+        "avg_ttft_s": round(sum(t["ttft_s"] for t in valid) / len(valid), 4) if valid else None,
+        "avg_tpot_s": round(sum(t["tpot_s"] for t in valid if t.get("tpot_s")) / max(1, sum(1 for t in valid if t.get("tpot_s"))), 4) if valid else None,
+        "avg_throughput_tok_per_s": round(sum(t["throughput_tok_per_s"] for t in valid if t.get("throughput_tok_per_s")) / max(1, sum(1 for t in valid if t.get("throughput_tok_per_s"))), 2) if valid else None,
+        "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
+    }
+
+
+def main():
+    if not os.path.exists(DATA_PATH):
+        raise SystemExit(
+            f"ShareGPT 데이터 없음: {DATA_PATH}\n"
+            "다운로드: cd data && wget https://huggingface.co/datasets/"
+            "anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/"
+            "ShareGPT_V3_unfiltered_cleaned_split.json"
+        )
+    items = load_conversations(DATA_PATH)
+    print(f"[sharegpt] CONFIG={CONFIG} C={CONCURRENCY} items={len(items)} "
+          f"(min_turns={MIN_TURNS}, max_turns={MAX_TURNS}) url={ROUTER_URL}")
+    if not items:
+        raise SystemExit("조건에 맞는 멀티턴 대화가 없음 (MIN_TURNS/MAX_PROMPT_CHARS 조정).")
+
+    results = []
+    lock = threading.Lock()
+    t0 = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
+        futs = {ex.submit(process_item, it): it for it in items}
+        for fut in tqdm(as_completed(futs), total=len(futs), desc="items"):
+            r = fut.result()
+            with lock:
+                results.append(r)
+    wall = time.perf_counter() - t0
+
+    total_out = sum(r["total_output_tokens"] for r in results)
+    valid = [r for r in results if r.get("avg_ttft_s")]
+    summary = {
+        "config": CONFIG,
+        "concurrency": CONCURRENCY,
+        "tool_delay_s": TOOL_DELAY,
+        "total_items": len(results),
+        "success_items": len(valid),
+        "error_items": len(results) - len(valid),
+        "total_output_tokens": total_out,
+        "total_wall_time_s": round(wall, 2),
+        "overall_throughput_tok_per_s": round(total_out / wall, 2) if wall else None,
+        "avg_ttft_s": round(sum(r["avg_ttft_s"] for r in valid) / len(valid), 4) if valid else None,
+        "avg_tpot_s": round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
+        "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / len(valid), 2) if valid else None,
+    }
+    output = {"summary": summary, "results": results}
+    os.makedirs("results", exist_ok=True)
+    out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"  # 이름 관례 유지(스크래퍼/스크립트 호환)
+    json.dump(output, open(out_path, "w"), indent=2, ensure_ascii=False)
+
+    print(f"\n{'='*60}")
+    print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개  (C={CONCURRENCY})")
+    print(f"전체 소요시간: {wall:.2f}s  overall throughput: {summary['overall_throughput_tok_per_s']} tok/s")
+    print(f"평균 TTFT: {summary['avg_ttft_s']}s  평균 TPOT: {summary['avg_tpot_s']}s")
+    print(f"결과 저장: {out_path}")
+
+
+if __name__ == "__main__":
+    main()

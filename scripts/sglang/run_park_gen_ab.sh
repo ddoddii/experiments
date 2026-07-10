@@ -28,7 +28,9 @@ TAG="p${POOL}_c${CONCURRENCY}_d${TOOL_DELAY}"
 OUTDIR=${OUTDIR:-results/park_gen_ab/${TAG}}
 mkdir -p "$OUTDIR"
 SCR="benchmark/phase0_metrics_scraper.py"
-BENCH="benchmark/sglang_BFCL_multi_turn_concurrent.py"
+# 워크로드 교체 가능: BFCL(기본) 또는 ShareGPT.
+#   BENCH=benchmark/sglang_sharegpt_multi_turn_concurrent.py ./scripts/sglang/run_park_gen_ab.sh
+BENCH="${BENCH:-benchmark/sglang_BFCL_multi_turn_concurrent.py}"
 
 echo "================================================================"
 echo " PARK GEN A/B  pool=${POOL} C=${CONCURRENCY} delay=${TOOL_DELAY}s  -> ${OUTDIR}"
