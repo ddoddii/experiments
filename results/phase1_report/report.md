@@ -109,3 +109,26 @@ python benchmark/plot_phase1_catch22.py     # 그림 2장 재생성
 강압박 park DIAG(성공 예): `opened peer KV pool ... MATCH 52.8 GB/s` → `GPU2-park` → `GPU2-fetch:
 pulled 5355 tok (P had 87 of 5442) in 50.6ms`(첫 fetch) → 다음 fetch 3.1ms(async). nospace≈0.
 상세: `phase1.md`, `research.md` §2.16, SGLang `docs/developer_guide/idle_kv_parking_design.md` §9–§12.
+
+---
+
+## 7. 확장 — 생성-KV 파킹은 워크로드 의존적 (BFCL vs ShareGPT)
+
+park를 prompt prefix뿐 아니라 **decode-생성 KV(assistant 응답)까지** 저장하도록 확장하고
+(`SGLANG_KV_PARK_GEN`), 다음 turn이 그 응답 KV를 재계산 대신 fetch하는지 측정했다. 무압박
+(pool 120k)에서 재면 축출 효과가 없어 **생성-KV 기여만 isolate**된다 (GEN=0 = prefix만).
+
+| 워크로드 | GEN=0 reuse | GEN=1 reuse | Δreuse | ΔTTFT | 순효과 |
+|---|---|---|---|---|---|
+| **BFCL** (tool-call, 짧은 응답) | 0.744 | 0.750 | **+0.6pp** | +4% | 손해 |
+| **ShareGPT** (chat, 긴 응답) | 0.619 | **0.936** | **+31.7pp** | **−8%** | **이득** |
+
+- **ShareGPT**: 생성-KV 파킹이 recompute를 **38%→6% (−83%)** 로 줄이고 TTFT **−8%**. assistant
+  응답이 길고 **평문 verbatim**으로 다음 turn에 재등장하므로, decode가 만든 KV를 다음 prefill이
+  통째로 재사용. **radix·hicache_host(prefill-only)는 생성 KV를 못 잡아 ~0.62에 머무는데, park
+  (GEN=1)만 0.94 달성** = 차별점.
+- **BFCL**: 응답이 짧은 tool-call + 재직렬화 토큰 불일치로 기여 +0.6pp뿐, 파킹 오버헤드로 net 손해.
+- **결론**: 생성-KV 파킹의 이득은 **assistant 응답 길이 × verbatim 재사용률**에 비례. chat/코딩류
+  long-response 워크로드에서 크고, tool-heavy 워크로드에선 미미. → **워크로드 감지 기반으로 켜는
+  적응형**이 맞다. (측정: `BENCH=benchmark/sglang_sharegpt_multi_turn_concurrent.py
+  ./scripts/sglang/run_park_gen_ab.sh`, `SGLANG_KV_PARK_GEN` 0/1.)
