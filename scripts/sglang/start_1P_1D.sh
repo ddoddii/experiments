@@ -64,9 +64,14 @@ case "$CACHE_MODE" in
     PREFILL_CACHE_ARGS="--enable-hierarchical-cache --hicache-ratio ${HICACHE_RATIO} --hicache-storage-backend file"
     ;;
   hicache_file_decode_offload)
-    PREFILL_CACHE_ARGS="--enable-hierarchical-cache --hicache-ratio ${HICACHE_RATIO} --hicache-storage-backend file"
-    DECODE_CACHE_ARGS="--enable-hierarchical-cache --hicache-ratio ${HICACHE_RATIO} --hicache-storage-backend file --disaggregation-decode-enable-offload-kvcache"
-    ;;
+  PREFILL_CACHE_ARGS="--enable-hierarchical-cache \
+    --hicache-ratio ${HICACHE_RATIO} \
+    --hicache-storage-backend file"
+
+  DECODE_CACHE_ARGS="--hicache-ratio ${HICACHE_RATIO} \
+    --hicache-storage-backend file \
+    --disaggregation-decode-enable-offload-kvcache"
+  ;;
   *)
     echo "ERROR: unknown CACHE_MODE=${CACHE_MODE}" >&2
     exit 1
