@@ -197,9 +197,43 @@ GPU dst view 직접 사용으로 **매 fetch host sync 제거**. (SGLang `7c2111
   insert**가 여유 없는 GPU/PCIe를 prefill 배치와 다툰다. async라도 GPU/PCIe **대역폭은 공유**하므로
   critical path 밖이어도 경합은 남는다. park가 아낀 prefill-FLOPs(266k 토큰)를 fetch copy+insert가
   도로 잡아먹는다.
-- **결론 확정**: reuse→TTFT 전환 실패는 **CPU 튜닝으로 못 고친다**(검증됨). 막힌 이유는 "포화된 GPU에
-  fetch가 GPU/PCIe 일감을 더 얹는데 쓸 여유 대역폭이 없어서"다. → 뒤집으려면 **NVLink park peer
-  (대역폭 10–20×)** 가 필요하고, 현재 토폴로지(PCIe park)에선 불가. 따라서 park의 **생성-KV 확장(GEN=1)은
-  serving-latency 최적화가 아니라 "reuse 지표 + host-RAM 효율(decode_offload 83GB 대비 ~0)" 이득으로
-  확정**한다. park의 **성능 이득은 §1–§6의 "압박 하 prefix 복구"**(BFCL 40k, −26% vs radix, hicache
-  동률)에 국한된다 — 여기선 fetch가 *축출된 만큼만*(bounded volume) 복구하므로 순이득이다.
+- **결론 (7-5 시점)**: reuse→TTFT 전환 실패는 **CPU 튜닝으로 못 고친다**(검증됨). 다음(§7-6)에서
+  NVLink 1-hop 경로로 링크/hop 가설을 직접 갈랐고, 거기서 **더 근본적인 원인(decode-bound)**을 찾았다.
+
+**7-6. NVLink 1-hop park (park_nvlink) — 링크 비용 vs PD 병목 위치를 분리**:
+사용자 제안: 생성-KV를 PCIe spare(GPU2)가 아니라 **P-D NVLink 쌍(GPU0-GPU1)** 으로 P radix에 직접 park.
+`PARK_GPU` 미설정 → manager가 **P-radix 모드**: `_receive_park`가 D(GPU1)→P(GPU0)를 NVLink로 copy 후
+P radix에 insert, `maybe_fetch`는 early-return(다음 turn 자연 prefix-hit, fetch hop 없음). 즉 **D→P
+NVLink 1-hop, fetch 단계 제거.** 3-arm (ShareGPT, pool 120k, C=32, delay=0):
+
+| arm | 경로 | reuse | TTFT | Δ TTFT | tput | wall |
+|---|---|---|---|---|---|---|
+| radix | — | 0.617 | 0.346s | — | 883 | 436.2s |
+| park (GPU2) | D→GPU2→P (PCIe 2-hop) | 0.917 | 0.617s | **+78%** | 843 (−4.6%) | 449.2s |
+| **park_nvlink** | D→P (NVLink 1-hop) | 0.718 | 0.503s | **+45%** | 867 (−1.9%) | **435.6s (≈radix)** |
+
+**(a) NVLink는 효과 있었다 (링크/hop 비용 확인)**: TTFT 회귀 **반토막(+78%→+45%)**, throughput 거의
+중립(**wall 435.6s ≈ radix 436.2s**). §7-5의 "잔여 비용은 GPU/PCIe 경합"이 맞았다 — PCIe 2-hop을 NVLink
+1-hop으로 바꾸니 그 비용이 사라졌다.
+
+**(b) 그런데 reuse가 떨어졌다 (0.92→0.72) — 축출이 아니라 파킹 실패**: park_nvlink DIAG
+`recv=790 processed=330 backlog=0` → 받은 790건 중 **460건(58%)이 조용히 드롭**(큐는 빔). P-radix park
+경로는 fetch 경로와 달리 **evict-to-room이 없어**, C=32에 P 풀이 꽉 차면 alloc 실패 시 그냥 포기한다.
+파킹된 것들 survival=100%. 즉 reuse 0.72는 고칠 수 있는 한계지 근본 문제 아님.
+
+**(c) 진짜 근본 원인 = decode-bound (토폴로지보다 깊음)**: reuse를 아무리 올려도(0.62→0.72→0.92)
+throughput이 안 오른다(883→867→843). 이유: **throughput 883 ÷ TPOT 0.0316(=31.6 tok/s/seq) ≈ 28개
+시퀀스 동시 decode** = decode 천장(32×31.6≈1011)의 87%. **C=32에서 병목은 decode 노드(GPU1)다.** reuse는
+**prefill(GPU0) 일감만** 줄이는데 prefill은 병목이 아니므로, 절약분이 throughput 천장을 못 뚫는다. 이건
+PD-disaggregation 구조적 사실: **생성-KV 재사용(=prefill 절약)은 prefill이 병목일 때만 serving에 도움.**
+
+**7-6 확정 결론**:
+- park의 생성-KV 확장은 **decode-bound saturation에선 원리적으로 serving-throughput을 못 올린다**
+  (link 무관). NVLink는 *손해를 없앨* 뿐(park_nvlink ≈ radix wall), *이득을 만들진* 못한다.
+- 생성-KV park의 확정 가치 = **① reuse 지표(latent prefill capacity) + ② host-RAM 효율**
+  (decode_offload 83GB vs park ~0). serving-latency/throughput 이득은 **prefill-bound 워크로드에서만** 기대.
+- park의 **serving 성능 이득은 §1–§6의 "압박 하 prefix 복구"**(BFCL 40k, −26% TTFT vs radix, hicache
+  동률)에 국한 — 거기선 C=8(비포화)이라 prefill이 first-token critical path에 있고, 축출된 prefix
+  재-prefill(대형 스파이크)을 park가 막으므로 순이득이다.
+- (참고) park_nvlink의 evict-to-room 추가로 reuse를 0.9까지 끌어올려도 (c) 때문에 throughput은 그대로,
+  TTFT는 오히려 악화 예상 → decode-bound 워크로드에선 그 수정이 무의미. prefill-bound 재검증이 선행.
