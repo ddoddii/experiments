@@ -179,7 +179,27 @@ park DIAG(C=32): `FETCH: hits=667(evict-to-room=116) tok=265,775 avg=3.4ms | mis
   (decode_offload 83GB 대비)**의 이점은 확실하나, **저부하에선 latency 무변(wash), 고부하에선 오히려
   악화**다. 즉 현재 구현에서 생성-KV 재사용은 *serving latency/throughput 이득이 아니다.* park의 **견고한
   이득은 여전히 §1–§6의 "압박 하 prefix 복구"**(BFCL 40k, park −26% vs radix, hicache와 동률)에 있다.
-- **개선 여지 (미검증)**: 위 순손실은 fetch 오케스트레이션(match/evict/insert)이 scheduler main-thread에
-  직렬화되기 때문. 이를 **별도 스레드/더 싼 매칭(해시 캐시)** 으로 옮기면 고부하에서도 reuse가 TTFT로
-  전환될 여지가 있다. 단, 그 전엔 park의 생성-KV 확장을 "성능 최적화"가 아니라 **"capacity/RAM-효율
-  최적화"**로 규정하는 것이 데이터에 부합한다.
+**7-5. fetch-path 최적화 후 재실측 — 병목은 CPU가 아니라 GPU/PCIe 경합 (토폴로지 한계)**:
+7-4의 "CPU 오케스트레이션이 순손실 원인"이라는 가설을 **직접 검증**했다. fetch의 host-side 비용을
+제거했다: ①`_match_park_prefix`를 rolling polynomial prefix-hash 1-pass로 교체(파킹 길이별
+`hash(tuple(token_ids[:L]))` 튜플 할당 제거, O(#lengths×L)→O(max_L)), ②`dst.to("cpu").tolist()` →
+GPU dst view 직접 사용으로 **매 fetch host sync 제거**. (SGLang `7c2111a`)
+
+| arm | reuse | TTFT | Δ TTFT vs radix | overall tput |
+|---|---|---|---|---|
+| radix | 0.618 | 0.380s | — | 879 tok/s |
+| **park (GEN=1, 최적화 후)** | **0.920** | **0.664s** | **+74.8% (여전히 악화)** | 838 tok/s (−4.8%) |
+
+- **최적화 효과: TTFT 악화 +94% → +75% (19pp만 감소), reuse 0.92 유지.** 즉 **CPU
+  match/hash/sync는 전체 오버헤드의 ~1/5에 불과**했다. 나머지 ~3/4는 CPU가 아니다.
+- **진짜 원인 = GPU/PCIe 경합**: 이 박스에서 park GPU2는 P(GPU0)에서 **PCIe**다 (NVLink는 (0-1),(2-3)
+  쌍만). C=32에서 GPU가 이미 포화라, fetch가 얹는 ①827k 토큰 KV의 **PCIe copy** + ②대용량 **radix
+  insert**가 여유 없는 GPU/PCIe를 prefill 배치와 다툰다. async라도 GPU/PCIe **대역폭은 공유**하므로
+  critical path 밖이어도 경합은 남는다. park가 아낀 prefill-FLOPs(266k 토큰)를 fetch copy+insert가
+  도로 잡아먹는다.
+- **결론 확정**: reuse→TTFT 전환 실패는 **CPU 튜닝으로 못 고친다**(검증됨). 막힌 이유는 "포화된 GPU에
+  fetch가 GPU/PCIe 일감을 더 얹는데 쓸 여유 대역폭이 없어서"다. → 뒤집으려면 **NVLink park peer
+  (대역폭 10–20×)** 가 필요하고, 현재 토폴로지(PCIe park)에선 불가. 따라서 park의 **생성-KV 확장(GEN=1)은
+  serving-latency 최적화가 아니라 "reuse 지표 + host-RAM 효율(decode_offload 83GB 대비 ~0)" 이득으로
+  확정**한다. park의 **성능 이득은 §1–§6의 "압박 하 prefix 복구"**(BFCL 40k, −26% vs radix, hicache
+  동률)에 국한된다 — 여기선 fetch가 *축출된 만큼만*(bounded volume) 복구하므로 순이득이다.
