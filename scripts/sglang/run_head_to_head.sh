@@ -87,6 +87,13 @@ start_arm() {
       CACHE_MODE=radix IDLE_KV_PARKING=1 PARK_GPU=${PARK_GPU} \
         PARK_POOL_TOKENS=${PARK_POOL_TOKENS} bash scripts/sglang/start_1P_1D.sh
       ;;
+    park_nvlink)
+      # 생성-KV를 GPU2(PCIe spare) 대신 P node radix에 직접 park. PARK_GPU 미설정 ->
+      # manager가 P-radix 모드: _receive_park가 D(GPU1)->P(GPU0)를 NVLink pair로 copy 후
+      # P radix에 insert, maybe_fetch는 early-return(자연 prefix-hit). 경로: D -NVLink-> P
+      # 1-hop, fetch 단계 없음. C=32 회귀(park PCIe 2-hop 비용)가 NVLink 1-hop으로 사라지는지 검증.
+      PARK_GPU= CACHE_MODE=radix IDLE_KV_PARKING=1 bash scripts/sglang/start_1P_1D.sh
+      ;;
     decode_offload)
       # SGLang 내장 decode-KV-offload (Full HiCache): decode 생성 KV를 host DRAM→storage(file)로
       # offload, 다음 prefill이 prefetch. park(GEN=1)과 같은 "생성 KV 재사용"을 host/disk로 하는 것.
@@ -135,7 +142,7 @@ for ARM in $ARMS; do
   python "$SCRAPER" --delta "$BEFORE" "$AFTER" --out "$DELTA" || true
 
   # park 팔이면 P 로그에서 park manager 출력(init/setup/park/fetch/DIAG/error)을 남긴다.
-  if [ "$ARM" = "park" ]; then
+  if [ "${ARM#park}" != "$ARM" ]; then   # park, park_nvlink, ... 모두 DIAG 캡처
     grep -iE "idle kv parking|GPU[0-9]+-(park|fetch)|DIAG|park.*fail|park.*error" logs/p1.log 2>/dev/null \
       > "$OUTDIR/park_diag_${ARM}.txt" || true
   fi
