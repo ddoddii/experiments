@@ -3,54 +3,54 @@
   "arms": {
     "radix": {
       "arm": "radix",
-      "avg_ttft_s": 1.8286,
-      "avg_tpot_s": 0.0197,
-      "overall_tput": 62.42,
-      "wall_s": 456.47,
+      "avg_ttft_s": 0.2492,
+      "avg_tpot_s": 0.0252,
+      "overall_tput": 249.95,
+      "wall_s": 1510.26,
       "errors": 0,
-      "reuse_ratio": 0.381,
-      "cached_tokens": 1351119.0,
-      "uncached_tokens": 2194810.0,
+      "reuse_ratio": 0.6196,
+      "cached_tokens": 558345.0,
+      "uncached_tokens": 342847.0,
       "L2_host_used": null,
-      "ttft_metric_s": 1.6020105739567905
-    },
-    "hicache": {
-      "arm": "hicache",
-      "avg_ttft_s": 1.3848,
-      "avg_tpot_s": 0.0235,
-      "overall_tput": 67.0,
-      "wall_s": 426.1,
-      "errors": 0,
-      "reuse_ratio": 0.744,
-      "cached_tokens": 2638439.0,
-      "uncached_tokens": 908011.0,
-      "L2_host_used": null,
-      "ttft_metric_s": 1.27105240213791
+      "ttft_metric_s": 0.24987078612220698
     },
     "park": {
       "arm": "park",
-      "avg_ttft_s": 1.3501,
-      "avg_tpot_s": 0.0238,
-      "overall_tput": 68.23,
-      "wall_s": 425.9,
+      "avg_ttft_s": 0.26,
+      "avg_tpot_s": 0.0254,
+      "overall_tput": 248.95,
+      "wall_s": 1527.82,
       "errors": 0,
-      "reuse_ratio": 0.7422,
-      "cached_tokens": 2632547.0,
-      "uncached_tokens": 914354.0,
+      "reuse_ratio": 0.9342,
+      "cached_tokens": 844621.0,
+      "uncached_tokens": 59520.0,
       "L2_host_used": null,
-      "ttft_metric_s": 1.2276930031360396
+      "ttft_metric_s": 0.254867532386862
+    },
+    "decode_offload": {
+      "arm": "decode_offload",
+      "avg_ttft_s": 0.2656,
+      "avg_tpot_s": 0.0254,
+      "overall_tput": 250.05,
+      "wall_s": 1524.02,
+      "errors": 0,
+      "reuse_ratio": 0.6214,
+      "cached_tokens": 564465.0,
+      "uncached_tokens": 343871.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 0.2654794046077235
     }
   },
   "comparison": {
-    "hicache": {
-      "ttft_pct_vs_radix": -24.3,
-      "tput_pct_vs_radix": 7.3
-    },
     "park": {
-      "ttft_pct_vs_radix": -26.2,
-      "tput_pct_vs_radix": 9.3
+      "ttft_pct_vs_radix": 4.3,
+      "tput_pct_vs_radix": -0.4
+    },
+    "decode_offload": {
+      "ttft_pct_vs_radix": 6.6,
+      "tput_pct_vs_radix": 0.0
     }
   },
-  "park_vs_radix_ttft_pct": -26.2,
-  "park_vs_hicache_ttft_pct": -2.5
+  "park_vs_radix_ttft_pct": 4.3,
+  "park_vs_decode_offload_ttft_pct": -2.1
 }
