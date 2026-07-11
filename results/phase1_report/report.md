@@ -144,8 +144,11 @@ BFCL은 응답이 짧은 tool-call + 재직렬화 토큰 불일치로 기여 미
   offload는 83GB 태우고 이득 0.
 - **차별점 확정**: park은 decode-offload가 의도한 "생성-KV 재사용"을 *실제로* 달성하고, **host RAM은 0**.
 
-**7-3. 정직한 한계 — reuse 이득은 무압박에선 latent**: pool 120k(무압박)에선 park의 reuse 0.93 vs
-radix 0.62 차이가 **TTFT/throughput으로 안 나타난다** (park TTFT +3% vs radix, wash). 아낀 prefill
-연산이 idle 상태라 병목이 아니기 때문. 이득은 **압박/고부하**(prefill 연산이 병목)에서 발현될 것 →
-다음: ShareGPT를 pool 40k(압박)/고동시성에서 재서 park의 reuse가 TTFT 이득으로 전환되는지 확인.
-(decode_offload 기본 설정의 저조는 prefetch policy 튜닝으로 개선될 여지 있으나, host RAM 소모는 불변.)
+**7-3. 정직한 한계 — reuse 이득은 저부하에선 latent (TTFT로 안 나타남)**: park reuse 0.93 vs radix
+0.62 차이가 **TTFT/throughput으로 안 나타난다** (park TTFT +3~4% vs radix, wash). pool 120k·40k 둘 다
+동일 — **ShareGPT는 대화가 짧아(세션 ~4.5k, C=8 working set ~36k) pool 40k에서도 축출이 없다**;
+pool로는 ShareGPT에 압박을 못 만든다. 그리고 C=8 + 3s tool-delay면 시스템이 저부하라, park가 아낀
+prefill 연산(recompute 62k vs 344k = **82% 적음**)이 병목이 아니라 TTFT로 전환 안 됨. → park의 reuse
+이득은 **"latent capacity"**(같은 GPU로 더 많이 서빙 가능)이지 저부하 latency 이득이 아니다. 실제
+TTFT/throughput 이득을 보려면 **고동시성 + tool-delay=0로 prefill을 saturate**해야 한다(다음 실험).
+(decode_offload 기본 설정의 저조는 prefetch policy 튜닝 여지 있으나 host RAM 소모는 불변.)
