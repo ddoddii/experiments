@@ -3,36 +3,53 @@
   "arms": {
     "radix": {
       "arm": "radix",
-      "avg_ttft_s": 0.3799,
-      "avg_tpot_s": 0.0315,
-      "overall_tput": 879.47,
-      "wall_s": 434.16,
+      "avg_ttft_s": 0.346,
+      "avg_tpot_s": 0.0316,
+      "overall_tput": 883.05,
+      "wall_s": 436.25,
       "errors": 0,
-      "reuse_ratio": 0.618,
-      "cached_tokens": 561123.0,
-      "uncached_tokens": 346897.0,
+      "reuse_ratio": 0.617,
+      "cached_tokens": 562864.0,
+      "uncached_tokens": 349380.0,
       "L2_host_used": null,
-      "ttft_metric_s": 0.3767382353544235
+      "ttft_metric_s": 0.3466346135427212
     },
     "park": {
       "arm": "park",
-      "avg_ttft_s": 0.6642,
+      "avg_ttft_s": 0.6169,
       "avg_tpot_s": 0.0324,
-      "overall_tput": 837.68,
-      "wall_s": 452.89,
+      "overall_tput": 842.64,
+      "wall_s": 449.21,
       "errors": 0,
-      "reuse_ratio": 0.9197,
-      "cached_tokens": 827289.0,
-      "uncached_tokens": 72204.0,
+      "reuse_ratio": 0.9165,
+      "cached_tokens": 824776.0,
+      "uncached_tokens": 75128.0,
       "L2_host_used": null,
-      "ttft_metric_s": 0.6492935519280105
+      "ttft_metric_s": 0.5996294026744777
+    },
+    "park_nvlink": {
+      "arm": "park_nvlink",
+      "avg_ttft_s": 0.5027,
+      "avg_tpot_s": 0.0318,
+      "overall_tput": 866.64,
+      "wall_s": 435.63,
+      "errors": 0,
+      "reuse_ratio": 0.7183,
+      "cached_tokens": 645851.0,
+      "uncached_tokens": 253289.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 0.50702556839277
     }
   },
   "comparison": {
     "park": {
-      "ttft_pct_vs_radix": 74.8,
-      "tput_pct_vs_radix": -4.8
+      "ttft_pct_vs_radix": 78.3,
+      "tput_pct_vs_radix": -4.6
+    },
+    "park_nvlink": {
+      "ttft_pct_vs_radix": 45.3,
+      "tput_pct_vs_radix": -1.9
     }
   },
-  "park_vs_radix_ttft_pct": 74.8
+  "park_vs_radix_ttft_pct": 78.3
 }
