@@ -152,3 +152,34 @@ prefill 연산(recompute 62k vs 344k = **82% 적음**)이 병목이 아니라 TT
 이득은 **"latent capacity"**(같은 GPU로 더 많이 서빙 가능)이지 저부하 latency 이득이 아니다. 실제
 TTFT/throughput 이득을 보려면 **고동시성 + tool-delay=0로 prefill을 saturate**해야 한다(다음 실험).
 (decode_offload 기본 설정의 저조는 prefetch policy 튜닝 여지 있으나 host RAM 소모는 불변.)
+
+**7-4. Saturation 실험 (C=32, tool-delay=0, ShareGPT pool 120k) — reuse 0.92가 TTFT로 전환 *안* 됨**:
+7-3에서 "고동시성이면 park의 reuse 이득이 TTFT로 전환될 것"이라 예측했으나, **실측은 반대였다.**
+
+| arm | reuse | TTFT | Δ TTFT vs radix | overall tput | host RAM |
+|---|---|---|---|---|---|
+| radix | 0.617 | 0.349s | — | 881 tok/s | 12.9 GB |
+| **park (GEN=1)** | **0.915** | **0.679s** | **+94% (악화)** | **841 tok/s (−4.6%)** | 13.2 GB |
+| decode_offload | 0.620 | — | — | — | 96.4 GB |
+
+park DIAG(C=32): `FETCH: hits=667(evict-to-room=116) tok=265,775 avg=3.4ms | miss=220 already=46 nospace=0 (of 933)`.
+
+- **reuse는 여전히 0.92로 성공 (fetch 동작함)**. 그런데 **TTFT는 오히려 2배로 악화**, throughput은 소폭 하락.
+- **원인 (avg=3.4ms와의 화해)**: `avg=3.4ms`는 **GPU2→GPU0 async copy 시간만** 잰다. 이 copy는
+  `forward_stream.wait_stream`로 critical path 밖이라 문제 아님. 진짜 비용은 **매 prefill(933건)마다
+  scheduler 단일 main-thread에서 동기로 도는** ①`_match_park_prefix`의 prefix 해시 탐색(파킹 길이별
+  `hash(tuple(token_ids[:L]))`), ②alloc + **evict-to-room 116회(LRU 트리 워크)**, ③fetch 블록 radix
+  insert(265k 토큰)다. 이건 3.4ms에 안 잡힌다.
+- **핵심 해석**: 저부하에선 GPU-prefill-FLOPs도 scheduler-CPU도 병목이 아니라 park가 wash(7-3).
+  **C=32/delay=0로 saturate하면 병목이 GPU-FLOPs → scheduler-CPU-throughput으로 이동**한다. park는
+  **GPU-bound 비용(recompute)을 CPU-bound 비용(match/evict/insert)으로 바꾼다** — 그런데 그 CPU 작업이
+  이미 포화된 바로 그 스레드에 얹혀서, 아낀 prefill FLOPs보다 더 비싸진다. → reuse 0.92는 진짜지만
+  **serving-perf로는 순손실**.
+- **결론 (정직)**: park의 생성-KV 확장(GEN=1)은 **① reuse 지표 승리(0.92 vs 0.62) + ② host RAM 0
+  (decode_offload 83GB 대비)**의 이점은 확실하나, **저부하에선 latency 무변(wash), 고부하에선 오히려
+  악화**다. 즉 현재 구현에서 생성-KV 재사용은 *serving latency/throughput 이득이 아니다.* park의 **견고한
+  이득은 여전히 §1–§6의 "압박 하 prefix 복구"**(BFCL 40k, park −26% vs radix, hicache와 동률)에 있다.
+- **개선 여지 (미검증)**: 위 순손실은 fetch 오케스트레이션(match/evict/insert)이 scheduler main-thread에
+  직렬화되기 때문. 이를 **별도 스레드/더 싼 매칭(해시 캐시)** 으로 옮기면 고부하에서도 reuse가 TTFT로
+  전환될 여지가 있다. 단, 그 전엔 park의 생성-KV 확장을 "성능 최적화"가 아니라 **"capacity/RAM-효율
+  최적화"**로 규정하는 것이 데이터에 부합한다.
