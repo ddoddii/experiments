@@ -38,7 +38,7 @@ def load_json(p):
 
 
 def collect(tag, arm, C, outdir):
-    bench = load_json(f"results/bfcl_multiturn_results_{tag}_{arm}_c{C}.json")
+    bench = load_json(f"results/{tag}_{arm}_c{C}.json")
     delta = load_json(os.path.join(outdir, f"metrics_{arm}_c{C}_delta.json"))
     row = {"arm": arm, "C": C}
     if bench and "summary" in bench:

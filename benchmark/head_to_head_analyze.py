@@ -31,7 +31,7 @@ def load_json(path):
 
 def collect_arm(tag, arm, outdir):
     """arm 하나의 벤치 summary + reuse delta 를 하나의 dict 로."""
-    bench = load_json(f"results/bfcl_multiturn_results_{tag}_{arm}.json")
+    bench = load_json(f"results/{tag}_{arm}.json")
     delta = load_json(os.path.join(outdir, f"metrics_{arm}_delta.json"))
     row = {"arm": arm}
     if bench and "summary" in bench:

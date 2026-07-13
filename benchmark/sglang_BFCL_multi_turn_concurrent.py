@@ -214,7 +214,7 @@ def main():
     }
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
-    out_path = f"results/bfcl_multiturn_results_{CONFIG}.json"
+    out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
     json.dump(output, open(out_path, "w"), indent=2, ensure_ascii=False)
 
     print(f"\n{'='*60}")
