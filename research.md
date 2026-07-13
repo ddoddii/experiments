@@ -1149,10 +1149,30 @@ FETCH hits=702/miss=225. **KV가 유휴 GPU 2개에 균형 분산(g2/g3 index 70
    유휴 자원 활용. Mooncake delta = 전용 공유 풀이 아니라 **그때그때 기회주의 배치**. Mooncake/LMCache
    lit-check 선행 필요.
 
+**slice 2 motivation 측정 — 2P2D GPU별 KV 점유 불균형 실재 확인 (2026-07-13)**:
+`kv_occupancy_timeseries.py`로 4 GPU(P0/P1/D0/D1)의 `sglang:token_usage`를 0.5s 주기로 시계열 수집,
+`plot_kv_imbalance.py`로 "한 GPU 포화(≥0.8) & 다른 GPU 여유(≤0.5) 공존" 시간 분율(OPPORTUNITY) 정량.
+
+| 조건 | P0 mean | P1 mean | D0 mean | D1 mean | spread(mean/max) | OPPORTUNITY |
+|---|---|---|---|---|---|---|
+| 무압박(기본 풀, C16) | ~0.10 | ~0.10 | ~0.10 | ~0.10 | 0.1~0.2 | **0%** (아무도 포화 안 됨) |
+| **압박(P/D 풀 20k, C24)** | 0.44 | 0.41 | **0.75** | **0.70** | 0.50 / 0.89 | **49.6%** |
+
+- **불균형 실재**: 압박 하에서 **절반의 시간** 포화 GPU와 여유 GPU가 공존 → slice-2(여유 GPU로 KV 이동) 전제 확인.
+  (그림: `results/kv_ts/2p2d_p20k_imbalance.png`)
+- **두 층위**: ① **구조적 D>P** (decode ~0.72 vs prefill ~0.42 상시) ② **순간적 P0↔P1 스윙**(한 P가 0.93일 때 다른 P는 0).
+- **해석(방향 결정)**: D의 높은 점유는 **활성 decode KV**(사용 중, 종료 시 free)라 이동 대상이 아니라
+  **턴 종료 시 free될 KV를 여유 P로 park**하는 게 맞다(원래 idle-parking). **P0↔P1 순간 불균형은
+  NVLink 쌍(GPU0-1)** 이라 evict 위기 P→여유 P 이동이 토폴로지상 유리. 라우터는 전 GPU 점유를 보므로
+  "park 시 지금 여유 있는 GPU 선택"이 상시 가능(50% 시간 여유 GPU 존재).
+- 재현: `PREFILL_MAX_TOTAL_TOKENS=20000 DECODE_MAX_TOTAL_TOKENS=20000 ./scripts/sglang/start_2P_2D.sh`
+  + 샘플러 백그라운드 + BFCL C24 + `plot_kv_imbalance.py`.
+
 **Phase 2 종합**: 두 방향(spare-GPU park, predictive-host)이 모두 같은 벽(20-40:1 + hicache incumbent
 + decode-bound)에 막힘을 규명 — 이는 negative가 아니라 **characterization 기여**(KV-tier-movement는
 언제 도움 되는가). 살아있는 positive 방향 = **NpNd 유휴 자원 기회주의적 배치(host-RAM-free)**; slice 1
-(다중 유휴 GPU 균형 배치) 동작 확인 완료, slice 2(라우터 pressure-balancing)가 다음.
+(다중 유휴 GPU 균형 배치) 동작 확인, slice-2 motivation(2P2D KV 불균형 OPPORTUNITY 49.6%) 실측 확인.
+다음: Mooncake/LMCache lit-check → 라우터 pressure-balancing migration 구현(slice 2).
 
 ---
 
