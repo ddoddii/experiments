@@ -90,8 +90,14 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   # CUDA IPC는 각 프로세스가 상대 GPU를 "볼 수" 있어야 한다. 격리(CUDA_VISIBLE_DEVICES=단일GPU)
   # 대신 두 GPU를 모두 보이게 하고 --base-gpu-id로 배치한다.
   PARK_VISIBLE=${PARK_VISIBLE:-"${PREFILL_GPU},${DECODE_GPU}"}
-  # slice 4: 전용 유휴 GPU park 풀. PARK_GPU 지정 시 가시성에 포함 + prefill에 env 전달.
-  if [ -n "${PARK_GPU:-}" ]; then
+  # slice 4 / Phase 2 slice 1: 유휴 GPU park 풀.
+  #   PARK_GPUS="2,3" (다중, 콤마) 지정 시 여러 유휴 GPU를 후보로 → prefill이 headroom 큰 풀 선택.
+  #   PARK_GPU (단일) 은 back-compat.
+  if [ -n "${PARK_GPUS:-}" ]; then
+    PARK_VISIBLE="${PARK_VISIBLE},${PARK_GPUS}"
+    PREFILL_ENV="SGLANG_KV_PARK_GPUS=${PARK_GPUS}"
+    [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
+  elif [ -n "${PARK_GPU:-}" ]; then
     PARK_VISIBLE="${PARK_VISIBLE},${PARK_GPU}"
     PREFILL_ENV="SGLANG_KV_PARK_GPU=${PARK_GPU}"
     [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
