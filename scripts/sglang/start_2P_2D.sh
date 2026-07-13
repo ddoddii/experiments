@@ -68,6 +68,7 @@ export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
 CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 \
+  --enable-metrics \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO --hicache-write-policy $HICACHE_WRITE_POLICY \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -79,6 +80,7 @@ sleep 3
 echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
 CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 \
+  --enable-metrics \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -94,6 +96,7 @@ sleep 3
 echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
 CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 \
+  --enable-metrics \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
@@ -104,6 +107,7 @@ sleep 3
 echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
 CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 \
+  --enable-metrics \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
