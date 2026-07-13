@@ -1126,14 +1126,33 @@ hicache를 이긴다는 주장 안 함.)
 - occupancy는 단조 `written` 카운터(`min(written,N)`) — 초기 `live` 카운터가 dual-index 이중차감
   + ring wrap으로 음수(-200213) 나던 버그 수정. DIAG에 per-pool 점유율 출력.
 - 회귀 확인: 단일 풀(back-compat) BFCL 40k에서 park TTFT 1.382s ≈ 정본 1.35s, fetch 정상.
-- 다음(진행중): ShareGPT 50k×1 vs 50k×2 A/B로 "유휴 GPU 추가 = capacity 회복" 존재증명.
-- slice 2 예정: 후보를 "serving 중이지만 여유 있는 GPU"로 확장 + 라우터가 실시간 압박 telemetry로
-  타겟 선택 (진짜 NpNd 버전).
+
+**slice 1 동작 확인 (2026-07-13, ShareGPT C=8, PARK_GPUS=2,3 각 50k)**: DIAG —
+`pools[live/N(idx)]: g2:50000/50000(70) g3:50000/50000(64)`, survival ~100%, nospace=0,
+FETCH hits=702/miss=225. **KV가 유휴 GPU 2개에 균형 분산(g2/g3 index 70:64)되어 둘 다 포화** →
+"그때그때 여유 있는 유휴 GPU에 저장"이 실제 동작. 100k(50k×2)를 다 채웠다는 건 50k×1이었으면 절반만
+담아 더 넘쳤을 것 = **2번째 유휴 GPU가 capacity를 실제로 보탬**. host RAM 0(전부 GPU2/3 VRAM). 저부하
+(C=8)라 TTFT엔 안 나타남(§7-3 그대로) — capacity/reuse 축의 이득이지 latency 아님. reuse 정확한 델타
+(1-pool 대비 %)는 slice 2의 pressure telemetry 측정으로 미룸.
+  - 미결: dedup/fetch가 전 풀 선형탐색이라 풀 수 N에 비례(현재 N=2라 무시가능; 스케일 시 인덱스 필요).
+  - "1개를 100k로 하면?" 반박 → 단일 GPU 여유 VRAM은 한정(그 GPU도 serving 중)이라 **여러 유휴 GPU에
+    aggregate**하는 게 요지. 그 정당화는 slice 2(serving GPU를 후보로)에서.
+
+**방향 — slice 2 (진짜 NpNd, host-RAM-free의 정당화)**:
+1. **후보 확장**: 지금은 전용 유휴 GPU(2,3). slice 2는 **serving 중이지만 순간적으로 여유 있는 GPU**를
+   후보로 — 2P2D에서 phase-이질성(어떤 GPU는 prefill 포화, 어떤 GPU는 KV 여유)을 이용.
+2. **라우터 pressure telemetry**: 각 노드가 per-GPU KV 점유를 publish(예: /dev/shm 또는 router),
+   외부 라우터가 실시간으로 "여유 GPU"를 탐지해 park 타겟을 지정 (제어면=라우터, 데이터면=P2P IPC copy).
+3. **측정**: 2P2D bursty multi-turn에서 GPU별 KV 점유 시계열(불균형 실재 확인) → pressure-balancing
+   migration이 siloed per-GPU eviction 대비 reuse 회복 + host RAM 0.
+4. **주의(정직)**: 성능은 hicache **동률**(latency로 못 이김, 20-40:1); win 축 = host-RAM-free +
+   유휴 자원 활용. Mooncake delta = 전용 공유 풀이 아니라 **그때그때 기회주의 배치**. Mooncake/LMCache
+   lit-check 선행 필요.
 
 **Phase 2 종합**: 두 방향(spare-GPU park, predictive-host)이 모두 같은 벽(20-40:1 + hicache incumbent
 + decode-bound)에 막힘을 규명 — 이는 negative가 아니라 **characterization 기여**(KV-tier-movement는
-언제 도움 되는가). 살아있는 positive 방향 = **NpNd 유휴 자원 기회주의적 배치(host-RAM-free)**, slice 1
-구현 완료.
+언제 도움 되는가). 살아있는 positive 방향 = **NpNd 유휴 자원 기회주의적 배치(host-RAM-free)**; slice 1
+(다중 유휴 GPU 균형 배치) 동작 확인 완료, slice 2(라우터 pressure-balancing)가 다음.
 
 ---
 
