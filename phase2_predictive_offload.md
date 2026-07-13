@@ -94,5 +94,36 @@ arm:
 - 신호 전달 통로: OpenAI API `extra_body` / 커스텀 헤더 / router passthrough.
 - 압박이 심하면 prefetch가 도착 전 다시 축출될 수 있음(§7-6-b의 파킹실패와 동형) → pin/우선순위 필요.
 
+## 8. S0 결과 (prefill-bound testbed, pool 40k / C16 / delay3 / n128)
+
+premise 1·2는 강하게 성립, 3은 **예상과 반대**로 나와 피벗의 명분을 좁혔다.
+
+| arm | TTFT | TPOT | reuse | tput | wall |
+|---|---|---|---|---|---|
+| radix | 4.75s | 0.008s | 0.019 | 52.5 | 233.8s |
+| hicache | 2.08s | 0.022s | **0.748** | 76.9 | 159.8s |
+
+- **(1) prefill-bound 확실**: 출력 24tok, TPOT~0.01s → TTFT가 응답시간 ~96%. radix reuse 0.019 = pool
+  40k에 C16 working set(~58k) 안 들어가 매턴 재-prefill 스래싱.
+- **(2) hicache ≫ radix**: TTFT −56%, tput +46%. 압박 하 offload가 재-prefill을 회피.
+- **(3) 그런데 hicache reuse 0.748 = 4턴 구조의 이론 최적(turn0은 문서 첫등장이라 원리적 cold, 3/4=0.75).**
+  → **hicache는 reuse를 놓치지 않는다.** "reactive prefetch가 늦어 miss"라는 원래 명분은 이 워크로드에서
+  성립 안 함.
+
+**턴별 TTFT (turns 1-3)**: radix ~4.5s(스래싱) vs hicache ~1.8s, hicache floor(min) ~0.35s.
+hicache 1.8s 분해:
+1. **host→GPU KV 로드** (predictive가 gap에 숨길 유일한 부분): KV 128KB/token × 3.5k tok = 448MB,
+   PCIe 25GB/s → **≈18ms. 무시가능** (memory-bound).
+2. **재-prefill 절약분 ~2.7s/turn**: 이미 hicache가 캐싱으로 회수. predictive 몫 아님.
+3. **queue-wait**: 나머지(floor 0.35↔median 1.8 변동). C16 압박+turn0 cold가 큐 막음. **KV 배치로 못 줄임.**
+
+**S0 결론**: hicache는 recompute-회피(큰 이득)를 이미 먹고, 남은 TTFT는 queue-wait(배치로 불가)+로드
+18ms(무시). **predictive의 addressable slice(load-hiding)는 3.5k prefix에선 미미.** 단 load-hiding은
+prefix 길이에 비례(128k tok ≈ 640ms) → **긴 컨텍스트에서만 niche 가능**. Phase 1 spare-GPU와 동형 패턴:
+hicache가 강한 incumbent라 KV-movement 추가 이득이 memory-bound라 항상 작다.
+
+**게이트(S0.5)**: `PREFIX_WORDS` 16k~32k로 키워 hicache TTFT에 로드 성분(수백 ms)이 드러나는지 확인.
+드러나면 long-context niche로 S1~S2 진행, 아니면 피벗 종료.
+
 ---
 _연계: Phase 1 결론 `results/phase1_report/report.md` §7-4~7-6. 이 문서는 Phase 2 설계/계획._
