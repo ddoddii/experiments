@@ -1067,6 +1067,76 @@ hicache(−24%)와 **대등**(park −2.5%). ② **무압박(≥60k)**: 축출�
 
 ---
 
+### 2.17 Phase 2 — 특성화(20-40:1) + 생성-KV/saturation 규명 + 다중 유휴 GPU 배치 (2026-07)
+
+Phase 1에서 "park ≈ hicache"까지 왔다. Phase 2는 (a) park을 **생성-KV**까지 확장하고, (b) 고동시성
+에서 **왜 reuse가 serving으로 안 바뀌는지** 규명하고, (c) 그 규명이 이끈 **다중 유휴 GPU 배치**를
+구현했다. 상세: `results/phase1_report/report.md` §7-4~7-6, `phase2_predictive_offload.md`.
+
+**(A) 생성-KV 파킹 (`SGLANG_KV_PARK_GEN=1`)** — park이 prompt prefix뿐 아니라 decode 생성 KV까지
+저장(dual-index: prefix 경계 + full 경계). 워크로드 의존적:
+
+| 워크로드 | GEN=0 reuse | GEN=1 reuse | host RAM (vs decode_offload) |
+|---|---|---|---|
+| BFCL (짧은 tool-call) | 0.744 | 0.750 (+0.6pp, 미미) | — |
+| ShareGPT (긴 chat) | 0.618 | **0.932** (+31pp) | park **+0**, decode_offload **+83GB** |
+
+ShareGPT에서 park(0.93)이 SGLang 내장 decode-offload(0.62=radix)를 이긴다 — decode_offload의 async
+best-effort prefetch가 3s-gap 루프에서 제때 못 읽음(L3 3,064토큰). **단 이 reuse는 hicache 대비가
+아니라 decode_offload 대비**이고, 그 실험에 hicache_host arm은 없었다(혼동 주의).
+
+**(B) Saturation 규명 (C=32, ShareGPT) — reuse 0.92가 TTFT로 전환 *안* 됨**:
+- 초기: park TTFT +94% vs radix(악화). fetch 경로 CPU 최적화(rolling prefix-hash, GPU dst view로
+  host-sync 제거) 후 +75% → **CPU는 오버헤드의 ~1/5뿐.**
+- **NVLink 1-hop(park_nvlink: D→P radix 직접, PARK_GPU 미설정)**: +75%→+45%, wall은 radix와 동률.
+  링크/hop 비용 확인. 하지만 reuse는 0.72로 하락(P-radix 경로에 evict-to-room 없어 파크 58% 드롭).
+- **진짜 근본 원인 = decode-bound**: throughput 883÷TPOT 0.0316 ≈ 28 seq 동시 decode = 천장 87%.
+  **C=32 병목은 decode 노드.** reuse는 prefill 절약이라 prefill이 병목 아니면 throughput 못 올림.
+  → 생성-KV 재사용은 **prefill-bound에서만** serving 이득.
+
+**(C) Predictive-host 게이트 + 20-40:1 법칙 (핵심 특성화)**: "hicache reactive prefetch가 늦다"를
+prefill-bound testbed(`sglang_longctx_multi_turn_concurrent.py`, 긴 문서 prefix + 짧은 출력)에서 검증
+→ **오히려 hicache가 이론 최적(reuse 0.748=3/4, turn0만 cold)**. 남은 TTFT는 queue-wait이지 로드
+지연이 아니다. 토큰당 비용으로 확정:
+
+| | 값 | |
+|---|---|---|
+| prefill 재계산 (hicache가 회피) | ~0.1–0.23 ms/tok | 2×8e9 FLOP ÷ A6000 유효 70–155 TFLOP/s |
+| KV host→GPU 로드 (movement가 숨길 부분) | ~0.005 ms/tok | 128KB/tok ÷ PCIe 25GB/s |
+
+**비율 ≈ 20–40 : 1, prefix 길이 무관**(둘 다 선형). → recompute 회피가 지배 이득이고 hicache가 먹는다.
+KV-movement의 latency 몫은 항상 20-40배 작다. **KV-tier-movement의 이득 축 = latency가 아니라
+host-RAM/capacity.** (그림: `results/phase1_report/why_hicache_wins.png`)
+
+**(D) "host RAM 0"의 정직한 해석**: park의 0 host RAM은 저장 회피가 아니라 **spare GPU VRAM(26.2GB,
+200k-token 풀)으로 위치 이동**이다. KV는 128KB/token — 어디 두든 같은 바이트. decode_offload의 83GB는
+hicache_ratio 2.0의 과할당 예약이라 공정 비교 아님. **정직한 주장 = "host DRAM이 제약이고 유휴 GPU가
+있을 때의 placement 옵션", 메모리 효율 win 아님.** Fig는 host RAM + spare-VRAM 둘 다 표기해야 함.
+
+**(E) 재프레이밍 → NpNd 라우터 pressure-balancing (Mooncake와의 delta)**: 위 특성화가 "유휴 자원 활용"
+방향을 확정. Mooncake는 **전용 공유 KV 풀**, 본 연구는 **그때그때 유휴 GPU에 기회주의적 배치**.
+합의된 프레이밍: *"NpNd에서 라우터 전역 pressure-balancing으로 hicache-동등 recompute 회피를 host
+RAM 0으로 — win = 남는 유휴 자원 활용."* (성능은 hicache 동률, 이득은 host-RAM-free. latency로
+hicache를 이긴다는 주장 안 함.)
+
+**(F) 구현 — slice 1: 다중 유휴 GPU 풀 + headroom 기반 배치** (SGLang `idle_kv_parking.py`):
+- `SGLANG_KV_PARK_GPUS="2,3"` → 후보 유휴 GPU마다 `_ParkPool`(ring + LRU index + occupancy).
+- park마다 `_select_pool`이 **headroom 최대(=가장 유휴)** 풀 선택 = "여유 있는 GPU에 저장".
+- fetch(`_match_park_prefix`)는 전 풀을 rolling-hash 1-pass로 검색, `(pool,start,n)` 반환.
+- occupancy는 단조 `written` 카운터(`min(written,N)`) — 초기 `live` 카운터가 dual-index 이중차감
+  + ring wrap으로 음수(-200213) 나던 버그 수정. DIAG에 per-pool 점유율 출력.
+- 회귀 확인: 단일 풀(back-compat) BFCL 40k에서 park TTFT 1.382s ≈ 정본 1.35s, fetch 정상.
+- 다음(진행중): ShareGPT 50k×1 vs 50k×2 A/B로 "유휴 GPU 추가 = capacity 회복" 존재증명.
+- slice 2 예정: 후보를 "serving 중이지만 여유 있는 GPU"로 확장 + 라우터가 실시간 압박 telemetry로
+  타겟 선택 (진짜 NpNd 버전).
+
+**Phase 2 종합**: 두 방향(spare-GPU park, predictive-host)이 모두 같은 벽(20-40:1 + hicache incumbent
++ decode-bound)에 막힘을 규명 — 이는 negative가 아니라 **characterization 기여**(KV-tier-movement는
+언제 도움 되는가). 살아있는 positive 방향 = **NpNd 유휴 자원 기회주의적 배치(host-RAM-free)**, slice 1
+구현 완료.
+
+---
+
 ## 3. Related Work & Novelty Positioning (2026-06 조사)
 
 ### 3.1 경쟁 연구 비교
