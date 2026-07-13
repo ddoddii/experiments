@@ -27,6 +27,12 @@ QUANTIZATION=${QUANTIZATION:-""}           # 8B@BF16=16GB, quantization 불필�
 TOOL_CALL_PARSER=${TOOL_CALL_PARSER:-"llama3"}   # Llama-3.1 uses llama3 parser
 HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through_selective"}
+# 압박(pressure) knob: KV 풀을 작게 잡아 점유율이 포화까지 오르게 (불균형/축출 측정용).
+# 빈 값이면 기본 대용량 풀. 예: PREFILL_MAX_TOTAL_TOKENS=20000
+PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
+DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
+P_MTT=""; [ -n "$PREFILL_MAX_TOTAL_TOKENS" ] && P_MTT="--max-total-tokens $PREFILL_MAX_TOTAL_TOKENS"
+D_MTT=""; [ -n "$DECODE_MAX_TOTAL_TOKENS" ] && D_MTT="--max-total-tokens $DECODE_MAX_TOTAL_TOKENS"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang"
@@ -68,6 +74,7 @@ echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
 CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 \
   --enable-metrics \
+  ${P_MTT} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO --hicache-write-policy $HICACHE_WRITE_POLICY \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -80,6 +87,7 @@ echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
 CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 \
   --enable-metrics \
+  ${P_MTT} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -96,6 +104,7 @@ echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
 CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 \
   --enable-metrics \
+  ${D_MTT} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
@@ -107,6 +116,7 @@ echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
 CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 \
   --enable-metrics \
+  ${D_MTT} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
