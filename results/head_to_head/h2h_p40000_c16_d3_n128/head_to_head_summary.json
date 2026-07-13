@@ -1,0 +1,37 @@
+{
+  "tag": "h2h_p40000_c16_d3_n128",
+  "arms": {
+    "radix": {
+      "arm": "radix",
+      "avg_ttft_s": 4.7521,
+      "avg_tpot_s": 0.0083,
+      "overall_tput": 52.55,
+      "wall_s": 233.85,
+      "errors": 0,
+      "reuse_ratio": 0.019,
+      "cached_tokens": 32013.0,
+      "uncached_tokens": 1649199.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 4.3831380545161664
+    },
+    "hicache": {
+      "arm": "hicache",
+      "avg_ttft_s": 2.0792,
+      "avg_tpot_s": 0.0221,
+      "overall_tput": 76.91,
+      "wall_s": 159.77,
+      "errors": 0,
+      "reuse_ratio": 0.7481,
+      "cached_tokens": 1257778.0,
+      "uncached_tokens": 423434.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 2.0097344829700887
+    }
+  },
+  "comparison": {
+    "hicache": {
+      "ttft_pct_vs_radix": -56.2,
+      "tput_pct_vs_radix": 46.4
+    }
+  }
+}
