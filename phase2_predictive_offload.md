@@ -125,5 +125,38 @@ hicache가 강한 incumbent라 KV-movement 추가 이득이 memory-bound라 항�
 **게이트(S0.5)**: `PREFIX_WORDS` 16k~32k로 키워 hicache TTFT에 로드 성분(수백 ms)이 드러나는지 확인.
 드러나면 long-context niche로 S1~S2 진행, 아니면 피벗 종료.
 
+## 9. S0.5 게이트 결과 + 근본 비율 논거 → 피벗 종료
+
+**게이트 실측 (PREFIX_WORDS 24000, pool 60k, C8, delay3, n48)**:
+
+| arm | TTFT | reuse | cached | tput |
+|---|---|---|---|---|
+| radix | 37.16s | 0.0016 | 7857 | 4.76 |
+| hicache | 41.21s | 0.0016 | 7857 | 4.34 |
+
+reuse/cached가 **양쪽 동일 ~0** → **hicache 캐싱이 붕괴**(pool 60k가 30k-tok prefix 2개도 못 담아
+radix와 동일 스래싱, TTFT 37-41s). 게이트가 재려던 "캐싱 성공 + 로드 지연"을 못 쟀다 (캐싱 자체 실패).
+= over-subscription 극단에선 hicache도 무력(부수 발견)이나, 게이트로는 무효.
+
+**그런데 재튜닝 전에 근본 계산이 이 게이트를 이론적으로 무의미하게 만든다**:
+
+| 토큰당 비용 | 값 |
+|---|---|
+| prefill 연산 (hicache가 reuse로 회피) | ~0.1–0.23 ms/tok (2×8e9 FLOP ÷ A6000 유효 70–155 TFLOP/s) |
+| KV host→GPU 로드 (predictive가 숨길 부분) | ~0.005 ms/tok (128KB/tok ÷ PCIe 25GB/s) |
+
+**비율 ≈ 20–40 : 1.** 캐시된 KV 로드가 재계산보다 20-40배 싸다(= prefix caching이 작동하는 이유).
+연산·로드 둘 다 prefix 길이에 **같은 비율로** 커지므로, (predictive 몫=로드) : (hicache 이미 먹은 몫=연산
+회피) = **항상 1:20~40, prefix 길이 무관.** → 긴 컨텍스트도 니치를 안 연다.
+
+**Phase 2 종료 결론**: spare-GPU park(§7-4~7-6)와 predictive-host(§8~9) 두 피벗 모두 hicache incumbent에
+막혔고, 그 벽은 하드웨어 비율로 확정된다 — **recompute-회피가 지배 이득이고 hicache가 그걸 먹는다;
+KV-movement 추가 이득(로드 은닉)은 ~20-40배 작고 prefix-length 무관; 압박 하 queue-wait은 KV 배치로
+불가.** KV-tier-movement의 남는 축은 latency가 아니라 **host-RAM/capacity**뿐 (park가 압박 하 prefix
+복구에서 hicache와 *동률* + host RAM 0 = host RAM이 제약일 때만 의미).
+
+이는 negative가 아니라 **characterization 기여**다: "PD disaggregation에서 KV-tier-movement가 언제
+도움이 되는가"에 대한 정량적 경계(20-40:1 compute:transfer ratio).
+
 ---
 _연계: Phase 1 결론 `results/phase1_report/report.md` §7-4~7-6. 이 문서는 Phase 2 설계/계획._
