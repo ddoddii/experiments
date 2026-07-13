@@ -1250,6 +1250,33 @@ A6000 시스템(PCIe, NVLink 없음)에서 1 GB KV (8k tokens) 기준 추정:
 | 단일 8B 모델 | 모델 스케일 axis 약함 (70B는 하드웨어상 불가) | long-context 변형(turn 누적 + 긴 system prompt)으로 KV pressure axis 보강 |
 | 구현 공수 | D 노드 decode 중 KV를 하위 tier로 내보내는 경로가 SGLang에 없음 (HiCache는 P 노드 radix cache 계층화) | **완화 (§2.9)**: sglang 0.5.9의 `--disaggregation-decode-enable-offload-kvcache`가 D→storage 경로 제공 (안정성 검증 필요, #11016). Oracle(§5.E)까지는 캐시 flush/유지 조작으로 시뮬레이션 |
 
+### 3.5 Phase 2 방향 — 선행연구 delta (2026-07 웹 조사)
+
+본 연구의 Phase 2 방향(**opportunistic idle-GPU KV parking + 라우터 pressure-balancing**)을
+KV-cache 관리 3대 시스템과 대조. 핵심 delta = **host DRAM/SSD가 아니라 순간 유휴인 peer GPU HBM을
+실시간 압박 기반으로 티어로 쓴다.**
+
+| 축 | Mooncake (FAST'25) | DistServe (OSDI'24) / DOPD | LMCache (2510.09665) | **본 연구 (idle-GPU parking)** |
+|---|---|---|---|---|
+| 핵심 | KVCache-centric 스케줄러 + host 티어 풀 | P/D 분리 + (DOPD) 동적 인스턴스 비율 | 계층형 KV 캐시 레이어(엔진 간 공유) | 유휴 GPU에 KV 기회주의 배치 + pressure-balancing |
+| KV 저장 티어 | **CPU/DRAM/SSD** (host) | 없음 (P→D 전송만) | GPU(로컬)/CPU/disk/remote(Redis,S3) | **peer GPU HBM** (순간 유휴) |
+| **유휴 peer GPU HBM 티어?** | ❌ | ❌ | △ (로컬 GPU 티어, peer 아님) | ✅ **핵심 delta** |
+| 배치 정책 | 전용 공유 풀 + cache-aware 요청 라우팅 | 인스턴스 배치(정적/DOPD 동적) | 계층 offload(정책 기반) | **실시간 per-GPU 압박 → 여유 GPU 선택** |
+| KV 이동 트리거 | 요청을 KV 있는 곳으로 라우팅 | — | prefix 재사용 / offload | **GPU 포화 위기 → 여유 GPU로 park** |
+| host-RAM-free? | ❌ (host가 티어) | N/A | ❌ (host/disk가 티어) | ✅ (spare GPU HBM만) |
+
+**delta 확정**: "실시간 per-GPU KV 압박을 읽어 순간 유휴 peer GPU HBM에 endangered KV를 기회주의적 배치"
+= 세 시스템 어디에도 없음. 특히 **host DRAM 아닌 유휴 GPU HBM 티어** 각도가 명확한 novelty.
+
+**겹치는(=주장하면 안 되는) 부분**: 계층형 KV 캐시(LMCache), cache/load-aware 스케줄링(Mooncake, 요청
+라우팅 형태), P→D cross-GPU 전송(셋 다), 동적 P/D 비율(DOPD).
+
+**리뷰어 예상 질문**: *"왜 값싼 host DRAM 대신 GPU HBM?"* — §2.17(C)의 20-40:1로 전송 속도 이득은 작으니,
+정직한 답 = **"host DRAM이 binding constraint이고 (재구성으로) stranded된 유휴 GPU HBM이 이미 있는
+배치에서, 추가 host RAM 없이 capacity 확보"** — 좁지만 실재하는 니치. "더 빠르다"로 팔면 뚫림.
+
+출처: Mooncake arXiv:2407.00079 (FAST'25) · DistServe arXiv:2401.09670 (OSDI'24) · LMCache arXiv:2510.09665.
+
 ---
 
 ## 4. Research Design
