@@ -44,6 +44,9 @@ PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park buffer (~4GB @
 PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}         # leave room for the park buffer
 SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN:-1}
 SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE:-1}
+# session-keyed parking (task 7): free superseded per-conversation versions -> small pool
+# holds the live working set (higher survival, less variance). SGLANG_KV_PARK_SESSION_KEYED=1.
+SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED:-0}
 # hicache args (prefill). PARK_NO_HICACHE=1 drops them so radix+park runs at host RAM 0
 # (the clean "park as a host-RAM-free alternative to hicache" arm).
 HICACHE_ARG="--enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio ${HICACHE_RATIO} --hicache-write-policy ${HICACHE_WRITE_POLICY}"
@@ -57,7 +60,7 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   CVD_P1="0,1,2,3"; BASE_P1="--base-gpu-id 1"
   CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id 2"
   CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id 3"
-  _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE}"
+  _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE} SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED}"
   ENV_P0="SGLANG_KV_PARK_GPUS=0 ${_PENV}"
   ENV_P1="SGLANG_KV_PARK_GPUS=1 ${_PENV}"
   ENV_D0=""; ENV_D1=""
