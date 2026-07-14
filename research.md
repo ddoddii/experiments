@@ -1204,6 +1204,18 @@ end-to-end 파이프라인 동작 확정 (systems 기여).
 - **→ 옵션 (b) session-keyed 파킹 동기 확정**: stale 성장 버전 제거로 같은 survival을 **더 작은 풀**로 달성 →
   GPU HBM 비용↓ → tradeoff를 park 쪽으로. "이길지 모름"이 아니라 "이미 이기는 걸 더 싸게".
 
+**검증 스윕 (pool {40,60,80,120}k × 2 reps, radix+park vs hicache, `park_sweep/`)** — 깨끗한 것/노이즈 구분:
+- **host RAM**: park 전 pool에서 **~20.8GB 일정** vs hicache 27.5GB → **−6.7GB 일관 (host-RAM-free 확증)**.
+  park는 GPU HBM 사용이라 park 풀 크기와 무관하게 host 평평.
+- **survival ∝ pool (단조)**: 19%(40k)→34%(60k)→47%(80k)→**69%(120k)**.
+- **TTFT**: park 120k mean **3.68s ≈ hicache 3.72s (동률)**. 그러나 **반복 분산 큼**: 80k=5.17 vs 3.59,
+  120k=3.84 vs 3.51 (같은 config); 세션 간 60k도 5.88(arm2)↔3.88(sweep). = **park는 hicache보다 TTFT
+  tail 분산이 큼**(hicache 3.80/3.64 타이트) — eviction/fetch storm의 확률적 spike.
+- **정직한 한계**: 2 reps로는 "survival→TTFT 매끈한 곡선"을 주장 못 함(노이즈 지배). 주장 가능: host-RAM-free,
+  survival∝pool, 충분 pool서 mean TTFT 동률(단 분산 큼). 논문 곡선은 3~5 reps 필요.
+- 그림: `results/park_sweep/park_sweep_curve.png` (pool→TTFT + survival→TTFT). CSV: `park_sweep/sweep_summary.csv`.
+- **→ session-keyed(다음)가 두 약점(HBM 비용 + tail 분산) 동시 공략**: churn↓ → 작은 풀 survival↑ + storm↓.
+
 **Phase 2 최종 종합**: cross-node pressure-balanced idle-GPU parking을 구현·동작·측정 완료. **positive
 기여 3개**: (1) **characterization** — PD disaggregation에서 KV-tier-movement의 정량적 경계
 (20-40:1 recompute:transfer, decode-bound, host DRAM≫GPU HBM 용량). (2) **동작하는 novel 시스템**
