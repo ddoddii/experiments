@@ -1168,11 +1168,38 @@ FETCH hits=702/miss=225. **KV가 유휴 GPU 2개에 균형 분산(g2/g3 index 70
 - 재현: `PREFILL_MAX_TOTAL_TOKENS=20000 DECODE_MAX_TOTAL_TOKENS=20000 ./scripts/sglang/start_2P_2D.sh`
   + 샘플러 백그라운드 + BFCL C24 + `plot_kv_imbalance.py`.
 
-**Phase 2 종합**: 두 방향(spare-GPU park, predictive-host)이 모두 같은 벽(20-40:1 + hicache incumbent
-+ decode-bound)에 막힘을 규명 — 이는 negative가 아니라 **characterization 기여**(KV-tier-movement는
-언제 도움 되는가). 살아있는 positive 방향 = **NpNd 유휴 자원 기회주의적 배치(host-RAM-free)**; slice 1
-(다중 유휴 GPU 균형 배치) 동작 확인, slice-2 motivation(2P2D KV 불균형 OPPORTUNITY 49.6%) 실측 확인.
-다음: Mooncake/LMCache lit-check → 라우터 pressure-balancing migration 구현(slice 2).
+**slice 2 구현 + 2P2D end-to-end 실측 (2026-07-14) — 시스템은 동작, 성능은 hicache 미달**:
+cross-node pressure-balanced idle-GPU parking을 5개 조각으로 구현(SGLang `idle_kv_parking.py` +
+`shared_park_index.py`): ①/dev/shm mmap 공유 인덱스(hash→gpu,start,n, flock, 단위+교차프로세스 검증)
+②N-node rendezvous(per-node IPC 핸들 publish/discover) ③decode가 라이브 압박 telemetry로 유휴 P
+선택→park write+공유인덱스 mirror ④cross-P fetch(local miss→공유인덱스→peer 풀 IPC read) ⑤2P2D 배선.
+
+**동작 확인 (server17, 2P2D)**: 4-node IPC mesh 형성(각 P가 decode 2개 + peer P park 풀 open, p2p=True),
+`FETCH hits=…(cross-P=…)` 로 **한 P가 다른 P가 park한 KV를 실제 fetch** — cross-P가 fetch의 25–47%.
+end-to-end 파이프라인 동작 확정 (systems 기여).
+
+**성능 (BFCL, 2P2D, pool 24k, C16)**:
+
+| arm | TTFT | tput | host RAM | park survival |
+|---|---|---|---|---|
+| hicache (incumbent) | **3.86s** | 34.0 | 27.3GB | — |
+| radix+park (host-RAM-free) | 5.88s (**+52%**) | 35.3 | **20.8GB (−6.5GB)** | 31–34% |
+
+- **park는 host RAM −6.5GB 아끼지만 TTFT +52% 나쁨 → hicache 미달.**
+- **근본 원인 = 용량**: park 티어(GPU HBM 60k/P)는 survival 31–34%(index ~20개)로 churn → miss 절반 →
+  재-prefill(radix라 host fallback 없음). hicache는 host L2(27GB)가 커서 survival 높음 → 재-prefill 거의
+  없음 → TTFT 낮음. **spare GPU HBM < host DRAM 용량이라 KV 캐시 티어로선 딸린다.** per-fetch는 park가
+  빠르나(8–14ms) 작아서 miss가 많아 집계 TTFT는 짐.
+- Phase 1(§7)의 결론 최종 확증: KV-tier-movement는 hicache를 못 이긴다 — 이번엔 latency(20-40:1)가 아니라
+  **용량(host DRAM ≫ spare GPU HBM)** 때문.
+
+**Phase 2 최종 종합**: 세 방향(spare-GPU park / predictive-host / NpNd cross-node park) 모두 hicache
+incumbent를 성능으로 못 이김을 실측으로 규명 — 벽은 하드웨어(20-40:1 recompute:transfer, decode-bound,
+host DRAM≫GPU HBM 용량). **positive 기여 2개**: (1) **characterization** — PD disaggregation에서
+KV-tier-movement가 언제/왜 hicache를 못 이기는지 정량적 경계 (CAL-scale). (2) **동작하는 novel 시스템** —
+cross-node pressure-balanced idle-GPU parking(Mooncake와 delta: 전용 공유풀이 아닌 그때그때 유휴 GPU
+기회주의 배치), host RAM은 실제로 덜 쓰나(−6.5GB) 성능 win은 아님(host-RAM-constrained niche 한정).
+코드: SGLang 브랜치 `claude/youthful-knuth-det52g` (5 pieces, 모두 커밋).
 
 ---
 
