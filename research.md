@@ -1216,6 +1216,31 @@ end-to-end 파이프라인 동작 확정 (systems 기여).
 - 그림: `results/park_sweep/park_sweep_curve.png` (pool→TTFT + survival→TTFT). CSV: `park_sweep/sweep_summary.csv`.
 - **→ session-keyed(다음)가 두 약점(HBM 비용 + tail 분산) 동시 공략**: churn↓ → 작은 풀 survival↑ + storm↓.
 
+**task 7 — session-keyed 파킹 (free-list + prefix-supersession) — 단편화로 실패**:
+ring 대신 free-list 할당기 + supersession(옛 버전=새 시퀀스의 prefix를 free)을 구현
+(`SGLANG_KV_PARK_SESSION_KEYED=1`, free-list는 50k-op property test 통과). 60k A/B(ring vs session):
+
+| | ring 60k | session-keyed 60k |
+|---|---|---|
+| TTFT | 3.714s | 3.715s (동일) |
+| survival | 34% | 31% (개선 X) |
+| evict-to-room | 71 | **416 (폭증)** / nospace 7 |
+| occupancy | 60000(full) | 51019(안 참) | tput 47.4 → 39.0 |
+
+- **실패 원인 = 단편화**: supersession이 옛 버전을 free해 공간은 비었으나(51k<60k) **잘게 흩어져** first-fit가
+  새 3.5k 블록을 못 넣음 → LRU evict 폭주(416) → survival 그대로, tput 악화. 추가로 BFCL은 turn N-1의 full
+  엔트리(gen)가 재직렬화로 turn N의 prefix가 안 됨(§7-1) → supersession이 prefix만 free(부분 동작).
+- **분산이 진짜 story**: 이번 ring-60k=3.714s(survival 34%)인데 이전 arm2 ring-60k=5.88s — **같은 config 2s차**.
+  park TTFT 문제는 mean survival이 아니라 **run-to-run 분산**(eviction storm 확률적). session-keyed는 분산을
+  줄이긴커녕 단편화로 키움.
+- **결론**: session-keyed는 variable free-list로는 실패 — compaction(조각모음)/slab(고정크기) 필요(추가 빌드,
+  payoff 불확실: ring도 운좋으면 3.71s). Phase 2 최적화의 자연스러운 종착.
+
+**Phase 2 완결 story**: 동작하는 novel 시스템(cross-node pressure-balanced idle-GPU parking) + 3-벽
+characterization(20-40:1 / decode-bound / host-DRAM≫GPU-HBM) + win condition(충분 pool서 hicache TTFT
+동률 @ host-RAM-free −6.7GB) + 정직한 약점(TTFT 고분산; session-keyed는 단편화로 미해결). 논문 = "characterize
++ working system", not "beats SOTA".
+
 **Phase 2 최종 종합**: cross-node pressure-balanced idle-GPU parking을 구현·동작·측정 완료. **positive
 기여 3개**: (1) **characterization** — PD disaggregation에서 KV-tier-movement의 정량적 경계
 (20-40:1 recompute:transfer, decode-bound, host DRAM≫GPU HBM 용량). (2) **동작하는 novel 시스템**
