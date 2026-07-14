@@ -33,6 +33,35 @@ PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
 DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 P_MTT=""; [ -n "$PREFILL_MAX_TOTAL_TOKENS" ] && P_MTT="--max-total-tokens $PREFILL_MAX_TOTAL_TOKENS"
 D_MTT=""; [ -n "$DECODE_MAX_TOTAL_TOKENS" ] && D_MTT="--max-total-tokens $DECODE_MAX_TOTAL_TOKENS"
+
+# --- Phase 2 slice-2: idle-KV-parking in 2P2D (IDLE_KV_PARKING=1) --------------
+# Each prefill parks decode-finished KV onto whichever P GPU is momentarily idle
+# (pressure-aware), discoverable cross-node via the shared index. Requires: all 4
+# procs SEE all 4 GPUs (CUDA IPC) -> full visibility + --base-gpu-id; park pool on
+# each P's own GPU (P0->gpu0, P1->gpu1); reduced --mem-fraction-static to leave HBM
+# for the park buffer. All nodes of one run share SGLANG_KV_PARK_EPOCH.
+PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park buffer (~4GB @ 30k)
+PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}         # leave room for the park buffer
+SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN:-1}
+SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE:-1}
+if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
+  export SGLANG_KV_PARK_EPOCH="$(date +%s)"
+  rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
+  PARK_ARG="--disaggregation-enable-idle-kv-parking"
+  MEMFRAC_P="--mem-fraction-static ${PARK_MEM_FRACTION}"
+  CVD_P0="0,1,2,3"; BASE_P0="--base-gpu-id 0"
+  CVD_P1="0,1,2,3"; BASE_P1="--base-gpu-id 1"
+  CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id 2"
+  CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id 3"
+  _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE}"
+  ENV_P0="SGLANG_KV_PARK_GPUS=0 ${_PENV}"
+  ENV_P1="SGLANG_KV_PARK_GPUS=1 ${_PENV}"
+  ENV_D0=""; ENV_D1=""
+else
+  PARK_ARG=""; MEMFRAC_P=""
+  CVD_P0=0; BASE_P0=""; CVD_P1=1; BASE_P1=""; CVD_D0=2; BASE_D0=""; CVD_D1=3; BASE_D1=""
+  ENV_P0=""; ENV_P1=""; ENV_D0=""; ENV_D1=""
+fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_DIR="$PROJECT_DIR/logs/sglang"
@@ -70,11 +99,11 @@ sleep 2
 
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
-echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)..."
-CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30000 \
+echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)  park=${IDLE_KV_PARKING:-0}..."
+env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
+  --model-path $MODEL_PATH --tp 1 --port 30000 ${BASE_P0} \
   --enable-metrics \
-  ${P_MTT} \
+  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO --hicache-write-policy $HICACHE_WRITE_POLICY \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -84,10 +113,10 @@ echo "  PID: $!"
 sleep 3
 
 echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
-CUDA_VISIBLE_DEVICES=1 python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30001 \
+env CUDA_VISIBLE_DEVICES=${CVD_P1} ${ENV_P1} python3 -m sglang.launch_server \
+  --model-path $MODEL_PATH --tp 1 --port 30001 ${BASE_P1} \
   --enable-metrics \
-  ${P_MTT} \
+  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -101,10 +130,10 @@ sleep 3
 sleep 3
 
 echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
-CUDA_VISIBLE_DEVICES=2 python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30002 \
+env CUDA_VISIBLE_DEVICES=${CVD_D0} ${ENV_D0} python3 -m sglang.launch_server \
+  --model-path $MODEL_PATH --tp 1 --port 30002 ${BASE_D0} \
   --enable-metrics \
-  ${D_MTT} \
+  ${D_MTT} ${PARK_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
@@ -113,10 +142,10 @@ echo "  PID: $!"
 sleep 3
 
 echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
-CUDA_VISIBLE_DEVICES=3 python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30003 \
+env CUDA_VISIBLE_DEVICES=${CVD_D1} ${ENV_D1} python3 -m sglang.launch_server \
+  --model-path $MODEL_PATH --tp 1 --port 30003 ${BASE_D1} \
   --enable-metrics \
-  ${D_MTT} \
+  ${D_MTT} ${PARK_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
