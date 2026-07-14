@@ -44,6 +44,10 @@ PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park buffer (~4GB @
 PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}         # leave room for the park buffer
 SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN:-1}
 SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE:-1}
+# hicache args (prefill). PARK_NO_HICACHE=1 drops them so radix+park runs at host RAM 0
+# (the clean "park as a host-RAM-free alternative to hicache" arm).
+HICACHE_ARG="--enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio ${HICACHE_RATIO} --hicache-write-policy ${HICACHE_WRITE_POLICY}"
+[ "${PARK_NO_HICACHE:-0}" = "1" ] && HICACHE_ARG=""
 if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   export SGLANG_KV_PARK_EPOCH="$(date +%s)"
   rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
@@ -105,7 +109,7 @@ env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
   --enable-metrics \
   ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
-  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO --hicache-write-policy $HICACHE_WRITE_POLICY \
+  ${HICACHE_ARG} \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8998 \
   > "$LOG_DIR/p1.log" 2>&1 &
@@ -118,7 +122,7 @@ env CUDA_VISIBLE_DEVICES=${CVD_P1} ${ENV_P1} python3 -m sglang.launch_server \
   --enable-metrics \
   ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
-  --enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio $HICACHE_RATIO \
+  ${HICACHE_ARG} \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
   --disaggregation-bootstrap-port 8999 \
   > "$LOG_DIR/p2.log" 2>&1 &
