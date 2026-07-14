@@ -1185,21 +1185,32 @@ end-to-end 파이프라인 동작 확정 (systems 기여).
 | hicache (incumbent) | **3.86s** | 34.0 | 27.3GB | — |
 | radix+park (host-RAM-free) | 5.88s (**+52%**) | 35.3 | **20.8GB (−6.5GB)** | 31–34% |
 
-- **park는 host RAM −6.5GB 아끼지만 TTFT +52% 나쁨 → hicache 미달.**
-- **근본 원인 = 용량**: park 티어(GPU HBM 60k/P)는 survival 31–34%(index ~20개)로 churn → miss 절반 →
-  재-prefill(radix라 host fallback 없음). hicache는 host L2(27GB)가 커서 survival 높음 → 재-prefill 거의
-  없음 → TTFT 낮음. **spare GPU HBM < host DRAM 용량이라 KV 캐시 티어로선 딸린다.** per-fetch는 park가
-  빠르나(8–14ms) 작아서 miss가 많아 집계 TTFT는 짐.
-- Phase 1(§7)의 결론 최종 확증: KV-tier-movement는 hicache를 못 이긴다 — 이번엔 latency(20-40:1)가 아니라
-  **용량(host DRAM ≫ spare GPU HBM)** 때문.
+- park 60k에선 host RAM −6.5GB지만 TTFT +52% 나쁨 (survival 34% churn).
+- **capacity가 knob 확정 — park 풀 60k→120k(2배)만 바꾸니 반전**:
 
-**Phase 2 최종 종합**: 세 방향(spare-GPU park / predictive-host / NpNd cross-node park) 모두 hicache
-incumbent를 성능으로 못 이김을 실측으로 규명 — 벽은 하드웨어(20-40:1 recompute:transfer, decode-bound,
-host DRAM≫GPU HBM 용량). **positive 기여 2개**: (1) **characterization** — PD disaggregation에서
-KV-tier-movement가 언제/왜 hicache를 못 이기는지 정량적 경계 (CAL-scale). (2) **동작하는 novel 시스템** —
-cross-node pressure-balanced idle-GPU parking(Mooncake와 delta: 전용 공유풀이 아닌 그때그때 유휴 GPU
-기회주의 배치), host RAM은 실제로 덜 쓰나(−6.5GB) 성능 win은 아님(host-RAM-constrained niche 한정).
-코드: SGLang 브랜치 `claude/youthful-knuth-det52g` (5 pieces, 모두 커밋).
+| arm | TTFT | tput | survival | host RAM |
+|---|---|---|---|---|
+| hicache | 3.86s | 34.0 | — | 27.3GB |
+| park 60k | 5.88s | 35.3 | 34% | 20.8GB |
+| **park 120k** | **3.8627s (=hicache)** | **41.05 (+21%)** | **69–72%** | ~20.8GB |
+
+- **hot working set이 park 풀에 들어가면(survival ~70%) park = hicache TTFT 동률 + throughput +21% + host RAM 0.**
+  survival 34→70%로 miss↓ → 재-prefill 급감 → TTFT 5.88→3.86s 회복. cross-P=100–108(fetch의 ~50%)로
+  cross-node 메커니즘이 실제 부하를 짐. **§7의 win condition을 실측 달성.**
+- **정직한 tradeoff**: park 120k는 GPU HBM ~30GB(15GB×2 버퍼 + mem-fraction 0.5)를 씀 = **비싼 GPU HBM으로
+  싼 host DRAM(hicache) 대체.** 성능 동률/우위지만 자원 경제성은 상황 의존(GPU HBM 여유 + host RAM 제약 시 유리).
+- **결론 수정**: KV-tier-movement가 hicache를 "못 이긴다"가 아니라 **"hot working set이 GPU HBM에 맞는 범위에서
+  hicache와 동률/우위, host RAM 0"** 이다. 벽(host DRAM≫GPU HBM 용량)은 그 범위의 상한을 정할 뿐, 범위 안에선 이김.
+- **→ 옵션 (b) session-keyed 파킹 동기 확정**: stale 성장 버전 제거로 같은 survival을 **더 작은 풀**로 달성 →
+  GPU HBM 비용↓ → tradeoff를 park 쪽으로. "이길지 모름"이 아니라 "이미 이기는 걸 더 싸게".
+
+**Phase 2 최종 종합**: cross-node pressure-balanced idle-GPU parking을 구현·동작·측정 완료. **positive
+기여 3개**: (1) **characterization** — PD disaggregation에서 KV-tier-movement의 정량적 경계
+(20-40:1 recompute:transfer, decode-bound, host DRAM≫GPU HBM 용량). (2) **동작하는 novel 시스템**
+(Mooncake delta: 전용 공유풀 아닌 유휴 GPU 기회주의 배치). (3) **실측 win condition** — hot working set이
+park 풀(GPU HBM)에 맞으면(survival ~70%) **park = hicache TTFT 동률 + throughput +21% + host RAM 0**
+(2P2D, park 120k). 벽은 그 범위의 상한일 뿐. 다음 최적화 = **session-keyed 파킹**(stale 버전 제거로 같은
+win을 더 작은 HBM으로). 코드: SGLang 브랜치 `claude/youthful-knuth-det52g` (5 pieces + shared index).
 
 ---
 
