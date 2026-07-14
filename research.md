@@ -1236,6 +1236,28 @@ ring 대신 free-list 할당기 + supersession(옛 버전=새 시퀀스의 prefi
 - **결론**: session-keyed는 variable free-list로는 실패 — compaction(조각모음)/slab(고정크기) 필요(추가 빌드,
   payoff 불확실: ring도 운좋으면 3.71s). Phase 2 최적화의 자연스러운 종착.
 
+**task 7b — session-keyed 파킹 (고정 slab) — 단편화는 해결, TTFT는 평평**:
+free-list를 버리고 고정 크기 slab(`SGLANG_KV_PARK_SLAB_TOKENS`, 기본 6000) 할당기로 교체.
+한 conversation = slab 하나를 재사용(supersede)/성장(제자리 덮어쓰기), full slab만 LRU evict. 60k/96k A/B:
+
+| | slab 60k (10 slabs) | slab 96k (16 slabs) |
+|---|---|---|
+| TTFT | 3.611s | 3.822s |
+| survival | 31% (10/32) | 50% (16/32) |
+| evict-to-room | 378 | 305 |
+| cross-P hits | 106 | 91 |
+| occupancy | 60000/60000 | 96000/96000 |
+
+- **slab이 단편화는 고침**: free-list의 evict 폭주(416) 없이 survival이 **slab 수에 깨끗이 비례**
+  (10 slabs=31% → 16 slabs=50%). storm 아님 — full slab만 LRU로 밀림.
+- **의도한 HBM 절감 확인**: slab 96k가 ring 120k와 비슷한 TTFT(3.82 vs 3.68)를 **~20% 작은 풀**로 달성.
+  session-keyed의 목적(같은 win을 더 작은 HBM으로)은 성립.
+- **그러나 survival→TTFT 곡선은 약함**: TTFT가 모든 park config에서 ~3.6–3.8s(hicache 근처)로 거의 평평.
+  이전 관측 "60k=5.88s"는 survival 탓이 아니라 **run-to-run 분산(outlier)**이었음(task 7 §분산 참조).
+  즉 park는 이미 hicache TTFT 근처에 붙어 있고, survival을 더 올려도 TTFT 여유가 크지 않음.
+- **trade-off**: slab은 고정 6k라 짧은 conversation에 공간 낭비(variable ring 대비). 그래도 단편화 없는
+  결정성 + 더 작은 풀 → 세션-키드 파킹의 **가장 깨끗한 구현**. 이것으로 Phase 2 최적화 종료.
+
 **Phase 2 완결 story**: 동작하는 novel 시스템(cross-node pressure-balanced idle-GPU parking) + 3-벽
 characterization(20-40:1 / decode-bound / host-DRAM≫GPU-HBM) + win condition(충분 pool서 hicache TTFT
 동률 @ host-RAM-free −6.7GB) + 정직한 약점(TTFT 고분산; session-keyed는 단편화로 미해결). 논문 = "characterize
@@ -1246,8 +1268,9 @@ characterization(20-40:1 / decode-bound / host-DRAM≫GPU-HBM) + win condition(�
 (20-40:1 recompute:transfer, decode-bound, host DRAM≫GPU HBM 용량). (2) **동작하는 novel 시스템**
 (Mooncake delta: 전용 공유풀 아닌 유휴 GPU 기회주의 배치). (3) **실측 win condition** — hot working set이
 park 풀(GPU HBM)에 맞으면(survival ~70%) **park = hicache TTFT 동률 + throughput +21% + host RAM 0**
-(2P2D, park 120k). 벽은 그 범위의 상한일 뿐. 다음 최적화 = **session-keyed 파킹**(stale 버전 제거로 같은
-win을 더 작은 HBM으로). 코드: SGLang 브랜치 `claude/youthful-knuth-det52g` (5 pieces + shared index).
+(2P2D, park 120k). 벽은 그 범위의 상한일 뿐. **session-keyed 파킹(slab)으로 같은 win을 ~20% 작은 HBM
+(96k)으로 재현** — free-list는 단편화로 실패, 고정 slab이 결정적으로 해결(survival이 slab 수에 비례).
+코드: SGLang 브랜치 `claude/youthful-knuth-det52g` (5 pieces + shared index + slab allocator).
 
 ---
 
