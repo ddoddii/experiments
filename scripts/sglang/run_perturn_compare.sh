@@ -10,10 +10,14 @@
 set -u
 cd "$(dirname "$0")/../.."
 
+# Park pool is a raw torch.zeros buffer on EACH P's own GPU (P0->gpu0, P1->gpu1),
+# competing with that P's weights. At 128KB/token it is ~7.7GB @ 60k, ~12.3GB @ 96k.
+# So mem-fraction-static must be high enough that (weights + park + KV) fits the budget,
+# or SGLang profiles negative KV. 60k @ 0.70 leaves ample KV; bump both to go larger.
 REPS=${REPS:-1}
-PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-96000}
+PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-60000}          # 10 slabs @ SLAB=6000 (best slab TTFT)
 SLAB=${SGLANG_KV_PARK_SLAB_TOKENS:-6000}
-PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.50}
+PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}          # was 0.50 -> negative KV with the park buffer
 export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-24000}
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-24000}
 BENCH=benchmark/sglang_perturn_ctxlen.py
