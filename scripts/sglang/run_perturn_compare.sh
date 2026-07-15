@@ -41,9 +41,14 @@ run_bench() {  # config
 }
 
 for rep in $(seq 1 $REPS); do
-  echo "=== rep ${rep}: hicache ==="
+  echo "=== rep ${rep}: hicache (parking explicitly OFF) ==="
   hard_stop
-  ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_hicache_r${rep}.log" 2>&1 \
+  # Explicitly force parking OFF and strip any leaked exports so this arm is a clean
+  # hicache-only baseline (guards against IDLE_KV_PARKING lingering in the shell).
+  env -u PARK_NO_HICACHE -u PARK_POOL_TOKENS -u PARK_MEM_FRACTION \
+      -u SGLANG_KV_PARK_SESSION_KEYED -u SGLANG_KV_PARK_SLAB_TOKENS \
+      IDLE_KV_PARKING=0 \
+      ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_hicache_r${rep}.log" 2>&1 \
     || { echo "hicache start failed r${rep}"; continue; }
   run_bench "perturn_hicache_r${rep}"
 

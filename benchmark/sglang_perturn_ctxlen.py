@@ -143,9 +143,13 @@ def run_turn(conversation, tools):
     n_out = completion_tokens if completion_tokens else token_count
     ttft = (t_first - t_request) if t_first else None
     e2e = (t_last - t_request) if t_last else None
+    # Guard the decode-rate calc: short tool-call turns stream their whole reply in one
+    # network flush (decode_time ~= 0), which makes (tokens-1)/decode_time explode to 1e5.
+    # Require a real multi-token decode phase; else leave decode-rate metrics None.
     decode_time = (t_last - t_first) if (t_last and token_count > 1) else None
-    tpot = (decode_time / (token_count - 1)) if (decode_time and token_count > 1) else None
-    tput = ((token_count - 1) / decode_time) if (decode_time and token_count > 1) else None
+    real_decode = decode_time is not None and decode_time >= 5e-3 and token_count >= 4
+    tpot = (decode_time / (token_count - 1)) if real_decode else None
+    tput = ((token_count - 1) / decode_time) if real_decode else None
     return ({
         "prompt_tokens": prompt_tokens,          # <- context length seen by the server
         "completion_tokens": n_out,

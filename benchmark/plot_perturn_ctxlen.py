@@ -33,6 +33,15 @@ INK, SECOND, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
 
 
 def load_points(paths):
+    """Build per-turn points from the `results` turns so we get e2e latency and
+    completion tokens (the flat `points` list lacks them). Each point:
+      ctx  = prompt_tokens (context length the server saw)
+      ttft = time to first token
+      good = effective throughput = completion_tokens / e2e_latency
+             (tok/s from request submit to last token -- includes TTFT, so it is NOT
+             confounded by the decode-batch-occupancy effect that inflates per-request
+             *decode* rate when an arm is starving/queueing).
+    """
     pts = []
     for p in paths:
         try:
@@ -40,13 +49,21 @@ def load_points(paths):
         except Exception as e:  # noqa: BLE001
             print(f"[warn] skip {p}: {e}")
             continue
-        pts.extend(d.get("points", []))
+        for r in d.get("results", []):
+            for t in r.get("turns", []):
+                ctx, ttft = t.get("prompt_tokens"), t.get("ttft_s")
+                e2e, ntok = t.get("e2e_latency_s"), t.get("completion_tokens")
+                if not ctx or not ttft:
+                    continue
+                good = (ntok / e2e) if (e2e and ntok) else None
+                pts.append({"ctx": ctx, "ttft": ttft, "good": good, "turn": t.get("turn")})
     return pts
 
 
 def binned(points, key, bin_w, min_n):
     """Group points into fixed-width context-length bins; return per-bin
-    (center, mean, q25, q75, n) for the given value key ('ttft'/'tput')."""
+    (center, median, q25, q75, n). Median (not mean) so the long TTFT tail doesn't
+    drag the line."""
     buckets = {}
     for pt in points:
         v = pt.get(key)
@@ -61,10 +78,10 @@ def binned(points, key, bin_w, min_n):
         if len(vals) < min_n:
             continue
         n = len(vals)
-        mean = sum(vals) / n
+        med = vals[n // 2] if n % 2 else 0.5 * (vals[n // 2 - 1] + vals[n // 2])
         q25 = vals[int(0.25 * (n - 1))]
         q75 = vals[int(0.75 * (n - 1))]
-        rows.append(((b + 0.5) * bin_w, mean, q25, q75, n))
+        rows.append(((b + 0.5) * bin_w, med, q25, q75, n))
     return rows
 
 
@@ -110,22 +127,23 @@ def main():
 
     park_ttft = binned(park, "ttft", args.bin, args.min_n)
     hic_ttft = binned(hic, "ttft", args.bin, args.min_n)
-    park_tput = binned(park, "tput", args.bin, args.min_n)
-    hic_tput = binned(hic, "tput", args.bin, args.min_n)
+    park_good = binned(park, "good", args.bin, args.min_n)
+    hic_good = binned(hic, "good", args.bin, args.min_n)
 
-    # console summary (overall means)
-    def om(pts, k):
-        vs = [p[k] for p in pts if p.get(k) is not None]
-        return sum(vs) / len(vs) if vs else float("nan")
-    print(f"\n=== overall means ===")
-    print(f"  TTFT   park={om(park,'ttft'):.3f}s  hicache={om(hic,'ttft'):.3f}s")
-    print(f"  tput   park={om(park,'tput'):.1f}    hicache={om(hic,'tput'):.1f}")
+    # console summary (overall medians)
+    def omed(pts, k):
+        vs = sorted(p[k] for p in pts if p.get(k) is not None)
+        return median(vs) if vs else float("nan")
+    print(f"\n=== overall medians ===")
+    print(f"  TTFT       park={omed(park,'ttft'):.3f}s  hicache={omed(hic,'ttft'):.3f}s")
+    print(f"  goodput    park={omed(park,'good'):.1f}   hicache={omed(hic,'good'):.1f} tok/s  (completion/e2e)")
 
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 4.6))
-    fig.suptitle("Per-turn TTFT / throughput vs growing context length  (2P2D, BFCL multi-turn)",
+    fig.suptitle("Per-turn TTFT / effective throughput vs growing context length  (2P2D, BFCL multi-turn)",
                  fontsize=13, fontweight="bold", color=INK)
-    draw(axL, park_ttft, hic_ttft, "avg TTFT (s)", "TTFT", "lower better")
-    draw(axR, park_tput, hic_tput, "decode throughput (tok/s)", "Throughput", "higher better")
+    draw(axL, park_ttft, hic_ttft, "median TTFT (s)", "TTFT", "lower better")
+    draw(axR, park_good, hic_good, "median effective throughput (tok/s)",
+         "Effective throughput  (tokens / end-to-end time)", "higher better")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.tight_layout(rect=[0, 0, 1, 0.94])
