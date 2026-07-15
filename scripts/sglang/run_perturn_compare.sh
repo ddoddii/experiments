@@ -33,11 +33,15 @@ hard_stop() {
   sleep 12
 }
 
-run_bench() {  # config
-  local cfg=$1
+run_bench() {  # config mem_csv
+  local cfg=$1 mem_csv=$2
+  # sample GPU HBM + host DRAM for the duration of THIS arm's benchmark
+  python benchmark/sys_mem_sampler.py --out "$mem_csv" --interval 1 &
+  local samp=$!
   env CONCURRENCY=$CONC TOOL_DELAY=$DELAY MAX_ITEMS=$ITEMS CONFIG="$cfg" \
       python "$BENCH" > "$OUTDIR/${cfg}.out" 2>&1 || true
-  echo ">> $cfg done -> results/${cfg}.json"
+  kill "$samp" 2>/dev/null || true
+  echo ">> $cfg done -> results/${cfg}.json  (mem -> $mem_csv)"
 }
 
 for rep in $(seq 1 $REPS); do
@@ -50,7 +54,7 @@ for rep in $(seq 1 $REPS); do
       IDLE_KV_PARKING=0 \
       ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_hicache_r${rep}.log" 2>&1 \
     || { echo "hicache start failed r${rep}"; continue; }
-  run_bench "perturn_hicache_r${rep}"
+  run_bench "perturn_hicache_r${rep}" "$OUTDIR/mem_hicache_r${rep}.csv"
 
   echo "=== rep ${rep}: park (session-keyed slab, host-RAM-free) ==="
   hard_stop
@@ -59,15 +63,19 @@ for rep in $(seq 1 $REPS); do
     PARK_POOL_TOKENS=$PARK_POOL_TOKENS PARK_MEM_FRACTION=$PARK_MEM_FRACTION \
     ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_park_r${rep}.log" 2>&1 \
     || { echo "park start failed r${rep}"; continue; }
-  run_bench "perturn_park_r${rep}"
+  run_bench "perturn_park_r${rep}" "$OUTDIR/mem_park_r${rep}.csv"
 done
 hard_stop
 
 echo ""
 echo "=== plotting ==="
-# merge reps by glob; plotter accepts multiple files per arm
+# merge reps by glob; plotters accept multiple files per arm
 python benchmark/plot_perturn_ctxlen.py \
   --park  results/perturn_park_r*.json \
   --hicache results/perturn_hicache_r*.json \
   --out "$OUTDIR/perturn_ctxlen.png" || true
+python benchmark/plot_mem_timeline.py \
+  --park  "$OUTDIR"/mem_park_r*.csv \
+  --hicache "$OUTDIR"/mem_hicache_r*.csv \
+  --out "$OUTDIR/mem_timeline.png" || true
 echo "done."
