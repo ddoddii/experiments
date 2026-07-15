@@ -74,24 +74,36 @@ def mean_series(series, dt=2.0):
 
 
 def draw(ax, park, hic, ylabel, title):
+    ymax = 0.0
     for series, color, label in ((hic, C_HICACHE, "hicache"),
                                  (park, C_PARK, "park (slab, host-RAM-free)")):
         for xs, ys in series:  # faint per-rep lines
             ax.plot(xs, ys, color=color, lw=0.9, alpha=0.28, zorder=2)
         mx, my = mean_series(series)
-        if mx:
-            ax.plot(mx, my, color=color, lw=2.4, zorder=3, label=label)
+        if not mx:
+            continue
+        ax.plot(mx, my, color=color, lw=2.4, zorder=3, label=label)
+        pk = peak(series)
+        ymax = max(ymax, pk)
+        # direct value label at the right end of the mean line (peak GB)
+        ax.annotate(f"{pk:.0f} GB", xy=(mx[-1], my[-1]), xytext=(6, 0),
+                    textcoords="offset points", va="center", ha="left",
+                    color=color, fontsize=10, fontweight="bold",
+                    fontfamily="monospace")
     ax.set_xlabel("elapsed time (s)", color=SECOND, fontsize=10.5)
     ax.set_ylabel(ylabel, color=SECOND, fontsize=10.5)
     ax.set_title(title, fontsize=11, color=INK, fontweight="bold")
     ax.grid(color=GRID, lw=0.6); ax.set_axisbelow(True)
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(0, ymax * 1.18 if ymax else None)  # headroom so top line + label fit
+    # extra right margin so the GB labels don't clip
+    x1 = max((xs[-1] for series in (park, hic) for xs, _ in series), default=1)
+    ax.set_xlim(right=x1 * 1.15)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     for s in ("bottom", "left"):
         ax.spines[s].set_color(GRID)
     ax.tick_params(colors=MUTED, labelsize=9)
-    ax.legend(frameon=False, fontsize=9.5, loc="best")
+    ax.legend(frameon=False, fontsize=9.5, loc="center left")
 
 
 def peak(series):
