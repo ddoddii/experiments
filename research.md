@@ -9,9 +9,11 @@
 > 실험으로 기각/축소되었다 — PAPER DRAFT의 scope가 현행 결론이다.
 >
 > 🔷 **2026-07 재프레이밍 (랩미팅 반영, 현행 최상위 방향)**: 이 연구를 **"KV Victim Cache —
-> 일시적 유휴 GPU HBM을 재활용하는 축출-KV 보조 캐시"**로 재정식화한다. hicache의 경쟁자가
-> 아니라 **메모리 계층의 새 GPU 티어**(host 티어 위)이며, 동기는 **agent/RAG 서버에서 희소한
-> CPU·host RAM 자원 보존**이다. 상세는 **§10** 참조 (CAL 타겟).
+> 일시적 유휴 GPU HBM을 재활용하는 축출-KV 보조 캐시"**로 재정식화한다. hicache와 경쟁이 아니라
+> **eager host 티어를 대체**하는 GPU 티어이며, 동기는 **agent/RAG 서버에서 희소한 CPU·host RAM
+> 보존**이다. **실측 확정(REPS=3): TTFT 동률(3.51 vs 3.52 s)에서 host RAM 122→49 GB (−73)**.
+> 상세·그림·CAL 아웃라인은 **§10** (그림 `results/perturn/fig_{mem,design,perturn}`, 아웃라인
+> `paper/cal_kv_victim_cache_outline.md`). CAL 타겟.
 
 ---
 
@@ -1786,11 +1788,12 @@ KV를 host로 밀면 **agent 스택이 써야 할 자원을 KV offload가 잠식
 
 | | GPU HBM | host DRAM (used) | host page cache | 다음-turn TTFT | overall tput |
 |---|---|---|---|---|---|
-| hicache (L3만) | 81 GB | 30 GB | **~94 GB** (file 티어) | 3.65 s | 84 tok/s |
-| park (L2 victim) | 98 GB (+17) | 23 GB (−7) | ~27 GB (평평) | 3.66 s (동률) | 92 tok/s |
+| hicache (L3만) | 81 GB | 28 GB | **~94 GB** (file 티어) | 3.51 s | ~86 tok/s |
+| park (L2 victim) | 98 GB (+17) | 21 GB | ~27 GB (평평) | 3.52 s (동률) | ~85 tok/s |
 
-→ **동일 성능**에서 park는 KV를 유휴 GPU HBM에 두어 **host used −7 GB + page cache −67 GB**를
-아낀다 (hicache의 file 티어가 page cache를 94 GB까지 채움). agent/RAG에게 host를 비워주는 것.
+→ **동일 성능**(TTFT 동률 REPS=3 확정)에서 park는 KV를 유휴 GPU HBM에 두어 **host RAM(used+cache)
+122 GB → 49 GB (−73)**를 아낀다 (hicache의 file 티어가 page cache를 94 GB까지 채움). agent/RAG에게
+host를 비워주는 것. 그림: `results/perturn/fig_mem.{pdf,png}`.
 
 ### 10.4 CAL 아웃라인 스켈레톤 (2쪽 letter)
 
@@ -1800,11 +1803,19 @@ KV를 host로 밀면 **agent 스택이 써야 할 자원을 KV offload가 잠식
    host DRAM ≫ GPU HBM 용량 — 왜 "latency로 못 이기고 용량이 상한"인지 정량화 (기존 §2.17).
 3. **Mechanism (KV Victim Cache)**: 유휴 감지(pressure-aware telemetry) → 축출 KV park
    (session-keyed slab, cross-node shared index) → 재참조 시 GPU→GPU 복구. victim-cache 정식화.
-4. **Evaluation**: (a) 동일 성능 @ host/CPU 절약 (§10.3 표 + mem timeline),
-   (b) 공존 arm: hicache+victim이 host fetch/page cache를 줄임 (§10.5, 진행 중),
+4. **Evaluation**: (a) 동일 성능 @ host/CPU 절약 (§10.3 표 + **Fig 1 `fig_mem`**),
+   (b) 공존 arm negative result: naive layered는 dominated → host 티어 대체 정당화 (§10.5),
    (c) survival→required-pool (session-keyed가 더 작은 GPU로 같은 win).
 5. **Positioning**: Mooncake/LMCache/DistServe/hicache와의 delta (§3.5) — 전용 공유풀이 아닌
    **일시적 유휴 peer-GPU-HBM의 victim 재활용**.
+
+**논문 그림 (2026-07 확정, `results/perturn/`, Times New Roman·벡터 PDF)**:
+- **Fig 1 `fig_mem`** — GPU HBM vs host RAM 타임라인 (host 122 vs 49 GB) → motivation.
+- **Fig 2 `fig_design`** — KV victim cache 계층 + Detect/Park/Fetch 2P2D 메커니즘 (SVG 생성:
+  `benchmark/make_fig_design.py`).
+- **Fig 3 `fig_perturn`** — per-turn TTFT / effective throughput vs context length (동률).
+- 스타일 통일 모듈 `benchmark/paperstyle.py` (Times New Roman, marker+linestyle grayscale-safe,
+  PDF+PNG). 상세 아웃라인: `paper/cal_kv_victim_cache_outline.md`.
 
 ### 10.5 남은 실험 (진행 중)
 
@@ -1822,9 +1833,18 @@ KV를 host로 밀면 **agent 스택이 써야 할 자원을 KV offload가 잠식
     쓰기** 때문에, park를 위에 얹어도 host가 그대로 122→123 GB로 참. park는 write 경로에서 중복이 됨.
   - **결론 = 설계 정당화**: park는 host 티어와 공존이 아니라 **대체**해야 한다. host-free park arm이
     올바른 설계. hicache의 숨은 host 비용(파일 티어 page cache 94 GB)이 이 그림의 핵심 (§10.3 동기 실증).
-  - **\*park TTFT 변동성 주의**: 이번 park=5.01 s인데 직전 run은 3.66 s(hicache와 동률). hicache는 두 run
-    다 3.65 s로 안정. **park는 TTFT tail 분산이 크다** — "동률" 주장엔 **3~5 reps 필요**(현재 1 rep은
-    park에 불리하게 뽑힘). `REPS=3`으로 재확인 예정.
+  - **\*park TTFT 변동성 주의**: 이 3-arm run의 park=5.01 s는 outlier였음(아래 REPS=3에서 해소).
+
+- **TTFT 동률 REPS=3 확정 (2026-07)**: park vs hicache 각 3회(`RUN_BOTH=0`). per-rep TTFT
+  hicache [3.61, 3.77, 3.88] vs park [3.67, 3.90, 3.70] → **pooled median 3.51 vs 3.52 s (동률)**.
+  overall tput hicache ~86 vs park ~85 tok/s. 5.01 s는 outlier로 확인. **"동일 성능" 주장 확정.**
+  그림 `fig_perturn`(rep별 얇은 선 + pooled median + IQR).
+
+- **논문 figure 확정 (2026-07)**: 3개 그림을 Times New Roman·벡터 PDF로 재작성(`benchmark/paperstyle.py`
+  + `make_fig_design.py`). Times New Roman은 컨테이너에 msttcorefonts Times TTF 설치로 확보(Liberation
+  Serif 대체 → 실제 Times). grayscale-safe(marker+linestyle). 2-arm(HiCache vs KV victim)로 정리 —
+  runner도 `RUN_BOTH=1`일 때만 layered arm을 플롯에 포함하도록 수정(stale both 누수 방지).
+
 - **(후속-1) write-back hicache + victim**: `HICACHE_WRITE_POLICY`를 write-back/on-demand로 바꿔,
   park가 GPU 축출을 줄여 host offload 자체를 감소시키는지 검증(smart coexistence 가능성).
 - **(후속-2) CPU-contention arm**: host에 CPU/RAM-bound 배경부하(RAG 검색 모사)를 병렬로 걸어,
