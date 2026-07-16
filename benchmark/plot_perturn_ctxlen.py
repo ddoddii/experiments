@@ -26,11 +26,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# dataviz palette (light): blue = hicache (incumbent), aqua = park (ours), amber = layered
-C_HICACHE = "#2a78d6"
-C_PARK = "#1baf7a"
-C_BOTH = "#e69f00"
-INK, SECOND, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
+from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
+
+C_HICACHE = PALETTE["hicache"]
+C_PARK = PALETTE["park"]
+C_BOTH = PALETTE["both"]
+INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 
 
 def load_points(paths):
@@ -87,28 +88,22 @@ def binned(points, key, bin_w, min_n):
 
 
 def draw(ax, arms, ylabel, title, better):
-    """arms = list of (rows, color, label)."""
-    for rows, color, label in arms:
+    """arms = list of (rows, color, label, key)."""
+    for rows, color, label, key in arms:
         if not rows:
             continue
         xs = [r[0] / 1000.0 for r in rows]
         ys = [r[1] for r in rows]
         lo = [r[2] for r in rows]
         hi = [r[3] for r in rows]
-        ax.fill_between(xs, lo, hi, color=color, alpha=0.14, lw=0, zorder=2)
-        ax.plot(xs, ys, "-o", color=color, lw=2, ms=6, label=label, zorder=3,
-                markeredgecolor="white", markeredgewidth=0.8)
-    ax.set_xlabel("context length (k tokens)  —  grows each turn →", color=SECOND, fontsize=10.5)
-    ax.set_ylabel(ylabel, color=SECOND, fontsize=10.5)
-    ax.set_title(f"{title}   ({better})", fontsize=11, color=INK, fontweight="bold")
-    ax.grid(color=GRID, lw=0.6)
-    ax.set_axisbelow(True)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    for s in ("bottom", "left"):
-        ax.spines[s].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=9)
-    ax.legend(frameon=False, fontsize=9.5)
+        ax.fill_between(xs, lo, hi, color=color, alpha=0.12, lw=0, zorder=2)
+        ax.plot(xs, ys, color=color, lw=1.5, ls=STYLE[key]["ls"], marker=STYLE[key]["marker"],
+                ms=4, label=label, zorder=3, markeredgecolor="white", markeredgewidth=0.6)
+    ax.set_xlabel("context length (k tokens), grows each turn")
+    ax.set_ylabel(ylabel)
+    ax.set_title(f"{title} ({better})")
+    style_axes(ax)
+    ax.legend()
 
 
 def main():
@@ -141,23 +136,20 @@ def main():
             print(f"  {name:8} TTFT={omed(pts,'ttft'):.3f}s  goodput={omed(pts,'good'):.1f} tok/s")
 
     def arms(key):
-        out = [(bin_arm(hic, key), C_HICACHE, "hicache (host tier)"),
-               (bin_arm(park, key), C_PARK, "park (GPU victim, host-free)")]
+        out = [(bin_arm(hic, key), C_HICACHE, "HiCache (host tier)", "hicache"),
+               (bin_arm(park, key), C_PARK, "KV victim cache (GPU, host-free)", "park")]
         if both:
-            out.append((bin_arm(both, key), C_BOTH, "hicache + GPU victim (layered)"))
+            out.append((bin_arm(both, key), C_BOTH, "HiCache + victim (layered)", "both"))
         return out
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 4.6))
-    fig.suptitle("Per-turn TTFT / effective throughput vs growing context length  (2P2D, BFCL multi-turn)",
-                 fontsize=13, fontweight="bold", color=INK)
-    draw(axL, arms("ttft"), "median TTFT (s)", "TTFT", "lower better")
+    use_paper_style()
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.0, 2.7))
+    draw(axL, arms("ttft"), "median TTFT (s)", "(a) TTFT", "lower is better")
     draw(axR, arms("good"), "median effective throughput (tok/s)",
-         "Effective throughput  (tokens / end-to-end time)", "higher better")
-
-    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
-    fig.savefig(args.out, dpi=140, bbox_inches="tight", facecolor="white")
-    print(f"\n[saved] {args.out}")
+         "(b) Effective throughput", "higher is better")
+    fig.tight_layout()
+    stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
+    savefig(fig, stem)
 
 
 if __name__ == "__main__":

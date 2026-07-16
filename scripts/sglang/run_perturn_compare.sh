@@ -84,9 +84,13 @@ hard_stop
 
 echo ""
 echo "=== plotting ==="
-# include the coexistence arm if it ran (glob may be empty -> plotters ignore)
-BOTH_JSON=$(ls results/perturn_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || BOTH_ARG_J=""
-BOTH_CSV=$(ls "$OUTDIR"/mem_both_r*.csv 2>/dev/null) && BOTH_ARG_C="--both $BOTH_CSV" || BOTH_ARG_C=""
+# only include the coexistence arm when it was requested THIS run (RUN_BOTH=1) --
+# otherwise stale perturn_both_*.json from a prior run would sneak back into the plot.
+BOTH_ARG_J=""; BOTH_ARG_C=""
+if [ "${RUN_BOTH:-1}" = "1" ]; then
+  BOTH_JSON=$(ls results/perturn_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || true
+  BOTH_CSV=$(ls "$OUTDIR"/mem_both_r*.csv 2>/dev/null) && BOTH_ARG_C="--both $BOTH_CSV" || true
+fi
 python benchmark/plot_perturn_ctxlen.py \
   --park  results/perturn_park_r*.json \
   --hicache results/perturn_hicache_r*.json $BOTH_ARG_J \
