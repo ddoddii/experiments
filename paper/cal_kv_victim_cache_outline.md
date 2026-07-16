@@ -37,7 +37,7 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
   `results/kv_ts/fig_imbalance`: 포화 GPU와 여유 GPU가 **49.6%의 시간 동안 공존**(2P2D, BFCL).
 - **2.3 CPU/host scarcity in agent serving** (동기 핵심): agent/RAG 부하가 host를 점유.
   hicache의 **파일 티어가 page cache를 94 GB까지** 채움(§우리 측정) → host 압박.
-- **Fig 1 (motivation)**: `mem_timeline.png` — hicache host RAM 55→122 GB 우상향 vs park 51 GB 평평.
+- **Fig 1 (motivation)**: `fig_mem` — hicache host RAM 55→122 GB 우상향 vs park 51 GB 평평.
 
 ## 3. Characterization — The Three Walls (왜 latency로는 못 이기는가)
 
@@ -78,7 +78,7 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
 
   → 유휴 GPU HBM +17 GB로 host RAM −73 GB. **TTFT 동률 REPS=3로 확정** (per-rep hicache
   [3.61,3.77,3.88] vs park [3.67,3.90,3.70], pooled median 3.51 vs 3.52 s — 0.01 s 차).
-  - **Fig 3**: `perturn_ctxlen.png` — TTFT / effective throughput vs 증가하는 context length.
+  - **Fig 3**: `fig_perturn` — TTFT / effective throughput vs 증가하는 context length.
   - **Fig 1 재사용**: 메모리 타임라인(host 절약).
 - **5.2 Negative result — naive coexistence는 dominated**: hicache(write_through_selective) 위에
   victim을 얹으면 GPU 98 GB + host 123 GB(둘 다 비쌈, host 안 줄어듦). eager offload가 원인.
@@ -110,13 +110,13 @@ KV Victim Cache는 PD disaggregation의 유휴 GPU HBM을 축출-KV 보조 캐�
 - [x] ★ park vs hicache **REPS=3** — TTFT 동률 확정 (pooled median 3.51 vs 3.52 s).
 - [ ] (선택) write-back hicache + victim — smart coexistence로 host offload 감소 검증.
 - [ ] (선택) CPU-contention arm — host 배경부하 하에서 hicache 저하 / victim 무영향 시연(§2.3 실증).
-- [ ] Fig 정리: Fig1 mem_timeline, Fig2 design, Fig3 perturn_ctxlen, (opt) survival→pool.
+- [x] Fig 정리: Fig0 fig_imbalance, Fig1 fig_mem, Fig2 fig_design, Fig3 fig_perturn (Times New Roman, PDF).
 
 ## Key figures (현재 산출물)
 - `results/kv_ts/fig_imbalance.{pdf,png}` — Fig 0 (intro: idle-GPU opportunity 49.6%)
-- `results/perturn/mem_timeline.png` — Fig 1 (host RAM 절약; 동기)
-- `results/perturn/perturn_ctxlen.png` — Fig 3 (per-turn TTFT/throughput vs context)
-- (design 다이어그램은 draw 필요 — Fig 2)
+- `results/perturn/fig_mem.{pdf,png}` — Fig 1 (host RAM 절약; 동기)
+- `results/perturn/fig_perturn.{pdf,png}` — Fig 3 (per-turn TTFT/throughput vs context)
+- `results/perturn/fig_design.{pdf,png}` — Fig 2 (victim hierarchy + detect/park/fetch)
 
 ## References (핵심)
 - N. P. Jouppi, "Improving direct-mapped cache performance …," ISCA 1990 (victim cache 앵커)
