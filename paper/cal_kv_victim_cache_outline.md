@@ -33,7 +33,8 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
 ## 2. Background & Motivation
 
 - **2.1 PD disaggregation & prefix caching**: prefill/decode 분리, radix/hicache 계층.
-- **2.2 The idle-GPU opportunity**: PD 비대칭 측정 — decode 포화 순간 prefill HBM idle 83–90%.
+- **2.2 The idle-GPU opportunity**: PD 비대칭 측정 — decode 포화 순간 prefill HBM idle. **Fig 0**
+  `results/kv_ts/fig_imbalance`: 포화 GPU와 여유 GPU가 **49.6%의 시간 동안 공존**(2P2D, BFCL).
 - **2.3 CPU/host scarcity in agent serving** (동기 핵심): agent/RAG 부하가 host를 점유.
   hicache의 **파일 티어가 page cache를 94 GB까지** 채움(§우리 측정) → host 압박.
 - **Fig 1 (motivation)**: `mem_timeline.png` — hicache host RAM 55→122 GB 우상향 vs park 51 GB 평평.
@@ -112,6 +113,7 @@ KV Victim Cache는 PD disaggregation의 유휴 GPU HBM을 축출-KV 보조 캐�
 - [ ] Fig 정리: Fig1 mem_timeline, Fig2 design, Fig3 perturn_ctxlen, (opt) survival→pool.
 
 ## Key figures (현재 산출물)
+- `results/kv_ts/fig_imbalance.{pdf,png}` — Fig 0 (intro: idle-GPU opportunity 49.6%)
 - `results/perturn/mem_timeline.png` — Fig 1 (host RAM 절약; 동기)
 - `results/perturn/perturn_ctxlen.png` — Fig 3 (per-turn TTFT/throughput vs context)
 - (design 다이어그램은 draw 필요 — Fig 2)
