@@ -70,12 +70,13 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
   C=16, tool-delay 3 s, pool 60k(=10 slabs, host-free).
 - **5.1 동일 성능 @ host-RAM-free** (핵심 결과):
 
-  | arm | GPU HBM | host RAM(used+cache) | TTFT★ | tput |
+  | arm | GPU HBM | host RAM(used+cache) | median TTFT | tput |
   |---|---|---|---|---|
-  | hicache | 81 GB | **122 GB** | 3.65 s | 84 tok/s |
-  | KV victim (host-free) | 98 GB | **51 GB (−71)** | ~3.7 s★ | ~85 |
+  | hicache | 81 GB | **122 GB** | 3.51 s | ~86 tok/s |
+  | KV victim (host-free) | 98 GB | **49 GB (−73)** | 3.52 s | ~85 tok/s |
 
-  → 유휴 GPU HBM +17 GB로 host RAM −71 GB. **★park TTFT 동률은 REPS=3 재확인 후 확정.**
+  → 유휴 GPU HBM +17 GB로 host RAM −73 GB. **TTFT 동률 REPS=3로 확정** (per-rep hicache
+  [3.61,3.77,3.88] vs park [3.67,3.90,3.70], pooled median 3.51 vs 3.52 s — 0.01 s 차).
   - **Fig 3**: `perturn_ctxlen.png` — TTFT / effective throughput vs 증가하는 context length.
   - **Fig 1 재사용**: 메모리 타임라인(host 절약).
 - **5.2 Negative result — naive coexistence는 dominated**: hicache(write_through_selective) 위에
@@ -105,7 +106,7 @@ KV Victim Cache는 PD disaggregation의 유휴 GPU HBM을 축출-KV 보조 캐�
 
 ## 8. 남은 실험 체크리스트 (제출 전)
 
-- [ ] ★ park vs hicache **REPS=3** — TTFT 동률 확정(현재 1 rep은 분산 큼).
+- [x] ★ park vs hicache **REPS=3** — TTFT 동률 확정 (pooled median 3.51 vs 3.52 s).
 - [ ] (선택) write-back hicache + victim — smart coexistence로 host offload 감소 검증.
 - [ ] (선택) CPU-contention arm — host 배경부하 하에서 hicache 저하 / victim 무영향 시연(§2.3 실증).
 - [ ] Fig 정리: Fig1 mem_timeline, Fig2 design, Fig3 perturn_ctxlen, (opt) survival→pool.

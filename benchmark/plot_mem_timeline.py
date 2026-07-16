@@ -17,16 +17,17 @@ the mean overlaid.
 import argparse
 import csv
 import os
-from collections import defaultdict
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-C_HICACHE = "#2a78d6"   # blue
-C_PARK = "#1baf7a"      # aqua
-C_BOTH = "#e69f00"      # amber (coexistence: hicache + GPU victim)
-INK, SECOND, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
+from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
+
+C_HICACHE = PALETTE["hicache"]
+C_PARK = PALETTE["park"]
+C_BOTH = PALETTE["both"]
+INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 
 
 def _rows(path):
@@ -95,36 +96,29 @@ def mean_series(series, dt=2.0):
 
 
 def draw(ax, arms, ylabel, title):
-    """arms = list of (series, color, label), drawn back-to-front."""
+    """arms = list of (series, color, label, key), drawn back-to-front."""
     ymax = 0.0
-    for series, color, label in arms:
+    for series, color, label, key in arms:
         for xs, ys in series:  # faint per-rep lines
-            ax.plot(xs, ys, color=color, lw=0.9, alpha=0.28, zorder=2)
+            ax.plot(xs, ys, color=color, lw=0.6, alpha=0.25, zorder=2)
         mx, my = mean_series(series)
         if not mx:
             continue
-        ax.plot(mx, my, color=color, lw=2.4, zorder=3, label=label)
+        ax.plot(mx, my, color=color, lw=1.5, ls=STYLE[key]["ls"], zorder=3, label=label)
         pk = peak(series)
         ymax = max(ymax, pk)
         # direct value label at the right end of the mean line (peak GB)
-        ax.annotate(f"{pk:.0f} GB", xy=(mx[-1], my[-1]), xytext=(6, 0),
+        ax.annotate(f"{pk:.0f} GB", xy=(mx[-1], my[-1]), xytext=(4, 0),
                     textcoords="offset points", va="center", ha="left",
-                    color=color, fontsize=10, fontweight="bold",
-                    fontfamily="monospace")
-    ax.set_xlabel("elapsed time (s)", color=SECOND, fontsize=10.5)
-    ax.set_ylabel(ylabel, color=SECOND, fontsize=10.5)
-    ax.set_title(title, fontsize=11, color=INK, fontweight="bold")
-    ax.grid(color=GRID, lw=0.6); ax.set_axisbelow(True)
+                    color=color, fontsize=7.5, fontweight="bold")
+    ax.set_xlabel("elapsed time (s)")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
     ax.set_ylim(0, ymax * 1.18 if ymax else None)  # headroom so top line + label fit
-    # extra right margin so the GB labels don't clip
-    x1 = max((xs[-1] for series, _, _ in arms for xs, _ in series), default=1)
-    ax.set_xlim(right=x1 * 1.15)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    for s in ("bottom", "left"):
-        ax.spines[s].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=9)
-    ax.legend(frameon=False, fontsize=9.5, loc="center left")
+    x1 = max((xs[-1] for series, *_ in arms for xs, _ in series), default=1)
+    ax.set_xlim(0, x1 * 1.13)
+    style_axes(ax)
+    ax.legend(loc="center left")
 
 
 def peak(series):
@@ -155,23 +149,19 @@ def main():
 
     # arm draw order: hicache (baseline) first, then park, then coexistence on top
     def arms(d):
-        out = [(d["hic"], C_HICACHE, "hicache (host tier)"),
-               (d["park"], C_PARK, "park (GPU victim, host-free)")]
+        out = [(d["hic"], C_HICACHE, "HiCache (host tier)", "hicache"),
+               (d["park"], C_PARK, "KV victim cache (GPU, host-free)", "park")]
         if "both" in d:
-            out.append((d["both"], C_BOTH, "hicache + GPU victim (layered)"))
+            out.append((d["both"], C_BOTH, "HiCache + victim (layered)", "both"))
         return out
 
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 4.6))
-    fig.suptitle("Memory footprint over the run: GPU HBM vs host RAM  (2P2D, BFCL multi-turn)",
-                 fontsize=13, fontweight="bold", color=INK)
-    draw(axL, arms(gpu), "GPU HBM used (GB, all 4 GPUs)", "GPU HBM  (victim spends this)")
-    draw(axR, arms(host), "host RAM used + page cache (GB)",
-         "host RAM  (hicache spends this: KV file tier -> page cache)")
-
-    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
-    fig.savefig(args.out, dpi=140, bbox_inches="tight", facecolor="white")
-    print(f"\n[saved] {args.out}")
+    use_paper_style()
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.0, 2.7))
+    draw(axL, arms(gpu), "GPU HBM used (GB, 4 GPUs)", "(a) GPU HBM footprint")
+    draw(axR, arms(host), "host RAM used + page cache (GB)", "(b) host RAM footprint")
+    fig.tight_layout()
+    stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
+    savefig(fig, stem)
 
 
 if __name__ == "__main__":
