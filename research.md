@@ -1766,9 +1766,14 @@ KV 메모리 계층으로 재배치:
   L4  disk (hicache file backend)
 ```
 
-park은 hicache를 **대체하지 않고**, host 티어 위에 **빠른 GPU victim 티어를 삽입**한다.
+park은 host 티어를 **대체**한다 (host = 진짜 포화일 때만 쓰는 cold overflow).
 정책: **GPU가 놀면 victim을 GPU에 두고, GPU가 진짜 포화일 때만 host로 흘린다.**
 → "latency 동률"이 약점이 아니라 **"성능 손해 0으로 host/CPU를 아낀다"는 강점**이 된다.
+
+> ⚠ **수정 (§10.5 실측 반영)**: 초기엔 "host 티어 위에 삽입(항상 공존)"으로 적었으나, 3-arm 실험
+> 결과 **eager hicache(write_through_selective) 위에 park를 그냥 얹는 naive coexistence는 dominated**
+> (GPU도 비싸고 host도 안 줄어듦). 올바른 설계는 **park가 eager host 티어를 대체**하는 것 —
+> 즉 host-free park arm이 곧 설계다. host는 write-back/on-demand일 때만 cold overflow로 유효.
 
 ### 10.3 동기 (Motivation) — Agent 서버에서 CPU·host RAM은 희소하다
 
@@ -1803,8 +1808,24 @@ KV를 host로 밀면 **agent 스택이 써야 할 자원을 KV offload가 잠식
 
 ### 10.5 남은 실험 (진행 중)
 
-- **(b) 공존 arm** `hicache + GPU victim(park)`: victim이 재참조 히트를 GPU에서 흡수 →
-  host fetch·page cache 감소를 hicache-단독 대비 측정. (`run_perturn_compare.sh`에 3번째 arm 추가,
-  mem timeline에 host `cached` 라인 추가.)
-- **(후속) CPU-contention arm**: host에 CPU/RAM-bound 배경부하(RAG 검색 모사)를 병렬로 걸어,
+- **(b) 공존 arm 실측 완료 — negative result (2026-07)**: 3-arm (hicache / park / hicache+victim
+  layered), 2P2D, BFCL, pool 60k, 1 rep. `results/perturn/mem_timeline.png`.
+
+  | arm | GPU HBM | host RAM (used+cache) | TTFT | overall tput |
+  |---|---|---|---|---|
+  | hicache (host tier) | 81 GB | **122 GB** (used 28 + cache 94) | 3.65 s | 84 tok/s |
+  | park (GPU victim, host-free) | 98 GB | **51 GB** (−71) | 5.01 s* | 80 tok/s |
+  | hicache + victim (layered) | 98 GB | **123 GB** | 4.45 s | 86 tok/s |
+
+  - **핵심: naive layered는 dominated** — GPU도 park만큼 비싸고(98) host도 hicache만큼 안 줄어듦(123).
+    원인 = `HICACHE_WRITE_POLICY=write_through_selective`: hicache가 KV를 host/파일 티어에 **선제적으로
+    쓰기** 때문에, park를 위에 얹어도 host가 그대로 122→123 GB로 참. park는 write 경로에서 중복이 됨.
+  - **결론 = 설계 정당화**: park는 host 티어와 공존이 아니라 **대체**해야 한다. host-free park arm이
+    올바른 설계. hicache의 숨은 host 비용(파일 티어 page cache 94 GB)이 이 그림의 핵심 (§10.3 동기 실증).
+  - **\*park TTFT 변동성 주의**: 이번 park=5.01 s인데 직전 run은 3.66 s(hicache와 동률). hicache는 두 run
+    다 3.65 s로 안정. **park는 TTFT tail 분산이 크다** — "동률" 주장엔 **3~5 reps 필요**(현재 1 rep은
+    park에 불리하게 뽑힘). `REPS=3`으로 재확인 예정.
+- **(후속-1) write-back hicache + victim**: `HICACHE_WRITE_POLICY`를 write-back/on-demand로 바꿔,
+  park가 GPU 축출을 줄여 host offload 자체를 감소시키는지 검증(smart coexistence 가능성).
+- **(후속-2) CPU-contention arm**: host에 CPU/RAM-bound 배경부하(RAG 검색 모사)를 병렬로 걸어,
   hicache는 경쟁으로 저하 / park는 무영향임을 직접 시연 (§10.3 동기의 실증).
