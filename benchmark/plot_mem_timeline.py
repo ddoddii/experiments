@@ -25,7 +25,17 @@ import matplotlib.pyplot as plt
 
 C_HICACHE = "#2a78d6"   # blue
 C_PARK = "#1baf7a"      # aqua
+C_BOTH = "#e69f00"      # amber (coexistence: hicache + GPU victim)
 INK, SECOND, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
+
+
+def _rows(path):
+    try:
+        with open(path) as f:
+            return list(csv.DictReader(f))
+    except Exception as ex:  # noqa: BLE001
+        print(f"[warn] skip {path}: {ex}")
+        return []
 
 
 def load(paths, col):
@@ -33,16 +43,27 @@ def load(paths, col):
     series = []
     for p in paths:
         xs, ys = [], []
-        try:
-            with open(p) as f:
-                for r in csv.DictReader(f):
-                    e = r.get("elapsed_s"); v = r.get(col)
-                    if not e or not v:
-                        continue
-                    xs.append(float(e)); ys.append(float(v) / 1024.0)  # MB -> GB
-        except Exception as ex:  # noqa: BLE001
-            print(f"[warn] skip {p}: {ex}")
-            continue
+        for r in _rows(p):
+            e, v = r.get("elapsed_s"), r.get(col)
+            if not e or not v:
+                continue
+            xs.append(float(e)); ys.append(float(v) / 1024.0)  # MB -> GB
+        if xs:
+            series.append((xs, ys))
+    return series
+
+
+def load_sum(paths, cols):
+    """Like load() but sums several columns per row (e.g. used + cached)."""
+    series = []
+    for p in paths:
+        xs, ys = [], []
+        for r in _rows(p):
+            e = r.get("elapsed_s")
+            vals = [r.get(c) for c in cols]
+            if not e or any(v in (None, "") for v in vals):
+                continue
+            xs.append(float(e)); ys.append(sum(float(v) for v in vals) / 1024.0)
         if xs:
             series.append((xs, ys))
     return series
@@ -73,10 +94,10 @@ def mean_series(series, dt=2.0):
     return gx, gy
 
 
-def draw(ax, park, hic, ylabel, title):
+def draw(ax, arms, ylabel, title):
+    """arms = list of (series, color, label), drawn back-to-front."""
     ymax = 0.0
-    for series, color, label in ((hic, C_HICACHE, "hicache"),
-                                 (park, C_PARK, "park (slab, host-RAM-free)")):
+    for series, color, label in arms:
         for xs, ys in series:  # faint per-rep lines
             ax.plot(xs, ys, color=color, lw=0.9, alpha=0.28, zorder=2)
         mx, my = mean_series(series)
@@ -96,7 +117,7 @@ def draw(ax, park, hic, ylabel, title):
     ax.grid(color=GRID, lw=0.6); ax.set_axisbelow(True)
     ax.set_ylim(0, ymax * 1.18 if ymax else None)  # headroom so top line + label fit
     # extra right margin so the GB labels don't clip
-    x1 = max((xs[-1] for series in (park, hic) for xs, _ in series), default=1)
+    x1 = max((xs[-1] for series, _, _ in arms for xs, _ in series), default=1)
     ax.set_xlim(right=x1 * 1.15)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
@@ -114,23 +135,38 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--park", nargs="+", required=True)
     ap.add_argument("--hicache", nargs="+", required=True)
+    ap.add_argument("--both", nargs="+", default=[], help="optional coexistence arm (hicache+victim)")
     ap.add_argument("--out", default="results/perturn/mem_timeline.png")
     args = ap.parse_args()
 
-    park_gpu = load(args.park, "gpu_used_mb")
-    hic_gpu = load(args.hicache, "gpu_used_mb")
-    park_host = load(args.park, "host_used_mb")
-    hic_host = load(args.hicache, "host_used_mb")
+    # host footprint = used + page cache. hicache's file backend lands its KV in page
+    # cache, so "used" alone understates its host cost -- sum for the honest picture.
+    HOST = ["host_used_mb", "host_cached_mb"]
+    gpu = {"hic": load(args.hicache, "gpu_used_mb"), "park": load(args.park, "gpu_used_mb")}
+    host = {"hic": load_sum(args.hicache, HOST), "park": load_sum(args.park, HOST)}
+    if args.both:
+        gpu["both"] = load(args.both, "gpu_used_mb")
+        host["both"] = load_sum(args.both, HOST)
 
     print("=== peak usage (GB) ===")
-    print(f"  GPU HBM   park={peak(park_gpu):.1f}   hicache={peak(hic_gpu):.1f}")
-    print(f"  host DRAM park={peak(park_host):.1f}  hicache={peak(hic_host):.1f}")
+    for k in ("hic", "park", "both"):
+        if k in gpu:
+            print(f"  {k:5} GPU={peak(gpu[k]):.1f}  host(used+cache)={peak(host[k]):.1f}")
+
+    # arm draw order: hicache (baseline) first, then park, then coexistence on top
+    def arms(d):
+        out = [(d["hic"], C_HICACHE, "hicache (host tier)"),
+               (d["park"], C_PARK, "park (GPU victim, host-free)")]
+        if "both" in d:
+            out.append((d["both"], C_BOTH, "hicache + GPU victim (layered)"))
+        return out
 
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 4.6))
-    fig.suptitle("Memory footprint over the run: GPU HBM vs host DRAM  (2P2D, BFCL multi-turn)",
+    fig.suptitle("Memory footprint over the run: GPU HBM vs host RAM  (2P2D, BFCL multi-turn)",
                  fontsize=13, fontweight="bold", color=INK)
-    draw(axL, park_gpu, hic_gpu, "GPU HBM used (GB, all 4 GPUs)", "GPU HBM  (park spends this)")
-    draw(axR, park_host, hic_host, "host DRAM used (GB)", "host DRAM  (hicache spends this)")
+    draw(axL, arms(gpu), "GPU HBM used (GB, all 4 GPUs)", "GPU HBM  (victim spends this)")
+    draw(axR, arms(host), "host RAM used + page cache (GB)",
+         "host RAM  (hicache spends this: KV file tier -> page cache)")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.tight_layout(rect=[0, 0, 1, 0.94])

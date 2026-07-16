@@ -26,9 +26,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# dataviz palette (light): blue = hicache (incumbent), aqua = park (ours)
+# dataviz palette (light): blue = hicache (incumbent), aqua = park (ours), amber = layered
 C_HICACHE = "#2a78d6"
 C_PARK = "#1baf7a"
+C_BOTH = "#e69f00"
 INK, SECOND, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
 
 
@@ -85,9 +86,9 @@ def binned(points, key, bin_w, min_n):
     return rows
 
 
-def draw(ax, park_rows, hic_rows, ylabel, title, better):
-    for rows, color, label in ((hic_rows, C_HICACHE, "hicache"),
-                               (park_rows, C_PARK, "park (slab, host-RAM-free)")):
+def draw(ax, arms, ylabel, title, better):
+    """arms = list of (rows, color, label)."""
+    for rows, color, label in arms:
         if not rows:
             continue
         xs = [r[0] / 1000.0 for r in rows]
@@ -114,6 +115,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--park", nargs="+", required=True)
     ap.add_argument("--hicache", nargs="+", required=True)
+    ap.add_argument("--both", nargs="+", default=[], help="optional coexistence arm (hicache+victim)")
     ap.add_argument("--bin", type=int, default=1500, help="context-length bin width (tokens)")
     ap.add_argument("--min-n", type=int, default=3, help="min points per bin to plot")
     ap.add_argument("--out", default="results/perturn/perturn_ctxlen.png")
@@ -121,28 +123,35 @@ def main():
 
     park = load_points(args.park)
     hic = load_points(args.hicache)
-    print(f"park points={len(park)}  hicache points={len(hic)}")
+    both = load_points(args.both) if args.both else []
+    print(f"park points={len(park)}  hicache points={len(hic)}  both points={len(both)}")
     if not park or not hic:
         print("[error] one arm has no points -- did both runs succeed with include_usage?")
 
-    park_ttft = binned(park, "ttft", args.bin, args.min_n)
-    hic_ttft = binned(hic, "ttft", args.bin, args.min_n)
-    park_good = binned(park, "good", args.bin, args.min_n)
-    hic_good = binned(hic, "good", args.bin, args.min_n)
+    def bin_arm(pts, key):
+        return binned(pts, key, args.bin, args.min_n) if pts else []
 
     # console summary (overall medians)
     def omed(pts, k):
         vs = sorted(p[k] for p in pts if p.get(k) is not None)
         return median(vs) if vs else float("nan")
     print(f"\n=== overall medians ===")
-    print(f"  TTFT       park={omed(park,'ttft'):.3f}s  hicache={omed(hic,'ttft'):.3f}s")
-    print(f"  goodput    park={omed(park,'good'):.1f}   hicache={omed(hic,'good'):.1f} tok/s  (completion/e2e)")
+    for name, pts in (("hicache", hic), ("park", park), ("both", both)):
+        if pts:
+            print(f"  {name:8} TTFT={omed(pts,'ttft'):.3f}s  goodput={omed(pts,'good'):.1f} tok/s")
+
+    def arms(key):
+        out = [(bin_arm(hic, key), C_HICACHE, "hicache (host tier)"),
+               (bin_arm(park, key), C_PARK, "park (GPU victim, host-free)")]
+        if both:
+            out.append((bin_arm(both, key), C_BOTH, "hicache + GPU victim (layered)"))
+        return out
 
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 4.6))
     fig.suptitle("Per-turn TTFT / effective throughput vs growing context length  (2P2D, BFCL multi-turn)",
                  fontsize=13, fontweight="bold", color=INK)
-    draw(axL, park_ttft, hic_ttft, "median TTFT (s)", "TTFT", "lower better")
-    draw(axR, park_good, hic_good, "median effective throughput (tok/s)",
+    draw(axL, arms("ttft"), "median TTFT (s)", "TTFT", "lower better")
+    draw(axR, arms("good"), "median effective throughput (tok/s)",
          "Effective throughput  (tokens / end-to-end time)", "higher better")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
