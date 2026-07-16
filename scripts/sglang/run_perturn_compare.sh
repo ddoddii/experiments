@@ -64,18 +64,35 @@ for rep in $(seq 1 $REPS); do
     ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_park_r${rep}.log" 2>&1 \
     || { echo "park start failed r${rep}"; continue; }
   run_bench "perturn_park_r${rep}" "$OUTDIR/mem_park_r${rep}.csv"
+
+  # coexistence (KV victim caching): hicache host tier + GPU victim cache LAYERED.
+  # Same as the park arm but WITHOUT PARK_NO_HICACHE, so both tiers are active. The
+  # victim absorbs re-reference hits on GPU; measure whether that reduces host fetch /
+  # page cache vs hicache-alone. Set RUN_BOTH=0 to skip.
+  if [ "${RUN_BOTH:-1}" = "1" ]; then
+    echo "=== rep ${rep}: hicache + GPU victim (layered) ==="
+    hard_stop
+    IDLE_KV_PARKING=1 \
+      SGLANG_KV_PARK_SESSION_KEYED=1 SGLANG_KV_PARK_SLAB_TOKENS=$SLAB \
+      PARK_POOL_TOKENS=$PARK_POOL_TOKENS PARK_MEM_FRACTION=$PARK_MEM_FRACTION \
+      ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_both_r${rep}.log" 2>&1 \
+      || { echo "both start failed r${rep}"; continue; }
+    run_bench "perturn_both_r${rep}" "$OUTDIR/mem_both_r${rep}.csv"
+  fi
 done
 hard_stop
 
 echo ""
 echo "=== plotting ==="
-# merge reps by glob; plotters accept multiple files per arm
+# include the coexistence arm if it ran (glob may be empty -> plotters ignore)
+BOTH_JSON=$(ls results/perturn_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || BOTH_ARG_J=""
+BOTH_CSV=$(ls "$OUTDIR"/mem_both_r*.csv 2>/dev/null) && BOTH_ARG_C="--both $BOTH_CSV" || BOTH_ARG_C=""
 python benchmark/plot_perturn_ctxlen.py \
   --park  results/perturn_park_r*.json \
-  --hicache results/perturn_hicache_r*.json \
+  --hicache results/perturn_hicache_r*.json $BOTH_ARG_J \
   --out "$OUTDIR/perturn_ctxlen.png" || true
 python benchmark/plot_mem_timeline.py \
   --park  "$OUTDIR"/mem_park_r*.csv \
-  --hicache "$OUTDIR"/mem_hicache_r*.csv \
+  --hicache "$OUTDIR"/mem_hicache_r*.csv $BOTH_ARG_C \
   --out "$OUTDIR/mem_timeline.png" || true
 echo "done."

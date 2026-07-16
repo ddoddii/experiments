@@ -7,6 +7,11 @@
 > ⚠ 아래 **PAPER DRAFT**가 2026-06-18 기준 정제된 최신 종합이다. §1–§7은 상세 실험 로그
 > (evidence appendix)이며, 일부 초기 가설(4-tier, DRAM/SSD tier, "D idle KV migration")은
 > 실험으로 기각/축소되었다 — PAPER DRAFT의 scope가 현행 결론이다.
+>
+> 🔷 **2026-07 재프레이밍 (랩미팅 반영, 현행 최상위 방향)**: 이 연구를 **"KV Victim Cache —
+> 일시적 유휴 GPU HBM을 재활용하는 축출-KV 보조 캐시"**로 재정식화한다. hicache의 경쟁자가
+> 아니라 **메모리 계층의 새 GPU 티어**(host 티어 위)이며, 동기는 **agent/RAG 서버에서 희소한
+> CPU·host RAM 자원 보존**이다. 상세는 **§10** 참조 (CAL 타겟).
 
 ---
 
@@ -1717,3 +1722,89 @@ tool-call-aware KV placement — 어느 노드, 어느 tier에, 언제까지"**�
 - [SGLang HiCache Best Practices](https://docs.sglang.ai/advanced_features/hicache_best_practices.html) — mem_layout/io_backend/prefetch 정책 가이드
 - [SGLang HiCache 블로그](https://www.lmsys.org/blog/2025-09-10-sglang-hicache/), [Mooncake × HiCache 설계](https://kvcache-ai.github.io/Mooncake/design/hicache-design.html)
 - [sglang #11016](https://github.com/sgl-project/sglang/issues/11016) — `disaggregation-decode-enable-offload-kvcache` CUDA error 보고 (안정성 주의)
+- N. P. Jouppi, "Improving direct-mapped cache performance by the addition of a small fully-associative cache and prefetch buffers," ISCA 1990 — **victim cache 원논문** (§10 재프레이밍의 이론적 앵커)
+
+---
+
+## 10. 재프레이밍: KV Victim Cache (2026-07, 랩미팅 반영 · CAL 타겟)
+
+교수님 피드백으로 스토리라인을 재정식화한다. 기존 "park vs hicache(대체재, latency 동률)"의
+김빠지는 프레임을 버리고, **캐시-계층 이론(victim cache) + agent 서버의 CPU 자원 희소성**이라는
+두 축으로 재구성한다. 이게 CAL(Computer Architecture Letters) 타겟에 맞는 프레임이다.
+
+### 10.1 핵심 재정식화 — "KV Victim Cache"
+
+**Victim cache** (Jouppi, ISCA 1990): 직접사상 L1에서 **축출된(victim) 라인**을 담는 작은
+fully-associative 보조 캐시. L1 miss 시 먼저 확인 → 있으면 스왑-백, 느린 하위 계층 접근을 회피.
+**conflict miss를 싸게 흡수**하는 것이 본질.
+
+우리 시스템 = **KV Victim Cache**:
+
+| Victim cache (고전) | 우리 (KV Victim Cache) |
+|---|---|
+| L1 직접사상 캐시 | GPU 서빙 KV 풀 (radix) |
+| victim (축출 라인) | tool-call 유휴 구간에 타 세션이 밀어낸 세션 KV |
+| victim cache (작은 보조) | **일시적 유휴 GPU HBM의 park 풀** |
+| 하위 계층 접근(느림) | 재-prefill(재계산) 또는 host fetch(hicache) |
+| conflict miss | multi-turn 대화들이 유휴 구간에 GPU KV를 두고 경쟁 |
+| 재참조 시 스왑-백 | 다음 turn에 GPU→GPU 복구 (session-keyed slab) |
+
+**고전 victim cache와의 novel 차이 (= 논문 기여)**:
+1. 전용 하드웨어가 아니라 **peer GPU의 일시적 유휴 HBM**을 기회주의적으로 재활용
+   (distributed / opportunistic victim cache).
+2. 배치가 **pressure-aware** (그 순간 노는 GPU로) — 전용이 아니라 유휴 용량 재활용.
+3. content-addressed (prefix hash) + session-keyed slab = fully-associative의 KV판.
+
+### 10.2 포지셔닝 — hicache의 경쟁자가 아니라 새 티어 (공존)
+
+KV 메모리 계층으로 재배치:
+
+```
+  L1  GPU 서빙 풀 (radix)
+  L2  ★ GPU victim cache (유휴 HBM)   ← 본 연구, 빠름 (GPU→GPU)
+  L3  host DRAM (hicache)              ← 느림, CPU·host RAM 경쟁
+  L4  disk (hicache file backend)
+```
+
+park은 hicache를 **대체하지 않고**, host 티어 위에 **빠른 GPU victim 티어를 삽입**한다.
+정책: **GPU가 놀면 victim을 GPU에 두고, GPU가 진짜 포화일 때만 host로 흘린다.**
+→ "latency 동률"이 약점이 아니라 **"성능 손해 0으로 host/CPU를 아낀다"는 강점**이 된다.
+
+### 10.3 동기 (Motivation) — Agent 서버에서 CPU·host RAM은 희소하다
+
+**핵심 논지**: agent/RAG 개인화 LLM 서버에서 host 측 자원(CPU, DRAM)은 KV 말고도 경쟁이 심하다 —
+agent orchestration, RAG 검색(vector DB, BM25/rerank), tool 실행, 개인화 프로필 상주. hicache처럼
+KV를 host로 밀면 **agent 스택이 써야 할 자원을 KV offload가 잠식**한다. GPU가 (PD 비대칭·tool-call
+유휴로) 놀고 있다면, KV를 CPU로 넘기는 것보다 **노는 GPU HBM에 두는 것이 옳다**.
+
+**우리 데이터가 이미 증거** (2P2D, BFCL, §2.17 perturn/mem):
+
+| | GPU HBM | host DRAM (used) | host page cache | 다음-turn TTFT | overall tput |
+|---|---|---|---|---|---|
+| hicache (L3만) | 81 GB | 30 GB | **~94 GB** (file 티어) | 3.65 s | 84 tok/s |
+| park (L2 victim) | 98 GB (+17) | 23 GB (−7) | ~27 GB (평평) | 3.66 s (동률) | 92 tok/s |
+
+→ **동일 성능**에서 park는 KV를 유휴 GPU HBM에 두어 **host used −7 GB + page cache −67 GB**를
+아낀다 (hicache의 file 티어가 page cache를 94 GB까지 채움). agent/RAG에게 host를 비워주는 것.
+
+### 10.4 CAL 아웃라인 스켈레톤 (2쪽 letter)
+
+1. **Motivation**: agent/RAG 서버의 CPU·host RAM 경쟁 + PD disaggregation의 유휴 GPU HBM 기회.
+   KV를 host로 미는 것(hicache)의 숨은 비용(page cache 94 GB, CPU 경쟁).
+2. **Characterization (3-벽)**: recompute:transfer 20–40:1 / decode-bound saturation /
+   host DRAM ≫ GPU HBM 용량 — 왜 "latency로 못 이기고 용량이 상한"인지 정량화 (기존 §2.17).
+3. **Mechanism (KV Victim Cache)**: 유휴 감지(pressure-aware telemetry) → 축출 KV park
+   (session-keyed slab, cross-node shared index) → 재참조 시 GPU→GPU 복구. victim-cache 정식화.
+4. **Evaluation**: (a) 동일 성능 @ host/CPU 절약 (§10.3 표 + mem timeline),
+   (b) 공존 arm: hicache+victim이 host fetch/page cache를 줄임 (§10.5, 진행 중),
+   (c) survival→required-pool (session-keyed가 더 작은 GPU로 같은 win).
+5. **Positioning**: Mooncake/LMCache/DistServe/hicache와의 delta (§3.5) — 전용 공유풀이 아닌
+   **일시적 유휴 peer-GPU-HBM의 victim 재활용**.
+
+### 10.5 남은 실험 (진행 중)
+
+- **(b) 공존 arm** `hicache + GPU victim(park)`: victim이 재참조 히트를 GPU에서 흡수 →
+  host fetch·page cache 감소를 hicache-단독 대비 측정. (`run_perturn_compare.sh`에 3번째 arm 추가,
+  mem timeline에 host `cached` 라인 추가.)
+- **(후속) CPU-contention arm**: host에 CPU/RAM-bound 배경부하(RAG 검색 모사)를 병렬로 걸어,
+  hicache는 경쟁으로 저하 / park는 무영향임을 직접 시연 (§10.3 동기의 실증).
