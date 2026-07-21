@@ -1857,6 +1857,13 @@ host를 비워주는 것. 그림: `results/perturn/fig_mem.{pdf,png}`.
   - **host 절약폭은 context 길이에 비례**: BFCL(ctx 4900) −73 GB > ShareGPT(ctx 841) −35 GB — 짧은
     context는 hicache가 offload할 KV가 적어 park의 절약도 작다. GPU 비용(+17)은 워크로드 무관 고정.
   - **결론**: "동일 성능 @ host-free"가 **서로 다른 두 agentic 워크로드에서 재현** → 일반성 확보.
+  - **⚠ 캐시 잔존 이슈 (확인·수정, 2026-07-21)**: BFCL(07-16)과 ShareGPT(07-21) 시작 시점 host_cached가
+    각각 28GB vs 92GB로 크게 달랐음 — 원인은 실험 로직이 아니라 **OS page cache가 실행 사이 전혀
+    초기화되지 않은 것**(리눅스는 메모리 압박 없으면 clean file-backed page를 계속 들고 있음). 5일 전
+    BFCL이 남긴 캐시가 ShareGPT 시작 시점까지 그대로 남아있었음(실측 확인). **워크로드 간 절대값은
+    비교 불가하지만, 같은 run 안의 hicache→park delta(같은 스크립트 호출, 몇 분 간격, 동일 시작 조건)는
+    유효** — 위 표의 −73GB/−35GB는 안전. `run_perturn_compare.sh`의 `hard_stop()`에
+    `sync; echo 3 > /proc/sys/vm/drop_caches`를 추가해 이후 모든 run이 클린 상태에서 시작하도록 수정.
 
 - **논문 figure 확정 (2026-07)**: 3개 그림을 Times New Roman·벡터 PDF로 재작성(`benchmark/paperstyle.py`
   + `make_fig_design.py`). Times New Roman은 컨테이너에 msttcorefonts Times TTF 설치로 확보(Liberation
