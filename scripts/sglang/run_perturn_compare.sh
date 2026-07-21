@@ -44,12 +44,25 @@ hard_stop() {
   # run's hicache file-tier cache can still be resident (seen: 92GB leftover from
   # a run 5 days earlier, inflating the next run's "starting" host RAM). Drop it
   # so every arm's host-RAM timeline starts from a comparable clean state.
-  # DROP_CACHES=0 to disable (e.g. if not running as root / no permission).
+  # DROP_CACHES=0 to disable. Requires root or passwordless sudo for this one
+  # command -- `test -w` avoids the bash redirection error a plain non-root
+  # `echo 3 > drop_caches` would print (redirect setup fails before the
+  # command's own 2>/dev/null can apply).
   if [ "${DROP_CACHES:-1}" = "1" ]; then
     sync
-    echo 3 > /proc/sys/vm/drop_caches 2>/dev/null \
-      && echo "(dropped page cache)" \
-      || echo "(warn: could not drop page cache -- need root; set DROP_CACHES=0 to silence)"
+    if [ -w /proc/sys/vm/drop_caches ]; then
+      echo 3 > /proc/sys/vm/drop_caches && echo "(dropped page cache)"
+    elif sudo -n true 2>/dev/null; then
+      sudo -n sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' \
+        && echo "(dropped page cache via sudo)"
+    else
+      echo "(note: no permission to drop page cache -- host-RAM ABSOLUTE numbers may" \
+           "carry leftover cache from earlier runs; the within-run hicache-vs-park" \
+           "DELTA is still valid, since both arms of one run start seconds/minutes" \
+           "apart under the same system state. To enable: run once as root/sudo, or" \
+           "grant passwordless sudo for 'echo 3 > /proc/sys/vm/drop_caches', or set" \
+           "DROP_CACHES=0 to silence this message.)"
+    fi
   fi
 }
 
