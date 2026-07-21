@@ -62,6 +62,26 @@ def load_points(paths):
     return pts
 
 
+def sliding(points, key, win, step, min_n):
+    """Overlapping sliding-window median over context length: many points AND smooth
+    (adjacent points share data). Returns (center, median, q25, q75, n) per window."""
+    pts = [(p["ctx"], p[key]) for p in points
+           if p.get(key) is not None and p.get("ctx") is not None]
+    if not pts:
+        return []
+    xs = sorted(x for x, _ in pts)
+    lo, hi = xs[0], xs[-1]
+    rows, c = [], lo + win / 2
+    while c <= hi - win / 2 + step:
+        vals = sorted(v for x, v in pts if c - win / 2 <= x <= c + win / 2)
+        n = len(vals)
+        if n >= min_n:
+            med = vals[n // 2] if n % 2 else 0.5 * (vals[n // 2 - 1] + vals[n // 2])
+            rows.append((c, med, vals[int(0.25 * (n - 1))], vals[int(0.75 * (n - 1))], n))
+        c += step
+    return rows
+
+
 def binned(points, key, bin_w, min_n):
     """Group points into fixed-width context-length bins; return per-bin
     (center, median, q25, q75, n). Median (not mean) so the long TTFT tail doesn't
@@ -100,7 +120,7 @@ def draw(ax, arms, ylabel, title, better):
     ax.set_ylabel(ylabel)
     ax.set_title(f"{title} ({better})")
     style_axes(ax)
-    ax.legend()
+    # legend goes in a single boxed row below both panels (see main)
 
 
 def main():
@@ -110,6 +130,9 @@ def main():
     ap.add_argument("--both", nargs="+", default=[], help="optional coexistence arm (hicache+victim)")
     ap.add_argument("--bin", type=int, default=800, help="context-length bin width (tokens); "
                     "smaller = more points but noisier (500->7pts, 800->5pts, 1500->3pts)")
+    ap.add_argument("--smooth", type=int, default=0, help="if >0, use an overlapping "
+                    "sliding-window median of this width (tokens) instead of disjoint bins "
+                    "-- many points AND smooth (the clean 'tie' view, e.g. 1400)")
     ap.add_argument("--min-n", type=int, default=3, help="min points per bin to plot")
     ap.add_argument("--out", default="results/perturn/perturn_ctxlen.png")
     args = ap.parse_args()
@@ -122,7 +145,11 @@ def main():
         print("[error] one arm has no points -- did both runs succeed with include_usage?")
 
     def bin_arm(pts, key):
-        return binned(pts, key, args.bin, args.min_n) if pts else []
+        if not pts:
+            return []
+        if args.smooth > 0:
+            return sliding(pts, key, args.smooth, max(1, args.smooth // 6), args.min_n)
+        return binned(pts, key, args.bin, args.min_n)
 
     # console summary (overall medians)
     def omed(pts, k):
@@ -141,11 +168,16 @@ def main():
         return out
 
     use_paper_style()
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.0, 2.7))
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.0, 2.9))
     draw(axL, arms("ttft"), "median TTFT (s)", "(a) TTFT", "lower is better")
     draw(axR, arms("good"), "median effective throughput (tok/s)",
          "(b) Effective throughput", "higher is better")
-    fig.tight_layout()
+    # single boxed legend centered below both panels
+    handles, labels = axL.get_legend_handles_labels()
+    fig.tight_layout(rect=[0, 0.09, 1, 1])
+    fig.legend(handles, labels, loc="lower center", ncol=len(labels), frameon=True,
+               fancybox=False, edgecolor=MUTED, handlelength=2.6, columnspacing=2.0,
+               bbox_to_anchor=(0.5, 0.0))
     stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
     savefig(fig, stem)
 
