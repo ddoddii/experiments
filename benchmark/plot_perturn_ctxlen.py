@@ -116,7 +116,7 @@ def draw(ax, arms, ylabel, title, better):
         ys = [r[1] for r in rows]
         ax.plot(xs, ys, color=color, lw=1.5, ls=STYLE[key]["ls"], marker=STYLE[key]["marker"],
                 ms=4, label=label, zorder=3, markeredgecolor="white", markeredgewidth=0.6)
-    ax.set_xlabel("context length (k tokens), grows each turn")
+    ax.set_xlabel("context length (k tokens)")
     ax.set_ylabel(ylabel)
     ax.set_title(f"{title} ({better})")
     style_axes(ax)
