@@ -118,7 +118,7 @@ def draw(ax, arms, ylabel, title):
     x1 = max((xs[-1] for series, *_ in arms for xs, _ in series), default=1)
     ax.set_xlim(0, x1 * 1.13)
     style_axes(ax)
-    ax.legend(loc="center left")
+    # no per-axes legend -- a single boxed legend goes below both panels (see main)
 
 
 def peak(series):
@@ -159,7 +159,12 @@ def main():
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.0, 2.7))
     draw(axL, arms(gpu), "GPU HBM used (GB, 4 GPUs)", "(a) GPU HBM footprint")
     draw(axR, arms(host), "host RAM used + page cache (GB)", "(b) host RAM footprint")
-    fig.tight_layout()
+    # single boxed legend centered below both panels (avoids overlapping the lines)
+    handles, labels = axL.get_legend_handles_labels()
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.legend(handles, labels, loc="lower center", ncol=len(labels), frameon=True,
+               fancybox=False, edgecolor=MUTED, handlelength=2.6, columnspacing=1.8,
+               bbox_to_anchor=(0.5, 0.0))
     stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
     savefig(fig, stem)
 
