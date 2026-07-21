@@ -39,6 +39,18 @@ hard_stop() {
   pkill -9 -f "mooncake"             2>/dev/null || true
   for p in 30000 30001 30002 30003 8000 8998 8999; do fuser -k ${p}/tcp 2>/dev/null || true; done
   sleep 12
+  # Host page cache is OS-level and outlives our processes -- Linux keeps clean
+  # file-backed pages around indefinitely under low memory pressure, so a prior
+  # run's hicache file-tier cache can still be resident (seen: 92GB leftover from
+  # a run 5 days earlier, inflating the next run's "starting" host RAM). Drop it
+  # so every arm's host-RAM timeline starts from a comparable clean state.
+  # DROP_CACHES=0 to disable (e.g. if not running as root / no permission).
+  if [ "${DROP_CACHES:-1}" = "1" ]; then
+    sync
+    echo 3 > /proc/sys/vm/drop_caches 2>/dev/null \
+      && echo "(dropped page cache)" \
+      || echo "(warn: could not drop page cache -- need root; set DROP_CACHES=0 to silence)"
+  fi
 }
 
 run_bench() {  # config mem_csv
