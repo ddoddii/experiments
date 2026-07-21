@@ -1,71 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
-<rect width="1024" height="512" fill="white"/>
-<defs><marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#555555"/></marker></defs>
-<defs><marker id="arrowG" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#009E73"/></marker></defs>
-<defs><marker id="arrowA" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E69F00"/></marker></defs>
-<defs><marker id="arrowB" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0072B2"/></marker></defs>
-<text x="185" y="30" font-family="Times New Roman, Times, serif" font-size="15" fill="#111111" font-weight="bold" text-anchor="middle" >(a) KV memory hierarchy</text>
-<rect x="78" y="62" width="214" height="50" rx="7" fill="#E7E7E7" stroke="#444444" stroke-width="1.2" />
-<text x="185.0" y="92" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="middle" >L1   GPU serving pool (radix)</text>
-<rect x="78" y="120" width="214" height="50" rx="7" fill="#D7F0E7" stroke="#009E73" stroke-width="2.4" />
-<text x="185.0" y="141" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="middle" >L2   GPU victim cache</text>
-<text x="185.0" y="158" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#555555" font-weight="normal" text-anchor="middle" >transiently-idle HBM</text>
-<rect x="78" y="178" width="214" height="50" rx="7" fill="#D6E6F3" stroke="#0072B2" stroke-width="1.2" />
-<text x="185.0" y="199" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="middle" >L3   host DRAM (HiCache)</text>
-<text x="185.0" y="216" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#555555" font-weight="normal" text-anchor="middle" >CPU / RAM contended</text>
-<rect x="78" y="236" width="214" height="50" rx="7" fill="#F0F0F0" stroke="#555555" stroke-width="1.2" />
-<text x="185.0" y="266" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#555555" font-weight="bold" text-anchor="middle" >L4   disk (file backend)</text>
-<polygon points="304.0,129.5 305.9,134.5 311.1,134.7 307.0,138.0 308.4,143.1 304.0,140.2 299.6,143.1 301.0,138.0 296.9,134.7 302.1,134.5" fill="#009E73"/>
-<text x="316" y="133" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#009E73" font-weight="bold" text-anchor="start" >this</text>
-<text x="316" y="145" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#009E73" font-weight="bold" text-anchor="start" >work</text>
-<path d="M 46 66 L 46 282" fill="none" stroke="#555555" stroke-width="1.6"  marker-end="url(#arrow)"/>
-<text x="30" y="74" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" transform="rotate(-90 30 74)">fast</text>
-<text x="30" y="275" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" transform="rotate(-90 30 275)">slow</text>
-<path d="M 336 62 L 344 62 L 344 170 L 336 170" fill="none" stroke="#555555" stroke-width="1"/>
-<text x="366" y="118" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#555555" font-weight="bold" text-anchor="middle" transform="rotate(90 366 118)">GPU</text>
-<path d="M 336 178 L 344 178 L 344 286 L 336 286" fill="none" stroke="#555555" stroke-width="1"/>
-<text x="366" y="232" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#555555" font-weight="bold" text-anchor="middle" transform="rotate(90 366 232)">host</text>
-<text x="185" y="320" font-family="Times New Roman, Times, serif" font-size="11" fill="#111111" font-weight="bold" text-anchor="middle" >victim = evicted KV kept on idle GPU</text>
-<text x="185" y="336" font-family="Times New Roman, Times, serif" font-size="11" fill="#555555" font-weight="normal" text-anchor="middle" >instead of spilled to CPU/host</text>
-<line x1="352" y1="46" x2="352" y2="470" stroke="#CFCFCF" stroke-width="1"/>
-<text x="690" y="30" font-family="Times New Roman, Times, serif" font-size="15" fill="#111111" font-weight="bold" text-anchor="middle" >(b) Detect → Park → Fetch   (2P2D)</text>
-<rect x="392" y="150" width="116" height="66" rx="7" fill="#F4F4F4" stroke="#444444" stroke-width="1.2" />
-<text x="450.0" y="175" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="middle" >D0  (GPU2)</text>
-<text x="450.0" y="193" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" >decode; holds</text>
-<text x="450.0" y="206" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" >finished KV</text>
-<text x="450.0" y="231" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="normal" text-anchor="middle" >(D1 GPU3 symmetric)</text>
-<rect x="768" y="66" width="208" height="116" rx="7" fill="white" stroke="#444444" stroke-width="1.3" />
-<text x="780" y="88" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="start" >P0  (GPU0)</text>
-<text x="964" y="88" font-family="Times New Roman, Times, serif" font-size="11" fill="#0072B2" font-weight="bold" text-anchor="end" >usage 82%</text>
-<text x="964" y="102" font-family="Times New Roman, Times, serif" font-size="10" fill="#0072B2" font-weight="bold" text-anchor="end" >busy</text>
-<rect x="782" y="110" width="180" height="28" rx="5" fill="#E7E7E7" stroke="#444444" stroke-width="1.0" />
-<text x="872.0" y="128" font-family="Times New Roman, Times, serif" font-size="11" fill="#111111" font-weight="normal" text-anchor="middle" >serving KV pool (L1)</text>
-<rect x="782" y="144" width="180" height="28" rx="5" fill="#D7F0E7" stroke="#009E73" stroke-width="1.8" />
-<text x="872.0" y="162" font-family="Times New Roman, Times, serif" font-size="11" fill="#009E73" font-weight="bold" text-anchor="middle" >victim cache (L2, idle HBM)</text>
-<rect x="768" y="262" width="208" height="116" rx="7" fill="white" stroke="#444444" stroke-width="1.3" />
-<text x="780" y="284" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="start" >P1  (GPU1)</text>
-<text x="964" y="284" font-family="Times New Roman, Times, serif" font-size="11" fill="#009E73" font-weight="bold" text-anchor="end" >usage 23%</text>
-<text x="964" y="298" font-family="Times New Roman, Times, serif" font-size="10" fill="#009E73" font-weight="bold" text-anchor="end" >← idlest</text>
-<rect x="782" y="306" width="180" height="28" rx="5" fill="#E7E7E7" stroke="#444444" stroke-width="1.0" />
-<text x="872.0" y="324" font-family="Times New Roman, Times, serif" font-size="11" fill="#111111" font-weight="normal" text-anchor="middle" >serving KV pool (L1)</text>
-<rect x="782" y="340" width="180" height="28" rx="5" fill="#D7F0E7" stroke="#009E73" stroke-width="1.8" />
-<text x="872.0" y="358" font-family="Times New Roman, Times, serif" font-size="11" fill="#009E73" font-weight="bold" text-anchor="middle" >victim cache (L2, idle HBM)</text>
-<rect x="512" y="430" width="402" height="44" rx="7" fill="#FBF6EC" stroke="#E69F00" stroke-width="1.3" />
-<text x="713.0" y="449" font-family="Times New Roman, Times, serif" font-size="11.5" fill="#111111" font-weight="bold" text-anchor="middle" >Shared Park Index  +  usage telemetry</text>
-<text x="713.0" y="465" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" >(/dev/shm, cross-node)</text>
-<path d="M 792 182 L 720 430" fill="none" stroke="#555555" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<path d="M 792 378 L 760 430" fill="none" stroke="#555555" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<path d="M 512 442 Q 430 430 470 210" fill="none" stroke="#555555" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<circle cx="548" cy="408" r="11" fill="#E69F00" stroke="white" stroke-width="1.5"/><text x="548" y="412.5" font-family="Times New Roman, Times, serif" font-size="13" fill="white" font-weight="bold" text-anchor="middle" >1</text>
-<text x="548" y="393" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="normal" text-anchor="middle" >publish KV usage / read</text>
-<path d="M 508 183 Q 650 300 782 352" fill="none" stroke="#009E73" stroke-width="2.2"  marker-end="url(#arrowG)"/>
-<circle cx="628" cy="250" r="11" fill="#E69F00" stroke="white" stroke-width="1.5"/><text x="628" y="254.5" font-family="Times New Roman, Times, serif" font-size="13" fill="white" font-weight="bold" text-anchor="middle" >2</text>
-<text x="632" y="232" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#009E73" font-weight="bold" text-anchor="middle" >park evicted KV → idlest P</text>
-<text x="632" y="219" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="normal" text-anchor="middle" >(CUDA IPC, GPU→GPU)</text>
-<path d="M 690 78 L 766 92" fill="none" stroke="#111111" stroke-width="1.6"  marker-end="url(#arrow)"/>
-<text x="676" y="74" font-family="Times New Roman, Times, serif" font-size="10" fill="#111111" font-weight="bold" text-anchor="end" >turn N</text>
-<path d="M 978 356 Q 1016 240 978 124" fill="none" stroke="#009E73" stroke-width="2.2"  marker-end="url(#arrowG)"/>
-<circle cx="998" cy="240" r="11" fill="#E69F00" stroke="white" stroke-width="1.5"/><text x="998" y="244.5" font-family="Times New Roman, Times, serif" font-size="13" fill="white" font-weight="bold" text-anchor="middle" >3</text>
-<text x="958" y="210" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#009E73" font-weight="bold" text-anchor="end" >cross-node fetch</text>
-<text x="958" y="198" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="normal" text-anchor="end" >via shared index → radix hit</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="360" viewBox="0 0 1080 360">
+<rect width="1080" height="360" fill="white"/>
+<defs>
+<marker id="aMut" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#555555"/></marker>
+<marker id="aGrn" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#009E73"/></marker>
+<marker id="aRed" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#B4423C"/></marker>
+<marker id="aAmb" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#E69F00"/></marker>
+</defs>
+<text x="150" y="26" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="middle"  >Victim cache (CPU architecture)</text>
+<rect x="74" y="46" width="152" height="56" rx="6" ry="6" fill="#DCE7F5" stroke="#2F6DB0" stroke-width="1.3" />
+<text x="150.0" y="70" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="middle"  >L1 cache</text>
+<text x="150.0" y="87" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" font-style="italic" >fast, small</text>
+<rect x="74" y="140" width="152" height="56" rx="6" ry="6" fill="#D5F0E6" stroke="#009E73" stroke-width="2.2" />
+<text x="150.0" y="164" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="middle"  >victim cache</text>
+<text x="150.0" y="181" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" font-style="italic" >evicted lines</text>
+<rect x="74" y="238" width="152" height="56" rx="6" ry="6" fill="#F6DEDE" stroke="#B4423C" stroke-width="1.3" />
+<text x="150.0" y="262" font-family="Times New Roman, Times, serif" font-size="12" fill="#111111" font-weight="bold" text-anchor="middle"  >main memory</text>
+<text x="150.0" y="279" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="middle" font-style="italic" >slow, large</text>
+<path d="M 62 102 L 62 140" fill="none" stroke="#555555" stroke-width="1.8"  marker-end="url(#aMut)"/>
+<path d="M 238 140 L 238 102" fill="none" stroke="#009E73" stroke-width="1.8"  marker-end="url(#aGrn)"/>
+<text x="58" y="124" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="normal" text-anchor="end"  >evict</text>
+<text x="242" y="124" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#009E73" font-weight="bold" text-anchor="start"  >refill</text>
+<path d="M 150.0 196 L 150.0 238" fill="none" stroke="#9A9A9A" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aMut)"/>
+<text x="156.0" y="220" font-family="Times New Roman, Times, serif" font-size="9" fill="#555555" font-weight="normal" text-anchor="start"  >miss</text>
+<path d="M 268 150 L 279 158 L 268 166" fill="none" stroke="#E69F00" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 283 150 L 294 158 L 283 166" fill="none" stroke="#E69F00" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 298 150 L 309 158 L 298 166" fill="none" stroke="#E69F00" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="286" y="140" font-family="Times New Roman, Times, serif" font-size="10" fill="#E69F00" font-weight="bold" text-anchor="middle"  >maps to</text>
+<line x1="330" y1="34" x2="330" y2="352" stroke="#9A9A9A" stroke-width="1" stroke-dasharray="2 3"/>
+<text x="700" y="26" font-family="Times New Roman, Times, serif" font-size="13" fill="#111111" font-weight="bold" text-anchor="middle"  >KV Victim Cache (ours)</text>
+<rect x="486" y="42" width="316" height="76" rx="6" ry="6" fill="#DCE7F5" stroke="#2F6DB0" stroke-width="1.4" />
+<text x="498" y="61" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="start"  >GPU serving pool</text>
+<text x="498" y="75" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="start" font-style="italic" >L1 · radix</text>
+<text x="535" y="93.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >K</text><rect x="544" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="84" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="84" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="84" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><text x="535" y="109.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >V</text><rect x="544" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="100" width="13" height="13" rx="2" fill="#2F6DB0" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="100" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="100" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/>
+<rect x="486" y="158" width="316" height="80" rx="6" ry="6" fill="#D5F0E6" stroke="#009E73" stroke-width="2.4" />
+<text x="498" y="177" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="start"  >GPU victim cache</text>
+<text x="498" y="191" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="start" font-style="italic" >L2 · transiently-idle HBM</text>
+<polygon points="726.0,165.5 727.6,169.8 732.2,170.0 728.6,172.8 729.8,177.3 726.0,174.7 722.2,177.3 723.4,172.8 719.8,170.0 724.4,169.8" fill="#009E73"/>
+<text x="738" y="176" font-family="Times New Roman, Times, serif" font-size="10" fill="#009E73" font-weight="bold" text-anchor="start"  >this work</text>
+<text x="535" y="209.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >K</text><rect x="544" y="200" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="200" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="200" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="200" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="200" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="200" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="200" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="200" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><text x="535" y="225.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >V</text><rect x="544" y="216" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="216" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="216" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="216" width="13" height="13" rx="2" fill="#009E73" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="216" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="216" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="216" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="216" width="13" height="13" rx="2" fill="white" stroke="#9A9A9A" stroke-width="0.8"/>
+<rect x="486" y="262" width="316" height="76" rx="6" ry="6" fill="#F6DEDE" stroke="#B4423C" stroke-width="1.4" />
+<text x="498" y="281" font-family="Times New Roman, Times, serif" font-size="12.5" fill="#111111" font-weight="bold" text-anchor="start"  >host DRAM — HiCache</text>
+<text x="498" y="295" font-family="Times New Roman, Times, serif" font-size="10" fill="#555555" font-weight="normal" text-anchor="start" font-style="italic" >L3 · file tier</text>
+<text x="535" y="313.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >K</text><rect x="544" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="304" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><text x="535" y="329.5" font-family="Times New Roman, Times, serif" font-size="9.5" fill="#555555" font-weight="bold" text-anchor="middle" font-style="italic" >V</text><rect x="544" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="560" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="576" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="592" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="608" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="624" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="640" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/><rect x="656" y="320" width="13" height="13" rx="2" fill="#B4423C" stroke="#9A9A9A" stroke-width="0.8"/>
+<path d="M 636 120 L 636 156" fill="none" stroke="#009E73" stroke-width="2.4"  marker-end="url(#aGrn)"/>
+<path d="M 676 156 L 676 120" fill="none" stroke="#009E73" stroke-width="2.4"  marker-end="url(#aGrn)"/>
+<circle cx="636" cy="138" r="9" fill="#E69F00"/><text x="636" y="142" font-family="Times New Roman, Times, serif" font-size="11" fill="white" font-weight="bold" text-anchor="middle"  >2</text>
+<text x="626" y="142" font-family="Times New Roman, Times, serif" font-size="10" fill="#009E73" font-weight="bold" text-anchor="end"  >park (evict)</text>
+<circle cx="676" cy="138" r="9" fill="#E69F00"/><text x="676" y="142" font-family="Times New Roman, Times, serif" font-size="11" fill="white" font-weight="bold" text-anchor="middle"  >3</text>
+<text x="686" y="142" font-family="Times New Roman, Times, serif" font-size="10" fill="#009E73" font-weight="bold" text-anchor="start"  >fetch (reuse)</text>
+<line x1="450" y1="250" x2="1066" y2="250" stroke="#9A9A9A" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="450" y="246" font-family="Times New Roman, Times, serif" font-size="9" fill="#555555" font-weight="bold" text-anchor="start"  >GPU HBM</text>
+<text x="450" y="261" font-family="Times New Roman, Times, serif" font-size="9" fill="#555555" font-weight="bold" text-anchor="start"  >host (PCIe)</text>
+<path d="M 644.0 238 L 644.0 262" fill="none" stroke="#B4423C" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aRed)"/>
+<text x="656.0" y="246" font-family="Times New Roman, Times, serif" font-size="9" fill="#B4423C" font-weight="normal" text-anchor="start"  >cold overflow</text>
+<text x="656.0" y="258" font-family="Times New Roman, Times, serif" font-size="8.5" fill="#555555" font-weight="normal" text-anchor="start"  >(only when GPU full)</text>
+<rect x="824" y="73" width="4.5" height="9" rx="1" fill="#111111"/><text x="834" y="80" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#111111" font-weight="normal" text-anchor="start"  >fast · active KV · small</text>
+<rect x="824" y="181" width="4.5" height="9" rx="1" fill="#111111"/><text x="834" y="188" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#111111" font-weight="normal" text-anchor="start"  >GPU↔GPU (fast) · evicted KV</text>
+<rect x="824" y="199" width="4.5" height="9" rx="1" fill="#009E73"/><text x="834" y="206" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#111111" font-weight="normal" text-anchor="start"  >idlest peer GPU: pressure-aware,</text>
+<text x="834" y="221" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#009E73" font-weight="normal" text-anchor="start"  >cross-node via shared index</text>
+<rect x="824" y="293" width="4.5" height="9" rx="1" fill="#111111"/><text x="834" y="300" font-family="Times New Roman, Times, serif" font-size="10.5" fill="#111111" font-weight="normal" text-anchor="start"  >PCIe (slow) · CPU/RAM-contended</text>
 </svg>

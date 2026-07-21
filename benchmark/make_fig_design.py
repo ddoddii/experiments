@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Fig 2 (design) — "KV Victim Cache: memory hierarchy + Detect/Park/Fetch mechanism".
-Hand-authored vector schematic (SVG -> PDF + PNG), Times New Roman, matching the
-paper palette. Two panels:
-  (a) KV memory hierarchy: L1 GPU serving -> L2 GPU victim (this work) -> L3 host
-      DRAM (HiCache, CPU-contended) -> L4 disk.
-  (b) 2P2D dataflow: (1) detect idlest prefill via usage telemetry, (2) park evicted
-      session KV onto it over CUDA IPC, (3) next turn fetches from the victim pool
-      (local or peer via the shared index) into the serving radix.
+Fig 2 (design) — "KV Victim Cache" overview, paper-quality vector schematic
+(SVG -> PDF + PNG), Times New Roman.
+
+Left:  the classic CPU victim-cache analogy (L1 cache -> small victim buffer ->
+       main memory) -- our conceptual anchor.
+Right: KV Victim Cache (ours). Three KV tiers with K/V block grids:
+       L1 GPU serving pool (radix) -> L2 GPU victim cache (transiently-idle HBM,
+       this work) -> L3 host DRAM (HiCache). Park (evict) / fetch (reuse) move
+       blocks between L1 and L2; host is demoted to a cold overflow across PCIe.
+       Right-hand bullets give each tier's speed / role. An L2 callout states the
+       novel placement (idlest peer GPU, pressure-aware, cross-node).
 
 사용: python benchmark/make_fig_design.py --out results/perturn/fig_design
 """
@@ -15,165 +18,146 @@ import argparse
 import math
 
 FONT = "Times New Roman, Times, serif"
-# paper palette (matches paperstyle.py)
-GREEN, GREEN_L = "#009E73", "#D7F0E7"      # victim (this work)
-BLUE, BLUE_L = "#0072B2", "#D6E6F3"        # host / HiCache
-AMBER = "#E69F00"                          # step badges
-INK, MUTED = "#111111", "#555555"
-NODE, NODE_L, SERV_L = "#444444", "#F4F4F4", "#E7E7E7"
-GRID = "#CFCFCF"
-
-W, H = 1024, 512
+# palette (matches the other paper figures)
+BLUE, BLUE_F = "#2F6DB0", "#DCE7F5"     # serving / L1 / fast
+GREEN, GREEN_F = "#009E73", "#D5F0E6"   # victim (this work)
+RED, RED_F = "#B4423C", "#F6DEDE"       # host / HiCache / slow
+AMBER = "#E69F00"
+INK, MUTED, HAIR = "#111111", "#555555", "#9A9A9A"
+W, H = 1080, 360
 
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def txt(x, y, s, size=13, col=INK, w="normal", anchor="middle", style=""):
-    return (f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" '
-            f'fill="{col}" font-weight="{w}" text-anchor="{anchor}" {style}>{esc(s)}</text>')
+def txt(x, y, s, size=12.5, col=INK, w="normal", anchor="middle", ital=False, style=""):
+    it = 'font-style="italic"' if ital else ""
+    return (f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" fill="{col}" '
+            f'font-weight="{w}" text-anchor="{anchor}" {it} {style}>{esc(s)}</text>')
 
 
-def box(x, y, w, h, fill, stroke, sw=1.2, rx=7, dash=""):
+def rrect(x, y, w, h, fill, stroke, sw=1.3, rx=6, dash=""):
     d = f'stroke-dasharray="{dash}"' if dash else ""
-    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" '
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" ry="{rx}" '
             f'fill="{fill}" stroke="{stroke}" stroke-width="{sw}" {d}/>')
+
+
+def grid(x, y, n, cell, gap, filled, fillcol, rows=("K", "V"), rowfill=(None, None)):
+    """K/V block grid: len(rows) rows of n cells; `filled` = #filled from left."""
+    out = []
+    for ri, rlab in enumerate(rows):
+        ry = y + ri * (cell + gap)
+        out.append(txt(x - 9, ry + cell - 3.5, rlab, 9.5, MUTED, "bold", "middle", True))
+        fc = rowfill[ri] if rowfill[ri] else fillcol
+        for c in range(n):
+            cx = x + c * (cell + gap)
+            f = fc if c < filled else "white"
+            out.append(f'<rect x="{cx}" y="{ry}" width="{cell}" height="{cell}" rx="2" '
+                       f'fill="{f}" stroke="{HAIR}" stroke-width="0.8"/>')
+    return "".join(out)
+
+
+def bullet(x, y, s, col=INK):
+    return (f'<rect x="{x}" y="{y-7}" width="4.5" height="9" rx="1" fill="{col}"/>'
+            + txt(x + 10, y, s, 10.5, INK, "normal", "start"))
 
 
 def star(cx, cy, r, col):
     pts = []
     for i in range(10):
-        ang = -math.pi / 2 + i * math.pi / 5
+        a = -math.pi / 2 + i * math.pi / 5
         rr = r if i % 2 == 0 else r * 0.42
-        pts.append(f"{cx + rr * math.cos(ang):.1f},{cy + rr * math.sin(ang):.1f}")
+        pts.append(f"{cx+rr*math.cos(a):.1f},{cy+rr*math.sin(a):.1f}")
     return f'<polygon points="{" ".join(pts)}" fill="{col}"/>'
 
 
-def badge(cx, cy, n, col=AMBER):
-    return (f'<circle cx="{cx}" cy="{cy}" r="11" fill="{col}" stroke="white" stroke-width="1.5"/>'
-            + txt(cx, cy + 4.5, n, 13, "white", "bold"))
-
-
-def arrow(x1, y1, x2, y2, col, sw=2.0, dash="", marker="arrow", curve=None):
-    d = f'stroke-dasharray="{dash}"' if dash else ""
-    if curve is None:
-        path = f'M {x1} {y1} L {x2} {y2}'
-    else:
-        cx, cy = curve
-        path = f'M {x1} {y1} Q {cx} {cy} {x2} {y2}'
-    return (f'<path d="{path}" fill="none" stroke="{col}" stroke-width="{sw}" '
-            f'{d} marker-end="url(#{marker})"/>')
-
-
 def build():
-    s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
-         f'viewBox="0 0 {W} {H}">']
+    s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
     s.append(f'<rect width="{W}" height="{H}" fill="white"/>')
-    # arrowhead markers
-    for name, col in (("arrow", MUTED), ("arrowG", GREEN), ("arrowA", AMBER), ("arrowB", BLUE)):
-        s.append(f'<defs><marker id="{name}" viewBox="0 0 10 10" refX="8.5" refY="5" '
-                 f'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-                 f'<path d="M 0 0 L 10 5 L 0 10 z" fill="{col}"/></marker></defs>')
+    s.append('<defs>')
+    for name, col in (("aMut", MUTED), ("aGrn", GREEN), ("aRed", RED), ("aAmb", AMBER)):
+        s.append(f'<marker id="{name}" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7.5" '
+                 f'markerHeight="7.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" '
+                 f'fill="{col}"/></marker>')
+    s.append('</defs>')
 
-    # =============== Panel (a): memory hierarchy ===============
-    s.append(txt(185, 30, "(a) KV memory hierarchy", 15, INK, "bold"))
-    bx, bw = 78, 214
+    def arrow(x1, y1, x2, y2, col, mk, sw=2.0, dash="", curve=None):
+        d = f'stroke-dasharray="{dash}"' if dash else ""
+        p = (f'M {x1} {y1} L {x2} {y2}' if curve is None
+             else f'M {x1} {y1} Q {curve[0]} {curve[1]} {x2} {y2}')
+        s.append(f'<path d="{p}" fill="none" stroke="{col}" stroke-width="{sw}" {d} '
+                 f'marker-end="url(#{mk})"/>')
+
+    # ============ LEFT: CPU victim-cache analogy ============
+    s.append(txt(150, 26, "Victim cache (CPU architecture)", 12.5, INK, "bold"))
+    lx, lw = 74, 152
+    an = [(46, BLUE_F, BLUE, "L1 cache", "fast, small"),
+          (140, GREEN_F, GREEN, "victim cache", "evicted lines"),
+          (238, RED_F, RED, "main memory", "slow, large")]
+    for y, f, st, a, b in an:
+        thick = 2.2 if st == GREEN else 1.3
+        s.append(rrect(lx, y, lw, 56, f, st, thick))
+        s.append(txt(lx + lw / 2, y + 24, a, 12, INK, "bold"))
+        s.append(txt(lx + lw / 2, y + 41, b, 10, MUTED, "normal", "middle", True))
+    # evict (down) / refill (up) between L1 and victim
+    arrow(lx - 12, 102, lx - 12, 140, MUTED, "aMut", 1.8)
+    arrow(lx + lw + 12, 140, lx + lw + 12, 102, GREEN, "aGrn", 1.8)
+    s.append(txt(lx - 16, 124, "evict", 9.5, MUTED, "normal", "end"))
+    s.append(txt(lx + lw + 16, 124, "refill", 9.5, GREEN, "bold", "start"))
+    arrow(lx + lw / 2, 196, lx + lw / 2, 238, HAIR, "aMut", 1.4, "4 3")
+    s.append(txt(lx + lw / 2 + 6, 220, "miss", 9, MUTED, "normal", "start"))
+
+    # analogy connector (chevrons)
+    for k in range(3):
+        cx = 268 + k * 15
+        s.append(f'<path d="M {cx} 150 L {cx+11} 158 L {cx} 166" fill="none" stroke="{AMBER}" '
+                 f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>')
+    s.append(txt(286, 140, "maps to", 10, AMBER, "bold"))
+    s.append(f'<line x1="330" y1="34" x2="330" y2="352" stroke="{HAIR}" stroke-width="1" stroke-dasharray="2 3"/>')
+
+    # ============ RIGHT: KV Victim Cache (ours) ============
+    s.append(txt(700, 26, "KV Victim Cache (ours)", 13, INK, "bold"))
+    tx, tw = 486, 316          # tier box
+    gx = tx + 58               # grid origin x
     tiers = [
-        (62,  SERV_L, NODE, "L1   GPU serving pool (radix)", None, INK),
-        (120, GREEN_L, GREEN, "L2   GPU victim cache", "transiently-idle HBM", INK),
-        (178, BLUE_L, BLUE, "L3   host DRAM (HiCache)", "CPU / RAM contended", INK),
-        (236, "#F0F0F0", MUTED, "L4   disk (file backend)", None, MUTED),
+        (42, 76, BLUE_F, BLUE, "GPU serving pool", "L1 · radix", 6, BLUE, False),
+        (158, 80, GREEN_F, GREEN, "GPU victim cache", "L2 · transiently-idle HBM", 4, GREEN, True),
+        (262, 76, RED_F, RED, "host DRAM — HiCache", "L3 · file tier", 8, RED, False),
     ]
-    for y, fill, stroke, label, sub, col in tiers:
-        thick = 2.4 if stroke == GREEN else 1.2
-        s.append(box(bx, y, bw, 50, fill, stroke, thick))
-        if sub:
-            s.append(txt(bx + bw / 2, y + 21, label, 12.5, col, "bold"))
-            s.append(txt(bx + bw / 2, y + 38, sub, 10.5, MUTED))
-        else:
-            s.append(txt(bx + bw / 2, y + 30, label, 12.5, col, "bold"))
-    # "this work" star tag on L2
-    s.append(star(bx + bw + 12, 137, 7.5, GREEN))
-    s.append(txt(bx + bw + 24, 133, "this", 10.5, GREEN, "bold", "start"))
-    s.append(txt(bx + bw + 24, 145, "work", 10.5, GREEN, "bold", "start"))
-    # fast/slow speed arrow on the left
-    s.append(arrow(46, 66, 46, 282, MUTED, 1.6))
-    s.append(txt(30, 74, "fast", 10, MUTED, "normal", "middle", 'transform="rotate(-90 30 74)"'))
-    s.append(txt(30, 275, "slow", 10, MUTED, "normal", "middle", 'transform="rotate(-90 30 275)"'))
-    # GPU vs host brace labels
-    s.append(f'<path d="M {bx+bw+44} 62 L {bx+bw+52} 62 L {bx+bw+52} 170 L {bx+bw+44} 170" '
-             f'fill="none" stroke="{MUTED}" stroke-width="1"/>')
-    s.append(txt(bx + bw + 74, 118, "GPU", 10.5, MUTED, "bold", "middle",
-                 f'transform="rotate(90 {bx+bw+74} 118)"'))
-    s.append(f'<path d="M {bx+bw+44} 178 L {bx+bw+52} 178 L {bx+bw+52} 286 L {bx+bw+44} 286" '
-             f'fill="none" stroke="{MUTED}" stroke-width="1"/>')
-    s.append(txt(bx + bw + 74, 232, "host", 10.5, MUTED, "bold", "middle",
-                 f'transform="rotate(90 {bx+bw+74} 232)"'))
-    s.append(txt(185, 320, "victim = evicted KV kept on idle GPU", 11, INK, "bold"))
-    s.append(txt(185, 336, "instead of spilled to CPU/host", 11, MUTED))
+    for y, hb, f, st, name, sub, filled, gc, hero in tiers:
+        s.append(rrect(tx, y, tw, hb, f, st, 2.4 if hero else 1.4))
+        s.append(txt(tx + 12, y + 19, name, 12.5, INK, "bold", "start"))
+        s.append(txt(tx + 12, y + 33, sub, 10, MUTED, "normal", "start", True))
+        if hero:
+            s.append(star(tx + tw - 76, y + 14, 6.5, GREEN))
+            s.append(txt(tx + tw - 64, y + 18, "this work", 10, GREEN, "bold", "start"))
+        s.append(grid(gx, y + 42, 8, 13, 3, filled, gc))
 
-    # vertical divider
-    s.append(f'<line x1="352" y1="46" x2="352" y2="470" stroke="{GRID}" stroke-width="1"/>')
+    # park (evict, down) / fetch (reuse, up) between L1 (ends 118) and L2 (starts 158)
+    arrow(tx + 150, 120, tx + 150, 156, GREEN, "aGrn", 2.4)     # park down
+    arrow(tx + 190, 156, tx + 190, 120, GREEN, "aGrn", 2.4)     # fetch up
+    s.append(f'<circle cx="{tx+150}" cy="138" r="9" fill="{AMBER}"/>' + txt(tx + 150, 142, "2", 11, "white", "bold"))
+    s.append(txt(tx + 140, 142, "park (evict)", 10, GREEN, "bold", "end"))
+    s.append(f'<circle cx="{tx+190}" cy="138" r="9" fill="{AMBER}"/>' + txt(tx + 190, 142, "3", 11, "white", "bold"))
+    s.append(txt(tx + 200, 142, "fetch (reuse)", 10, GREEN, "bold", "start"))
 
-    # =============== Panel (b): mechanism ===============
-    s.append(txt(690, 30, "(b) Detect → Park → Fetch   (2P2D)", 15, INK, "bold"))
+    # GPU|host boundary (PCIe) + cold-overflow spill between L2 (238) and L3 (262)
+    s.append(f'<line x1="{tx-36}" y1="250" x2="{tx+tw+264}" y2="250" stroke="{HAIR}" '
+             f'stroke-width="1" stroke-dasharray="3 3"/>')
+    s.append(txt(tx - 36, 246, "GPU HBM", 9, MUTED, "bold", "start"))
+    s.append(txt(tx - 36, 261, "host (PCIe)", 9, MUTED, "bold", "start"))
+    arrow(tx + tw / 2, 238, tx + tw / 2, 262, RED, "aRed", 1.8, "5 3")
+    s.append(txt(tx + tw / 2 + 12, 246, "cold overflow", 9, RED, "normal", "start"))
+    s.append(txt(tx + tw / 2 + 12, 258, "(only when GPU full)", 8.5, MUTED, "normal", "start"))
 
-    # decode node D0
-    dx, dy, dw, dh = 392, 150, 116, 66
-    s.append(box(dx, dy, dw, dh, NODE_L, NODE, 1.2))
-    s.append(txt(dx + dw / 2, dy + 25, "D0  (GPU2)", 12, INK, "bold"))
-    s.append(txt(dx + dw / 2, dy + 43, "decode; holds", 10, MUTED))
-    s.append(txt(dx + dw / 2, dy + 56, "finished KV", 10, MUTED))
-    s.append(txt(dx + dw / 2, dy + dh + 15, "(D1 GPU3 symmetric)", 9.5, MUTED))
-
-    # prefill nodes P0 (busy) and P1 (idle) with serving + victim sub-pools
-    def prefill(px, py, name, gpu, usage, tag, tagcol):
-        pw, ph = 208, 116
-        s.append(box(px, py, pw, ph, "white", NODE, 1.3))
-        s.append(txt(px + 12, py + 22, f"{name}  ({gpu})", 12, INK, "bold", "start"))
-        s.append(txt(px + pw - 12, py + 22, f"usage {usage}", 11, tagcol, "bold", "end"))
-        if tag:
-            s.append(txt(px + pw - 12, py + 36, tag, 10, tagcol, "bold", "end"))
-        # serving sub-box (L1)
-        s.append(box(px + 14, py + 44, pw - 28, 28, SERV_L, NODE, 1.0, 5))
-        s.append(txt(px + pw / 2, py + 62, "serving KV pool (L1)", 11, INK))
-        # victim sub-box (L2)
-        s.append(box(px + 14, py + 78, pw - 28, 28, GREEN_L, GREEN, 1.8, 5))
-        s.append(txt(px + pw / 2, py + 96, "victim cache (L2, idle HBM)", 11, GREEN, "bold"))
-        return px, py, pw, ph
-
-    p0 = prefill(768, 66, "P0", "GPU0", "82%", "busy", BLUE)
-    p1 = prefill(768, 262, "P1", "GPU1", "23%", "← idlest", GREEN)
-
-    # shared index / telemetry box
-    six, siy, siw, sih = 512, 430, 402, 44
-    s.append(box(six, siy, siw, sih, "#FBF6EC", AMBER, 1.3))
-    s.append(txt(six + siw / 2, siy + 19, "Shared Park Index  +  usage telemetry", 11.5, INK, "bold"))
-    s.append(txt(six + siw / 2, siy + 35, "(/dev/shm, cross-node)", 10, MUTED))
-
-    # --- (1) DETECT: P0/P1 publish usage, D reads telemetry ---
-    s.append(arrow(792, 182, 720, siy, MUTED, 1.4, "4 3"))           # P0 -> index
-    s.append(arrow(792, 378, 760, siy, MUTED, 1.4, "4 3"))           # P1 -> index
-    s.append(arrow(six, siy + 12, 470, 210, MUTED, 1.4, "4 3", curve=(430, 430)))  # index -> D0 (read)
-    s.append(badge(548, 408, "1"))
-    s.append(txt(548, 393, "publish KV usage / read", 9.5, MUTED))
-
-    # --- (2) PARK: D0 -> P1 victim (idlest), CUDA IPC ---
-    s.append(arrow(508, 183, 782, 352, GREEN, 2.2, "", "arrowG", curve=(650, 300)))
-    s.append(badge(628, 250, "2"))
-    s.append(txt(632, 232, "park evicted KV → idlest P", 10.5, GREEN, "bold", "middle"))
-    s.append(txt(632, 219, "(CUDA IPC, GPU→GPU)", 9.5, MUTED, "normal", "middle"))
-
-    # --- (3) FETCH: next turn at P0 misses -> peer P1 victim via shared index -> P0 serving ---
-    # incoming turn N into P0
-    s.append(arrow(690, 78, 766, 92, INK, 1.6))
-    s.append(txt(676, 74, "turn N", 10, INK, "bold", "end"))
-    # cross-node fetch: P1 victim -> P0 serving (curved on the right)
-    s.append(arrow(978, 356, 978, 124, GREEN, 2.2, "", "arrowG", curve=(1016, 240)))
-    s.append(badge(998, 240, "3"))
-    s.append(txt(958, 210, "cross-node fetch", 10.5, GREEN, "bold", "end"))
-    s.append(txt(958, 198, "via shared index → radix hit", 9.5, MUTED, "normal", "end"))
+    # right-hand property bullets, aligned to tier centres
+    bxx = tx + tw + 22
+    s.append(bullet(bxx, 80, "fast · active KV · small"))
+    s.append(bullet(bxx, 188, "GPU↔GPU (fast) · evicted KV"))
+    s.append(bullet(bxx, 206, "idlest peer GPU: pressure-aware,", GREEN))
+    s.append(txt(bxx + 10, 221, "cross-node via shared index", 10.5, GREEN, "normal", "start"))
+    s.append(bullet(bxx, 300, "PCIe (slow) · CPU/RAM-contended"))
 
     s.append('</svg>')
     return "\n".join(s)
@@ -186,11 +170,11 @@ def main():
     import os
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     svg = build()
-    with open(args.out + ".svg", "w") as f:
-        f.write(svg)
+    open(args.out + ".svg", "w").write(svg)
     import cairosvg
     cairosvg.svg2pdf(bytestring=svg.encode(), write_to=args.out + ".pdf")
-    cairosvg.svg2png(bytestring=svg.encode(), write_to=args.out + ".png", scale=2.0, background_color="white")
+    cairosvg.svg2png(bytestring=svg.encode(), write_to=args.out + ".png", scale=2.0,
+                     background_color="white")
     print(f"[saved] {args.out}.svg + .pdf + .png")
 
 
