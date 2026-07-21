@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 
 from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
 from plot_perturn_ctxlen import load_points, sliding
-from plot_mem_timeline import load_sum, peak
+from plot_mem_timeline import load_sum, peak, mean_series
 
 C_HIC, C_PARK = PALETTE["hicache"], PALETTE["park"]
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
@@ -50,22 +50,32 @@ def line_panel(ax, park_pts, hic_pts, key, win, ylabel, title):
 
 
 def host_panel(ax, mem_park, mem_hic, title):
+    """Host RAM (used + page cache) over elapsed time -- same style as fig_mem's
+    panel (b): faint per-rep lines + bold mean line + a direct GB label at the end."""
     HOST = ["host_used_mb", "host_cached_mb"]
-    ph = peak(load_sum(mem_park, HOST))
-    hh = peak(load_sum(mem_hic, HOST))
-    xs = [0, 1]
-    ax.bar(xs, [hh, ph], width=0.62, color=[C_HIC, C_PARK],
-           edgecolor="white", linewidth=0.6, zorder=3)
-    for x, v in zip(xs, [hh, ph]):
-        ax.text(x, v + max(hh, ph) * 0.02, f"{v:.0f}", ha="center", va="bottom",
-                fontsize=8, fontweight="bold", color=INK)
-    ax.set_xticks(xs)
-    ax.set_xticklabels([L_HIC, L_PARK], fontsize=7)
+    ymax = 0.0
+    for mem_paths, col, lab, sty in ((mem_hic, C_HIC, L_HIC, "hicache"),
+                                     (mem_park, C_PARK, L_PARK, "park")):
+        series = load_sum(mem_paths, HOST)
+        for xs, ys in series:
+            ax.plot(xs, ys, color=col, lw=0.5, alpha=0.25, zorder=2)
+        mx, my = mean_series(series)
+        if not mx:
+            continue
+        ax.plot(mx, my, color=col, lw=1.3, ls=STYLE[sty]["ls"], zorder=3, label=lab)
+        pk = peak(series)
+        ymax = max(ymax, pk)
+        ax.annotate(f"{pk:.0f} GB", xy=(mx[-1], my[-1]), xytext=(4, 0),
+                    textcoords="offset points", va="center", ha="left",
+                    color=col, fontsize=7, fontweight="bold")
+    ax.set_xlabel("elapsed time (s)")
     ax.set_ylabel("host RAM (GB)")
     ax.set_title(title)
-    ax.set_ylim(0, max(hh, ph) * 1.22)
+    ax.set_ylim(0, ymax * 1.18 if ymax else None)
+    x1 = max((max(xs) for mem_paths in (mem_hic, mem_park)
+              for xs, _ in load_sum(mem_paths, HOST)), default=1)
+    ax.set_xlim(0, x1 * 1.16)  # headroom so the GB label doesn't clip
     style_axes(ax)
-    ax.grid(axis="x", visible=False)
 
 
 def main():
@@ -85,7 +95,7 @@ def main():
     sp, sh = load_points(args.sg_park), load_points(args.sg_hic)
 
     use_paper_style()
-    fig, axes = plt.subplots(2, 3, figsize=(9.2, 4.7))
+    fig, axes = plt.subplots(2, 3, figsize=(9.2, 5.6))
     # row 0: BFCL (longer context -> wider smoothing window)
     line_panel(axes[0][0], bp, bh, "ttft", 1400, "median TTFT (s)", "TTFT (lower better)")
     line_panel(axes[0][1], bp, bh, "good", 1400, "eff. throughput (tok/s)", "Throughput (higher better)")
@@ -95,16 +105,21 @@ def main():
     line_panel(axes[1][1], sp, sh, "good", 600, "eff. throughput (tok/s)", "")
     host_panel(axes[1][2], args.sg_mem_park, args.sg_mem_hic, "")
 
-    # row labels on the far left
-    axes[0][0].annotate("BFCL\n(tool-call)", xy=(0, 0.5), xytext=(-52, 0),
-                        xycoords="axes fraction", textcoords="offset points",
-                        ha="center", va="center", rotation=90, fontsize=10, fontweight="bold")
-    axes[1][0].annotate("ShareGPT\n(long-form)", xy=(0, 0.5), xytext=(-52, 0),
-                        xycoords="axes fraction", textcoords="offset points",
-                        ha="center", va="center", rotation=90, fontsize=10, fontweight="bold")
-
     handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.tight_layout(rect=[0.03, 0.07, 1, 1])
+    # extra hspace so the (a)/(b) row captions have room between/below the rows
+    fig.tight_layout(rect=[0.0, 0.09, 1, 1])
+    fig.subplots_adjust(hspace=0.62)
+
+    # (a)/(b) captions centered under each row (below its bottom edge, above the next
+    # row / legend). Positions read from the actual laid-out axes so they never overlap.
+    row_left = axes[0][0].get_position().x0
+    row_right = axes[0][2].get_position().x1
+    cap_x = (row_left + row_right) / 2
+    cap_y0 = axes[0][0].get_position().y0 - 0.07
+    cap_y1 = axes[1][0].get_position().y0 - 0.07
+    fig.text(cap_x, cap_y0, "(a) BFCL v3", ha="center", va="top", fontsize=10.5, fontweight="bold")
+    fig.text(cap_x, cap_y1, "(b) ShareGPT", ha="center", va="top", fontsize=10.5, fontweight="bold")
+
     fig.legend(handles, labels, loc="lower center", ncol=2, frameon=True, fancybox=False,
                edgecolor=MUTED, handlelength=2.6, columnspacing=2.2, bbox_to_anchor=(0.5, 0.0))
     stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
