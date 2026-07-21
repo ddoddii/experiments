@@ -1840,6 +1840,24 @@ host를 비워주는 것. 그림: `results/perturn/fig_mem.{pdf,png}`.
   overall tput hicache ~86 vs park ~85 tok/s. 5.01 s는 outlier로 확인. **"동일 성능" 주장 확정.**
   그림 `fig_perturn`(rep별 얇은 선 + pooled median + IQR).
 
+- **2번째 워크로드 — ShareGPT 교차검증 (REPS=3, 2026-07)**: 같은 2P2D·pool 60k·park vs hicache를
+  ShareGPT(평문 long-form multi-turn, tool 없음)로 반복. BFCL(짧은 tool-call)과 대비되는 agentic 패턴.
+  `results/perturn_sharegpt/fig_{perturn,mem}.{pdf,png}`, `benchmark/sglang_perturn_sharegpt.py`
+  (러너 `WORKLOAD=sharegpt`).
+
+  | 워크로드 | median TTFT (hic / park) | overall tput (hic / park) | host RAM used+cache (hic / park) | GPU (hic / park) | median ctx |
+  |---|---|---|---|---|---|
+  | BFCL (tool-call) | 3.51 / 3.52 s (동률) | 86 / 85 tok/s | 122 / **49** GB (**−73**) | 81 / 98 | 4900 tok |
+  | ShareGPT (long-form) | 0.32 / **0.29** s (park −9%) | 468 / 465 tok/s (동률) | 123 / **88** GB (**−35**) | 81 / 98 | 841 tok |
+
+  - **두 워크로드 공통**: park는 TTFT·throughput에서 hicache와 **동률 이상**이며 항상 **host-free**
+    (host 평평 vs hicache는 파일 티어로 host 우상향). GPU는 고정 60k 풀이라 +17 GB 상수.
+  - **ShareGPT에선 park가 TTFT를 약간 이김** (특히 ctx>2k). 긴 평문 응답이 다음 turn에 verbatim 재사용 →
+    **생성-KV 재사용(SGLANG_KV_PARK_GEN)이 살아남**(BFCL은 tool-call 재직렬화로 full 경계 자주 miss, §7-1).
+  - **host 절약폭은 context 길이에 비례**: BFCL(ctx 4900) −73 GB > ShareGPT(ctx 841) −35 GB — 짧은
+    context는 hicache가 offload할 KV가 적어 park의 절약도 작다. GPU 비용(+17)은 워크로드 무관 고정.
+  - **결론**: "동일 성능 @ host-free"가 **서로 다른 두 agentic 워크로드에서 재현** → 일반성 확보.
+
 - **논문 figure 확정 (2026-07)**: 3개 그림을 Times New Roman·벡터 PDF로 재작성(`benchmark/paperstyle.py`
   + `make_fig_design.py`). Times New Roman은 컨테이너에 msttcorefonts Times TTF 설치로 확보(Liberation
   Serif 대체 → 실제 Times). grayscale-safe(marker+linestyle). 2-arm(HiCache vs KV victim)로 정리 —
