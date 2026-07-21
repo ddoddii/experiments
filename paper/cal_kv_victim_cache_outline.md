@@ -113,6 +113,8 @@ KV Victim Cache는 PD disaggregation의 유휴 GPU HBM을 축출-KV 보조 캐�
 - [x] Fig 정리: Fig0 fig_imbalance, Fig1 fig_mem, Fig2 fig_design, Fig3 fig_perturn (Times New Roman, PDF).
 
 ## Key figures (현재 산출물)
+- `results/fig_combined.{pdf,png}` — **cross-workload 종합** (BFCL+ShareGPT × TTFT/throughput/host RAM;
+  범례 SGLang vs KV Victim Cache) — 성능 동률 + host RAM win이 두 워크로드에서 성립
 - `results/kv_ts/fig_imbalance.{pdf,png}` — Fig 0 (intro: idle-GPU opportunity 49.6%)
 - `results/perturn/fig_mem.{pdf,png}` — Fig 1 (host RAM 절약; 동기)
 - `results/perturn/fig_perturn.{pdf,png}` — Fig 3 (per-turn TTFT/throughput vs context)

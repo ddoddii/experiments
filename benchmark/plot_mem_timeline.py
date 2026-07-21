@@ -149,10 +149,10 @@ def main():
 
     # arm draw order: hicache (baseline) first, then park, then coexistence on top
     def arms(d):
-        out = [(d["hic"], C_HICACHE, "HiCache (host tier)", "hicache"),
-               (d["park"], C_PARK, "KV victim cache (GPU, host-free)", "park")]
+        out = [(d["hic"], C_HICACHE, "SGLang", "hicache"),
+               (d["park"], C_PARK, "KV Victim Cache", "park")]
         if "both" in d:
-            out.append((d["both"], C_BOTH, "HiCache + victim (layered)", "both"))
+            out.append((d["both"], C_BOTH, "SGLang + KV Victim Cache (layered)", "both"))
         return out
 
     use_paper_style()
