@@ -20,10 +20,18 @@ SLAB=${SGLANG_KV_PARK_SLAB_TOKENS:-6000}
 PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}          # was 0.50 -> negative KV with the park buffer
 export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-24000}
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-24000}
-BENCH=benchmark/sglang_perturn_ctxlen.py
+# workload switch: bfcl (tool-call multi-turn) | sharegpt (plain long-form multi-turn).
+# each gets its own benchmark, CONFIG tag, and OUTDIR so results/figures don't collide.
+WORKLOAD=${WORKLOAD:-bfcl}
+case "$WORKLOAD" in
+  sharegpt) BENCH=benchmark/sglang_perturn_sharegpt.py; TAG=perturn_sharegpt ;;
+  bfcl)     BENCH=benchmark/sglang_perturn_ctxlen.py;   TAG=perturn ;;
+  *) echo "unknown WORKLOAD=$WORKLOAD (use bfcl|sharegpt)"; exit 1 ;;
+esac
 CONC=${CONCURRENCY:-16}; DELAY=${TOOL_DELAY:-3}; ITEMS=${MAX_ITEMS:-200}
-OUTDIR=${OUTDIR:-results/perturn}
+OUTDIR=${OUTDIR:-results/${TAG}}
 mkdir -p "$OUTDIR" logs/sglang
+echo "=== workload=$WORKLOAD  bench=$BENCH  tag=$TAG  outdir=$OUTDIR ==="
 
 hard_stop() {
   pkill -9 -f "sglang.launch_server" 2>/dev/null || true
@@ -54,7 +62,7 @@ for rep in $(seq 1 $REPS); do
       IDLE_KV_PARKING=0 \
       ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_hicache_r${rep}.log" 2>&1 \
     || { echo "hicache start failed r${rep}"; continue; }
-  run_bench "perturn_hicache_r${rep}" "$OUTDIR/mem_hicache_r${rep}.csv"
+  run_bench "${TAG}_hicache_r${rep}" "$OUTDIR/mem_hicache_r${rep}.csv"
 
   echo "=== rep ${rep}: park (session-keyed slab, host-RAM-free) ==="
   hard_stop
@@ -63,7 +71,7 @@ for rep in $(seq 1 $REPS); do
     PARK_POOL_TOKENS=$PARK_POOL_TOKENS PARK_MEM_FRACTION=$PARK_MEM_FRACTION \
     ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_park_r${rep}.log" 2>&1 \
     || { echo "park start failed r${rep}"; continue; }
-  run_bench "perturn_park_r${rep}" "$OUTDIR/mem_park_r${rep}.csv"
+  run_bench "${TAG}_park_r${rep}" "$OUTDIR/mem_park_r${rep}.csv"
 
   # coexistence (KV victim caching): hicache host tier + GPU victim cache LAYERED.
   # Same as the park arm but WITHOUT PARK_NO_HICACHE, so both tiers are active. The
@@ -77,7 +85,7 @@ for rep in $(seq 1 $REPS); do
       PARK_POOL_TOKENS=$PARK_POOL_TOKENS PARK_MEM_FRACTION=$PARK_MEM_FRACTION \
       ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_both_r${rep}.log" 2>&1 \
       || { echo "both start failed r${rep}"; continue; }
-    run_bench "perturn_both_r${rep}" "$OUTDIR/mem_both_r${rep}.csv"
+    run_bench "${TAG}_both_r${rep}" "$OUTDIR/mem_both_r${rep}.csv"
   fi
 done
 hard_stop
@@ -88,15 +96,15 @@ echo "=== plotting ==="
 # otherwise stale perturn_both_*.json from a prior run would sneak back into the plot.
 BOTH_ARG_J=""; BOTH_ARG_C=""
 if [ "${RUN_BOTH:-1}" = "1" ]; then
-  BOTH_JSON=$(ls results/perturn_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || true
+  BOTH_JSON=$(ls results/${TAG}_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || true
   BOTH_CSV=$(ls "$OUTDIR"/mem_both_r*.csv 2>/dev/null) && BOTH_ARG_C="--both $BOTH_CSV" || true
 fi
 python benchmark/plot_perturn_ctxlen.py \
-  --park  results/perturn_park_r*.json \
-  --hicache results/perturn_hicache_r*.json $BOTH_ARG_J \
-  --out "$OUTDIR/perturn_ctxlen.png" || true
+  --park  results/${TAG}_park_r*.json \
+  --hicache results/${TAG}_hicache_r*.json $BOTH_ARG_J \
+  --out "$OUTDIR/fig_perturn.png" || true
 python benchmark/plot_mem_timeline.py \
   --park  "$OUTDIR"/mem_park_r*.csv \
   --hicache "$OUTDIR"/mem_hicache_r*.csv $BOTH_ARG_C \
-  --out "$OUTDIR/mem_timeline.png" || true
+  --out "$OUTDIR/fig_mem.png" || true
 echo "done."
