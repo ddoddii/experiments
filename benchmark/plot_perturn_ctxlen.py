@@ -94,9 +94,6 @@ def draw(ax, arms, ylabel, title, better):
             continue
         xs = [r[0] / 1000.0 for r in rows]
         ys = [r[1] for r in rows]
-        lo = [r[2] for r in rows]
-        hi = [r[3] for r in rows]
-        ax.fill_between(xs, lo, hi, color=color, alpha=0.12, lw=0, zorder=2)
         ax.plot(xs, ys, color=color, lw=1.5, ls=STYLE[key]["ls"], marker=STYLE[key]["marker"],
                 ms=4, label=label, zorder=3, markeredgecolor="white", markeredgewidth=0.6)
     ax.set_xlabel("context length (k tokens), grows each turn")
@@ -111,7 +108,8 @@ def main():
     ap.add_argument("--park", nargs="+", required=True)
     ap.add_argument("--hicache", nargs="+", required=True)
     ap.add_argument("--both", nargs="+", default=[], help="optional coexistence arm (hicache+victim)")
-    ap.add_argument("--bin", type=int, default=1500, help="context-length bin width (tokens)")
+    ap.add_argument("--bin", type=int, default=800, help="context-length bin width (tokens); "
+                    "smaller = more points but noisier (500->7pts, 800->5pts, 1500->3pts)")
     ap.add_argument("--min-n", type=int, default=3, help="min points per bin to plot")
     ap.add_argument("--out", default="results/perturn/perturn_ctxlen.png")
     args = ap.parse_args()
