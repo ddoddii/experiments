@@ -161,10 +161,10 @@ def main():
             print(f"  {name:8} TTFT={omed(pts,'ttft'):.3f}s  goodput={omed(pts,'good'):.1f} tok/s")
 
     def arms(key):
-        out = [(bin_arm(hic, key), C_HICACHE, "HiCache (host tier)", "hicache"),
-               (bin_arm(park, key), C_PARK, "KV victim cache (GPU, host-free)", "park")]
+        out = [(bin_arm(hic, key), C_HICACHE, "SGLang", "hicache"),
+               (bin_arm(park, key), C_PARK, "KV Victim Cache", "park")]
         if both:
-            out.append((bin_arm(both, key), C_BOTH, "HiCache + victim (layered)", "both"))
+            out.append((bin_arm(both, key), C_BOTH, "SGLang + KV Victim Cache (layered)", "both"))
         return out
 
     use_paper_style()
