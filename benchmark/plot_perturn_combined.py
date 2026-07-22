@@ -50,15 +50,13 @@ def line_panel(ax, park_pts, hic_pts, key, win, ylabel, title):
 
 
 def host_panel(ax, mem_park, mem_hic, title):
-    """Host RAM (used + page cache) over elapsed time -- same style as fig_mem's
-    panel (b): faint per-rep lines + bold mean line + a direct GB label at the end."""
+    """Host RAM (used + page cache) over elapsed time: bold mean line only (no
+    faint per-rep lines) + a direct GB label at the end."""
     HOST = ["host_used_mb", "host_cached_mb"]
     ymax = 0.0
     for mem_paths, col, lab, sty in ((mem_hic, C_HIC, L_HIC, "hicache"),
                                      (mem_park, C_PARK, L_PARK, "park")):
         series = load_sum(mem_paths, HOST)
-        for xs, ys in series:
-            ax.plot(xs, ys, color=col, lw=0.5, alpha=0.25, zorder=2)
         mx, my = mean_series(series)
         if not mx:
             continue
