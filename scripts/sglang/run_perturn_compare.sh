@@ -10,6 +10,23 @@
 set -u
 cd "$(dirname "$0")/../.."
 
+# NEVER run this whole script under `sudo` -- start_2P_2D.sh does `conda activate
+# sglang`, and sudo resets PATH/HOME and skips your shell rc, so conda either
+# isn't found or resolves to a different install without the sglang env -> every
+# server start fails ("hicache start failed r1", etc.), which is exactly what
+# happens if you type `sudo WORKLOAD=... ./run_perturn_compare.sh`. Cache-dropping
+# only needs privilege for one line inside hard_stop(), handled separately below
+# via a scoped `sudo -n` -- run this script itself as your normal user.
+if [ "${EUID:-$(id -u)}" = "0" ]; then
+  echo "ERROR: do not run this script with sudo (breaks conda activation in" >&2
+  echo "start_2P_2D.sh -> every server start will fail). Instead:" >&2
+  echo "  1) sudo -v                          # cache sudo credentials (one password prompt)" >&2
+  echo "  2) WORKLOAD=... ./run_perturn_compare.sh   # run normally; hard_stop() will use" >&2
+  echo "     'sudo -n' automatically for just the cache-drop line while your credentials" >&2
+  echo "     are cached. Or set DROP_CACHES=0 and skip cache-dropping entirely." >&2
+  exit 1
+fi
+
 # Park pool is a raw torch.zeros buffer on EACH P's own GPU (P0->gpu0, P1->gpu1),
 # competing with that P's weights. At 128KB/token it is ~7.7GB @ 60k, ~12.3GB @ 96k.
 # So mem-fraction-static must be high enough that (weights + park + KV) fits the budget,
