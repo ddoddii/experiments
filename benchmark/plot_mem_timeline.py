@@ -96,11 +96,10 @@ def mean_series(series, dt=2.0):
 
 
 def draw(ax, arms, ylabel, title):
-    """arms = list of (series, color, label, key), drawn back-to-front."""
+    """arms = list of (series, color, label, key), drawn back-to-front. Bold mean
+    line only (no faint per-rep lines behind it)."""
     ymax = 0.0
     for series, color, label, key in arms:
-        for xs, ys in series:  # faint per-rep lines
-            ax.plot(xs, ys, color=color, lw=0.6, alpha=0.25, zorder=2)
         mx, my = mean_series(series)
         if not mx:
             continue
