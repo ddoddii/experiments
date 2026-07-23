@@ -14,18 +14,20 @@ import matplotlib.pyplot as plt
 # colorblind-safe, print-legible (Okabe-Ito-ish). Pair with marker+linestyle so the
 # figure survives grayscale.
 PALETTE = {
-    "hicache": "#0072B2",   # blue
-    "park":    "#009E73",   # green
-    "both":    "#E69F00",   # amber (only if a 3rd arm is explicitly requested)
-    "ink":     "#000000",
-    "muted":   "#555555",
-    "grid":    "#D9D9D9",
+    "hicache":   "#0072B2",   # blue
+    "park":      "#009E73",   # green
+    "both":      "#E69F00",   # amber (only if a 3rd arm is explicitly requested)
+    "recompute": "#B4423C",   # red -- prefix-cache-off baseline (costly/slow)
+    "ink":       "#000000",
+    "muted":     "#555555",
+    "grid":      "#D9D9D9",
 }
 # marker + linestyle per arm (redundant encoding for grayscale)
 STYLE = {
-    "hicache": dict(marker="o", ls="--"),
-    "park":    dict(marker="s", ls="-"),
-    "both":    dict(marker="^", ls=":"),
+    "hicache":   dict(marker="o", ls="--"),
+    "park":      dict(marker="s", ls="-"),
+    "both":      dict(marker="^", ls=":"),
+    "recompute": dict(marker="D", ls="-."),
 }
 
 

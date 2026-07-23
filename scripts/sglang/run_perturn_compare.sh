@@ -106,6 +106,22 @@ for rep in $(seq 1 $REPS); do
     || { echo "hicache start failed r${rep}"; continue; }
   run_bench "${TAG}_hicache_r${rep}" "$OUTDIR/mem_hicache_r${rep}.csv"
 
+  # recompute baseline: prefix caching fully OFF (--disable-radix-cache, which also
+  # forces hicache off since it layers on radix). Every turn re-prefills its ENTIRE
+  # context from scratch -- no reuse at all. This is the "recompute" side of the
+  # recompute-vs-prefix-cache motivation figure (§ three walls). Set RUN_RECOMPUTE=1
+  # to include (off by default: slow -- every turn is a full prefill, no C=1 shortcut).
+  if [ "${RUN_RECOMPUTE:-0}" = "1" ]; then
+    echo "=== rep ${rep}: recompute (prefix cache disabled) ==="
+    hard_stop
+    env -u PARK_NO_HICACHE -u PARK_POOL_TOKENS -u PARK_MEM_FRACTION \
+        -u SGLANG_KV_PARK_SESSION_KEYED -u SGLANG_KV_PARK_SLAB_TOKENS \
+        IDLE_KV_PARKING=0 DISABLE_RADIX_CACHE=1 \
+        ./scripts/sglang/start_2P_2D.sh > "$OUTDIR/start_recompute_r${rep}.log" 2>&1 \
+      || { echo "recompute start failed r${rep}"; continue; }
+    run_bench "${TAG}_recompute_r${rep}" "$OUTDIR/mem_recompute_r${rep}.csv"
+  fi
+
   echo "=== rep ${rep}: park (session-keyed slab, host-RAM-free) ==="
   hard_stop
   IDLE_KV_PARKING=1 PARK_NO_HICACHE=1 \
@@ -141,9 +157,13 @@ if [ "${RUN_BOTH:-1}" = "1" ]; then
   BOTH_JSON=$(ls results/${TAG}_both_r*.json 2>/dev/null) && BOTH_ARG_J="--both $BOTH_JSON" || true
   BOTH_CSV=$(ls "$OUTDIR"/mem_both_r*.csv 2>/dev/null) && BOTH_ARG_C="--both $BOTH_CSV" || true
 fi
+RECOMP_ARG_J=""
+if [ "${RUN_RECOMPUTE:-0}" = "1" ]; then
+  RECOMP_JSON=$(ls results/${TAG}_recompute_r*.json 2>/dev/null) && RECOMP_ARG_J="--recompute $RECOMP_JSON" || true
+fi
 python benchmark/plot_perturn_ctxlen.py \
   --park  results/${TAG}_park_r*.json \
-  --hicache results/${TAG}_hicache_r*.json $BOTH_ARG_J \
+  --hicache results/${TAG}_hicache_r*.json $BOTH_ARG_J $RECOMP_ARG_J \
   --out "$OUTDIR/fig_perturn.png" || true
 python benchmark/plot_mem_timeline.py \
   --park  "$OUTDIR"/mem_park_r*.csv \
