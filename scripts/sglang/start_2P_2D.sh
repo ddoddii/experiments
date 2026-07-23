@@ -52,6 +52,14 @@ SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS:-6000}   # session-keyed
 # (the clean "park as a host-RAM-free alternative to hicache" arm).
 HICACHE_ARG="--enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio ${HICACHE_RATIO} --hicache-write-policy ${HICACHE_WRITE_POLICY}"
 [ "${PARK_NO_HICACHE:-0}" = "1" ] && HICACHE_ARG=""
+# DISABLE_RADIX_CACHE=1 -> pure "recompute" baseline: no prefix reuse at all (radix off,
+# so hicache -- which layers on top of radix -- is force-dropped too). Every turn
+# re-prefills its full context from scratch. Motivation figure: recompute vs prefix-cache.
+RADIX_ARG=""
+if [ "${DISABLE_RADIX_CACHE:-0}" = "1" ]; then
+  RADIX_ARG="--disable-radix-cache"
+  HICACHE_ARG=""
+fi
 if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   export SGLANG_KV_PARK_EPOCH="$(date +%s)"
   rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
@@ -111,7 +119,7 @@ echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)  park=
 env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 ${BASE_P0} \
   --enable-metrics \
-  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
+  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   ${HICACHE_ARG} \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -124,7 +132,7 @@ echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
 env CUDA_VISIBLE_DEVICES=${CVD_P1} ${ENV_P1} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 ${BASE_P1} \
   --enable-metrics \
-  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} \
+  ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   ${HICACHE_ARG} \
   --disaggregation-mode prefill --disaggregation-transfer-backend mooncake \
@@ -141,7 +149,7 @@ echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D0} ${ENV_D0} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 ${BASE_D0} \
   --enable-metrics \
-  ${D_MTT} ${PARK_ARG} \
+  ${D_MTT} ${PARK_ARG} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
@@ -153,7 +161,7 @@ echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D1} ${ENV_D1} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 ${BASE_D1} \
   --enable-metrics \
-  ${D_MTT} ${PARK_ARG} \
+  ${D_MTT} ${PARK_ARG} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \

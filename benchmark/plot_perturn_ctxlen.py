@@ -31,6 +31,7 @@ from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
 C_HICACHE = PALETTE["hicache"]
 C_PARK = PALETTE["park"]
 C_BOTH = PALETTE["both"]
+C_RECOMPUTE = PALETTE["recompute"]
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 
 
@@ -128,6 +129,8 @@ def main():
     ap.add_argument("--park", nargs="+", required=True)
     ap.add_argument("--hicache", nargs="+", required=True)
     ap.add_argument("--both", nargs="+", default=[], help="optional coexistence arm (hicache+victim)")
+    ap.add_argument("--recompute", nargs="+", default=[],
+                    help="optional recompute-baseline arm (prefix cache fully disabled)")
     ap.add_argument("--bin", type=int, default=800, help="context-length bin width (tokens); "
                     "smaller = more points but noisier (500->7pts, 800->5pts, 1500->3pts)")
     ap.add_argument("--smooth", type=int, default=0, help="if >0, use an overlapping "
@@ -140,7 +143,9 @@ def main():
     park = load_points(args.park)
     hic = load_points(args.hicache)
     both = load_points(args.both) if args.both else []
-    print(f"park points={len(park)}  hicache points={len(hic)}  both points={len(both)}")
+    recomp = load_points(args.recompute) if args.recompute else []
+    print(f"park points={len(park)}  hicache points={len(hic)}  both points={len(both)}  "
+          f"recompute points={len(recomp)}")
     if not park or not hic:
         print("[error] one arm has no points -- did both runs succeed with include_usage?")
 
@@ -156,15 +161,17 @@ def main():
         vs = sorted(p[k] for p in pts if p.get(k) is not None)
         return median(vs) if vs else float("nan")
     print(f"\n=== overall medians ===")
-    for name, pts in (("hicache", hic), ("park", park), ("both", both)):
+    for name, pts in (("hicache", hic), ("park", park), ("both", both), ("recompute", recomp)):
         if pts:
-            print(f"  {name:8} TTFT={omed(pts,'ttft'):.3f}s  goodput={omed(pts,'good'):.1f} tok/s")
+            print(f"  {name:9} TTFT={omed(pts,'ttft'):.3f}s  goodput={omed(pts,'good'):.1f} tok/s")
 
     def arms(key):
         out = [(bin_arm(hic, key), C_HICACHE, "SGLang", "hicache"),
                (bin_arm(park, key), C_PARK, "KV Victim Cache", "park")]
         if both:
             out.append((bin_arm(both, key), C_BOTH, "SGLang + KV Victim Cache (layered)", "both"))
+        if recomp:
+            out.append((bin_arm(recomp, key), C_RECOMPUTE, "Recompute (no cache)", "recompute"))
         return out
 
     use_paper_style()
