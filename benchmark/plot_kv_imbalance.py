@@ -79,6 +79,9 @@ def main():
     ap.add_argument("--hi", type=float, default=0.8, help="saturation threshold")
     ap.add_argument("--lo", type=float, default=0.5, help="headroom threshold")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--single", action="store_true",
+                    help="render only panel (b) (max/min envelope + opportunity) -- "
+                    "drops the cluttered per-GPU occupancy panel (a)")
     args = ap.parse_args()
 
     data, labels = load(args.csv)
@@ -106,53 +109,65 @@ def main():
     print(f"  OPPORTUNITY (some GPU>={args.hi} AND some GPU<={args.lo}): {opp_frac*100:.1f}% of time")
 
     use_paper_style()
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7.0, 3.9), sharex=True,
-                                   gridspec_kw={"height_ratios": [3, 1.7]})
 
     def shade(ax):
         for a, b in spans:
             ax.axvspan(a, b, color=SHADE, alpha=0.16, lw=0, zorder=1)
 
-    # (a) per-GPU occupancy
-    shade(ax1)
-    for l in labels:
-        col, ls = SERIES.get(l, ("#888", "-"))
-        xs = [t[i] for i in range(len(t)) if data[l][i] is not None]
-        ys = [data[l][i] for i in range(len(t)) if data[l][i] is not None]
-        ax1.plot(xs, ys, ls=ls, color=col, lw=1.0, label=l, zorder=3)
-    ax1.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
-    ax1.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
-    ax1.text(t[-1], args.hi + 0.01, f"saturated {args.hi:g}", color=MUTED, fontsize=6.5,
-             va="bottom", ha="right")
-    ax1.text(t[-1], args.lo - 0.01, f"headroom {args.lo:g}", color=MUTED, fontsize=6.5,
-             va="top", ha="right")
-    ax1.set_ylabel("KV pool usage")
-    ax1.set_ylim(0, 1.03)
-    ax1.set_title("(a) Per-GPU KV occupancy (2P2D)")
-    ax1.legend(ncol=4, loc="upper center", handlelength=1.6, columnspacing=1.2,
-               borderaxespad=0.2)
-    style_axes(ax1)
+    def draw_envelope(ax, title):
+        shade(ax)
+        xs = [t[i] for i in range(len(t)) if mx[i] is not None]
+        mxv = [mx[i] for i in range(len(t)) if mx[i] is not None]
+        mnv = [mn[i] for i in range(len(t)) if mn[i] is not None]
+        ax.fill_between(xs, mnv, mxv, color="#CFCFCF", alpha=0.5, lw=0, zorder=2)
+        ax.plot(xs, mxv, color=INK, lw=1.1, zorder=3, label="max GPU")
+        ax.plot(xs, mnv, color=INK, lw=1.1, ls="--", zorder=3, label="min GPU")
+        ax.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
+        ax.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
+        ax.set_ylabel("occupancy\nenvelope")
+        ax.set_xlabel("time (s)")
+        ax.set_ylim(0, 1.03)
+        ax.set_title(title)
+        ax.legend(ncol=2, loc="lower right", handlelength=1.6)
+        style_axes(ax)
 
-    # (b) max/min envelope -- shading is exactly verifiable here
-    shade(ax2)
-    xs = [t[i] for i in range(len(t)) if mx[i] is not None]
-    mxv = [mx[i] for i in range(len(t)) if mx[i] is not None]
-    mnv = [mn[i] for i in range(len(t)) if mn[i] is not None]
-    ax2.fill_between(xs, mnv, mxv, color="#CFCFCF", alpha=0.5, lw=0, zorder=2)
-    ax2.plot(xs, mxv, color=INK, lw=1.1, zorder=3, label="max GPU")
-    ax2.plot(xs, mnv, color=INK, lw=1.1, ls="--", zorder=3, label="min GPU")
-    ax2.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
-    ax2.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
-    ax2.set_ylabel("occupancy\nenvelope")
-    ax2.set_xlabel("time (s)")
-    ax2.set_ylim(0, 1.03)
-    ax2.set_title(f"(b) Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}  "
-                  f"— {opp_frac*100:.0f}% of the run (shaded)")
-    ax2.legend(ncol=2, loc="lower right", handlelength=1.6)
-    style_axes(ax2)
+    if args.single:
+        # panel (b) only -- the caption/number belongs in the paper's Fig. N text,
+        # so keep the in-figure title terse.
+        fig, ax = plt.subplots(1, 1, figsize=(7.0, 2.6))
+        draw_envelope(ax, f"Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}  "
+                          f"— {opp_frac*100:.0f}% of the run (shaded)")
+        fig.tight_layout(pad=0.6)
+        out = args.out or (os.path.splitext(args.csv)[0] + "_imbalance_single")
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7.0, 3.9), sharex=True,
+                                       gridspec_kw={"height_ratios": [3, 1.7]})
+        # (a) per-GPU occupancy
+        shade(ax1)
+        for l in labels:
+            col, ls = SERIES.get(l, ("#888", "-"))
+            xs = [t[i] for i in range(len(t)) if data[l][i] is not None]
+            ys = [data[l][i] for i in range(len(t)) if data[l][i] is not None]
+            ax1.plot(xs, ys, ls=ls, color=col, lw=1.0, label=l, zorder=3)
+        ax1.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
+        ax1.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
+        ax1.text(t[-1], args.hi + 0.01, f"saturated {args.hi:g}", color=MUTED, fontsize=6.5,
+                 va="bottom", ha="right")
+        ax1.text(t[-1], args.lo - 0.01, f"headroom {args.lo:g}", color=MUTED, fontsize=6.5,
+                 va="top", ha="right")
+        ax1.set_ylabel("KV pool usage")
+        ax1.set_ylim(0, 1.03)
+        ax1.set_title("(a) Per-GPU KV occupancy (2P2D)")
+        ax1.legend(ncol=4, loc="upper center", handlelength=1.6, columnspacing=1.2,
+                   borderaxespad=0.2)
+        style_axes(ax1)
 
-    fig.tight_layout(pad=0.6)
-    out = args.out or (os.path.splitext(args.csv)[0] + "_imbalance")
+        # (b) max/min envelope -- shading is exactly verifiable here
+        draw_envelope(ax2, f"(b) Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}  "
+                          f"— {opp_frac*100:.0f}% of the run (shaded)")
+        fig.tight_layout(pad=0.6)
+        out = args.out or (os.path.splitext(args.csv)[0] + "_imbalance")
+
     stem = out[:-4] if out.endswith((".png", ".pdf")) else out
     savefig(fig, stem)
 
