@@ -36,9 +36,10 @@ SERIES = {
     "D0": ("#E69F00", "-"),
     "D1": ("#D55E00", "--"),
 }
-SHADE = "#B8860B"        # darker goldenrod wash for opportunity spans (more contrast than the muted brown)
-MAX_COL = "#D55E00"      # vermilion: max GPU (busy/hot)
-MIN_COL = "#0072B2"      # blue: min GPU (idle/cool) -- Okabe-Ito pair, distinct from SHADE
+SHADE = "#808080"        # neutral gray wash for opportunity spans (was brown/goldenrod --
+                          # clashed with the amber-ish line colors and read muddy)
+MAX_COL = PALETTE["hicache"]  # blue -- reuses the paper's established palette
+MIN_COL = PALETTE["both"]     # amber -- reuses the paper's established palette
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 
 
