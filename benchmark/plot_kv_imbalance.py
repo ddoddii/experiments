@@ -36,11 +36,11 @@ SERIES = {
     "D0": ("#E69F00", "-"),
     "D1": ("#D55E00", "--"),
 }
-SHADE = "#808080"        # neutral gray wash for opportunity spans (was brown/goldenrod --
-                          # clashed with the amber-ish line colors and read muddy)
-MAX_COL = PALETTE["hicache"]  # blue -- reuses the paper's established palette
-MIN_COL = PALETTE["both"]     # amber -- reuses the paper's established palette
+SHADE = PALETTE["park"]  # green -- reuses the paper's established palette; also a
+                          # thematic nod (the shaded opportunity is what a green
+                          # "KV Victim Cache" exploits in later figures)
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
+MAX_COL = MIN_COL = INK  # both black; separated by linestyle only (solid vs dashed)
 
 
 def load(csv_path):
