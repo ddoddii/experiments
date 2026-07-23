@@ -36,9 +36,7 @@ SERIES = {
     "D0": ("#E69F00", "-"),
     "D1": ("#D55E00", "--"),
 }
-SHADE = PALETTE["park"]  # green -- reuses the paper's established palette; also a
-                          # thematic nod (the shaded opportunity is what a green
-                          # "KV Victim Cache" exploits in later figures)
+SHADE = "#9C7A3C"   # muted amber/brown wash for opportunity spans
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 MAX_COL = MIN_COL = INK  # both black; separated by linestyle only (solid vs dashed)
 
@@ -200,7 +198,7 @@ def main():
         ax.plot(xs, mnv, color=MIN_COL, lw=1.2, ls="--", zorder=3, label="min GPU")
         ax.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
         ax.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
-        ax.set_ylabel("occupancy\nenvelope")
+        ax.set_ylabel("KV pool occupancy")
         ax.set_xlabel("time (s)")
         ax.set_ylim(0, 1.03)
         ax.set_title(title)
