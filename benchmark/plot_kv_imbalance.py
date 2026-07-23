@@ -207,8 +207,7 @@ def main():
         # that has to be cross-referenced against the wiggly lines by eye.
         fig, (ax, axs) = plt.subplots(2, 1, figsize=(7.0, 3.15), sharex=True,
                                       gridspec_kw={"height_ratios": [4, 0.7]})
-        draw_envelope(ax, f"Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}  "
-                          f"— {opp_frac*100:.0f}% of the run (shaded)")
+        draw_envelope(ax, f"Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}")
 
         # binary opportunity strip: solid block = condition true, blank = false
         for a, b in spans:
