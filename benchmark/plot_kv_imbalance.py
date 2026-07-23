@@ -201,12 +201,51 @@ def main():
         style_axes(ax)
 
     if args.single:
-        # panel (b) only -- the caption/number belongs in the paper's Fig. N text,
-        # so keep the in-figure title terse.
-        fig, ax = plt.subplots(1, 1, figsize=(7.0, 2.6))
+        # panel (b) only, PLUS two aids so "shaded" reads concretely instead of as an
+        # abstract translucent wash:
+        #   1. a thin binary "opportunity" strip below the envelope -- on/off, no
+        #      need to squint at overlapping wiggly lines to tell shaded from not.
+        #   2. one annotated real instant (actual max/min values) showing exactly
+        #      what the shading condition means in the data.
+        fig, (ax, axs) = plt.subplots(2, 1, figsize=(7.0, 3.15), sharex=True,
+                                      gridspec_kw={"height_ratios": [4, 0.7]})
         draw_envelope(ax, f"Opportunity: max GPU ≥ {args.hi:g} and min GPU ≤ {args.lo:g}  "
                           f"— {opp_frac*100:.0f}% of the run (shaded)")
+
+        # annotate one concrete shaded instant with its actual values -- pick a
+        # TYPICAL shaded instant (close to the mean max/min among shaded instants),
+        # not an extreme one (e.g. min=0%), so the example reads as representative.
+        shaded_idx = [i for i in range(len(t)) if opp[i] and mx[i] is not None]
+        ex = None
+        if shaded_idx:
+            mean_mx = sum(mx[i] for i in shaded_idx) / len(shaded_idx)
+            mean_mn = sum(mn[i] for i in shaded_idx) / len(shaded_idx)
+            lo_t, hi_t = t[0] + (t[-1] - t[0]) * 0.08, t[0] + (t[-1] - t[0]) * 0.75
+            candidates = [i for i in shaded_idx if lo_t <= t[i] <= hi_t] or shaded_idx
+            ex = min(candidates, key=lambda i: abs(mx[i] - mean_mx) + abs(mn[i] - mean_mn))
+        if ex is not None:
+            ax.annotate(f"e.g. t={t[ex]:.0f}s: max={mx[ex]*100:.0f}%, min={mn[ex]*100:.0f}%",
+                        xy=(t[ex], mx[ex]), xytext=(t[ex] + t[-1] * 0.10, min(mx[ex] + 0.14, 0.98)),
+                        fontsize=7, color=INK,
+                        arrowprops=dict(arrowstyle="->", color=INK, lw=0.8),
+                        bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=MUTED, lw=0.6))
+
+        # binary opportunity strip: solid block = condition true, blank = false
+        for a, b in spans:
+            axs.axvspan(a, b, color=SHADE, alpha=0.9, lw=0)
+        axs.set_xlim(ax.get_xlim())
+        axs.set_ylim(0, 1)
+        axs.set_yticks([])
+        axs.set_ylabel("opportunity", fontsize=7, rotation=0, ha="right", va="center")
+        axs.set_xlabel("time (s)")
+        for s in ("top", "right", "left"):
+            axs.spines[s].set_visible(False)
+        axs.spines["bottom"].set_color(MUTED)
+        axs.tick_params(colors=MUTED, length=2.5, width=0.5)
+        ax.set_xlabel("")  # xlabel lives on the shared bottom strip axis instead
+
         fig.tight_layout(pad=0.6)
+        fig.subplots_adjust(hspace=0.12)
         out = args.out or (os.path.splitext(args.csv)[0] + "_imbalance_single")
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7.0, 3.9), sharex=True,
