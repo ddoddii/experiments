@@ -73,6 +73,64 @@ def opp_spans(t, opp):
     return spans
 
 
+def main_role(args, data, labels, t):
+    """Role-conditioned variant: D-envelope (max over decode GPUs) vs P-envelope (min
+    over prefill GPUs), shading instants where D >= d_hi AND P <= p_lo at the SAME
+    instant. This is the defensible version of the "decode saturates while prefill
+    idles" claim -- unlike the plain max/min-over-all-4-GPUs mode, it doesn't let a
+    P-vs-P or D-vs-D spread masquerade as a P-vs-D asymmetry."""
+    p_labels = [l for l in labels if l.upper().startswith("P")]
+    d_labels = [l for l in labels if l.upper().startswith("D")]
+    if not p_labels or not d_labels:
+        raise SystemExit(f"--role needs both P* and D* columns; found labels={labels}")
+
+    d_env, p_env, cond = [], [], []
+    for i in range(len(t)):
+        dv = [data[l][i] for l in d_labels if data[l][i] is not None]
+        pv = [data[l][i] for l in p_labels if data[l][i] is not None]
+        if dv and pv:
+            d_env.append(max(dv)); p_env.append(min(pv))
+            cond.append(1 if (max(dv) >= args.d_hi and min(pv) <= args.p_lo) else 0)
+        else:
+            d_env.append(None); p_env.append(None); cond.append(0)
+    frac = sum(cond) / len(cond) if cond else 0.0
+    spans = opp_spans(t, cond)
+
+    print(f"\n=== 2P2D role-conditioned imbalance ({os.path.basename(args.csv)}) ===")
+    print(f"  P labels={p_labels}  D labels={d_labels}")
+    print(f"  D>={args.d_hi:g} AND P<={args.p_lo:g} (same instant): {frac*100:.1f}% of time")
+    d_alone = sum(1 for v in d_env if v is not None and v >= args.d_hi)
+    p_alone = sum(1 for v in p_env if v is not None and v <= args.p_lo)
+    n = sum(1 for v in d_env if v is not None)
+    print(f"  (for reference) D>={args.d_hi:g} alone: {100*d_alone/n:.1f}%   "
+          f"P<={args.p_lo:g} alone: {100*p_alone/n:.1f}%")
+
+    use_paper_style()
+    fig, ax = plt.subplots(1, 1, figsize=(7.0, 2.7))
+    for a, b in spans:
+        ax.axvspan(a, b, color=SHADE, alpha=0.16, lw=0, zorder=1)
+    xs = [t[i] for i in range(len(t)) if d_env[i] is not None]
+    dv = [d_env[i] for i in range(len(t)) if d_env[i] is not None]
+    pv = [p_env[i] for i in range(len(t)) if p_env[i] is not None]
+    ax.fill_between(xs, pv, dv, color="#CFCFCF", alpha=0.5, lw=0, zorder=2)
+    ax.plot(xs, dv, color=SERIES["D0"][0], lw=1.3, zorder=3, label="max decode GPU")
+    ax.plot(xs, pv, color=SERIES["P0"][0], lw=1.3, ls="--", zorder=3, label="min prefill GPU")
+    ax.axhline(args.d_hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
+    ax.axhline(args.p_lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
+    ax.set_ylabel("occupancy")
+    ax.set_xlabel("time (s)")
+    ax.set_ylim(0, 1.03)
+    ax.set_title(f"Decode saturated (≥{args.d_hi:g}) while prefill idles (≤{args.p_lo:g})"
+                f"  — {frac*100:.0f}% of the run (shaded)")
+    ax.legend(ncol=2, loc="lower right", handlelength=1.6)
+    style_axes(ax)
+
+    fig.tight_layout(pad=0.6)
+    out = args.out or (os.path.splitext(args.csv)[0] + "_role")
+    stem = out[:-4] if out.endswith((".png", ".pdf")) else out
+    savefig(fig, stem)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
@@ -82,12 +140,23 @@ def main():
     ap.add_argument("--single", action="store_true",
                     help="render only panel (b) (max/min envelope + opportunity) -- "
                     "drops the cluttered per-GPU occupancy panel (a)")
+    ap.add_argument("--role", action="store_true",
+                    help="role-conditioned mode: shade instants where a DECODE GPU is "
+                    "saturated (>=--d-hi) AND a PREFILL GPU has deep headroom (<=--p-lo) "
+                    "at the SAME instant -- the exact claim 'D saturates while P idles'. "
+                    "Roles inferred from labels starting with P/D.")
+    ap.add_argument("--d-hi", type=float, default=0.85, help="decode saturation threshold (--role mode)")
+    ap.add_argument("--p-lo", type=float, default=0.30, help="prefill headroom threshold (--role mode)")
     args = ap.parse_args()
 
     data, labels = load(args.csv)
     t = data["t"]
     if not t:
         raise SystemExit(f"no samples in {args.csv}")
+
+    if args.role:
+        main_role(args, data, labels, t)
+        return
 
     mx, mn, opp = [], [], []
     for i in range(len(t)):
