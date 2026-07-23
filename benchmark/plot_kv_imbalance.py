@@ -36,7 +36,9 @@ SERIES = {
     "D0": ("#E69F00", "-"),
     "D1": ("#D55E00", "--"),
 }
-SHADE = "#9C7A3C"   # muted amber wash for opportunity spans
+SHADE = "#B8860B"        # darker goldenrod wash for opportunity spans (more contrast than the muted brown)
+MAX_COL = "#D55E00"      # vermilion: max GPU (busy/hot)
+MIN_COL = "#0072B2"      # blue: min GPU (idle/cool) -- Okabe-Ito pair, distinct from SHADE
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 
 
@@ -181,16 +183,20 @@ def main():
 
     def shade(ax):
         for a, b in spans:
-            ax.axvspan(a, b, color=SHADE, alpha=0.16, lw=0, zorder=1)
+            # zorder above the envelope fill (2) so opportunity spans read as a clear
+            # darker overlay, not competing with the lighter gray fill-between.
+            ax.axvspan(a, b, color=SHADE, alpha=0.34, lw=0, zorder=2.5)
 
     def draw_envelope(ax, title):
-        shade(ax)
         xs = [t[i] for i in range(len(t)) if mx[i] is not None]
         mxv = [mx[i] for i in range(len(t)) if mx[i] is not None]
         mnv = [mn[i] for i in range(len(t)) if mn[i] is not None]
-        ax.fill_between(xs, mnv, mxv, color="#CFCFCF", alpha=0.5, lw=0, zorder=2)
-        ax.plot(xs, mxv, color=INK, lw=1.1, zorder=3, label="max GPU")
-        ax.plot(xs, mnv, color=INK, lw=1.1, ls="--", zorder=3, label="min GPU")
+        # lighter, recessive envelope fill so the (darker, higher-zorder) opportunity
+        # shading from shade() stands out clearly on top of it rather than blending in.
+        ax.fill_between(xs, mnv, mxv, color="#E7E7E7", alpha=0.7, lw=0, zorder=1)
+        shade(ax)
+        ax.plot(xs, mxv, color=MAX_COL, lw=1.2, zorder=3, label="max GPU")
+        ax.plot(xs, mnv, color=MIN_COL, lw=1.2, ls="--", zorder=3, label="min GPU")
         ax.axhline(args.hi, color=MUTED, lw=0.7, ls=(0, (5, 3)))
         ax.axhline(args.lo, color=MUTED, lw=0.7, ls=(0, (1, 2)))
         ax.set_ylabel("occupancy\nenvelope")
