@@ -144,7 +144,6 @@ def render(lengths, cached_ms, recompute_ms, out):
     ax.set_xticklabels([f"{int(x)}" if x >= 1 else f"{x:g}" for x in xs])
     ax.set_xlabel("context length (k tokens)")
     ax.set_ylabel("mean TTFT (ms)")
-    ax.set_title("Recompute cost vs context length")
     style_axes(ax)
     ax.legend(frameon=True, fancybox=False, edgecolor=PALETTE["muted"], facecolor="white",
               handlelength=2.6, loc="upper left")
