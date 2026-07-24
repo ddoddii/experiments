@@ -50,7 +50,23 @@ SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED:-0}
 SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS:-6000}   # session-keyed slab size
 # hicache args (prefill). PARK_NO_HICACHE=1 drops them so radix+park runs at host RAM 0
 # (the clean "park as a host-RAM-free alternative to hicache" arm).
-HICACHE_ARG="--enable-hierarchical-cache --hicache-storage-backend file --hicache-ratio ${HICACHE_RATIO} --hicache-write-policy ${HICACHE_WRITE_POLICY}"
+#
+# HICACHE_WRITE_POLICY  = write_through | write_through_selective | write_back
+#   write_through           : offload every access to L2/L3 immediately (max host/L3 use)
+#   write_through_selective : offload only hot data past a threshold (medium)
+#   write_back              : offload only when evicted from the upper level (min host use)
+# HICACHE_STORAGE_BACKEND = file | none
+#   file : L1(GPU)+L2(host DRAM)+L3(disk /tmp/hicache). The L3 files show up as
+#          RECLAIMABLE OS page cache -> the "94GB" a reviewer will question.
+#   none : L2-only (no L3 disk). Host footprint = just the L2 host KV pool
+#          (hicache-ratio x GPU KV), NO file page cache. Answers "turn the file
+#          backend off and use only the L2 host cache -- what happens?"
+HICACHE_STORAGE_BACKEND=${HICACHE_STORAGE_BACKEND:-file}
+_BACKEND_ARG="--hicache-storage-backend file"
+if [ "${HICACHE_STORAGE_BACKEND}" = "none" ] || [ -z "${HICACHE_STORAGE_BACKEND}" ]; then
+  _BACKEND_ARG=""          # L2-only: hierarchical cache with host DRAM tier, no L3 disk
+fi
+HICACHE_ARG="--enable-hierarchical-cache ${_BACKEND_ARG} --hicache-ratio ${HICACHE_RATIO} --hicache-write-policy ${HICACHE_WRITE_POLICY}"
 [ "${PARK_NO_HICACHE:-0}" = "1" ] && HICACHE_ARG=""
 # DISABLE_RADIX_CACHE=1 -> pure "recompute" baseline: no prefix reuse at all (radix off,
 # so hicache -- which layers on top of radix -- is force-dropped too). Every turn
@@ -88,6 +104,7 @@ HICACHE_DIR="/tmp/hicache"
 echo "Model     : $(basename $MODEL_PATH)  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
 echo "hicache-ratio = $HICACHE_RATIO"
 echo "hicache-write-policy = $HICACHE_WRITE_POLICY"
+echo "hicache-storage-backend = ${HICACHE_STORAGE_BACKEND:-file}"
 echo ""
 echo "[0/6] Stopping any existing SGLang/Mooncake/exporter processes..."
 pkill -9 -f "sglang.launch_server" 2>/dev/null || true
