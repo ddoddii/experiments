@@ -18,10 +18,12 @@ be contaminated by the recompute prompt evicting the base.
 Output: JSON {lengths, cached_ms, recompute_ms, raw} + a single-panel figure (log2 x).
 
 사용:
-  ./scripts/sglang/start_single.sh          # start the server first (port 30010)
+  # the server's --context-length must exceed the LARGEST sweep length (+delta).
+  # start_single.sh defaults to 40000, so 64k needs CONTEXT_LENGTH=70000.
+  CONTEXT_LENGTH=70000 ./scripts/sglang/start_single.sh    # start the server first
   python benchmark/ttft_ctx_sweep.py \
     --url http://127.0.0.1:30010 \
-    --lengths 1000 2000 4000 8000 16000 32000 --reps 5 \
+    --lengths 1000 2000 4000 8000 16000 32000 64000 --reps 5 \
     --out results/intro/fig_ttft_ctx_sweep.png
 """
 import argparse
@@ -93,10 +95,18 @@ def main():
     for L in args.lengths:
         base = gen_ids(L, rng)             # fixed base prefix for this L
         cac, rec = [], []
-        for _ in range(args.reps):
-            ttft(args.url, base)                                   # 1) warm/refresh prefix
-            cac.append(ttft(args.url, base + gen_ids(args.delta, rng)))  # 2) cached hit
-            rec.append(ttft(args.url, gen_ids(L, rng)))            # 3) recompute (unique miss)
+        try:
+            for _ in range(args.reps):
+                ttft(args.url, base)                                   # 1) warm/refresh prefix
+                cac.append(ttft(args.url, base + gen_ids(args.delta, rng)))  # 2) cached hit
+                rec.append(ttft(args.url, gen_ids(L, rng)))            # 3) recompute (unique miss)
+        except Exception as e:  # noqa: BLE001
+            # one bad length (usually L > server --context-length, or KV OOM) must not
+            # discard the lengths that already succeeded -> skip it and keep going.
+            print(f"{L:>8}  [skipped: {type(e).__name__}: {e}]")
+            print(f"           -> likely L exceeds the server's --context-length "
+                  f"(restart with CONTEXT_LENGTH>{L}) or KV OOM (lower reps / free a GPU)")
+            continue
         cm, rm = mean_ms(cac), mean_ms(rec)
         lengths.append(L); cached_ms.append(cm); recompute_ms.append(rm)
         raw[str(L)] = {"cached": cac, "recompute": rec}
