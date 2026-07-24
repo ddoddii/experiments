@@ -52,12 +52,44 @@ def read_meminfo():
     return out
 
 
+def _ppid_map():
+    """pid -> ppid for every process (from /proc/*/stat)."""
+    m = {}
+    for name in os.listdir("/proc"):
+        if not name.isdigit():
+            continue
+        try:
+            with open(f"/proc/{name}/stat") as f:
+                parts = f.read().rsplit(")", 1)[1].split()
+            m[int(name)] = int(parts[1])   # field after "(comm)": state, ppid
+        except Exception:  # noqa: BLE001
+            continue
+    return m
+
+
 def sglang_pids(pattern):
+    """Roots matching `pattern` PLUS all their descendants. The launch_server main is
+    a thin HTTP proc; the big host KV pool lives in the scheduler/TP-worker children,
+    whose cmdline may NOT contain the pattern -- so we must walk the process tree, or
+    we undercount the L2 host pool by tens of GB."""
     try:
         r = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True)
-        return [int(x) for x in r.stdout.split()]
+        roots = set(int(x) for x in r.stdout.split())
     except Exception:  # noqa: BLE001
         return []
+    if not roots:
+        return []
+    ppid = _ppid_map()
+    children = {}
+    for pid, par in ppid.items():
+        children.setdefault(par, []).append(pid)
+    seen, stack = set(roots), list(roots)
+    while stack:
+        p = stack.pop()
+        for ch in children.get(p, []):
+            if ch not in seen:
+                seen.add(ch); stack.append(ch)
+    return sorted(seen)
 
 
 def proc_mem(pids):

@@ -57,22 +57,51 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", nargs="+", required=True, help="label=path.csv ...")
     ap.add_argument("--stat", choices=["peak", "mean", "last"], default="peak")
+    ap.add_argument("--anon-source", choices=["proc", "global"], default="proc",
+                    help="proc = SGLang per-process anon RSS (needs the fixed sampler that "
+                    "walks child procs); global = /proc/meminfo AnonPages (use with "
+                    "--baseline to subtract non-SGLang tenants; correct for old CSVs whose "
+                    "per-process anon undercounted the host pool)")
+    ap.add_argument("--baseline", default="", help="config label whose anon+file_cache is "
+                    "subtracted from every config -- isolates the HiCache-attributable host "
+                    "pool (non-recl) and L3 page cache (recl) above the SGLang+weights floor. "
+                    "Use the GPU-only 'park' run as baseline.")
     ap.add_argument("--out", default="results/mem/fig_mem_breakdown.png")
     args = ap.parse_args()
 
-    configs = []
+    anon_col = "anonpages_mb" if args.anon_source == "global" else "proc_anon_mb"
+    raw = {}
+    order = []
     for spec in args.csv:
         label, _, path = spec.partition("=")
         if not path or not os.path.exists(path):
             print(f"[warn] skip {spec}")
             continue
         rows = load(path)
+        raw[label] = {
+            "anon": stat(rows, anon_col, args.stat) / GB,
+            "file": stat(rows, "file_cache_mb", args.stat) / GB,
+            "gpu": stat(rows, "gpu_hbm_mb", args.stat) / GB,
+            "dir": stat(rows, "hicache_dir_mb", args.stat) / GB,
+        }
+        order.append(label)
+
+    base_anon = base_file = 0.0
+    if args.baseline and args.baseline in raw:
+        base_anon = raw[args.baseline]["anon"]
+        base_file = raw[args.baseline]["file"]
+        print(f"[baseline] subtracting '{args.baseline}': anon={base_anon:.1f}GB "
+              f"file_cache={base_file:.1f}GB (SGLang runtime + model-weight page cache)")
+
+    configs = []
+    for label in order:
+        r = raw[label]
         configs.append({
             "label": label,
-            "anon": stat(rows, "proc_anon_mb", args.stat) / GB,       # non-reclaimable
-            "file": stat(rows, "file_cache_mb", args.stat) / GB,      # reclaimable
-            "gpu": stat(rows, "gpu_hbm_mb", args.stat) / GB,
-            "dir": stat(rows, "hicache_dir_mb", args.stat) / GB,      # on-disk L3
+            "anon": max(0.0, r["anon"] - base_anon),   # non-reclaimable host KV pool
+            "file": max(0.0, r["file"] - base_file),   # reclaimable L3 file page cache
+            "gpu": r["gpu"],
+            "dir": r["dir"],                            # on-disk L3 volume
         })
     if not configs:
         print("[error] no CSVs loaded"); return
@@ -83,8 +112,9 @@ def main():
     gpu = [c["gpu"] for c in configs]
 
     # console table
-    print(f"\n=== host/GPU memory ({args.stat}), GB ===")
-    print(f"  {'config':>24}  {'anon(NR)':>9}  {'pagecache(R)':>12}  {'host_tot':>9}  "
+    print(f"\n=== host/GPU memory ({args.stat}), GB "
+          f"{'[baseline-subtracted]' if args.baseline else ''} ===")
+    print(f"  {'config':>24}  {'pool(NR)':>9}  {'pagecache(R)':>12}  {'host_tot':>9}  "
           f"{'GPU_HBM':>8}  {'L3_disk':>8}")
     for c in configs:
         print(f"  {c['label']:>24}  {c['anon']:>9.1f}  {c['file']:>12.1f}  "
@@ -100,12 +130,19 @@ def main():
     c_r = PALETTE["both"]         # reclaimable page cache (amber)
     # stacked host bars: anon (non-reclaimable) + file cache (reclaimable)
     axH.bar(x, anon, width=0.62, color=c_nr, edgecolor="white", linewidth=0.5,
-            label="anon RSS (non-reclaimable: L2 pool + heap)", zorder=3)
+            label="host KV pool (non-reclaimable anon)", zorder=3)
     axH.bar(x, file_, width=0.62, bottom=anon, color=c_r, edgecolor="white", linewidth=0.5,
-            label="file page cache (reclaimable: HiCache L3)", zorder=3)
-    for xi, (a, fv) in enumerate(zip(anon, file_)):
+            label="L3 file page cache (reclaimable)", zorder=3)
+    dirs = [c["dir"] for c in configs]
+    tops = [a + fv for a, fv in zip(anon, file_)]
+    ymax = max(tops) if tops else 1.0
+    for xi, (a, fv, dv) in enumerate(zip(anon, file_, dirs)):
         if a + fv > 0:
-            axH.text(xi, a + fv, f"{a+fv:.0f}", ha="center", va="bottom", fontsize=6.5)
+            axH.text(xi, a + fv + 0.01 * ymax, f"{a+fv:.0f}", ha="center", va="bottom",
+                     fontsize=6.5)
+        if dv > 1 and fv > 0:   # on-disk L3 volume (the disk-filling write amplification)
+            axH.text(xi, a + fv / 2, f"{dv:.0f}GB\non disk", ha="center", va="center",
+                     fontsize=5.8, color="white", fontweight="bold")
     axH.set_xticks(x); axH.set_xticklabels(labels, rotation=20, ha="right")
     axH.set_ylabel("host memory (GB)")
     axH.set_title("(a) Host RAM: real allocation vs reclaimable cache")
