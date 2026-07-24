@@ -9,7 +9,7 @@ Runs against ONE plain radix-cache-ON SGLang server (scripts/sglang/start_single
 Uses the native /generate endpoint with explicit `input_ids` so context length is
 exact and controllable. For each length L, per rep:
   1. warm the L-token base prefix (so it's resident)
-  2. cached   = TTFT of (base_L + tiny delta)  -> hits the L-prefix, prefills only delta
+  2. cached    = TTFT of (base_L + tiny delta)  -> hits the L-prefix, prefills only delta
   3. recompute = TTFT of a FRESH unique L-token prompt -> full prefill of L (a cold miss,
      which is exactly what you pay when the prefix cache has been evicted)
 Ordering (warm -> cached -> recompute) each rep guarantees the cached measurement can't
@@ -59,9 +59,9 @@ def ttft(url, input_ids, timeout=600):
     return None
 
 
-def med_ms(xs):
+def mean_ms(xs):
     xs = [x for x in xs if x is not None]
-    return round(1000 * st.median(xs), 1) if xs else None
+    return round(1000 * st.mean(xs), 1) if xs else None
 
 
 def main():
@@ -97,7 +97,7 @@ def main():
             ttft(args.url, base)                                   # 1) warm/refresh prefix
             cac.append(ttft(args.url, base + gen_ids(args.delta, rng)))  # 2) cached hit
             rec.append(ttft(args.url, gen_ids(L, rng)))            # 3) recompute (unique miss)
-        cm, rm = med_ms(cac), med_ms(rec)
+        cm, rm = mean_ms(cac), mean_ms(rec)
         lengths.append(L); cached_ms.append(cm); recompute_ms.append(rm)
         raw[str(L)] = {"cached": cac, "recompute": rec}
         ratio = f"{rm / cm:.1f}x" if (cm and rm) else "-"
@@ -124,10 +124,8 @@ def render(lengths, cached_ms, recompute_ms, out):
     fig, ax = plt.subplots(figsize=(3.7, 2.9))
     xs = [L / 1000.0 for L in lengths]
     for ys, color, label, key in (
-        ([m / 1000.0 if m else None for m in recompute_ms],
-         PALETTE["recompute"], "recompute", "recompute"),
-        ([m / 1000.0 if m else None for m in cached_ms],
-         PALETTE["park"], "cached", "park"),
+        (recompute_ms, PALETTE["recompute"], "recompute", "recompute"),
+        (cached_ms, PALETTE["park"], "cached", "park"),
     ):
         ax.plot(xs, ys, color=color, lw=1.7, ls=STYLE[key]["ls"], marker=STYLE[key]["marker"],
                 ms=5, label=label, zorder=3, markeredgecolor="white", markeredgewidth=0.6)
@@ -135,7 +133,7 @@ def render(lengths, cached_ms, recompute_ms, out):
     ax.set_xticks(xs)
     ax.set_xticklabels([f"{int(x)}" if x >= 1 else f"{x:g}" for x in xs])
     ax.set_xlabel("context length (k tokens)")
-    ax.set_ylabel("median TTFT (s)")
+    ax.set_ylabel("mean TTFT (ms)")
     ax.set_title("Recompute cost vs context length")
     style_axes(ax)
     ax.legend(frameon=True, fancybox=False, edgecolor=PALETTE["muted"], facecolor="white",
