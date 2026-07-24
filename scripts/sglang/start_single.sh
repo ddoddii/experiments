@@ -18,9 +18,13 @@ GPU=${GPU:-0}
 PORT=${PORT:-30010}
 CTX=${CONTEXT_LENGTH:-40000}          # must exceed the largest sweep length (+delta)
 MEMFRAC=${MEM_FRACTION:-0.85}
+# MAX_RUNNING=1 serializes requests -> clean single-request timing (ttft_ctx_sweep).
+# For the QPS load sweep (qps_sweep.py) set MAX_RUNNING high so the server BATCHES,
+# e.g. MAX_RUNNING=256 ./scripts/sglang/start_single.sh
+MAX_RUNNING=${MAX_RUNNING:-1}
 LOG_DIR=${LOG_DIR:-logs/sglang}; mkdir -p "$LOG_DIR"
 
-echo "[single] gpu=$GPU port=$PORT ctx=$CTX model=$MODEL_PATH"
+echo "[single] gpu=$GPU port=$PORT ctx=$CTX max_running=$MAX_RUNNING model=$MODEL_PATH"
 pkill -9 -f "launch_server.*--port $PORT" 2>/dev/null || true
 sleep 2
 
@@ -29,7 +33,7 @@ CUDA_VISIBLE_DEVICES=$GPU python -m sglang.launch_server \
   --host 127.0.0.1 --port "$PORT" \
   --mem-fraction-static "$MEMFRAC" \
   --context-length "$CTX" \
-  --max-running-requests 1 \
+  --max-running-requests "$MAX_RUNNING" \
   > "$LOG_DIR/single.log" 2>&1 &
 echo "  PID $!"
 
