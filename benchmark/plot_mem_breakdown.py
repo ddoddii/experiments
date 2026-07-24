@@ -57,11 +57,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", nargs="+", required=True, help="label=path.csv ...")
     ap.add_argument("--stat", choices=["peak", "mean", "last"], default="peak")
-    ap.add_argument("--anon-source", choices=["proc", "global"], default="proc",
-                    help="proc = SGLang per-process anon RSS (needs the fixed sampler that "
-                    "walks child procs); global = /proc/meminfo AnonPages (use with "
-                    "--baseline to subtract non-SGLang tenants; correct for old CSVs whose "
-                    "per-process anon undercounted the host pool)")
+    ap.add_argument("--anon-source", choices=["proc", "pss", "global"], default="global",
+                    help="global = /proc/meminfo AnonPages (RECOMMENDED; use with --baseline "
+                    "park to subtract SGLang runtime + other tenants -- physically consistent, "
+                    "can't double-count). pss = sum of per-process Pss_Anon (de-duplicated "
+                    "shared pages). proc = sum of per-process Anonymous (DOUBLE-COUNTS shared "
+                    "CUDA/pinned/shm mappings -- can exceed system AnonPages; do not use).")
     ap.add_argument("--baseline", default="", help="config label whose anon+file_cache is "
                     "subtracted from every config -- isolates the HiCache-attributable host "
                     "pool (non-recl) and L3 page cache (recl) above the SGLang+weights floor. "
@@ -69,7 +70,8 @@ def main():
     ap.add_argument("--out", default="results/mem/fig_mem_breakdown.png")
     args = ap.parse_args()
 
-    anon_col = "anonpages_mb" if args.anon_source == "global" else "proc_anon_mb"
+    anon_col = {"global": "anonpages_mb", "pss": "proc_pss_anon_mb",
+                "proc": "proc_anon_mb"}[args.anon_source]
     raw = {}
     order = []
     for spec in args.csv:

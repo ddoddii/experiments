@@ -93,9 +93,13 @@ def sglang_pids(pattern):
 
 
 def proc_mem(pids):
-    """Sum smaps_rollup Rss / Anonymous / Locked over pids (MB). Robust to missing
-    fields across kernels (falls back Anonymous<-Pss_Anon, Locked<-0)."""
-    rss = anon = locked = 0.0
+    """Sum smaps_rollup fields over pids (MB). Returns (rss, anon, locked, pss, pss_anon).
+    NOTE: summing raw Anonymous/Rss over sibling processes DOUBLE-COUNTS pages they share
+    (CUDA IPC, pinned host buffers, /dev/shm) -- it can exceed the system-wide AnonPages,
+    which is nonsense. Pss / Pss_Anon divide each shared page by its sharers, so summing
+    THEM is the de-duplicated per-process attribution. Prefer pss_anon (or the global
+    AnonPages minus a GPU-only baseline) for the real host-pool number."""
+    rss = anon = locked = pss = pss_anon = 0.0
     for pid in pids:
         try:
             with open(f"/proc/{pid}/smaps_rollup") as f:
@@ -105,11 +109,13 @@ def proc_mem(pids):
                     if rest.strip().endswith("kB"):
                         fields[k.strip()] = float(rest.strip().split()[0]) / 1024.0
             rss += fields.get("Rss", 0.0)
-            anon += fields.get("Anonymous", fields.get("Pss_Anon", 0.0))
+            anon += fields.get("Anonymous", 0.0)
             locked += fields.get("Locked", 0.0)
+            pss += fields.get("Pss", 0.0)
+            pss_anon += fields.get("Pss_Anon", 0.0)
         except Exception:  # noqa: BLE001
             continue
-    return rss, anon, locked
+    return rss, anon, locked, pss, pss_anon
 
 
 def gpu_hbm_mb():
@@ -143,9 +149,10 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    cols = ["elapsed_s", "gpu_hbm_mb", "proc_rss_mb", "proc_anon_mb", "proc_locked_mb",
-            "file_cache_mb", "hicache_dir_mb", "anonpages_mb", "reclaimable_mb",
-            "nonreclaimable_mb", "mem_used_mb", "mem_avail_mb", "n_pids"]
+    cols = ["elapsed_s", "gpu_hbm_mb", "proc_rss_mb", "proc_anon_mb", "proc_pss_mb",
+            "proc_pss_anon_mb", "proc_locked_mb", "file_cache_mb", "hicache_dir_mb",
+            "anonpages_mb", "reclaimable_mb", "nonreclaimable_mb", "mem_used_mb",
+            "mem_avail_mb", "n_pids"]
     t0 = time.time()
     last_dir = 0.0
     last_dir_t = -1e9
@@ -157,7 +164,7 @@ def main():
             now = time.time()
             mi = read_meminfo()
             pids = sglang_pids(args.pid_pattern)
-            rss, anon, locked = proc_mem(pids)
+            rss, anon, locked, pss, pss_anon = proc_mem(pids)
             gpu = gpu_hbm_mb()
             if now - last_dir_t >= args.dir_interval:
                 last_dir = dir_mb(args.hicache_dir); last_dir_t = now
@@ -168,7 +175,8 @@ def main():
             nonreclaim = mem_used - reclaimable - mi.get("Buffers", 0.0)
 
             w.writerow([round(now - t0, 1), round(gpu, 1), round(rss, 1), round(anon, 1),
-                        round(locked, 1), round(file_cache, 1), round(last_dir, 1),
+                        round(pss, 1), round(pss_anon, 1), round(locked, 1),
+                        round(file_cache, 1), round(last_dir, 1),
                         round(mi.get("AnonPages", 0.0), 1), round(reclaimable, 1),
                         round(nonreclaim, 1), round(mem_used, 1),
                         round(mi.get("MemAvailable", 0.0), 1), len(pids)])
