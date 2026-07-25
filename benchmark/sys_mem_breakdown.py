@@ -152,7 +152,7 @@ def main():
     cols = ["elapsed_s", "gpu_hbm_mb", "proc_rss_mb", "proc_anon_mb", "proc_pss_mb",
             "proc_pss_anon_mb", "proc_locked_mb", "file_cache_mb", "hicache_dir_mb",
             "anonpages_mb", "reclaimable_mb", "nonreclaimable_mb", "mem_used_mb",
-            "mem_avail_mb", "n_pids"]
+            "mem_avail_mb", "mem_total_mb", "n_pids"]
     t0 = time.time()
     last_dir = 0.0
     last_dir_t = -1e9
@@ -179,7 +179,8 @@ def main():
                         round(file_cache, 1), round(last_dir, 1),
                         round(mi.get("AnonPages", 0.0), 1), round(reclaimable, 1),
                         round(nonreclaim, 1), round(mem_used, 1),
-                        round(mi.get("MemAvailable", 0.0), 1), len(pids)])
+                        round(mi.get("MemAvailable", 0.0), 1),
+                        round(mi.get("MemTotal", 0.0), 1), len(pids)])
             fh.flush()
             time.sleep(max(0.05, args.interval - (time.time() - now)))
 
