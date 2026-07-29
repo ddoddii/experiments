@@ -122,6 +122,92 @@ def panel(ax, xs, mean, lo, hi, title, cs, args, headroom=False):
     return avg
 
 
+def both_roles(t, data, p_labels, d_labels):
+    """-> (xs, decode_mean, prefill_mean) on the samples where BOTH roles report,
+    so the two curves are directly comparable instant by instant."""
+    xs, dm, pm = [], [], []
+    for i in range(len(t)):
+        dv = [data[l][i] for l in d_labels if data[l][i] is not None]
+        pv = [data[l][i] for l in p_labels if data[l][i] is not None]
+        if not dv or not pv:
+            continue
+        xs.append(t[i])
+        dm.append(100.0 * sum(dv) / len(dv))
+        pm.append(100.0 * sum(pv) / len(pv))
+    return xs, dm, pm
+
+
+def render_overlay(args, t, data, p_labels, d_labels):
+    """Single-axes version (saves ~half the vertical space): decode drawn as the
+    LIGHT area behind, prefill as the DARK area in front. Because decode sits above
+    prefill nearly everywhere, the light band left visible between the two curves IS
+    the imbalance -- the HBM that is busy on decode and idle on prefill at the same
+    instant. Same idiom as the classic occupied-vs-demanded utilization figure."""
+    xs, dm, pm = both_roles(t, data, p_labels, d_labels)
+    if not xs:
+        raise SystemExit("no samples where both roles report")
+
+    d_avg = sum(dm) / len(dm)
+    p_avg = sum(pm) / len(pm)
+    gap = [d - p for d, p in zip(dm, pm)]
+    g_avg = sum(gap) / len(gap)
+    frac_d_above = 100.0 * sum(1 for g in gap if g > 0) / len(gap)
+
+    c_dec = COLOR["D"]["fill"] if args.color else "#BFBFBF"
+    c_pre = COLOR["P"]["fill"] if args.color else "#333333"
+
+    use_paper_style()
+    fig, ax = plt.subplots(1, 1, figsize=(args.width, args.height))
+    ax.fill_between(xs, 0, dm, color=c_dec, lw=0, zorder=2, label="Decode instance")
+    ax.fill_between(xs, 0, pm, color=c_pre, lw=0, zorder=3, label="Prefill instance")
+    ax.plot(xs, dm, color="#000000", lw=0.6, zorder=4)
+    ax.plot(xs, pm, color="#000000", lw=0.6, zorder=5)
+
+    # the two time-averages, labelled on the right edge -- the whole claim in 2 numbers
+    for avg, txt, va in ((d_avg, f"decode avg {d_avg:.0f}%", "bottom"),
+                         (p_avg, f"prefill avg {p_avg:.0f}%", "top")):
+        ax.axhline(avg, color="#000000", lw=0.7, ls=(0, (4, 2.5)), zorder=6)
+        ax.text(xs[-1], avg, f"{txt} ", ha="right", va=va, fontsize=6.4, zorder=7,
+                bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
+
+    if not args.no_gap_label:
+        # name the light band once -- without it the reader has to infer that the gap
+        # between the two areas is the point of the figure
+        ax.annotate("", xy=(xs[0] + 0.16 * (xs[-1] - xs[0]), d_avg),
+                    xytext=(xs[0] + 0.16 * (xs[-1] - xs[0]), p_avg),
+                    arrowprops=dict(arrowstyle="<->", lw=0.8, color="#000000"), zorder=7)
+        ax.text(xs[0] + 0.195 * (xs[-1] - xs[0]), (d_avg + p_avg) / 2,
+                f"{g_avg:.0f} pts idle on prefill\nwhile decode is busy",
+                ha="left", va="center", fontsize=6.4, zorder=8,
+                bbox=dict(facecolor="white", edgecolor="none", pad=1.0))
+
+    ax.set_ylim(0, 100)
+    ax.set_xlim(min(xs), max(xs))
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.set_ylabel("KV memory\nutilization (%)")
+    ax.set_xlabel("time (s)")
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    for s in ("bottom", "left"):
+        ax.spines[s].set_color(MUTED); ax.spines[s].set_linewidth(0.6)
+    ax.tick_params(colors=MUTED, length=2.5, width=0.5)
+    ax.grid(False)
+    ax.legend(loc="lower left", ncol=2, frameon=True, fancybox=False, facecolor="white",
+              edgecolor=MUTED, fontsize=6.4, handlelength=1.4, borderpad=0.3,
+              columnspacing=1.0).set_zorder(8)
+
+    print(f"\n=== role occupancy, overlay ({os.path.basename(args.csv)}) ===")
+    print(f"  decode  {d_labels}  time-avg {d_avg:.1f}%")
+    print(f"  prefill {p_labels}  time-avg {p_avg:.1f}%")
+    print(f"  mean gap = {g_avg:.1f} points; decode above prefill "
+          f"{frac_d_above:.0f}% of samples")
+    print(f"  prefill leaves {100 - p_avg:.0f}% of its KV pool unused on average")
+
+    fig.tight_layout(pad=0.4)
+    out = args.out or (os.path.splitext(args.csv)[0] + "_overlay")
+    savefig(fig, out[:-4] if out.endswith((".png", ".pdf")) else out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", required=True)
@@ -137,6 +223,15 @@ def main():
     ap.add_argument("--max-points", type=int, default=4000,
                     help="decimate to at most this many samples per panel (0 = all)")
     ap.add_argument("--tmax", type=float, default=0.0, help="crop to the first N seconds")
+    ap.add_argument("--overlay", action="store_true",
+                    help="single axes instead of two stacked panels: decode as the "
+                         "light area behind, prefill as the dark area in front, so the "
+                         "visible light band is the imbalance. Half the page height.")
+    ap.add_argument("--no-gap-label", action="store_true",
+                    help="--overlay: drop the arrow/label naming the decode-prefill gap")
+    ap.add_argument("--width", type=float, default=6.4, help="figure width (in)")
+    ap.add_argument("--height", type=float, default=1.85,
+                    help="figure height (in); only used by --overlay")
     args = ap.parse_args()
 
     t, data, labels = load(args.csv)
@@ -152,6 +247,10 @@ def main():
     d_labels = [l for l in labels if l.upper().startswith("D")]
     if not p_labels or not d_labels:
         raise SystemExit(f"need both P* and D* columns; found {labels}")
+
+    if args.overlay:
+        render_overlay(args, t, data, p_labels, d_labels)
+        return
 
     dx, dmean, dlo, dhi = role_envelope(t, data, d_labels)
     px, pmean, plo, phi = role_envelope(t, data, p_labels)
