@@ -158,17 +158,23 @@ def render_overlay(args, t, data, p_labels, d_labels):
 
     use_paper_style()
     fig, ax = plt.subplots(1, 1, figsize=(args.width, args.height))
+    # thinner outlines at column width -- 0.6pt over a dense series turns the whole
+    # band black once the figure is scaled down to ~3.5in
+    olw = 0.6 if args.width >= 4.5 else 0.45
     ax.fill_between(xs, 0, dm, color=c_dec, lw=0, zorder=2, label="Decode instance")
     ax.fill_between(xs, 0, pm, color=c_pre, lw=0, zorder=3, label="Prefill instance")
-    ax.plot(xs, dm, color="#000000", lw=0.6, zorder=4)
-    ax.plot(xs, pm, color="#000000", lw=0.6, zorder=5)
+    ax.plot(xs, dm, color="#000000", lw=olw, zorder=4)
+    ax.plot(xs, pm, color="#000000", lw=olw, zorder=5)
 
-    # the two time-averages, labelled on the right edge -- the whole claim in 2 numbers
-    for avg, txt, va in ((d_avg, f"decode avg {d_avg:.0f}%", "bottom"),
-                         (p_avg, f"prefill avg {p_avg:.0f}%", "top")):
-        ax.axhline(avg, color="#000000", lw=0.7, ls=(0, (4, 2.5)), zorder=6)
-        ax.text(xs[-1], avg, f"{txt} ", ha="right", va=va, fontsize=6.4, zorder=7,
-                bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
+    # the two time-averages, labelled on the right edge -- the whole claim in 2 numbers.
+    # At single-column width these crowd the plot, so --no-avg drops them and the
+    # numbers go in the caption instead (they are printed to stdout either way).
+    if not args.no_avg:
+        for avg, txt, va in ((d_avg, f"decode avg {d_avg:.0f}%", "bottom"),
+                             (p_avg, f"prefill avg {p_avg:.0f}%", "top")):
+            ax.axhline(avg, color="#000000", lw=0.7, ls=(0, (4, 2.5)), zorder=6)
+            ax.text(xs[-1], avg, f"{txt} ", ha="right", va=va, fontsize=6.4, zorder=7,
+                    bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
 
     if not args.no_gap_label:
         # name the light band once -- without it the reader has to infer that the gap
@@ -192,9 +198,15 @@ def render_overlay(args, t, data, p_labels, d_labels):
         ax.spines[s].set_color(MUTED); ax.spines[s].set_linewidth(0.6)
     ax.tick_params(colors=MUTED, length=2.5, width=0.5)
     ax.grid(False)
-    ax.legend(loc="lower left", ncol=2, frameon=True, fancybox=False, facecolor="white",
-              edgecolor=MUTED, fontsize=6.4, handlelength=1.4, borderpad=0.3,
-              columnspacing=1.0).set_zorder(8)
+    if args.legend_top:
+        # at column width an in-plot legend covers a third of the data; put it above
+        ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, frameon=False,
+                  fontsize=6.6, handlelength=1.4, borderpad=0.2, columnspacing=1.4,
+                  handletextpad=0.5)
+    else:
+        ax.legend(loc="lower left", ncol=2, frameon=True, fancybox=False,
+                  facecolor="white", edgecolor=MUTED, fontsize=6.4, handlelength=1.4,
+                  borderpad=0.3, columnspacing=1.0).set_zorder(8)
 
     print(f"\n=== role occupancy, overlay ({os.path.basename(args.csv)}) ===")
     print(f"  decode  {d_labels}  time-avg {d_avg:.1f}%")
@@ -229,7 +241,13 @@ def main():
                          "visible light band is the imbalance. Half the page height.")
     ap.add_argument("--no-gap-label", action="store_true",
                     help="--overlay: drop the arrow/label naming the decode-prefill gap")
-    ap.add_argument("--width", type=float, default=6.4, help="figure width (in)")
+    ap.add_argument("--legend-top", action="store_true",
+                    help="--overlay: put the legend above the axes instead of inside "
+                         "(recommended at --width 3.5, where it would cover the data)")
+    ap.add_argument("--no-avg", action="store_true",
+                    help="--overlay: drop the dashed time-average lines and their labels")
+    ap.add_argument("--width", type=float, default=6.4,
+                    help="figure width (in); 3.5 = one IEEE/CAL column")
     ap.add_argument("--height", type=float, default=1.85,
                     help="figure height (in); only used by --overlay")
     args = ap.parse_args()
