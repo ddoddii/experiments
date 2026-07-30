@@ -34,6 +34,27 @@ HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through_selective"}
 # ROUTER_MODE=skew starts one router per prefill (:8000 -> P0, :8001 -> P1) so the client
 # can set the prefill-side load imbalance exactly. Default "balanced" = the usual single
 # router on :8000. See the [6/6] block.
+# ─── Mooncake transfer address ──────────────────────────────────────────────
+# All four workers are on ONE host, but SGLang derives the KV-transfer address from
+# get_local_ip_auto(), which picks the node's routable address (165.132.142.205 here).
+# Every Mooncake transfer then opens a TCP connection from that address to that same
+# address on a FIXED port, e.g. 165.132.142.205:16916.
+#
+# A fixed (src_ip, dst_ip, dst_port) triple leaves only the local port range to make the
+# 4-tuple unique: 32768-60999 = 28,231 ports, each held ~60 s in TIME-WAIT. That caps
+# sustained transfers at roughly 470/s, and past it connect() returns EADDRNOTAVAIL --
+# "Cannot assign requested address", exactly the error in p1.log at :15119 and :16916.
+# tcp_tw_reuse=2 on this kernel means TIME-WAIT reuse applies to LOOPBACK ONLY, so using
+# the routable address opts out of the one mechanism that would have recycled the tuples.
+#
+# SGLANG_HOST_IP=127.0.0.1 makes the transfer loopback, which both enables tw_reuse and
+# removes the NIC path. Override only for genuinely multi-node runs.
+#
+# (An earlier diagnosis of mine dismissed port exhaustion because `ss` showed 121
+# TIME-WAIT sockets -- measured minutes after the failure, long past the 60 s drain. That
+# measurement proved nothing.)
+export SGLANG_HOST_IP=${SGLANG_HOST_IP:-127.0.0.1}
+
 ROUTER_MODE=${ROUTER_MODE:-balanced}
 PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
 DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
