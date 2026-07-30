@@ -299,11 +299,22 @@ def process_item(item_idx: int, item: dict) -> dict:
             t_request = time.perf_counter()
             t_wall_s  = t_request - t_experiment_start
             resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                # Capture the BODY, not just the status line. raise_for_status() throws
+                # "400 Client Error: Bad Request for url: ..." which says nothing about
+                # what the server objected to, and that string was the only record we
+                # had of 7 failures -- undiagnosable after the fact.
+                try:
+                    _body = resp.text[:600]
+                except Exception:  # noqa: BLE001
+                    _body = "<unreadable>"
+                raise RuntimeError(f"HTTP {resp.status_code} from {ROUTER_URL}: {_body}")
 
             t_first_token     = None
             t_last_token      = None
             token_count       = 0
+            finish_reason     = None
+            n_chunks          = 0
             assistant_content = ""
             tool_calls_map    = {}
             server_completion_tokens = None
@@ -320,7 +331,11 @@ def process_item(item_idx: int, item: dict) -> dict:
                     server_completion_tokens = chunk["usage"].get("completion_tokens")
                 if not chunk.get("choices"):
                     continue
-                delta = chunk["choices"][0]["delta"]
+                _ch0 = chunk["choices"][0]
+                if _ch0.get("finish_reason"):
+                    finish_reason = _ch0["finish_reason"]
+                n_chunks += 1
+                delta = _ch0["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
                 if t_first_token is None and has_content:
@@ -375,6 +390,12 @@ def process_item(item_idx: int, item: dict) -> dict:
                 else f"    [{item['id']} t{turn_idx}] → ttft={ttft}  tokens={actual_tokens}"
             )
 
+            empty_reason = None
+            if not tool_calls_result and not assistant_content and actual_tokens == 0:
+                empty_reason = (f"200 OK but no content: finish_reason={finish_reason!r} "
+                                f"chunks={n_chunks} usage_completion_tokens="
+                                f"{server_completion_tokens!r}")
+
             turn_metrics.append({
                 "turn":                 turn_idx,
                 "t_wall_s":             round(t_wall_s,  1),
@@ -390,6 +411,8 @@ def process_item(item_idx: int, item: dict) -> dict:
                 "e2e_latency_s":        round(e2e,       4) if e2e       else None,
                 "throughput_tok_per_s": round(turn_tput, 2) if turn_tput else None,
                 "context_chars":        ctx_chars,
+                "finish_reason":        finish_reason,
+                "empty_reason":         empty_reason,
             })
 
             with _counter_lock:
