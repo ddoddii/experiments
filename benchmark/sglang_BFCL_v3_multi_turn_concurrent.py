@@ -271,6 +271,33 @@ _results             = []
 _total_output_tokens = 0
 _items_done          = 0
 
+# ─── Give-up detector ────────────────────────────────────────────────────────
+# Once the router opens every prefill circuit it does not close them again, so every
+# remaining request returns 503 instantly. A run in that state spent 70 s emitting 184
+# identical 503s and then wrote a summary as if it were a measurement. Stop instead, and
+# record WHY, so the failure is a one-line answer rather than a 200-item file to diagnose.
+GIVE_UP_AFTER = int(os.environ.get("GIVE_UP_AFTER", "20"))   # 0 disables
+_consec_fail  = 0
+_gave_up      = None   # set to the reason string once tripped
+
+
+def _note_failure(msg: str):
+    """Count a consecutive hard failure; returns True once the run should stop."""
+    global _consec_fail, _gave_up
+    with _counter_lock:
+        _consec_fail += 1
+        if GIVE_UP_AFTER and _consec_fail >= GIVE_UP_AFTER and _gave_up is None:
+            _gave_up = (f"{_consec_fail} consecutive failures, last: {msg[:200]}")
+            print(f"\n[give-up] {_gave_up}\n[give-up] the server is not serving; "
+                  f"remaining items are skipped. Set GIVE_UP_AFTER=0 to disable.")
+        return _gave_up is not None
+
+
+def _note_success():
+    global _consec_fail
+    with _counter_lock:
+        _consec_fail = 0
+
 t_experiment_start = time.perf_counter()
 
 # ─── SGLang hicache background poller ────────────────────────────────────────
@@ -302,6 +329,9 @@ def process_item(item_idx: int, item: dict) -> dict:
     tqdm.write(f"\n[{item['id']}] turns={len(item['question'])}  classes={item.get('involved_classes')}")
 
     for turn_idx, turn in enumerate(item["question"]):
+        if _gave_up is not None:
+            turn_metrics.append({"turn": turn_idx, "error": f"skipped: {_gave_up}"})
+            break
         user_msg  = turn[0]
         conversation.append(user_msg)
         ctx_chars = sum(len(str(m.get("content", "") or "")) for m in conversation)
@@ -423,6 +453,9 @@ def process_item(item_idx: int, item: dict) -> dict:
                                 f"chunks={n_chunks} usage_completion_tokens="
                                 f"{server_completion_tokens!r}")
 
+            # A turn that reached here got a response, so the server is serving: clear
+            # the consecutive-failure count that arms the give-up detector.
+            _note_success()
             turn_metrics.append({
                 "turn":                 turn_idx,
                 "t_wall_s":             round(t_wall_s,  1),
@@ -488,6 +521,7 @@ def process_item(item_idx: int, item: dict) -> dict:
         except Exception as e:
             tqdm.write(f"    [{item['id']} t{turn_idx}] ERROR: {e}")
             turn_metrics.append({"turn": turn_idx, "error": str(e)})
+            _note_failure(str(e))
             break
 
     valid_turns = [t for t in turn_metrics if t.get("ttft_s")]

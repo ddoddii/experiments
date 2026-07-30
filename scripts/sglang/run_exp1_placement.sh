@@ -38,6 +38,16 @@ export CONCURRENCY=${CONCURRENCY:-16}
 # a conversation's KV is cold and gets evicted. At 0 there is no window and parking has
 # nothing to park.
 export TOOL_DELAY_SEC=${TOOL_DELAY:-3}
+# The KV-flush flood MUST be off here. _kv_flush() fires 30 concurrent 3000-token
+# requests every time a tool delay elapses; at C=16 that is up to 480 concurrent
+# requests / 1.44M tokens against a 60k-token prefill pool -- 24x oversubscription. It
+# aborts the in-flight requests (finish_reason="abort"), the aborts fail the Mooncake KV
+# transfers, the router opens every prefill circuit, and the rest of the run is 503.
+# One sweep was lost exactly this way, in the radix arm, with parking and hicache both
+# off. The flood exists for a different setup (a LARGE pool, where eviction has to be
+# forced); here the pool is deliberately small and saturates on its own -- the failed run
+# measured prefill token_usage at 0.9988 with the flood as the thing that killed it.
+export FLOOD_DURING_DELAY=${FLOOD_DURING_DELAY:-0}
 export MAX_ITEMS=${MAX_ITEMS:-0}
 export TIMEOUT=${TIMEOUT:-600}
 
