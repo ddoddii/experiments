@@ -118,14 +118,19 @@ def proc_mem(pids):
     return rss, anon, locked, pss, pss_anon
 
 
-def gpu_hbm_mb():
+def gpu_hbm_mb_each():
+    """Per-GPU used HBM, in nvidia-smi index order.
+
+    Reported per device rather than only as a sum because the placement claim is about
+    WHICH GPU absorbed the KV: a total that is flat can hide a peer filling up while the
+    serving GPU drains, which is exactly the effect under test."""
     try:
         r = subprocess.run(
             ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
             capture_output=True, text=True, timeout=10)
-        return sum(float(x) for x in r.stdout.split())
+        return [float(x) for x in r.stdout.split()]
     except Exception:  # noqa: BLE001
-        return 0.0
+        return []
 
 
 def dir_mb(path):
@@ -149,10 +154,14 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    cols = ["elapsed_s", "gpu_hbm_mb", "proc_rss_mb", "proc_anon_mb", "proc_pss_mb",
-            "proc_pss_anon_mb", "proc_locked_mb", "file_cache_mb", "hicache_dir_mb",
-            "anonpages_mb", "reclaimable_mb", "nonreclaimable_mb", "mem_used_mb",
-            "mem_avail_mb", "mem_total_mb", "n_pids"]
+    # Fix the per-GPU columns from the first probe so the header is stable even though
+    # a later probe could fail and return a shorter list.
+    n_gpu = len(gpu_hbm_mb_each())
+    cols = (["elapsed_s", "gpu_hbm_mb"] + [f"gpu{i}_hbm_mb" for i in range(n_gpu)]
+            + ["proc_rss_mb", "proc_anon_mb", "proc_pss_mb",
+               "proc_pss_anon_mb", "proc_locked_mb", "file_cache_mb", "hicache_dir_mb",
+               "anonpages_mb", "reclaimable_mb", "nonreclaimable_mb", "mem_used_mb",
+               "mem_avail_mb", "mem_total_mb", "rss_plus_cache_mb", "n_pids"])
     t0 = time.time()
     last_dir = 0.0
     last_dir_t = -1e9
@@ -160,12 +169,26 @@ def main():
         w = csv.writer(fh); w.writerow(cols)
         print(f"[breakdown] -> {args.out}  (pattern='{args.pid_pattern}', "
               f"hicache_dir={args.hicache_dir})  Ctrl-C to stop")
+        # A 2P2D server is ~150 processes; seeing only the launch_server roots means the
+        # descendant walk found nothing and every per-process column will undercount the
+        # host pool by tens of GB. Earlier runs recorded n_pids=4 for exactly this reason
+        # and their proc_* columns are unusable -- say so at collection time, not later.
+        n0 = len(sglang_pids(args.pid_pattern))
+        if n0 and n0 < 8:
+            print(f"[breakdown] WARNING: only {n0} pids matched '{args.pid_pattern}' plus "
+                  f"descendants. The scheduler/TP children hold the host KV pool, so "
+                  f"proc_rss/proc_anon will undercount it. Check the pattern.")
+        elif not n0:
+            print(f"[breakdown] WARNING: no process matches '{args.pid_pattern}' -- "
+                  f"proc_* columns will be 0. Start the servers first.")
         while True:
             now = time.time()
             mi = read_meminfo()
             pids = sglang_pids(args.pid_pattern)
             rss, anon, locked, pss, pss_anon = proc_mem(pids)
-            gpu = gpu_hbm_mb()
+            per_gpu = gpu_hbm_mb_each()
+            per_gpu = (per_gpu + [0.0] * n_gpu)[:n_gpu]
+            gpu = sum(per_gpu)
             if now - last_dir_t >= args.dir_interval:
                 last_dir = dir_mb(args.hicache_dir); last_dir_t = now
 
@@ -174,13 +197,18 @@ def main():
             mem_used = mi.get("MemTotal", 0.0) - mi.get("MemFree", 0.0)
             nonreclaim = mem_used - reclaimable - mi.get("Buffers", 0.0)
 
-            w.writerow([round(now - t0, 1), round(gpu, 1), round(rss, 1), round(anon, 1),
+            w.writerow([round(now - t0, 1), round(gpu, 1)]
+                       + [round(v, 1) for v in per_gpu]
+                       + [round(rss, 1), round(anon, 1),
                         round(pss, 1), round(pss_anon, 1), round(locked, 1),
                         round(file_cache, 1), round(last_dir, 1),
                         round(mi.get("AnonPages", 0.0), 1), round(reclaimable, 1),
                         round(nonreclaim, 1), round(mem_used, 1),
                         round(mi.get("MemAvailable", 0.0), 1),
-                        round(mi.get("MemTotal", 0.0), 1), len(pids)])
+                        round(mi.get("MemTotal", 0.0), 1),
+                        # the "total host-memory footprint" of the serving stack: its own
+                        # resident pages plus the page cache it caused (L3 file backend)
+                        round(rss + file_cache, 1), len(pids)])
             fh.flush()
             time.sleep(max(0.05, args.interval - (time.time() - now)))
 

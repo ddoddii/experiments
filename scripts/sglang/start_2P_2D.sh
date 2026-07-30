@@ -31,6 +31,10 @@ HICACHE_RATIO=${HICACHE_RATIO:-"1.2"}
 HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through_selective"}
 # 압박(pressure) knob: KV 풀을 작게 잡아 점유율이 포화까지 오르게 (불균형/축출 측정용).
 # 빈 값이면 기본 대용량 풀. 예: PREFILL_MAX_TOTAL_TOKENS=20000
+# ROUTER_MODE=skew starts one router per prefill (:8000 -> P0, :8001 -> P1) so the client
+# can set the prefill-side load imbalance exactly. Default "balanced" = the usual single
+# router on :8000. See the [6/6] block.
+ROUTER_MODE=${ROUTER_MODE:-balanced}
 PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
 DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 P_MTT=""; [ -n "$PREFILL_MAX_TOTAL_TOKENS" ] && P_MTT="--max-total-tokens $PREFILL_MAX_TOTAL_TOKENS"
@@ -101,8 +105,27 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id 2"
   CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id 3"
   _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE} SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED} SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS} SGLANG_KV_PARK_BW_AWARE=${SGLANG_KV_PARK_BW_AWARE} SGLANG_KV_PARK_HOST_OVERFLOW=${SGLANG_KV_PARK_HOST_OVERFLOW} SGLANG_KV_PARK_HOST_BUCKET_TOKENS=${SGLANG_KV_PARK_HOST_BUCKET_TOKENS} SGLANG_KV_PARK_HOST_MAX_GB=${SGLANG_KV_PARK_HOST_MAX_GB} SGLANG_KV_PARK_REUSE_AWARE=${SGLANG_KV_PARK_REUSE_AWARE} SGLANG_KV_PARK_REUSE_HALFLIFE_S=${SGLANG_KV_PARK_REUSE_HALFLIFE_S}"
-  ENV_P0="SGLANG_KV_PARK_GPUS=0 ${_PENV}"
-  ENV_P1="SGLANG_KV_PARK_GPUS=1 ${_PENV}"
+  # Which GPUs each prefill may park ONTO.
+  #
+  # Default (0 / 1) gives each prefill a pool on its own GPU only. Cross-P sharing then
+  # exists on the FETCH side alone: P0 can read a prefix P1 parked into P1's pool, but P0
+  # cannot place into P1's idle HBM. That is the "park_local" configuration.
+  #
+  # PARK_PEER=1 gives each prefill a pool on BOTH P GPUs, so under uneven load P0's
+  # placement policy can choose its GPU1 pool because GPU1's live serving usage is low --
+  # the peer-placement mechanism Exp 2 measures. Pool tokens are HALVED so the total park
+  # HBM per GPU is unchanged: otherwise the peer arm would win simply by having twice the
+  # park capacity, which is not the claim.
+  if [ "${PARK_PEER:-0}" = "1" ]; then
+    _HALF=$(( PARK_POOL_TOKENS / 2 ))
+    _PENV_PEER="${_PENV/SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}/SGLANG_KV_PARK_POOL_TOKENS=${_HALF}}"
+    ENV_P0="SGLANG_KV_PARK_GPUS=0,1 ${_PENV_PEER}"
+    ENV_P1="SGLANG_KV_PARK_GPUS=1,0 ${_PENV_PEER}"
+    echo "park: PEER placement ON -- each P owns pools on GPU0+GPU1 at ${_HALF} tokens each"
+  else
+    ENV_P0="SGLANG_KV_PARK_GPUS=${PARK_GPUS_P0:-0} ${_PENV}"
+    ENV_P1="SGLANG_KV_PARK_GPUS=${PARK_GPUS_P1:-1} ${_PENV}"
+  fi
   ENV_D0=""; ENV_D1=""
 else
   PARK_ARG=""; MEMFRAC_P=""
@@ -213,16 +236,44 @@ for port in 30000 30001 30002 30003; do
 done
 
 echo ""
-echo "[6/6] Starting Router (port 8000)..."
-python -m sglang_router.launch_router \
-  --pd-disaggregation \
-  --prefill http://127.0.0.1:30000 8998 \
-  --prefill http://127.0.0.1:30001 8999 \
-  --decode http://127.0.0.1:30002 \
-  --decode http://127.0.0.1:30003 \
-  --host 0.0.0.0 --port 8000 \
-  > "$LOG_DIR/router.log" 2>&1 &
-echo "  PID: $!"
+if [ "$ROUTER_MODE" = "skew" ]; then
+  # Exp 2 (controlled imbalance): ONE ROUTER PER PREFILL, both listing both decodes.
+  # A single router balances the two prefills, so P0 and P1 fill up together and
+  # peer-GPU placement has nothing to exploit -- the effect under test is invisible by
+  # construction. Two routers move the routing decision to the client, which then sets
+  # the skew exactly (SKEW=0.9 -> 90% of sessions to P0) instead of hoping the router's
+  # policy produces an imbalance. Decodes stay shared so only the PREFILL side is skewed.
+  echo "[6/6] Starting TWO routers (skew mode): :8000 -> P0 only, :8001 -> P1 only"
+  python -m sglang_router.launch_router \
+    --pd-disaggregation \
+    --prefill http://127.0.0.1:30000 8998 \
+    --decode http://127.0.0.1:30002 \
+    --decode http://127.0.0.1:30003 \
+    --host 0.0.0.0 --port 8000 \
+    > "$LOG_DIR/router_p0.log" 2>&1 &
+  echo "  :8000 (P0) PID: $!"
+  python -m sglang_router.launch_router \
+    --pd-disaggregation \
+    --prefill http://127.0.0.1:30001 8999 \
+    --decode http://127.0.0.1:30002 \
+    --decode http://127.0.0.1:30003 \
+    --host 0.0.0.0 --port 8001 \
+    > "$LOG_DIR/router_p1.log" 2>&1 &
+  echo "  :8001 (P1) PID: $!"
+  echo "  benchmark with: SGLANG_URLS=http://127.0.0.1:8000/v1/chat/completions,\\"
+  echo "                              http://127.0.0.1:8001/v1/chat/completions SKEW=0.9"
+else
+  echo "[6/6] Starting Router (port 8000)..."
+  python -m sglang_router.launch_router \
+    --pd-disaggregation \
+    --prefill http://127.0.0.1:30000 8998 \
+    --prefill http://127.0.0.1:30001 8999 \
+    --decode http://127.0.0.1:30002 \
+    --decode http://127.0.0.1:30003 \
+    --host 0.0.0.0 --port 8000 \
+    > "$LOG_DIR/router.log" 2>&1 &
+  echo "  PID: $!"
+fi
 
 # ─── Diagnostics: /metrics 엔드포인트 확인 ─────────────────────────────────
 echo ""
