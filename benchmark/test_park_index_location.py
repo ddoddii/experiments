@@ -22,11 +22,17 @@ import tempfile
 # pulls in torch/pybase64/etc -- unnecessary here since this module is stdlib-only.
 _REL = "python/sglang/srt/disaggregation/shared_park_index.py"
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_CANDIDATES = [
-    os.environ.get("SGLANG_SRC", ""),
-    os.path.join(os.path.dirname(_HERE), "..", "sglang", _REL),   # <repo>/../sglang
-    os.path.expanduser(os.path.join("~", "sglang", _REL)),
-]
+_REPO_PARENT = os.path.join(os.path.dirname(_HERE), "..")
+# Tree names differ per machine: the working copy is ~/sglang-source on server17 and
+# ~/sglang in the dev mirror. SGLANG_SRC_DIR is the same variable the start scripts use.
+_TREES = ["sglang-source", "sglang"]
+_CANDIDATES = [os.environ.get("SGLANG_SRC", "")]
+_SRC_DIR = os.environ.get("SGLANG_SRC_DIR", "")
+if _SRC_DIR:
+    _CANDIDATES.append(os.path.join(_SRC_DIR, _REL))
+for _t in _TREES:
+    _CANDIDATES.append(os.path.join(_REPO_PARENT, _t, _REL))          # <repo>/../<tree>
+    _CANDIDATES.append(os.path.expanduser(os.path.join("~", _t, _REL)))
 _SPI = next((os.path.normpath(p) for p in _CANDIDATES
              if p and os.path.exists(os.path.normpath(p))), None)
 if _SPI is None:
@@ -36,6 +42,9 @@ _spec = importlib.util.spec_from_file_location("shared_park_index", _SPI)
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 LOC_GPU, LOC_HOST, SharedParkIndex = _mod.LOC_GPU, _mod.LOC_HOST, _mod.SharedParkIndex
+# Print it: with several candidate trees on a machine, a pass against the WRONG tree is
+# worse than a failure. Set SGLANG_SRC_DIR (or SGLANG_SRC) to pin it.
+print(f"[test] shared_park_index.py under test: {_SPI}")
 
 FAILS = []
 
