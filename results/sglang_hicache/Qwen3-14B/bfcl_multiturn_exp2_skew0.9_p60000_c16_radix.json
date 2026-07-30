@@ -1,0 +1,5114 @@
+{
+  "summary": {
+    "config": "exp2_skew0.9_p60000_c16_radix",
+    "model": "/home/uhmturks/hf_models/Qwen3-14B",
+    "concurrency": 16,
+    "hicache_write_policy": "write_through",
+    "tool_delay_sec": 3.0,
+    "flood_during_delay": true,
+    "flood_n": 30,
+    "flood_tokens": 3000,
+    "total_items": 200,
+    "success_items": 20,
+    "error_items": 180,
+    "total_output_tokens": 2314,
+    "total_wall_time_s": 51.03,
+    "overall_throughput_tok_per_s": 45.34,
+    "avg_ttft_s": 5.0101,
+    "avg_tpot_s": 0.014,
+    "avg_throughput_tok_per_s": 18032.96,
+    "ttft_after_tool_delay_s": 3.3804,
+    "ttft_no_delay_s": 6.3953,
+    "ttft_degradation_s": -3.0149,
+    "turns_after_delay_count": 47,
+    "ttft_p50_s": 5.1926,
+    "ttft_p90_s": 7.5154,
+    "ttft_p95_s": 9.8216,
+    "ttft_p99_s": 10.3751,
+    "ttft_histogram": {
+      "lt_0.5s": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "0.5_1.5s": {
+        "count": 22,
+        "pct": 32.8
+      },
+      "1.5_2.5s": {
+        "count": 2,
+        "pct": 3.0
+      },
+      "gt_2.5s": {
+        "count": 43,
+        "pct": 64.2
+      }
+    },
+    "ttft_histogram_after_delay": {
+      "lt_0.5s": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "0.5_1.5s": {
+        "count": 21,
+        "pct": 44.7
+      },
+      "1.5_2.5s": {
+        "count": 1,
+        "pct": 2.1
+      },
+      "gt_2.5s": {
+        "count": 25,
+        "pct": 53.2
+      }
+    },
+    "hicache_stats": {
+      "p1": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0,
+          "samples": 23
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 0,
+          "mean": 0.0,
+          "samples": 23
+        },
+        "num_used_tokens": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0,
+          "samples": 23
+        },
+        "token_capacity": 60000,
+        "kvcache_gb": 7.32
+      },
+      "p2": {
+        "token_usage": {
+          "min": 0.0894,
+          "max": 0.4622,
+          "mean": 0.1731,
+          "samples": 23
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 0,
+          "mean": 0.0,
+          "samples": 23
+        },
+        "num_used_tokens": {
+          "min": 5365.0,
+          "max": 27734.0,
+          "mean": 10388.0435,
+          "samples": 23
+        },
+        "token_capacity": 60000,
+        "kvcache_gb": 7.32
+      },
+      "d1": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.2638,
+          "mean": 0.0764,
+          "samples": 23
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 3,
+          "mean": 1.2174,
+          "samples": 23
+        },
+        "num_used_tokens": {
+          "min": 5211.0,
+          "max": 55140.0,
+          "mean": 16688.3182,
+          "samples": 22
+        },
+        "token_capacity": 209038,
+        "kvcache_gb": 25.52,
+        "_prom_metric_names": [
+          "sglang:cuda_graph_passes_total",
+          "sglang:e2e_request_latency_seconds_bucket",
+          "sglang:e2e_request_latency_seconds_count",
+          "sglang:e2e_request_latency_seconds_sum",
+          "sglang:generation_tokens_total",
+          "sglang:http_requests_active",
+          "sglang:http_requests_total",
+          "sglang:http_responses_total",
+          "sglang:inter_token_latency_seconds_bucket",
+          "sglang:inter_token_latency_seconds_count",
+          "sglang:inter_token_latency_seconds_sum",
+          "sglang:num_requests_total",
+          "sglang:num_retractions_bucket",
+          "sglang:num_retractions_count",
+          "sglang:num_retractions_sum",
+          "sglang:per_stage_req_latency_seconds_bucket",
+          "sglang:per_stage_req_latency_seconds_count",
+          "sglang:per_stage_req_latency_seconds_sum",
+          "sglang:process_cpu_seconds_total",
+          "sglang:prompt_tokens_total",
+          "sglang:realtime_tokens_total",
+          "sglang:routing_keys_active",
+          "sglang:time_to_first_token_seconds_bucket",
+          "sglang:time_to_first_token_seconds_count",
+          "sglang:time_to_first_token_seconds_sum"
+        ]
+      },
+      "d2": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.1566,
+          "mean": 0.0618,
+          "samples": 23
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 2,
+          "mean": 1.1304,
+          "samples": 23
+        },
+        "num_used_tokens": {
+          "min": 5377.0,
+          "max": 32727.0,
+          "mean": 13506.7273,
+          "samples": 22
+        },
+        "token_capacity": 209038,
+        "kvcache_gb": 25.52,
+        "_prom_metric_names": [
+          "sglang:cuda_graph_passes_total",
+          "sglang:e2e_request_latency_seconds_bucket",
+          "sglang:e2e_request_latency_seconds_count",
+          "sglang:e2e_request_latency_seconds_sum",
+          "sglang:generation_tokens_total",
+          "sglang:http_requests_active",
+          "sglang:http_requests_total",
+          "sglang:http_responses_total",
+          "sglang:inter_token_latency_seconds_bucket",
+          "sglang:inter_token_latency_seconds_count",
+          "sglang:inter_token_latency_seconds_sum",
+          "sglang:num_requests_total",
+          "sglang:num_retractions_bucket",
+          "sglang:num_retractions_count",
+          "sglang:num_retractions_sum",
+          "sglang:per_stage_req_latency_seconds_bucket",
+          "sglang:per_stage_req_latency_seconds_count",
+          "sglang:per_stage_req_latency_seconds_sum",
+          "sglang:process_cpu_seconds_total",
+          "sglang:prompt_tokens_total",
+          "sglang:realtime_tokens_total",
+          "sglang:routing_keys_active",
+          "sglang:time_to_first_token_seconds_bucket",
+          "sglang:time_to_first_token_seconds_count",
+          "sglang:time_to_first_token_seconds_sum"
+        ]
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "multi_turn_base_1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_2",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_3",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_5",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_6",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_11",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_7",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_9",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_8",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_4",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_16",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_12",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_13",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_14",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_15",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_17",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_18",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_19",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_21",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_22",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_23",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_24",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_26",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_27",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_28",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_29",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_25",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_31",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_32",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_33",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_34",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_36",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_35",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_37",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_38",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_39",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_41",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_42",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_43",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_44",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_45",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_46",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_49",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_48",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_52",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_54",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_55",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_56",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_58",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_57",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_59",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_63",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_64",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_65",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_66",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_69",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_71",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_72",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_73",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_74",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_75",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_76",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_77",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_78",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_79",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_83",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_84",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_86",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_85",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_87",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_88",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_89",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_91",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_92",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_94",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_93",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_96",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_97",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_98",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_99",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_101",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_102",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_103",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_104",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_105",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_106",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_107",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_111",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_109",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_108",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_115",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_113",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_114",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_112",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_117",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_118",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_119",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_122",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_124",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_128",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_129",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_131",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_132",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_133",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_134",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_135",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_136",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_138",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_139",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_141",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_142",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_143",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_145",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_146",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_147",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_148",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_149",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_50",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "Hey there, I noticed that all of my car doors seem to have locked themselves up, and with my schedule being pretty tight",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_9d47dcc5e1e64bacadc3e925",
+              "type": "function",
+              "function": {
+                "name": "lockDoors",
+                "arguments": "{\"unlock\": \"True\", \"door\": \"['driver', 'passenger', 'rear_left', 'rear_right']\"}"
+              }
+            },
+            {
+              "id": "call_295e58e3de384224b6b46e41",
+              "type": "function",
+              "function": {
+                "name": "setHeadlights",
+                "arguments": "{\"mode\": \"on\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 4.6374,
+          "tpot_s": 0.0181,
+          "output_tokens": 57,
+          "e2e_latency_s": 5.6502,
+          "throughput_tok_per_s": 55.29,
+          "context_chars": 1176,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.6374,
+      "avg_tpot_s": 0.0181,
+      "avg_throughput": 55.29,
+      "total_output_tokens": 57,
+      "ttft_by_turn": {
+        "0": 4.6374
+      }
+    },
+    {
+      "id": "multi_turn_base_151",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_152",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_153",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_154",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_155",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_158",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_159",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_110",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "I'm currently exploring the StockView platform and wish to take a peek at the assortment in my stock watchlist. I'd appr",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_9d8c468eeee24fe49eb9b0eb",
+              "type": "function",
+              "function": {
+                "name": "get_watchlist",
+                "arguments": ""
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 9.2573,
+          "tpot_s": null,
+          "output_tokens": 15,
+          "e2e_latency_s": 9.2573,
+          "throughput_tok_per_s": null,
+          "context_chars": 2475,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 400 from http://127.0.0.1:8001/v1/chat/completions: data: {'error': {\"message\":{\"object\":\"error\",\"message\":\"Input is a zero-length, empty document: line 1 column 1 (char 0)\",\"type\":\"BadReques"
+        }
+      ],
+      "avg_ttft_s": 9.2573,
+      "avg_tpot_s": 0.0,
+      "avg_throughput": 0.0,
+      "total_output_tokens": 15,
+      "ttft_by_turn": {
+        "0": 9.2573
+      }
+    },
+    {
+      "id": "multi_turn_base_161",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_163",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_168",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_169",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_70",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "Ensure the fuel tank is replenished adequately by adding 38 liters of gasoline so that we're well-prepared for the lengt",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_d06a9db1201d4db898d3b0d6",
+              "type": "function",
+              "function": {
+                "name": "fillFuelTank",
+                "arguments": "{\"fuelAmount\": 38.0}"
+              }
+            },
+            {
+              "id": "call_44ea13c3d11943cf8b054e16",
+              "type": "function",
+              "function": {
+                "name": "startEngine",
+                "arguments": "{\"ignitionMode\": \"START\"}"
+              }
+            },
+            {
+              "id": "call_767689b6c6e64ca682b017d4",
+              "type": "function",
+              "function": {
+                "name": "lockDoors",
+                "arguments": "{\"unlock\": \"False\", \"door\": \"['driver', 'passenger', 'rear_left', 'rear_right']\"}"
+              }
+            },
+            {
+              "id": "call_f037ba0726124e4eb87d7bed",
+              "type": "function",
+              "function": {
+                "name": "activateParkingBrake",
+                "arguments": "{\"mode\": \"engage\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 5.776,
+          "tpot_s": 0.0208,
+          "output_tokens": 98,
+          "e2e_latency_s": 7.7982,
+          "throughput_tok_per_s": 47.97,
+          "context_chars": 1215,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 10.9,
+          "user": "As we gear up for our adventure, it’s wise to confirm that each tire is inflated to a stable 32 PSI. Should any of the t",
+          "assistant": " \"parameters\": {\"pressure\": 32.0}}",
+          "tool_calls": null,
+          "had_tool_call": false,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.513,
+          "tpot_s": 0.0121,
+          "output_tokens": 21,
+          "e2e_latency_s": 5.7556,
+          "throughput_tok_per_s": 82.46,
+          "context_chars": 1474,
+          "finish_reason": "stop",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 5.6445,
+      "avg_tpot_s": 0.0164,
+      "avg_throughput": 65.22,
+      "total_output_tokens": 119,
+      "ttft_by_turn": {
+        "0": 5.776,
+        "1": 5.513
+      }
+    },
+    {
+      "id": "multi_turn_base_171",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_172",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_173",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_174",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_175",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_176",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_177",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_178",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_179",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_30",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Search for test result of Apollo Project which is supposed to be in the project directory. It's likely a JSON file. Whil",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_4f97d7e5b5e64977ba546e39",
+              "type": "function",
+              "function": {
+                "name": "grep",
+                "arguments": "{\"file_name\": \"test_results.json\", \"pattern\": \"Apollo Project\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 3.5639,
+          "tpot_s": 0.0189,
+          "output_tokens": 27,
+          "e2e_latency_s": 4.0543,
+          "throughput_tok_per_s": 53.01,
+          "context_chars": 1846,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 7.1,
+          "user": "Craft and broadcast an electrifying tweet on my profile, sharing with the world the thrilling discovery of these previou",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_ec31673f580c4f60ad67dacb",
+              "type": "function",
+              "function": {
+                "name": "post_tweet",
+                "arguments": "{\"content\": \"{\\\"experiment\\\": \\\"Apollo Test\\\", \\\"result\\\": \\\"Success\\\", \\\"details\\\": \\\"All systems operational.\\\"}\", \"tags\": \"['#Apollo', '#ProjectApollo', '#Discovery']\", \"mentions\": \"[]\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.7578,
+          "tpot_s": 0.0151,
+          "output_tokens": 57,
+          "e2e_latency_s": 6.6037,
+          "throughput_tok_per_s": 66.2,
+          "context_chars": 2116,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.6608,
+      "avg_tpot_s": 0.017,
+      "avg_throughput": 59.61,
+      "total_output_tokens": 84,
+      "ttft_by_turn": {
+        "0": 3.5639,
+        "1": 5.7578
+      }
+    },
+    {
+      "id": "multi_turn_base_181",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_182",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_183",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_184",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_185",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_20",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Go to documents folder in CWD. Next, from the first document in current folder. What does the last line look like?",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_8bb4a9ca18e343f4a33ae6c6",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"documents\"}"
+              }
+            },
+            {
+              "id": "call_2cdaeb7200c343809d758756",
+              "type": "function",
+              "function": {
+                "name": "cat",
+                "arguments": "{\"file_name\": \"file1.txt\"}"
+              }
+            },
+            {
+              "id": "call_7bac43d6c58149ac96e427ed",
+              "type": "function",
+              "function": {
+                "name": "tail",
+                "arguments": "{\"file_name\": \"file1.txt\", \"lines\": \"1\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 2.9356,
+          "tpot_s": 0.02,
+          "output_tokens": 61,
+          "e2e_latency_s": 4.1381,
+          "throughput_tok_per_s": 49.89,
+          "context_chars": 1153,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 7.2,
+          "user": "Write the difference of the first two file into a new file call file5.txt.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_66886da811b84b78b7fac411",
+              "type": "function",
+              "function": {
+                "name": "diff",
+                "arguments": "{\"file_name1\": \"file1.txt\", \"file_name2\": \"file2.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.2498,
+          "tpot_s": 0.0101,
+          "output_tokens": 30,
+          "e2e_latency_s": 6.5438,
+          "throughput_tok_per_s": 98.66,
+          "context_chars": 1266,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.5927,
+      "avg_tpot_s": 0.0151,
+      "avg_throughput": 74.28,
+      "total_output_tokens": 91,
+      "ttft_by_turn": {
+        "0": 2.9356,
+        "1": 6.2498
+      }
+    },
+    {
+      "id": "multi_turn_base_186",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_187",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_188",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_189",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_191",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_192",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_193",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_194",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_195",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_196",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_197",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_198",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_199",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_60",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "It's been quite an adventure today! Before embarking on a long trip, I filled up my cars fuel tank, doubling its existin",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1a3fee1fe15447fa96e35605",
+              "type": "function",
+              "function": {
+                "name": "fillFuelTank",
+                "arguments": "{\"fuelAmount\": \"20\"}"
+              }
+            },
+            {
+              "id": "call_9bcec4bee5fb483f97744b33",
+              "type": "function",
+              "function": {
+                "name": "startEngine",
+                "arguments": "{\"ignitionMode\": \"START\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 5.1926,
+          "tpot_s": 0.019,
+          "output_tokens": 39,
+          "e2e_latency_s": 5.9153,
+          "throughput_tok_per_s": 52.58,
+          "context_chars": 1315,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 9.0,
+          "user": "Oh no! One of the tires feels odd. Could you check the tire pressure to confirm if they're at a healthy level?",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_53333c48866f4a1d9413879d",
+              "type": "function",
+              "function": {
+                "name": "check_tire_pressure",
+                "arguments": ""
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.205,
+          "tpot_s": null,
+          "output_tokens": 15,
+          "e2e_latency_s": 6.205,
+          "throughput_tok_per_s": null,
+          "context_chars": 1474,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "error": "HTTP 400 from http://127.0.0.1:8001/v1/chat/completions: data: {'error': {\"message\":{\"object\":\"error\",\"message\":\"Input is a zero-length, empty document: line 1 column 1 (char 0)\",\"type\":\"BadReques"
+        }
+      ],
+      "avg_ttft_s": 5.6988,
+      "avg_tpot_s": 0.019,
+      "avg_throughput": 52.58,
+      "total_output_tokens": 54,
+      "ttft_by_turn": {
+        "0": 5.1926,
+        "1": 6.205
+      }
+    },
+    {
+      "id": "multi_turn_base_100",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "I'm contemplating enhancing my investment portfolio with some tech industry assets, and I've got my eye on Nvidia. I'm k",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_17e0cc740d334506be691846",
+              "type": "function",
+              "function": {
+                "name": "get_stock_info",
+                "arguments": "{\"symbol\": \"NVDA\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 9.2672,
+          "tpot_s": 0.0,
+          "output_tokens": 20,
+          "e2e_latency_s": 9.2673,
+          "throughput_tok_per_s": 319811.49,
+          "context_chars": 2428,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 12.4,
+          "user": "Additionally, as I'm strategizing to expand my investments further, I need some help replenishing my trading account. Le",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_afdf26041348400385542e11",
+              "type": "function",
+              "function": {
+                "name": "trading_login",
+                "arguments": "{\"username\": \"Ramkumar\", \"password\": \"hello123\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.7519,
+          "tpot_s": 0.0009,
+          "output_tokens": 27,
+          "e2e_latency_s": 5.7742,
+          "throughput_tok_per_s": 1162.83,
+          "context_chars": 2806,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 7.5096,
+      "avg_tpot_s": 0.0009,
+      "avg_throughput": 160487.16,
+      "total_output_tokens": 47,
+      "ttft_by_turn": {
+        "0": 9.2672,
+        "1": 5.7519
+      }
+    },
+    {
+      "id": "multi_turn_base_140",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.2,
+          "user": "I'm contemplating whether adding Zeta Corp's stock to my watchlist is the right move. It sounds like it's on a noteworth",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_8709226b8a31444cbd3573b0",
+              "type": "function",
+              "function": {
+                "name": "add_to_watchlist",
+                "arguments": "{\"stock\": \"ZETA\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.3751,
+          "tpot_s": 0.008,
+          "output_tokens": 21,
+          "e2e_latency_s": 10.5357,
+          "throughput_tok_per_s": 124.56,
+          "context_chars": 2456,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 13.7,
+          "user": "I'm gearing up to critique some financial strategies. Could you assist by checking the balance of my account and confirm",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_8ec49c30daa140ceb2535292",
+              "type": "function",
+              "function": {
+                "name": "get_account_info",
+                "arguments": ""
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.7254,
+          "tpot_s": null,
+          "output_tokens": 14,
+          "e2e_latency_s": 6.7254,
+          "throughput_tok_per_s": null,
+          "context_chars": 2658,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "error": "HTTP 400 from http://127.0.0.1:8001/v1/chat/completions: data: {'error': {\"message\":{\"object\":\"error\",\"message\":\"Input is a zero-length, empty document: line 1 column 1 (char 0)\",\"type\":\"BadReques"
+        }
+      ],
+      "avg_ttft_s": 8.5503,
+      "avg_tpot_s": 0.008,
+      "avg_throughput": 124.56,
+      "total_output_tokens": 35,
+      "ttft_by_turn": {
+        "0": 10.3751,
+        "1": 6.7254
+      }
+    },
+    {
+      "id": "multi_turn_base_150",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.2,
+          "user": "Wanderlust is calling, and I'm mapping out my travel from Rivermist to Stonebrook in the month of October—the skies abov",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_a7308c60e935458b93b0b2c0",
+              "type": "function",
+              "function": {
+                "name": "get_flight_cost",
+                "arguments": "{\"travel_from\": \"RIV\", \"travel_to\": \"STB\", \"travel_date\": \"2024-10-06\", \"travel_class\": \"economy\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.3663,
+          "tpot_s": 0.021,
+          "output_tokens": 49,
+          "e2e_latency_s": 11.3755,
+          "throughput_tok_per_s": 47.56,
+          "context_chars": 828,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 14.6,
+          "user": "Let's anchor my daily spend at 15400 GBP—an expedient conversion—per my esteemed authorization. I appreciate your assist",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_06587d81880a4b43a6a881ff",
+              "type": "function",
+              "function": {
+                "name": "set_budget_limit",
+                "arguments": "{\"access_token\": \"abc123token\", \"budget_limit\": 15400.0}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.4562,
+          "tpot_s": 0.0109,
+          "output_tokens": 31,
+          "e2e_latency_s": 6.7835,
+          "throughput_tok_per_s": 91.67,
+          "context_chars": 1082,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 8.4113,
+      "avg_tpot_s": 0.0159,
+      "avg_throughput": 69.62,
+      "total_output_tokens": 80,
+      "ttft_by_turn": {
+        "0": 10.3663,
+        "1": 6.4562
+      }
+    },
+    {
+      "id": "multi_turn_base_40",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "Arrange a complete listing of all files and directories presently located here, making sure you don't overlook the hidde",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_bb27228b429e4682925f5232",
+              "type": "function",
+              "function": {
+                "name": "ls",
+                "arguments": "{\"a\": \"True\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 4.0577,
+          "tpot_s": 0.0114,
+          "output_tokens": 17,
+          "e2e_latency_s": 4.2396,
+          "throughput_tok_per_s": 87.98,
+          "context_chars": 1080,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 7.3,
+          "user": "Transfer the 'annual_report.txt' in Documents directory to the 'Reports' directory that's in Documents directory, but al",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_0dad3d28c2b34b85a544e0ad",
+              "type": "function",
+              "function": {
+                "name": "cp",
+                "arguments": "{\"source\": \"annual_report.txt\", \"destination\": \"Reports/annual_report.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.7201,
+          "tpot_s": 0.0139,
+          "output_tokens": 28,
+          "e2e_latency_s": 7.0961,
+          "throughput_tok_per_s": 71.81,
+          "context_chars": 1293,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 17.5,
+          "user": "Reveal the last lines of 'Q4_summary.doc' so we can ascertain how the report wraps up.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_0ce96676ccf54809a8132867",
+              "type": "function",
+              "function": {
+                "name": "tail",
+                "arguments": "{\"file_name\": \"Q4_summary.doc\", \"lines\": \"10\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.5098,
+          "tpot_s": 0.018,
+          "output_tokens": 26,
+          "e2e_latency_s": 6.9604,
+          "throughput_tok_per_s": 55.48,
+          "context_chars": 1418,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 27.5,
+          "user": "Attempt to relay a message to the individual with ID 'USR002' by logging in as USR001, updating them on the finalization",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_5c491674bcce489bacac4871",
+              "type": "function",
+              "function": {
+                "name": "message_login",
+                "arguments": "{\"user_id\": \"USR001\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.8141,
+          "tpot_s": 0.0154,
+          "output_tokens": 19,
+          "e2e_latency_s": 1.0913,
+          "throughput_tok_per_s": 64.92,
+          "context_chars": 1634,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.5254,
+      "avg_tpot_s": 0.0147,
+      "avg_throughput": 70.05,
+      "total_output_tokens": 90,
+      "ttft_by_turn": {
+        "0": 4.0577,
+        "1": 6.7201,
+        "2": 6.5098,
+        "3": 0.8141
+      }
+    },
+    {
+      "id": "multi_turn_base_0",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Move 'final_report.pdf' within document directory to 'temp' directory in document. Make sure to create the directory",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_edeba46657464c51b1167d8c",
+              "type": "function",
+              "function": {
+                "name": "mv",
+                "arguments": "{\"source\": \"final_report.pdf\", \"destination\": \"temp/final_report.pdf\"}"
+              }
+            },
+            {
+              "id": "call_81304df21668422984f8144c",
+              "type": "function",
+              "function": {
+                "name": "mkdir",
+                "arguments": "{\"dir_name\": \"temp\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 2.492,
+          "tpot_s": 0.0201,
+          "output_tokens": 46,
+          "e2e_latency_s": 3.3984,
+          "throughput_tok_per_s": 49.65,
+          "context_chars": 1816,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 6.5,
+          "user": "Perform a detailed search using grep to identify sections in the file pertaining to 'budget analysis'.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_78929c64c4ed472c9b1e01c0",
+              "type": "function",
+              "function": {
+                "name": "grep",
+                "arguments": "{\"file_name\": \"final_report.pdf\", \"pattern\": \"budget analysis\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.8626,
+          "tpot_s": 0.0017,
+          "output_tokens": 26,
+          "e2e_latency_s": 5.9051,
+          "throughput_tok_per_s": 588.34,
+          "context_chars": 1957,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 15.4,
+          "user": "Upon identifying the requisite 'budget analysis' content, sort the 'final_report.pdf' by line for improved clarity and c",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_06f51c1de0d2428b9a172996",
+              "type": "function",
+              "function": {
+                "name": "sort",
+                "arguments": "{\"file_name\": \"final_report.pdf\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.7862,
+          "tpot_s": 0.0079,
+          "output_tokens": 19,
+          "e2e_latency_s": 6.9293,
+          "throughput_tok_per_s": 125.82,
+          "context_chars": 2131,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 25.4,
+          "user": "Move 'previous_report.pdf' in document directory to temp as well and having final report also there, proceed to juxtapos",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_9b5593821d714ab5b58acf2b",
+              "type": "function",
+              "function": {
+                "name": "mv",
+                "arguments": "{\"source\": \"previous_report.pdf\", \"destination\": \"temp/previous_report.pdf\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 2.7537,
+          "tpot_s": 0.0186,
+          "output_tokens": 28,
+          "e2e_latency_s": 3.2547,
+          "throughput_tok_per_s": 53.89,
+          "context_chars": 2359,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.4736,
+      "avg_tpot_s": 0.0121,
+      "avg_throughput": 204.43,
+      "total_output_tokens": 119,
+      "ttft_by_turn": {
+        "0": 2.492,
+        "1": 5.8626,
+        "2": 6.7862,
+        "3": 2.7537
+      }
+    },
+    {
+      "id": "multi_turn_base_160",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 8.8,
+          "user": "As a seasoned real estate agent, my expertise is all about ensuring your bakery finds the perfect spot to thrive. Now, i",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_ac62a12b83d940e2b3ee216f",
+              "type": "function",
+              "function": {
+                "name": "set_budget_limit",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"budget_limit\": 20000.0}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 5.8712,
+          "tpot_s": 0.0137,
+          "output_tokens": 32,
+          "e2e_latency_s": 6.2959,
+          "throughput_tok_per_s": 72.98,
+          "context_chars": 1240,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 18.1,
+          "user": "Switching gears, once your financial plan is secured and straightened out, it’s time to arrange your business-class jour",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_baf6b5190c00440caccb04cb",
+              "type": "function",
+              "function": {
+                "name": "book_flight",
+                "arguments": "{\"travel_class\": \"business\", \"travel_cost\": 2300, \"card_id\": \"card_3478\", \"access_token\": \"abc123xyz\", \"travel_date\": \"2024-02-28\", \"travel_from\": \"JFK\", \"travel_to\": \"LAX\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.4747,
+          "tpot_s": 0.0215,
+          "output_tokens": 73,
+          "e2e_latency_s": 8.0224,
+          "throughput_tok_per_s": 46.52,
+          "context_chars": 1656,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 29.2,
+          "user": "Segueing into your organizational requirements, it seems there’s an ongoing examination under the company's digital syst",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_ad71d044ad6e487ab039176c",
+              "type": "function",
+              "function": {
+                "name": "close_ticket",
+                "arguments": "{\"ticket_id\": 83912}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.7203,
+          "tpot_s": 0.0159,
+          "output_tokens": 19,
+          "e2e_latency_s": 1.0056,
+          "throughput_tok_per_s": 63.08,
+          "context_chars": 1861,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.3554,
+      "avg_tpot_s": 0.017,
+      "avg_throughput": 60.86,
+      "total_output_tokens": 124,
+      "ttft_by_turn": {
+        "0": 5.8712,
+        "1": 6.4747,
+        "2": 0.7203
+      }
+    },
+    {
+      "id": "multi_turn_base_120",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "Stay updated on the current market status on my behalf.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_f29bb66eb0bc4d689e79499f",
+              "type": "function",
+              "function": {
+                "name": "update_market_status",
+                "arguments": "{\"current_time_str\": \"current time\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 9.8312,
+          "tpot_s": 0.0,
+          "output_tokens": 21,
+          "e2e_latency_s": 9.8312,
+          "throughput_tok_per_s": 462000.8,
+          "context_chars": 2259,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 13.0,
+          "user": "After confirming the market's operational status, proceed to purchase 100 Apple shares at the prevailing market price.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_a39c77554d3c4038a61b0fbb",
+              "type": "function",
+              "function": {
+                "name": "place_order",
+                "arguments": "{\"order_type\": \"Buy\", \"symbol\": \"AAPL\", \"price\": 227.16, \"amount\": 100}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.3052,
+          "tpot_s": 0.0181,
+          "output_tokens": 39,
+          "e2e_latency_s": 6.9926,
+          "throughput_tok_per_s": 55.28,
+          "context_chars": 2434,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 23.1,
+          "user": "Review the AAPL order details to ensure it's error-free and accurately executed.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_97be07d65fdc4c35b1b9113a",
+              "type": "function",
+              "function": {
+                "name": "get_order_details",
+                "arguments": "{\"order_id\": \"12446\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 3.239,
+          "tpot_s": 0.0137,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.499,
+          "throughput_tok_per_s": 73.06,
+          "context_chars": 2562,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 29.6,
+          "user": "Cancel the previously placed order immediately and manage the procedure for me.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1ec5ba800bf54c71bc845dfc",
+              "type": "function",
+              "function": {
+                "name": "cancel_order",
+                "arguments": "{\"order_id\": \"12446\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.582,
+          "tpot_s": 0.0156,
+          "output_tokens": 19,
+          "e2e_latency_s": 0.862,
+          "throughput_tok_per_s": 64.28,
+          "context_chars": 2695,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.9893,
+      "avg_tpot_s": 0.0158,
+      "avg_throughput": 115548.35,
+      "total_output_tokens": 99,
+      "ttft_by_turn": {
+        "0": 9.8312,
+        "1": 6.3052,
+        "2": 3.239,
+        "3": 0.582
+      }
+    },
+    {
+      "id": "multi_turn_base_90",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "I need to fill 150 liters of gasoline into my vehicle for today's trip and then start the engine using the standard star",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_4a48751e375843eba7eae904",
+              "type": "function",
+              "function": {
+                "name": "gallon_to_liter",
+                "arguments": "{\"gallon\": 31}"
+              }
+            },
+            {
+              "id": "call_16dd6ad1a78f4c0281140a86",
+              "type": "function",
+              "function": {
+                "name": "fillFuelTank",
+                "arguments": "{\"fuelAmount\": 31}"
+              }
+            },
+            {
+              "id": "call_b9515407f2e64f3d8f30f9b2",
+              "type": "function",
+              "function": {
+                "name": "startEngine",
+                "arguments": "{\"ignitionMode\": \"START\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 7.5154,
+          "tpot_s": 0.0186,
+          "output_tokens": 60,
+          "e2e_latency_s": 8.6123,
+          "throughput_tok_per_s": 53.79,
+          "context_chars": 1562,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 11.8,
+          "user": "Find out the distance from San Francisco to Rivermist for my travel plans to determine fuel consumption and travel time.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_9e34829bdb0a41f2b9b566ac",
+              "type": "function",
+              "function": {
+                "name": "estimate_distance",
+                "arguments": "{\"cityA\": \"San Francisco\", \"cityB\": \"Rivermist\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.784,
+          "tpot_s": 0.0102,
+          "output_tokens": 27,
+          "e2e_latency_s": 6.0486,
+          "throughput_tok_per_s": 98.26,
+          "context_chars": 1734,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 20.9,
+          "user": "Also, on Twitter, let everyone know about my upcoming trip from San Francisco to Rivermist, with content 'Excited for my",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1c9b77de4ebc4dcb9e63db4f",
+              "type": "function",
+              "function": {
+                "name": "post_tweet",
+                "arguments": "{\"content\": \"Excited for my trip from San Francisco to Rivermist!\", \"tags\": \"['#JourneyAhead']\", \"mentions\": \"['@TravelBuddy']\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.1929,
+          "tpot_s": 0.0187,
+          "output_tokens": 48,
+          "e2e_latency_s": 6.0737,
+          "throughput_tok_per_s": 53.36,
+          "context_chars": 2009,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 30.0,
+          "user": "After posting, make sure to add a mention of @RoadsideAssistance to the tweet we just created to ensure everyone is cove",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_91f357b878534c48acc1dc5e",
+              "type": "function",
+              "function": {
+                "name": "mention",
+                "arguments": "{\"tweet_id\": \"0\", \"mentioned_usernames\": \"['@RoadsideAssistance']\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6757,
+          "tpot_s": 0.0199,
+          "output_tokens": 31,
+          "e2e_latency_s": 1.272,
+          "throughput_tok_per_s": 50.31,
+          "context_chars": 2196,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.792,
+      "avg_tpot_s": 0.0169,
+      "avg_throughput": 63.93,
+      "total_output_tokens": 166,
+      "ttft_by_turn": {
+        "0": 7.5154,
+        "1": 5.784,
+        "2": 5.1929,
+        "3": 0.6757
+      }
+    },
+    {
+      "id": "multi_turn_base_10",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Hey, can you set up a new directory named 'Projects' right in workspace folder?",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_2076f00d6fff4145abf1e07c",
+              "type": "function",
+              "function": {
+                "name": "mkdir",
+                "arguments": "{\"dir_name\": \"Projects\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 1.1893,
+          "tpot_s": 0.001,
+          "output_tokens": 18,
+          "e2e_latency_s": 1.2057,
+          "throughput_tok_per_s": 1035.22,
+          "context_chars": 741,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 4.3,
+          "user": "Let's move over the project's proposal document into this 'Projects' folder, but we'll go ahead and rename it to 'final_",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_e4ea3a1a68f54477a2740caf",
+              "type": "function",
+              "function": {
+                "name": "mv",
+                "arguments": "{\"source\": \"proposal.docx\", \"destination\": \"Projects/final_proposal_2024\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.8406,
+          "tpot_s": 0.0164,
+          "output_tokens": 31,
+          "e2e_latency_s": 7.3317,
+          "throughput_tok_per_s": 61.09,
+          "context_chars": 918,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 14.7,
+          "user": "Inside this directory, get cracking on a new file, call it 'notes.md', to capture all the highlights from our meetings.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_42b337baf8cf41e99d1d8d1d",
+              "type": "function",
+              "function": {
+                "name": "touch",
+                "arguments": "{\"file_name\": \"notes.md\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.9727,
+          "tpot_s": 0.0,
+          "output_tokens": 18,
+          "e2e_latency_s": 6.9727,
+          "throughput_tok_per_s": 415444.92,
+          "context_chars": 1076,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 24.7,
+          "user": "Also, create a file named 'summary.txt' and write 'Hello' into it. After that, do a quick comparison between this one an",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_cdeda422e77d4444b28e0274",
+              "type": "function",
+              "function": {
+                "name": "echo",
+                "arguments": "{\"content\": \"Hello\", \"file_name\": \"summary.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 2.5099,
+          "tpot_s": 0.0174,
+          "output_tokens": 24,
+          "e2e_latency_s": 2.911,
+          "throughput_tok_per_s": 57.34,
+          "context_chars": 1290,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 30.6,
+          "user": "Finally, tally up the number of characters in 'summary.txt'.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_f01d2bca45e94dbaa0761166",
+              "type": "function",
+              "function": {
+                "name": "wc",
+                "arguments": "{\"file_name\": \"summary.txt\", \"mode\": \"c\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.3362,
+          "tpot_s": 0.0183,
+          "output_tokens": 24,
+          "e2e_latency_s": 1.758,
+          "throughput_tok_per_s": 54.53,
+          "context_chars": 1391,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 3.7697,
+      "avg_tpot_s": 0.0133,
+      "avg_throughput": 83330.62,
+      "total_output_tokens": 115,
+      "ttft_by_turn": {
+        "0": 1.1893,
+        "1": 6.8406,
+        "2": 6.9727,
+        "3": 2.5099,
+        "4": 1.3362
+      }
+    },
+    {
+      "id": "multi_turn_base_80",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "You're planning an extended expedition from Rivermist to San Francisco. Could you determine the travel distance between ",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_a5f748b996b045c789c2f581",
+              "type": "function",
+              "function": {
+                "name": "estimate_distance",
+                "arguments": "{\"cityA\": \"Rivermist\", \"cityB\": \"San Francisco\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.9471,
+          "tpot_s": 0.0044,
+          "output_tokens": 28,
+          "e2e_latency_s": 7.0668,
+          "throughput_tok_per_s": 225.49,
+          "context_chars": 1086,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 10.2,
+          "user": "Next, I need to verify if my car's mileage capacity suffices for the journey. Can you assess if the vehicle can handle t",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1a368f3cd50b4f7183386bf4",
+              "type": "function",
+              "function": {
+                "name": "estimate_drive_feasibility_by_mileage",
+                "arguments": "{\"distance\": \"calculate travel distance\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.1941,
+          "tpot_s": 0.0046,
+          "output_tokens": 26,
+          "e2e_latency_s": 6.3096,
+          "throughput_tok_per_s": 216.31,
+          "context_chars": 1290,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 19.6,
+          "user": "It seems I've discovered the tank isn't full. Could you be so kind as to facilitate refueling the vehicle fully for such",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_229718df6b6f49b58662fc7c",
+              "type": "function",
+              "function": {
+                "name": "fillFuelTank",
+                "arguments": "{\"fuelAmount\": \"50\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 5.6094,
+          "tpot_s": 0.0048,
+          "output_tokens": 19,
+          "e2e_latency_s": 5.6964,
+          "throughput_tok_per_s": 207.08,
+          "context_chars": 1500,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 28.3,
+          "user": "With the tank now replenished, let's confirm our readiness for departure. Please secure all doors and initiate the engin",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_47890851bfc84c07a7d45a96",
+              "type": "function",
+              "function": {
+                "name": "lockDoors",
+                "arguments": "{\"unlock\": \"False\", \"door\": \"['driver', 'passenger', 'rear_left', 'rear_right']\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.7596,
+          "tpot_s": 0.0199,
+          "output_tokens": 38,
+          "e2e_latency_s": 1.4963,
+          "throughput_tok_per_s": 50.23,
+          "context_chars": 1678,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 32.9,
+          "user": "As the vehicle's prepared, let's delve into evaluating some fuel efficiency statistics via the mean of these travel dist",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_2764ed4109c64cff883f46e3",
+              "type": "function",
+              "function": {
+                "name": "mean",
+                "arguments": "{\"numbers\": \"[750.0, 320.0, 450.0, 290.0]\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6226,
+          "tpot_s": 0.0196,
+          "output_tokens": 34,
+          "e2e_latency_s": 1.2705,
+          "throughput_tok_per_s": 50.93,
+          "context_chars": 1894,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 4.0266,
+      "avg_tpot_s": 0.0107,
+      "avg_throughput": 150.01,
+      "total_output_tokens": 145,
+      "ttft_by_turn": {
+        "0": 6.9471,
+        "1": 6.1941,
+        "2": 5.6094,
+        "3": 0.7596,
+        "4": 0.6226
+      }
+    },
+    {
+      "id": "multi_turn_base_130",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.1,
+          "user": "Let's envision you suddenly grasp that gauging the stock market's current state is pivotal before making any trading mov",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_d953934c1ca2450f81b1c3e8",
+              "type": "function",
+              "function": {
+                "name": "update_market_status",
+                "arguments": "{\"current_time_str\": \"get_current_time\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 9.8216,
+          "tpot_s": 0.0131,
+          "output_tokens": 23,
+          "e2e_latency_s": 10.1106,
+          "throughput_tok_per_s": 76.14,
+          "context_chars": 2263,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 13.3,
+          "user": "Having established the market scenario, imagine you're poised to place an order to acquire 150 shares of 'NEPT' at 25.50",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_41fc443e01804e64a09d847c",
+              "type": "function",
+              "function": {
+                "name": "place_order",
+                "arguments": "{\"order_type\": \"Buy\", \"symbol\": \"NEPT\", \"price\": 25.5, \"amount\": 150}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 6.606,
+          "tpot_s": 0.0143,
+          "output_tokens": 39,
+          "e2e_latency_s": 7.1495,
+          "throughput_tok_per_s": 69.92,
+          "context_chars": 2493,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 23.5,
+          "user": "Once you've positioned this order, curiosity strikes about its intricate details. Would you mind fetching those details ",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_fd729f128c344c399bfc5a14",
+              "type": "function",
+              "function": {
+                "name": "get_order_details",
+                "arguments": "{\"order_id\": \"place_order\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 3.2291,
+          "tpot_s": 0.0137,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.4888,
+          "throughput_tok_per_s": 73.17,
+          "context_chars": 2672,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 30.1,
+          "user": "After a detailed inspection of the order, a change of heart leads you to rescind the transaction. Would you revoke the p",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_a1d6e61960c94c14b76cddf0",
+              "type": "function",
+              "function": {
+                "name": "cancel_order",
+                "arguments": "{\"order_id\": \"get_order_details\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.0686,
+          "tpot_s": 0.0128,
+          "output_tokens": 20,
+          "e2e_latency_s": 1.3126,
+          "throughput_tok_per_s": 77.88,
+          "context_chars": 2858,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 34.4,
+          "user": "Post cancellation, you're driven to survey your financial standing. Would you compile and relay a summary of your curren",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_40dacf8270494537a750b5e6",
+              "type": "function",
+              "function": {
+                "name": "get_account_info",
+                "arguments": ""
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6373,
+          "tpot_s": null,
+          "output_tokens": 14,
+          "e2e_latency_s": 0.6373,
+          "throughput_tok_per_s": null,
+          "context_chars": 3049,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 5,
+          "error": "HTTP 400 from http://127.0.0.1:8001/v1/chat/completions: data: {'error': {\"message\":{\"object\":\"error\",\"message\":\"Input is a zero-length, empty document: line 1 column 1 (char 0)\",\"type\":\"BadReques"
+        }
+      ],
+      "avg_ttft_s": 4.2725,
+      "avg_tpot_s": 0.0135,
+      "avg_throughput": 74.28,
+      "total_output_tokens": 116,
+      "ttft_by_turn": {
+        "0": 9.8216,
+        "1": 6.606,
+        "2": 3.2291,
+        "3": 1.0686,
+        "4": 0.6373
+      }
+    },
+    {
+      "id": "multi_turn_base_190",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 16.8,
+          "user": "I'm on a quest to escape my quaint hometown of Oakendale for the dynamic allure of Los Angeles! Eagerly anticipating thi",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_80bf53aa4183461f85acdcab",
+              "type": "function",
+              "function": {
+                "name": "book_flight",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"card_id\": \"crd6789\", \"travel_date\": \"2024-11-15\", \"travel_from\": \"OAK\", \"travel_to\": \"LAX\", \"travel_class\": \"business\", \"travel_cost\": \"get_flight_cost\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.5725,
+          "tpot_s": 0.0223,
+          "output_tokens": 110,
+          "e2e_latency_s": 9.0002,
+          "throughput_tok_per_s": 44.9,
+          "context_chars": 1590,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 28.9,
+          "user": "With the excitement of my flight secured, I'd feel more at ease by getting travel insurance for $50 under the 'comprehen",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1bd54af4fe95441f9fc84fc5",
+              "type": "function",
+              "function": {
+                "name": "purchase_insurance",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"insurance_type\": \"comprehensive protection\", \"insurance_cost\": \"50\", \"booking_id\": \"book_flight\", \"card_id\": \"crd6789\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6202,
+          "tpot_s": 0.0215,
+          "output_tokens": 55,
+          "e2e_latency_s": 1.7797,
+          "throughput_tok_per_s": 46.57,
+          "context_chars": 1891,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 33.7,
+          "user": "My notorious forgetfulness strikes again! I cannot recall all the specifics about the flight and insurance I just organi",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_975e8159c647434c903ec174",
+              "type": "function",
+              "function": {
+                "name": "retrieve_invoice",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"booking_id\": \"book_flight\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.9869,
+          "tpot_s": 0.0183,
+          "output_tokens": 28,
+          "e2e_latency_s": 1.4821,
+          "throughput_tok_per_s": 54.52,
+          "context_chars": 2193,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 38.3,
+          "user": "An unexpected charge popped up on the invoice that I retrieved. If at all possible, could someone contact customer suppo",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_8c5b3cf557b3427197eb5df7",
+              "type": "function",
+              "function": {
+                "name": "contact_customer_support",
+                "arguments": "{\"booking_id\": \"retrieve_invoice\", \"message\": \"Unexpected charge found on the invoice.\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.0832,
+          "tpot_s": 0.0178,
+          "output_tokens": 32,
+          "e2e_latency_s": 1.6363,
+          "throughput_tok_per_s": 56.06,
+          "context_chars": 2475,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 43.0,
+          "user": "Customer support didn't quite resolve my concerns, and now I'm a bit frustrated. It would be appreciated if a priority-2",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_43da83619b2d4b7db5ddb35f",
+              "type": "function",
+              "function": {
+                "name": "create_ticket",
+                "arguments": "{\"title\": \"Billing Concern\", \"description\": \"Detailed exchange with customer support regarding unexpected charge.\", \"priority\": \"2\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6377,
+          "tpot_s": 0.0193,
+          "output_tokens": 37,
+          "e2e_latency_s": 1.3313,
+          "throughput_tok_per_s": 51.9,
+          "context_chars": 2888,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 1.9801,
+      "avg_tpot_s": 0.0198,
+      "avg_throughput": 50.79,
+      "total_output_tokens": 262,
+      "ttft_by_turn": {
+        "0": 6.5725,
+        "1": 0.6202,
+        "2": 0.9869,
+        "3": 1.0832,
+        "4": 0.6377
+      }
+    },
+    {
+      "id": "multi_turn_base_170",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 12.6,
+          "user": "I'm planning to jet off and stumbled upon a nifty flight from San Francisco to Los Angeles. Since my budget isn't too ti",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_0dc891c0d0f04342a6a964dc",
+              "type": "function",
+              "function": {
+                "name": "book_flight",
+                "arguments": "{\"travel_date\": \"2024-11-15\", \"travel_class\": \"first\", \"card_id\": \"card123\", \"travel_to\": \"LAX\", \"travel_from\": \"SFO\", \"access_token\": \"access_token_abc123\", \"travel_cost\": 350.0}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.1609,
+          "tpot_s": 0.0184,
+          "output_tokens": 75,
+          "e2e_latency_s": 7.5208,
+          "throughput_tok_per_s": 54.42,
+          "context_chars": 1444,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 23.2,
+          "user": "With my flight all set, can you whip up those invoice details for me? I need a nice little record of when I'm traveling,",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_9373743a97a0452a8b29f69d",
+              "type": "function",
+              "function": {
+                "name": "retrieve_invoice",
+                "arguments": "{\"booking_id\": \"booking123\", \"access_token\": \"access_token_abc123\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 3.7889,
+          "tpot_s": 0.0183,
+          "output_tokens": 30,
+          "e2e_latency_s": 4.3198,
+          "throughput_tok_per_s": 54.62,
+          "context_chars": 1665,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 30.5,
+          "user": "If things go south with my itinerary, could you be a champ and get me in touch with customer support? Just mention my co",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_53180b893bb34ab4ba40a21f",
+              "type": "function",
+              "function": {
+                "name": "contact_customer_support",
+                "arguments": "{\"message\": \"I need help with my booking\", \"booking_id\": \"booking123\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.1732,
+          "tpot_s": 0.0182,
+          "output_tokens": 31,
+          "e2e_latency_s": 1.7206,
+          "throughput_tok_per_s": 54.8,
+          "context_chars": 1874,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 35.3,
+          "user": "Thinking I might need to call off this trip. Could you chat with support to cancel my reservation and make sure my accou",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_eb2ed8358ef44528930d3534",
+              "type": "function",
+              "function": {
+                "name": "contact_customer_support",
+                "arguments": "{\"message\": \"I need to cancel my booking and get a refund\", \"booking_id\": \"booking123\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6932,
+          "tpot_s": 0.0183,
+          "output_tokens": 35,
+          "e2e_latency_s": 1.3158,
+          "throughput_tok_per_s": 54.61,
+          "context_chars": 2090,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 39.7,
+          "user": "I've picked up some nifty travel insights from my adventures, and I've got the itch to share them. Could you pen a tweet",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_97484b504a614fc48c5e8559",
+              "type": "function",
+              "function": {
+                "name": "authenticate_twitter",
+                "arguments": "{\"username\": \"michael_smith\", \"password\": \"michael1234\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6873,
+          "tpot_s": 0.018,
+          "output_tokens": 29,
+          "e2e_latency_s": 1.1911,
+          "throughput_tok_per_s": 55.58,
+          "context_chars": 2493,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 5,
+          "t_wall_s": 44.0,
+          "user": "Wow, the tweet with the travel tips got a hit! Can you give it a boost by retweeting it for me? Let's get it out to even",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_11c20d2fc8784d0db36d6e9c",
+              "type": "function",
+              "function": {
+                "name": "retweet",
+                "arguments": "{\"tweet_id\": \"12345\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.1619,
+          "tpot_s": 0.0147,
+          "output_tokens": 19,
+          "e2e_latency_s": 1.4258,
+          "throughput_tok_per_s": 68.22,
+          "context_chars": 2682,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 2.2776,
+      "avg_tpot_s": 0.0176,
+      "avg_throughput": 57.04,
+      "total_output_tokens": 219,
+      "ttft_by_turn": {
+        "0": 6.1609,
+        "1": 3.7889,
+        "2": 1.1732,
+        "3": 0.6932,
+        "4": 0.6873,
+        "5": 1.1619
+      }
+    },
+    {
+      "id": "multi_turn_base_180",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 16.7,
+          "user": "I need to cap my travel expenses at 20,000 RMB. Sort out everything to make sure this limit is correctly set up. Around ",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_30e853174cbd4b88a5482da1",
+              "type": "function",
+              "function": {
+                "name": "set_budget_limit",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"budget_limit\": 20000.0}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.0767,
+          "tpot_s": 0.0101,
+          "output_tokens": 32,
+          "e2e_latency_s": 6.3885,
+          "throughput_tok_per_s": 99.43,
+          "context_chars": 873,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "t_wall_s": 26.2,
+          "user": "With my budget arranged, I want to book a business class ticket going from LAX to JFK on October 12th 2024. Charge it to",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_345ced037ca94fa7b52607aa",
+              "type": "function",
+              "function": {
+                "name": "book_flight",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"card_id\": \"main_card\", \"travel_date\": \"2024-10-12\", \"travel_from\": \"LAX\", \"travel_to\": \"JFK\", \"travel_class\": \"business\", \"travel_cost\": \"get_flight_cost\", \"travel_cost__travel_from\": \"LAX\", \"travel_cost__travel_to\": \"JFK\", \"travel_cost__travel_date\": \"2024-10-12\", \"travel_cost__travel_class\": \"business\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.5833,
+          "tpot_s": 0.0232,
+          "output_tokens": 119,
+          "e2e_latency_s": 4.3175,
+          "throughput_tok_per_s": 43.16,
+          "context_chars": 1110,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 2,
+          "t_wall_s": 33.6,
+          "user": "I've had a change of heart regarding my travel itinerary. Go ahead and cancel my previous booking and process any refund",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_b1856c75a6e64b6f8c90688f",
+              "type": "function",
+              "function": {
+                "name": "cancel_booking",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"booking_id\": \"get_booking_id\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 1.0931,
+          "tpot_s": 0.0178,
+          "output_tokens": 29,
+          "e2e_latency_s": 1.5927,
+          "throughput_tok_per_s": 56.05,
+          "context_chars": 1284,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 3,
+          "t_wall_s": 38.2,
+          "user": "I'm looking to get my hands on the invoice for the flights I've arranged recently. Kindly send me the full details.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_3106cb8e522b431fb1fdb901",
+              "type": "function",
+              "function": {
+                "name": "retrieve_invoice",
+                "arguments": "{\"access_token\": \"abc123xyz\", \"booking_id\": \"get_booking_id\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6336,
+          "tpot_s": 0.0184,
+          "output_tokens": 29,
+          "e2e_latency_s": 1.1483,
+          "throughput_tok_per_s": 54.39,
+          "context_chars": 1450,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 4,
+          "t_wall_s": 42.4,
+          "user": "There's been some confusion with the invoice. Please liaise with customer support for me, explaining the issue and escal",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_8e204aea3d7543b49d46dc0d",
+              "type": "function",
+              "function": {
+                "name": "contact_customer_support",
+                "arguments": "{\"booking_id\": \"get_booking_id\", \"message\": \"There is a discrepancy with the invoice, please assist in resolving the issue.\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6352,
+          "tpot_s": 0.0191,
+          "output_tokens": 41,
+          "e2e_latency_s": 1.3981,
+          "throughput_tok_per_s": 52.43,
+          "context_chars": 1637,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 5,
+          "t_wall_s": 46.9,
+          "user": "Initiate a new support ticket titled 'Invoice Discrepancy' outlining the problem I encountered with invoicing and priori",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_aed737b4a0c447ffbd12d61c",
+              "type": "function",
+              "function": {
+                "name": "ticket_login",
+                "arguments": "{\"username\": \"mzhang\", \"password\": \"SecurePass123\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 3.0,
+          "kv_flush_applied": true,
+          "ttft_s": 0.6349,
+          "tpot_s": 0.0174,
+          "output_tokens": 27,
+          "e2e_latency_s": 1.0881,
+          "throughput_tok_per_s": 57.36,
+          "context_chars": 1889,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        }
+      ],
+      "avg_ttft_s": 1.7761,
+      "avg_tpot_s": 0.0177,
+      "avg_throughput": 60.47,
+      "total_output_tokens": 277,
+      "ttft_by_turn": {
+        "0": 6.0767,
+        "1": 1.5833,
+        "2": 1.0931,
+        "3": 0.6336,
+        "4": 0.6352,
+        "5": 0.6349
+      }
+    }
+  ]
+}
