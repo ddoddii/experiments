@@ -40,9 +40,20 @@ def read_all(park_dir, stale_s):
     otherwise keep contributing its last-known occupancy forever and inflate the GPU
     share -- exactly the direction that would flatter the result."""
     now = time.time()
-    per_gpu, host, meta = {}, 0, {"writers": 0, "stale": 0, "host_blocks": 0,
-                                  "host_flushes": 0, "host_evicted": 0,
-                                  "host_peak_bytes": 0, "bytes_per_token": 0}
+    # SUMMED across publishers: every field below is either a per-process byte count or a
+    # per-process cumulative counter, so the node-level value is the sum. bytes_per_token
+    # is the exception (identical for every publisher) and is overwritten, not added.
+    SUM = ("host_blocks", "host_flushes", "host_evicted", "host_peak_bytes",
+           "serving_bytes", "dropped_bytes", "host_evicted_bytes",
+           "fetch_hits", "fetch_peer_hits", "fetch_host_hits", "fetch_local_hits",
+           "fetch_miss", "fetch_already", "fetch_nospace",
+           "fetched_tokens", "parked_tokens")
+    per_gpu, host = {}, 0
+    meta = {"writers": 0, "stale": 0, "bytes_per_token": 0}
+    meta.update({k: 0 for k in SUM})
+    # parked bytes split by whether the target GPU is the publisher's own serving GPU
+    meta["park_local_bytes"] = 0
+    meta["park_peer_bytes"] = 0
     for path in sorted(glob.glob(os.path.join(park_dir, "parked_gpu*.json"))):
         try:
             with open(path) as fh:
@@ -53,14 +64,15 @@ def read_all(park_dir, stale_s):
             meta["stale"] += 1
             continue
         meta["writers"] += 1
+        writer = int(d.get("writer_gpu", -1))
         for g, b in (d.get("gpu_bytes") or {}).items():
             # last writer wins per target GPU: each park pool has exactly one owner
             per_gpu[int(g)] = int(b)
+            key = "park_local_bytes" if int(g) == writer else "park_peer_bytes"
+            meta[key] += int(b)
         host += int(d.get("host_bytes") or 0)
-        meta["host_blocks"] += int(d.get("host_blocks") or 0)
-        meta["host_flushes"] += int(d.get("host_flushes") or 0)
-        meta["host_evicted"] += int(d.get("host_evicted") or 0)
-        meta["host_peak_bytes"] += int(d.get("host_peak_bytes") or 0)
+        for k in SUM:
+            meta[k] += int(d.get(k) or 0)
         meta["bytes_per_token"] = int(d.get("bytes_per_token") or 0)
     return per_gpu, host, meta
 
@@ -91,6 +103,15 @@ def main():
     cols = (["elapsed_s"] + [f"gpu{g}_gb" for g in gpus]
             + ["gpu_total_gb", "host_gb", "total_gb", "host_frac",
                "host_peak_gb", "host_blocks", "host_flushes", "host_evicted",
+               # residency breakdown: serving (local radix) / park local / park peer /
+               # host / dropped. The first four are instantaneous, dropped_* are
+               # cumulative -- KV that no longer exists anywhere and must be re-prefilled.
+               "serving_gb", "park_local_gb", "park_peer_gb",
+               "dropped_gb", "host_evicted_gb", "peer_frac_of_parked",
+               # fetch source split: the read-back counterpart of the residency split
+               "fetch_hits", "fetch_local_hits", "fetch_peer_hits", "fetch_host_hits",
+               "fetch_miss", "fetch_already", "fetch_nospace",
+               "fetched_tokens", "parked_tokens",
                "writers", "stale"])
 
     t0 = time.time()
@@ -105,12 +126,24 @@ def main():
             gtot = sum(gvals)
             hgb = host / 1e9
             tot = gtot + hgb
+            gb = lambda k: round(meta[k] / 1e9, 4)  # noqa: E731
+            parked = meta["park_local_bytes"] + meta["park_peer_bytes"]
             w.writerow([round(now - t0, 1)] + [round(v, 4) for v in gvals]
                        + [round(gtot, 4), round(hgb, 4), round(tot, 4),
                           round(hgb / tot, 4) if tot > 0 else 0.0,
-                          round(meta["host_peak_bytes"] / 1e9, 4),
+                          gb("host_peak_bytes"),
                           meta["host_blocks"], meta["host_flushes"],
-                          meta["host_evicted"], meta["writers"], meta["stale"]])
+                          meta["host_evicted"],
+                          gb("serving_bytes"), gb("park_local_bytes"),
+                          gb("park_peer_bytes"), gb("dropped_bytes"),
+                          gb("host_evicted_bytes"),
+                          round(meta["park_peer_bytes"] / parked, 4) if parked else 0.0,
+                          meta["fetch_hits"], meta["fetch_local_hits"],
+                          meta["fetch_peer_hits"], meta["fetch_host_hits"],
+                          meta["fetch_miss"], meta["fetch_already"],
+                          meta["fetch_nospace"], meta["fetched_tokens"],
+                          meta["parked_tokens"],
+                          meta["writers"], meta["stale"]])
             fh.flush()
             if args.duration and now - t0 >= args.duration:
                 break

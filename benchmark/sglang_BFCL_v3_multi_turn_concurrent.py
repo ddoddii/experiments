@@ -69,6 +69,30 @@ def _p(rel): return os.path.join(PROJECT_ROOT, rel)
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 ROUTER_URL      = os.environ.get("SGLANG_URL",       "http://127.0.0.1:8000/v1/chat/completions")
+# ── Controlled load imbalance (Exp 2) ───────────────────────────────────────
+# With one router the two prefills fill up together and peer-GPU placement has nothing
+# to exploit. To concentrate load on P0 we run one router PER prefill (see
+# start_2P_2D_skew.sh) and split SESSIONS between them by weight -- per session, not per
+# turn, because a conversation must keep hitting the same prefill for its prefix to be
+# reusable there at all. SKEW=0.5 is balanced; SKEW=0.9 sends 90% of sessions to the
+# first URL.
+ROUTER_URLS     = [u.strip() for u in os.environ.get("SGLANG_URLS", "").split(",") if u.strip()]
+SKEW            = float(os.environ.get("SKEW", "0.5"))
+
+
+def _url_for_session(item_idx: int) -> str:
+    """Deterministic per-session router choice. Deterministic rather than random so two
+    arms see the exact same session->prefill assignment and the comparison is paired."""
+    if len(ROUTER_URLS) < 2:
+        return ROUTER_URLS[0] if ROUTER_URLS else ROUTER_URL
+    # Bresenham line-drawing: url[0] gets a session whenever the running quota crosses an
+    # integer. Yields exactly round(n*SKEW) sessions on url[0], evenly interleaved -- a
+    # hash or an RNG would cluster and make the observed skew differ from the requested
+    # one on the 200-item dataset.
+    import math
+    return (ROUTER_URLS[0]
+            if math.floor((item_idx + 1) * SKEW) > math.floor(item_idx * SKEW)
+            else ROUTER_URLS[1])
 MODEL           = os.environ.get("MODEL",             "/home/uhmturks/hf_models/Qwen3-14B")
 CONCURRENCY     = int(os.environ.get("CONCURRENCY",   "4"))
 TOOL_DELAY_SEC  = float(os.environ.get("TOOL_DELAY_SEC", "0"))
@@ -106,7 +130,7 @@ def _model_from_server(router_url: str, timeout: float = 5.0):
         return None
 
 
-_served = _model_from_server(ROUTER_URL)
+_served = _model_from_server(ROUTER_URLS[0] if ROUTER_URLS else ROUTER_URL)
 if _served:
     if os.path.basename(_served.rstrip("/")) != os.path.basename(MODEL.rstrip("/")):
         print(f"[model] MODEL env says {os.path.basename(MODEL.rstrip('/'))} but the "
@@ -257,6 +281,9 @@ hicache_poller.start()
 def process_item(item_idx: int, item: dict) -> dict:
     global _total_output_tokens, _items_done
 
+    # Every turn of this conversation goes to the same prefill (see _url_for_session).
+    session_url = _url_for_session(item_idx)
+
     tools = []
     for cls in item.get("involved_classes", []):
         for func in func_docs.get(cls, []):
@@ -298,7 +325,7 @@ def process_item(item_idx: int, item: dict) -> dict:
         try:
             t_request = time.perf_counter()
             t_wall_s  = t_request - t_experiment_start
-            resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
+            resp = requests.post(session_url, json=payload, stream=True, timeout=TIMEOUT)
             if resp.status_code >= 400:
                 # Capture the BODY, not just the status line. raise_for_status() throws
                 # "400 Client Error: Bad Request for url: ..." which says nothing about
@@ -308,7 +335,7 @@ def process_item(item_idx: int, item: dict) -> dict:
                     _body = resp.text[:600]
                 except Exception:  # noqa: BLE001
                     _body = "<unreadable>"
-                raise RuntimeError(f"HTTP {resp.status_code} from {ROUTER_URL}: {_body}")
+                raise RuntimeError(f"HTTP {resp.status_code} from {session_url}: {_body}")
 
             t_first_token     = None
             t_last_token      = None
@@ -581,6 +608,7 @@ summary = {
     # TTFT distribution
     "ttft_p50_s":  _percentile(ttft_all_vals, 50),
     "ttft_p90_s":  _percentile(ttft_all_vals, 90),
+    "ttft_p95_s":  _percentile(ttft_all_vals, 95),
     "ttft_p99_s":  _percentile(ttft_all_vals, 99),
     "ttft_histogram": _hist(ttft_all_vals),
     "ttft_histogram_after_delay": _hist([t["ttft_s"] for t in turns_after_delay]),
@@ -608,7 +636,8 @@ print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT     : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
 print(f"\n── TTFT 분포 (전체 {len(ttft_all_vals)}개 turn) ──")
-print(f"  p50={summary['ttft_p50_s']}s  p90={summary['ttft_p90_s']}s  p99={summary['ttft_p99_s']}s")
+print(f"  p50={summary['ttft_p50_s']}s  p90={summary['ttft_p90_s']}s  "
+      f"p95={summary['ttft_p95_s']}s  p99={summary['ttft_p99_s']}s")
 hist = summary["ttft_histogram"]
 print(f"  <0.5s (L1 GPU)   : {hist['lt_0.5s']['count']:4d}턴  ({hist['lt_0.5s']['pct']}%)")
 print(f"  0.5~1.5s (중간)   : {hist['0.5_1.5s']['count']:4d}턴  ({hist['0.5_1.5s']['pct']}%)")
