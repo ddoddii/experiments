@@ -34,14 +34,14 @@ unavailable to the existing CUDA Unified Memory API.* — CUDA Unified Memory를
 
 - **관찰 1 — HBM 아래에 대역폭 계층이 존재하지 않는다.** 하나의 주소 공간에서 동일한 접근 경로로
   측정하면 (4× A6000, NV4 pair): **local HBM 331 GB/s, NVLink peer HBM 27–53 GB/s,
-  CPU DRAM 24–26 GB/s.** NVLink peer와 CPU DRAM은 같은 구간이다(27.2 vs 26.1 = **4% 차**). 여기에
+  CPU DRAM 26.3 GB/s(pinned, 실제 구현 경로).** NVLink peer와 CPU DRAM은 같은 구간이다(27.2 vs 26.3 = **3.4% 차**). 여기에
   layer-wise transfer·prefill overlap·tool-call window prefetch가 더해져 end-to-end TTFT 차이는
   사라진다. → **"local HBM(빠름) vs 그 밖의 전부(≈PCIe)" 2층뿐이므로**, peer GPU HBM과 CPU DRAM을
   분리된 고정 tier로 볼 근거가 없다. 하나의 placement 대상 집합(= unified memory)으로 보는 것이 맞다.
   (Fig. X로 이 표 제시)
 - **관찰 1b — 그런데 이 집합은 메모리 계층 직관대로 정렬되지 않는다.** 같은 노드에서 **non-NVLink
   peer는 3.3 GB/s로 CPU DRAM보다 7–8× 느리다.** 올바른 순위는
-  *NVLink peer(27–53) > CPU DRAM(24–26) ≫ non-NVLink peer(3.3) > recompute*이며, **"GPU가 항상 CPU보다
+  *NVLink peer(27–53) > CPU DRAM(26.3) ≫ non-NVLink peer(3.3) > recompute*이며, **"GPU가 항상 CPU보다
   빠르다"는 고정 tier 가정은 틀렸다.** → placement는 고정 계층이 아니라 **런타임이 측정한 대역폭에
   따라 결정**되어야 한다.
 - **관찰 2 — 기존 시스템은 CPU DRAM을 정적으로 예약한다.** SGLang HiCache는 `--hicache-ratio`로 host
