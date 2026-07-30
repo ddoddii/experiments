@@ -193,6 +193,48 @@ def pair_bandwidth(n_dev, slab_mb, iters):
         print(f"  {i:>3} " + "".join(row) + "   GB/s")
 
 
+def batched_remap(prop, g_min, page, n_pages, dev, iters):
+    """Cost of committing n_pages of `page` bytes as ONE logical region:
+    n_pages x cuMemMap, then a SINGLE cuMemSetAccess over the whole range, then a
+    SINGLE cuMemUnmap of the whole range.
+
+    Why this matters: the per-slab sweep shows map+setAccess+unmap costs ~87 us
+    REGARDLESS of slab size, i.e. the cost is per CALL, not per byte. So the way to
+    keep 2 MiB granularity (little internal waste) without paying 44 ms/GiB is to
+    batch: cuMemSetAccess and cuMemUnmap both take a RANGE that may span many mapped
+    handles, so they are paid once per region instead of once per page.
+    Returns (us_total_p50, us_map_p50, us_access_p50, us_unmap_p50)."""
+    size = page * n_pages
+    descs = _access([dev])
+    tot, tm, ta, tu = [], [], [], []
+    for _ in range(iters):
+        va = _c(cuda.cuMemAddressReserve(size, g_min, 0, 0))
+        hs = [_c(cuda.cuMemCreate(page, prop, 0)) for _ in range(n_pages)]
+        try:
+            t0 = time.perf_counter()
+            for i, h in enumerate(hs):
+                _c(cuda.cuMemMap(int(va) + i * page, page, 0, h, 0))
+            t1 = time.perf_counter()
+            _c(cuda.cuMemSetAccess(int(va), size, descs, len(descs)))
+            t2 = time.perf_counter()
+            _c(cuda.cuMemUnmap(int(va), size))
+            t3 = time.perf_counter()
+            tm.append((t1 - t0) * 1e6); ta.append((t2 - t1) * 1e6)
+            tu.append((t3 - t2) * 1e6); tot.append((t3 - t0) * 1e6)
+        finally:
+            for h in hs:
+                try:
+                    cuda.cuMemRelease(h)
+                except Exception:  # noqa: BLE001
+                    pass
+            try:
+                cuda.cuMemAddressFree(va, size)
+            except Exception:  # noqa: BLE001
+                pass
+    mid = lambda xs: sorted(xs)[len(xs) // 2]     # noqa: E731
+    return mid(tot), mid(tm), mid(ta), mid(tu)
+
+
 def kv_math(results, lengths, layers, kv_heads, head_dim, dtype_bytes, recompute_ms):
     """Turn the measured bandwidths into the number the paper actually argues about:
     how long it takes to RESTORE an L-token prefix from each residency, versus
@@ -259,6 +301,10 @@ def main():
                     help="print nvidia-smi topo -m / nvlink -s (authoritative on NVLink)")
     ap.add_argument("--remap-slabs", nargs="+", type=int, default=[2, 8, 32, 128],
                     help="slab sizes (MiB) for the remap-latency sweep")
+    ap.add_argument("--batch-pages", nargs="+", type=int, default=[1, 8, 64, 384, 512],
+                    help="page counts for the batched-commit test (N x map, 1 x "
+                         "setAccess, 1 x unmap). 384 pages of 2 MiB = a 6000-token "
+                         "session slab for Llama-3.1-8B")
     # KV geometry for the restore-vs-recompute table (default: Llama-3.1-8B-Instruct)
     ap.add_argument("--layers", type=int, default=32)
     ap.add_argument("--kv-heads", type=int, default=8, help="num_key_value_heads (GQA)")
@@ -421,8 +467,30 @@ def main():
             n_per_gib = 2**30 / sz
             print(f"  {sz/2**20:>6.0f}Mi  {p50:>9.1f}  {p99:>9.1f}  "
                   f"{n_per_gib:>11.0f}  {p50*n_per_gib:>9.0f}")
-        print("     -> pick the slab so that us/GiB is a small fraction of the transfer")
-        print("        time for the same GiB (see the KV math table below).")
+        print("     -> latency is flat in slab size, so the cost is per CALL, not per")
+        print("        byte. Either use large slabs, or batch (next table).")
+
+        # ---- Q2b batched commit: many 2 MiB pages, ONE setAccess, ONE unmap.
+        # This is the number the implementation should be designed around: it keeps
+        # fine granularity (little internal waste) while paying the expensive calls
+        # once per region.
+        print(f"\n[Q2b] batched commit of a region built from {g_min/2**20:.0f} MiB pages "
+              f"(N x cuMemMap, 1 x cuMemSetAccess, 1 x cuMemUnmap):")
+        print(f"  {'region':>9}  {'pages':>6}  {'total us':>9}  {'map':>8}  "
+              f"{'access':>8}  {'unmap':>8}  {'us/GiB':>9}")
+        for n_pages in args.batch_pages:
+            try:
+                tot, tm_, ta_, tu_ = batched_remap(
+                    prop_local, g_min, g_min, n_pages, args.dev,
+                    max(3, args.remap_iters // 20))
+            except Exception as e:  # noqa: BLE001
+                print(f"  {n_pages*g_min/2**20:>8.0f}Mi  {n_pages:>6}  failed: {e}")
+                continue
+            per_gib = tot * (2**30 / (n_pages * g_min))
+            print(f"  {n_pages*g_min/2**20:>8.0f}Mi  {n_pages:>6}  {tot:>9.1f}  "
+                  f"{tm_:>8.1f}  {ta_:>8.1f}  {tu_:>8.1f}  {per_gib:>9.0f}")
+        print("     -> compare us/GiB against the ~38600 us/GiB transfer time at "
+              "27 GB/s.")
 
         # ---- turn bandwidth into restore-vs-recompute, the paper's actual claim
         if results:
