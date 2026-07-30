@@ -21,6 +21,8 @@ set -e
 # conda 초기화
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
+# run the modified source tree, and fail loudly if we'd be running the installed copy
+source "$(dirname "${BASH_SOURCE[0]}")/_use_source.sh"
 
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
 QUANTIZATION=${QUANTIZATION:-""}           # 8B@BF16=16GB, quantization 불필요
