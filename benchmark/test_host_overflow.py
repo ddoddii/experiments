@@ -135,8 +135,14 @@ def test_alloc_and_cap():
     check(s.n_evicted >= 1, f"an LRU eviction happened (n_evicted={s.n_evicted})")
     check(s.live_bytes <= s.max_bytes, "live_bytes never exceeds the cap")
     check(1000 not in s.blocks, "the coldest block (hash 1000) was the one evicted")
-    check(len(s.blocks) == n_before, "block count stays at the cap")
+    # alloc() and put() are deliberately separate: the block is not indexed until the
+    # D2H copy has succeeded, so a failed copy cannot leave a phantom entry pointing at
+    # memory holding nothing. Hence the count is n_before-1 here and back to n_before
+    # only after put().
+    check(len(s.blocks) == n_before - 1,
+          f"alloc() evicts but does not index (got {len(s.blocks)}, want {n_before-1})")
     s.put(2000, b, 500)
+    check(len(s.blocks) == n_before, "after put() the count is back at the cap")
 
     # LRU order must follow reads
     s2 = new_store(max_gb=0.25, bucket=512)     # 4 blocks
@@ -166,21 +172,31 @@ def test_alias_eviction():
 def test_warm_alloc_is_cheap():
     print("\n=== quantized sizes hit the caching allocator warm ===")
     s = new_store(max_gb=4.0, bucket=2048)       # 2048 tok = 256 MiB per bucket
+    mib = 2048 * s.bytes_per_token / 2**20
     t0 = time.perf_counter()
     b1 = s.alloc(2000)
     cold = (time.perf_counter() - t0) * 1e3
     s.put(1, b1, 2000)
+    # Drop the local reference too. _drop() removes the store's reference, but a live
+    # local keeps the tensor alive, so the caching allocator cannot hand its memory back
+    # -- and the next alloc would be a fresh cold pin. Real callers do not retain one
+    # (_park_to_host returns straight after put()).
+    b1 = None
     s.drop(1)
+
     t0 = time.perf_counter()
     b2 = s.alloc(1900)                # different length, SAME bucket -> should be warm
     warm = (time.perf_counter() - t0) * 1e3
     check(b2 is not None, "second alloc of the same bucket succeeds")
-    print(f"       cold={cold:.1f} ms  warm={warm:.1f} ms for a "
-          f"{2048*s.bytes_per_token/2**20:.0f} MiB bucket")
-    # The point is that a DIFFERENT length maps to the same size class. If bucketing
-    # were removed, this second alloc would be a cold pin (hundreds of ms).
+    print(f"       cold={cold:.1f} ms  warm={warm:.1f} ms for a {mib:.0f} MiB bucket "
+          f"({cold/max(mib/1024, 1e-9):.0f} ms/GiB cold)")
     check(s.bucket_for(2000) == s.bucket_for(1900),
           "two different session lengths share one bucket (why bucketing exists)")
+    # The whole tier depends on this: if a repeat of the same size class is not much
+    # cheaper than the first pin, per-park allocation is unaffordable and the design
+    # must switch to a reused staging buffer.
+    check(warm < cold * 0.25,
+          f"a repeat of the same size class is much cheaper ({warm:.1f} vs {cold:.1f} ms)")
 
 
 def test_flush_releases_rss():
