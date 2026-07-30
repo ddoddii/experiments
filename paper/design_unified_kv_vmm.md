@@ -48,46 +48,93 @@ The VMM API separates **virtual address** from **physical backing**:
 | change residency | `cuMemUnmap` + `cuMemMap` a different handle | **same VA, new physical location** |
 | hand to another process | `cuMemExportToShareableHandle` (POSIX fd) / `cuMemImportFromShareableHandle` | the 2P2D multi-process case |
 
-Three consequences that matter for this paper:
+Three consequences that matter for this paper — **one of which the measurement in §3
+kills, so read that before designing around it**:
 
 1. **The pointer never changes.** A slab can move from local HBM to peer HBM to host
    DRAM while attention kernels, the radix index, and the KV index tensors keep the
    same addresses. Compare with the current park implementation, where a peer pool is a
    *separate tensor* and a hit requires an explicit gather-copy back into the local
-   pool (`_p2p_gather` / `_gather_copy_from_peer` in `idle_kv_parking.py`).
-2. **Peer residency can be zero-copy.** `cuMemSetAccess` for the local device on a
-   peer-backed slab makes it directly readable over NVLink. "Migration" becomes
-   "remap", and the copy disappears — *if* the pair has a P2P path (see §5).
+   pool (`_p2p_gather` / `_gather_copy_from_peer` in `idle_kv_parking.py`). **This
+   survives measurement and is the mechanism claim to make.**
+2. ~~**Peer residency can be zero-copy.**~~ `cuMemSetAccess` does make a peer-backed
+   slab directly readable, but at **27 GB/s vs 333 GB/s local on this machine (8%)** —
+   see §3. Reading KV in place from a peer during attention would multiply TPOT by ~12×
+   at 8k context. **Do not put peer-resident KV on the attention hot path.** The peer
+   tier is a *restore source*, not an execution-time residency.
 3. **Host is just another location.** `CU_MEM_LOCATION_TYPE_HOST_NUMA` (CUDA ≥ 12.2)
-   makes the overflow tier a location in the same space rather than a separate
-   subsystem, which is literally the "residency, not tier" reframing.
+   would make the overflow tier a location in the same space rather than a separate
+   subsystem. On server17 the first attempt returned `CUDA_ERROR_INVALID_VALUE`; the
+   probe now tries several (location, handle-type) combinations, since requesting
+   fd-exportable handles for a *host* location is itself a likely cause. If none works,
+   the unified space covers local+peer HBM only and host overflow falls back to
+   `cuMemHostAlloc` — say that explicitly rather than overclaiming.
 
 Precedent that this composes with PyTorch: PyTorch's own
 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` allocator is built on these calls.
 Read `c10/cuda/CUDACachingAllocator.cpp` (`ExpandableSegment`) — it is the closest
 working model for what you need to write.
 
-## 3. Run the feasibility probe FIRST
+## 3. Measured on server17 (4× RTX A6000)
 
-`benchmark/vmm_probe.py` answers the four questions that decide whether any of this is
-worth building, in ~2 minutes and with zero SGLang changes:
+`benchmark/vmm_probe.py --pairs --slab-mb 32`, servers down:
+
+| quantity | measured | reading |
+|---|---|---|
+| allocation granularity | **2.00 MiB** (min = recommended) | KV slab must be a multiple of 2 MiB |
+| P2P reachability | **all 12 ordered pairs = 1** | every GPU can map every other GPU's memory |
+| local HBM read | **333.2 GB/s** | baseline |
+| **peer HBM read (0←1)** | **27.2 GB/s = 8% of local** | **PCIe speed, not NVLink** (A6000 NVLink would be ~50 GB/s) |
+| host-backed VMM slab | `CUDA_ERROR_INVALID_VALUE` | needs the retry matrix now in the probe |
+| residency change @ fixed VA, 32 MiB | **p50 87.4 µs, p99 98.0 µs** | control-plane cost per slab |
+| write/read through a remapped VA | **OK** | the mechanism works |
+
+### 3.1 What this settles
+
+**Zero-copy peer-resident attention is dead.** Llama-3.1-8B carries
+32 × 8 × 128 × 2 × 2 B = **128 KiB of KV per token**, so an 8k-token context is 0.98 GiB
+and a decode step reads all of it: **3.1 ms from local HBM vs 38.6 ms from a peer.** No
+policy makes that acceptable on the hot path.
+
+**But restoring from a peer beats recomputing by 30–43×**, using the measured 27.2 GB/s
+against the measured recompute costs in `results/intro/fig_ttft_ctx_sweep.json`:
+
+| ctx | KV size | local restore | **peer restore** | recompute (measured) | **speedup** |
+|---|---|---|---|---|---|
+| 1 000 | 0.12 GiB | 0.4 ms | **4.8 ms** | 161 ms | **33×** |
+| 4 000 | 0.49 GiB | 1.6 ms | **19.3 ms** | 592 ms | **31×** |
+| 8 000 | 0.98 GiB | 3.1 ms | **38.6 ms** | 1 203 ms | **31×** |
+| 16 000 | 1.95 GiB | 6.3 ms | **77.1 ms** | 2 706 ms | **35×** |
+| 32 000 | 3.91 GiB | 12.6 ms | **154.2 ms** | 6 681 ms | **43×** |
+
+This is the sentence the paper wants: **peer GPU HBM has host-DRAM-class transfer
+bandwidth (both are PCIe-bound at ~25–27 GB/s) and therefore the same ability to avoid a
+recompute, while costing zero host DRAM.** That reframes the contribution away from
+"faster than HiCache" (which §7-3 of `research.md` already showed you cannot win) and
+onto "same benefit, different resource" — which the 61 GB / 105 GB MemAvailable result
+already quantifies.
+
+**Slab size is now a first-order design parameter.** At 87 µs per remap, a 1 GiB
+migration costs 32 remaps ≈ 2.8 ms in 32 MiB slabs (7% of the 38.6 ms transfer) but
+512 remaps ≈ **44 ms** in 2 MiB slabs — *more than the transfer itself*. Run
+`--remap-slabs 2 8 32 128` (now in the probe) to get the real curve; design for the
+largest slab the session-keyed allocator can tolerate.
+
+### 3.2 Still to measure (probe updated, ~5 min)
 
 ```bash
-conda activate sglang
-./scripts/stop.sh                       # so the probe sees free GPUs
-python benchmark/vmm_probe.py --pairs --slab-mb 32
+./scripts/stop.sh
+python benchmark/vmm_probe.py --topo --pairs --all-pairs-bw \
+    --remap-slabs 2 8 32 128 --slab-mb 32
 ```
 
-| probe | why it gates the design |
-|---|---|
-| **Q1** allocation granularity | the KV slab size must be a multiple of it (expect 2 MiB) |
-| **Q2** remap latency at a fixed VA | the per-migration control cost. Must be ≪ the prefill it avoids (~1200 ms at 8k tokens from `results/intro/fig_ttft_ctx_sweep.json`) |
-| **Q3** peer-backed read bandwidth vs local | decides zero-copy-remote vs copy-then-use. Also prints the `cuDeviceCanAccessPeer` matrix |
-| **Q4** host-backed read bandwidth | the cost of the overflow tier, and whether `HOST_NUMA` works on this driver |
-
-**Do not skip this.** If Q3 shows no P2P path outside the NVLink pair, or Q2 shows
-remap costing milliseconds per slab, the design changes shape — better to learn that
-before touching `memory_pool.py`.
+1. **Is there an NVLink bridge at all?** 27.2 GB/s says pair 0-1 went over PCIe.
+   `--topo` prints `nvidia-smi topo -m` / `nvlink -s`; `--all-pairs-bw` measures every
+   ordered pair. If some pair *is* bridged it will stand out, and the placement policy
+   must prefer it — a bridged peer restore would be ~2× faster again.
+2. **Does any host location work?** The probe now tries HOST / HOST_NUMA × exportable,
+   which distinguishes "driver too old" from "fd export not allowed for host memory".
+3. **Remap latency vs slab size** — §3.1.
 
 ## 4. Staged implementation plan
 
@@ -136,14 +183,18 @@ from `shared_park_index.py`, which already lets one node see every GPU's occupan
 
 ```
 on evict(slab_group, session):
-    if peer with headroom and P2P path:  place(PEER(argmax headroom))
-    elif host headroom:                  place(HOST_NUMA(local socket))
-    else:                                drop (recompute later)
+    if peer with headroom:   place(PEER(argmax headroom, prefer NVLink-bridged))
+    elif host headroom:      place(HOST)          # overflow only
+    else:                    drop (recompute later)
+
 on next turn touches session:
-    if residency == PEER and peer bandwidth is adequate:  read in place (no migration)
-    else:                                                  place(LOCAL)   # prefetch
+    place(LOCAL)             # ALWAYS migrate in; never execute on peer-resident KV
+                             # (27 GB/s vs 333 GB/s -- see §3.1)
+                             # issue during the tool-call window, which you already detect
 ```
-The prefetch is issued during the tool-call window — you already have that trigger.
+Note the difference from the earlier sketch: there is **no "read in place if bandwidth is
+adequate" branch**, because §3.1 measured that it never is. The policy question is only
+*where does an evicted slab go* and *when is it migrated back*.
 
 ### Stage 4 — evaluation. Reuse existing harnesses.
 `benchmark/ttft_ctx_sweep.py` (TTFT vs context), `qps_sweep.py` (load), and
@@ -152,10 +203,12 @@ HiCache (write_back and L2-only), unified-KV, recompute.
 
 ## 5. Hazards specific to this machine
 
-- **A6000 P2P is pairwise.** NVLink bridges 0-1 and 2-3; across pairs it is PCIe P2P at
-  best. `research.md` already notes the NVLink pair. So "place on the peer with the most
-  headroom" must be **topology-aware**: prefer a bridged peer, and treat a non-bridged
-  peer as roughly host-class bandwidth. Q3 in the probe measures this — do not assume.
+- **Peer bandwidth is PCIe-class, and reachability is not the constraint.** The probe
+  measured all 12 ordered pairs reachable, and 0←1 at 27.2 GB/s — i.e. PCIe, not the
+  ~50 GB/s an A6000 NVLink bridge would give. So the earlier "NVLink pairs only" worry
+  was wrong about *reachability* and right about *bandwidth*: every peer is usable, and
+  none of them is fast enough to execute on. Run `--all-pairs-bw` to check whether any
+  pair is actually bridged before writing a topology-aware policy.
 - **VRAM accounting.** SGLang sizes its pool from `--mem-fraction-static`. A
   VMM-backed pool that can grow into peer HBM breaks the assumption that a GPU's KV
   pool is bounded by its own memory; add explicit per-GPU caps or you will OOM a peer
@@ -166,10 +219,15 @@ HiCache (write_back and L2-only), unified-KV, recompute.
   socket, or reuse the existing `/dev/shm` rendezvous pattern to pass fds via
   `SCM_RIGHTS`. `cudaIpcMemHandle` (what the code uses now) does **not** work for VMM
   allocations; it is a different handle type.
-- **Driver/CUDA version.** `HOST_NUMA` needs CUDA ≥ 12.2. Check on server17 before
-  designing the overflow tier around it; the fallback is `cuMemHostAlloc` plus a
-  separate host pool (i.e. what HiCache already does), which weakens the "one space"
-  claim but does not break the paper.
+- **Host locations may not be available.** The first probe run got
+  `CUDA_ERROR_INVALID_VALUE` for a host-located `cuMemCreate`. Most likely cause: the
+  probe asked for fd-exportable handles, which host memory need not support; second
+  possibility is a driver below CUDA 12.2. The probe now tries HOST / HOST_NUMA ×
+  {exportable, not} and reports which combination works. If none does, the overflow tier
+  uses `cuMemHostAlloc` plus a separate host pool (what HiCache already does), the
+  unified space covers local+peer HBM only, and the paper must say so — it weakens the
+  "one space" phrasing but not the result, since §3.1 shows peer HBM is the tier that
+  matters and host is only overflow.
 
 ## 6. Scope warning, stated plainly
 
@@ -190,3 +248,12 @@ results in `results/kv_ts/`, `results/mem/`, `results/intro/`). Two honest optio
 If the CAL deadline is near, do (a) now and Stage 1 in parallel — the probe plus the
 `data_ptr()`-invariant unit test is a defensible "we validated the mechanism"
 paragraph even before full integration.
+
+**§3's measurements shift the balance toward (a).** The one thing VMM would have bought
+that the existing IPC mechanism cannot — executing attention directly on peer-resident
+KV — is ruled out at 27 GB/s. What remains is that VMM makes the restore a remap plus a
+copy into an already-correctly-addressed slab instead of a gather-copy into a separate
+pool: real, but an engineering improvement on a mechanism you already have working and
+measured, not a new capability. The 30–43× restore-vs-recompute table and the
+61 GB → 0 host-DRAM result are the paper's results either way, and both are already in
+hand.

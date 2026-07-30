@@ -66,17 +66,22 @@ def _c(res):
     return rest[0] if len(rest) == 1 else rest
 
 
-def _prop(loc_type, loc_id):
-    """CUmemAllocationProp for a physical allocation at a given location."""
+def _prop(loc_type, loc_id, exportable=True):
+    """CUmemAllocationProp for a physical allocation at a given location.
+
+    exportable=True requests POSIX-fd handles, which a multi-process (2P2D) deployment
+    needs to pass a slab to another process. HOST/HOST_NUMA allocations do NOT support
+    fd export on every driver, and asking for it there returns CUDA_ERROR_INVALID_VALUE
+    -- which is why the first version of this probe reported host allocation as
+    unsupported when it was really the handle-type request that failed."""
     p = cuda.CUmemAllocationProp()
     p.type = cuda.CUmemAllocationType.CU_MEM_ALLOCATION_TYPE_PINNED
     p.location.type = loc_type
     p.location.id = loc_id
-    # POSIX fd handles are what a multi-process (2P2D) deployment needs in order to
-    # pass a slab to another process; requesting it here also proves it is available.
-    p.requestedHandleTypes = (
-        cuda.CUmemAllocationHandleType.CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR
-    )
+    if exportable:
+        p.requestedHandleTypes = (
+            cuda.CUmemAllocationHandleType.CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR
+        )
     return p
 
 
@@ -107,6 +112,113 @@ def bandwidth_dtod(src_ptr, dst_ptr, nbytes, iters):
     _c(cuda.cuCtxSynchronize())
     dt = time.perf_counter() - t0
     return nbytes * iters / dt / 1e9
+
+
+def print_topo():
+    """nvidia-smi's own view -- the authoritative answer to 'is there an NVLink bridge'.
+    cuDeviceCanAccessPeer says only that a P2P path exists, NOT that it is NVLink: PCIe
+    P2P also reports 1, at a fraction of the bandwidth."""
+    import subprocess
+    for cmd, title in ((["nvidia-smi", "topo", "-m"], "topology matrix"),
+                       (["nvidia-smi", "nvlink", "-s"], "NVLink status")):
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            out = (r.stdout or r.stderr).strip()
+        except Exception as e:  # noqa: BLE001
+            out = f"(failed: {e})"
+        print(f"\n[topo] {title} ({' '.join(cmd)}):")
+        for line in out.splitlines()[:24]:
+            print(f"  {line}")
+
+
+def pair_bandwidth(n_dev, slab_mb, iters):
+    """Measure peer-read bandwidth for EVERY ordered pair. This is what separates an
+    NVLink-bridged pair (tens of GB/s more) from a PCIe P2P pair -- the placement policy
+    must prefer the former, and a single 0->1 measurement cannot tell you which is which."""
+    print(f"\n[Q3b] peer-read bandwidth per ordered pair ({slab_mb} MiB slab, "
+          f"cuMemcpyDtoD peer->local)")
+    print("      rows = reading dev (owns the address space), cols = dev holding the data")
+    hdr = "      " + "".join(f"{j:>10}" for j in range(n_dev))
+    print(hdr)
+    for i in range(n_dev):
+        dev_i = _c(cuda.cuDeviceGet(i))
+        ctx_i = _c(cuda.cuDevicePrimaryCtxRetain(dev_i))
+        _c(cuda.cuCtxSetCurrent(ctx_i))
+        prop_i = _prop(cuda.CUmemLocationType.CU_MEM_LOCATION_TYPE_DEVICE, i)
+        gran = _c(cuda.cuMemGetAllocationGranularity(
+            prop_i,
+            cuda.CUmemAllocationGranularity_flags.CU_MEM_ALLOC_GRANULARITY_MINIMUM))
+        size = round_up(slab_mb * 2**20, gran)
+        row, va, hs, ms = [], None, [], []
+        try:
+            va = _c(cuda.cuMemAddressReserve(size * 2, gran, 0, 0))
+            h_dst = _c(cuda.cuMemCreate(size, prop_i, 0))
+            hs.append(h_dst)
+            _c(cuda.cuMemMap(int(va), size, 0, h_dst, 0))
+            _c(cuda.cuMemSetAccess(int(va), size, _access([i]), 1))
+            ms.append((int(va), size))
+            for j in range(n_dev):
+                if i == j:
+                    row.append(f"{'  --':>10}")
+                    continue
+                src = int(va) + size
+                try:
+                    prop_j = _prop(cuda.CUmemLocationType.CU_MEM_LOCATION_TYPE_DEVICE, j)
+                    h = _c(cuda.cuMemCreate(size, prop_j, 0))
+                    hs.append(h)
+                    _c(cuda.cuMemMap(src, size, 0, h, 0))
+                    _c(cuda.cuMemSetAccess(src, size, _access([i, j]), 2))
+                    bw = bandwidth_dtod(src, int(va), size, iters)
+                    row.append(f"{bw:>9.1f}")
+                    _c(cuda.cuMemUnmap(src, size))
+                except Exception:  # noqa: BLE001
+                    row.append(f"{'  n/a':>10}")
+        finally:
+            for ptr, sz in ms:
+                try:
+                    cuda.cuMemUnmap(ptr, sz)
+                except Exception:  # noqa: BLE001
+                    pass
+            for h in hs:
+                try:
+                    cuda.cuMemRelease(h)
+                except Exception:  # noqa: BLE001
+                    pass
+            if va is not None:
+                try:
+                    cuda.cuMemAddressFree(va, size * 2)
+                except Exception:  # noqa: BLE001
+                    pass
+            cuda.cuDevicePrimaryCtxRelease(dev_i)
+        print(f"  {i:>3} " + "".join(row) + "   GB/s")
+
+
+def kv_math(results, lengths, layers, kv_heads, head_dim, dtype_bytes, recompute_ms):
+    """Turn the measured bandwidths into the number the paper actually argues about:
+    how long it takes to RESTORE an L-token prefix from each residency, versus
+    recomputing it. Recompute costs are the measured ones from
+    results/intro/fig_ttft_ctx_sweep.json."""
+    per_tok = layers * kv_heads * head_dim * 2 * dtype_bytes   # 2 = K and V
+    print(f"\n[KV math] {per_tok/1024:.0f} KiB of KV per token "
+          f"({layers} layers x {kv_heads} kv-heads x {head_dim} dim x K/V x "
+          f"{dtype_bytes}B)")
+    cols = [k for k in ("local", "peer", "host") if k in results]
+    head = f"  {'ctx':>7}  {'KV size':>9}" + "".join(f"{k+' (ms)':>13}" for k in cols)
+    print(head + f"{'recompute':>12}  {'speedup vs recompute':>22}")
+    for L in lengths:
+        nbytes = L * per_tok
+        cells, best = [], None
+        for k in cols:
+            ms = nbytes / (results[k] * 1e9) * 1e3
+            cells.append(f"{ms:>13.1f}")
+            if k == "peer":
+                best = ms
+        rc = recompute_ms.get(L)
+        rc_s = f"{rc:>12.0f}" if rc else f"{'-':>12}"
+        sp = f"{rc/best:>21.0f}x" if (rc and best) else f"{'-':>22}"
+        print(f"  {L:>7}  {nbytes/2**30:>8.2f}G" + "".join(cells) + rc_s + sp)
+    print("  -> 'peer' is the transfer a park/fetch pays instead of a full prefill.")
+    print("     A peer-resident restore only has to beat RECOMPUTE, not local HBM.")
 
 
 def probe_pairs(n_dev):
@@ -140,14 +252,33 @@ def main():
     ap.add_argument("--numa", type=int, default=-1,
                     help="host slab NUMA node (>=0 uses CU_MEM_LOCATION_TYPE_HOST_NUMA)")
     ap.add_argument("--pairs", action="store_true", help="also print the P2P matrix")
+    ap.add_argument("--all-pairs-bw", action="store_true",
+                    help="measure peer-read bandwidth for EVERY ordered pair -- the only "
+                         "way to tell an NVLink-bridged pair from a PCIe P2P one")
+    ap.add_argument("--topo", action="store_true",
+                    help="print nvidia-smi topo -m / nvlink -s (authoritative on NVLink)")
+    ap.add_argument("--remap-slabs", nargs="+", type=int, default=[2, 8, 32, 128],
+                    help="slab sizes (MiB) for the remap-latency sweep")
+    # KV geometry for the restore-vs-recompute table (default: Llama-3.1-8B-Instruct)
+    ap.add_argument("--layers", type=int, default=32)
+    ap.add_argument("--kv-heads", type=int, default=8, help="num_key_value_heads (GQA)")
+    ap.add_argument("--head-dim", type=int, default=128)
+    ap.add_argument("--dtype-bytes", type=int, default=2, help="2 = fp16/bf16")
+    ap.add_argument("--kv-lengths", nargs="+", type=int,
+                    default=[1000, 2000, 4000, 8000, 16000, 32000])
     args = ap.parse_args()
 
     _c(cuda.cuInit(0))
     n_dev = _c(cuda.cuDeviceGetCount())
-    print(f"[vmm_probe] {n_dev} GPU(s) visible; building the space on dev {args.dev}, "
-          f"peer slab on dev {args.peer}")
+    ver = _c(cuda.cuDriverGetVersion())
+    print(f"[vmm_probe] {n_dev} GPU(s) visible, driver CUDA {ver//1000}.{(ver%1000)//10}; "
+          f"space on dev {args.dev}, peer slab on dev {args.peer}")
+    if args.topo:
+        print_topo()
     if args.pairs:
         probe_pairs(n_dev)
+    if args.all_pairs_bw:
+        pair_bandwidth(n_dev, args.slab_mb, args.iters)
 
     dev = _c(cuda.cuDeviceGet(args.dev))
     ctx = _c(cuda.cuDevicePrimaryCtxRetain(dev))
@@ -223,57 +354,89 @@ def main():
                 print("          PCIe P2P disabled). Zero-copy peer residency is not")
                 print("          available for this pair; migration must be a copy.")
 
-        # ---- Q4 host-backed slab
-        try:
-            if args.numa >= 0:
-                prop_host = _prop(
-                    cuda.CUmemLocationType.CU_MEM_LOCATION_TYPE_HOST_NUMA, args.numa)
-                tag = f"host DRAM (NUMA {args.numa})"
-            else:
-                prop_host = _prop(cuda.CUmemLocationType.CU_MEM_LOCATION_TYPE_HOST, 0)
-                tag = "host DRAM"
-            _, p_host = make_and_map(3, prop_host, [args.dev], tag)
+        # ---- Q4 host-backed slab. Several (location, exportable) combinations are
+        # legal on paper but not all are supported by a given driver, and the failure
+        # is an indistinguishable INVALID_VALUE -- so try them in order and report
+        # which one works instead of concluding "host is unsupported" from one attempt.
+        LT = cuda.CUmemLocationType
+        host_attempts = [
+            (LT.CU_MEM_LOCATION_TYPE_HOST, 0, False, "host DRAM"),
+            (LT.CU_MEM_LOCATION_TYPE_HOST, 0, True, "host DRAM (fd-exportable)"),
+            (LT.CU_MEM_LOCATION_TYPE_HOST_NUMA, max(0, args.numa), False,
+             f"host DRAM NUMA{max(0, args.numa)}"),
+            (LT.CU_MEM_LOCATION_TYPE_HOST_NUMA, max(0, args.numa), True,
+             f"host DRAM NUMA{max(0, args.numa)} (fd-exportable)"),
+        ]
+        if hasattr(LT, "CU_MEM_LOCATION_TYPE_HOST_NUMA_CURRENT"):
+            host_attempts.append(
+                (LT.CU_MEM_LOCATION_TYPE_HOST_NUMA_CURRENT, 0, False,
+                 "host DRAM NUMA_CURRENT"))
+        for lt, lid, exp, tag in host_attempts:
+            try:
+                _, p_host = make_and_map(3, _prop(lt, lid, exportable=exp),
+                                         [args.dev], tag)
+            except Exception as e:  # noqa: BLE001
+                print(f"     {tag:<32}: unsupported ({e})")
+                continue
             results["host"] = bandwidth_dtod(p_host, p_dst, slab, args.iters)
-            print(f"     {tag:<17}: {results['host']:8.1f} GB/s   "
+            results["host_kind"] = tag
+            print(f"     {tag:<32}: {results['host']:8.1f} GB/s   "
                   f"({results['host']/results['local']*100:.0f}% of local)")
-        except Exception as e:  # noqa: BLE001
-            print(f"     host DRAM        : FAILED -- {e}")
-            print("       -> host-located VMM allocations need CUDA >= 12.2; fall back")
-            print("          to cuMemHostAlloc + a separate host pool for the overflow tier.")
+            break
+        else:
+            print("     host DRAM: no VMM host location worked on this driver.")
+            print("       -> the overflow tier must use cuMemHostAlloc + a separate host")
+            print("          pool (what HiCache does). The unified-space claim then covers")
+            print("          local+peer HBM only; say so explicitly in the paper.")
 
-        # ---- Q2 remap latency: same VA, different physical backing
-        h_a = _c(cuda.cuMemCreate(slab, prop_local, 0))
-        h_b = _c(cuda.cuMemCreate(slab, prop_local, 0))
-        handles += [h_a, h_b]
-        ptr = int(va)                       # reuse slot 0's address
-        _c(cuda.cuMemUnmap(ptr, slab))
-        descs = _access([args.dev])
-        lat = []
-        for i in range(args.remap_iters):
-            h = h_a if i % 2 == 0 else h_b
-            t0 = time.perf_counter()
-            _c(cuda.cuMemMap(ptr, slab, 0, h, 0))
-            _c(cuda.cuMemSetAccess(ptr, slab, descs, len(descs)))
-            _c(cuda.cuMemUnmap(ptr, slab))
-            lat.append((time.perf_counter() - t0) * 1e6)
-        _c(cuda.cuMemMap(ptr, slab, 0, h_a, 0))
-        _c(cuda.cuMemSetAccess(ptr, slab, descs, len(descs)))
-        lat.sort()
-        p50, p99 = lat[len(lat) // 2], lat[int(0.99 * len(lat))]
+        # ---- Q2 remap latency vs SLAB SIZE, at a fixed VA.
+        # Swept, not measured at one size: the cost that matters is
+        #   (bytes to migrate / slab size) x per-slab latency,
+        # so if latency is flat in slab size, small slabs are catastrophic (a 1 GiB
+        # migration in 2 MiB slabs is 512 remaps) and large slabs are nearly free.
         print(f"\n[Q2] residency change at a FIXED virtual address "
-              f"(map+setAccess+unmap, {slab/2**20:.0f} MiB slab):")
-        print(f"     p50 = {p50:.1f} us   p99 = {p99:.1f} us   "
-              f"({p50/1000:.3f} ms per slab)")
-        print("     -> compare against the prefill this migration avoids: a 8k-token")
-        print("        recompute cost ~1200 ms on this model (results/intro sweep), so a")
-        print("        remap is worth it as long as slabs-per-migration x p50 << that.")
+              f"(cuMemMap + cuMemSetAccess + cuMemUnmap):")
+        print(f"  {'slab':>8}  {'p50 (us)':>9}  {'p99 (us)':>9}  "
+              f"{'remaps/GiB':>11}  {'us/GiB':>9}")
+        for mb in args.remap_slabs:
+            sz = round_up(mb * 2**20, g_min)
+            sva = _c(cuda.cuMemAddressReserve(sz, g_min, 0, 0))
+            ha = _c(cuda.cuMemCreate(sz, prop_local, 0))
+            hb = _c(cuda.cuMemCreate(sz, prop_local, 0))
+            descs = _access([args.dev])
+            lat = []
+            try:
+                for i in range(args.remap_iters):
+                    h = ha if i % 2 == 0 else hb
+                    t0 = time.perf_counter()
+                    _c(cuda.cuMemMap(int(sva), sz, 0, h, 0))
+                    _c(cuda.cuMemSetAccess(int(sva), sz, descs, len(descs)))
+                    _c(cuda.cuMemUnmap(int(sva), sz))
+                    lat.append((time.perf_counter() - t0) * 1e6)
+            finally:
+                cuda.cuMemRelease(ha); cuda.cuMemRelease(hb)
+                cuda.cuMemAddressFree(sva, sz)
+            lat.sort()
+            p50, p99 = lat[len(lat) // 2], lat[int(0.99 * len(lat))]
+            n_per_gib = 2**30 / sz
+            print(f"  {sz/2**20:>6.0f}Mi  {p50:>9.1f}  {p99:>9.1f}  "
+                  f"{n_per_gib:>11.0f}  {p50*n_per_gib:>9.0f}")
+        print("     -> pick the slab so that us/GiB is a small fraction of the transfer")
+        print("        time for the same GiB (see the KV math table below).")
 
-        print("\n[summary]")
+        # ---- turn bandwidth into restore-vs-recompute, the paper's actual claim
+        if results:
+            kv_math(results, args.kv_lengths, args.layers, args.kv_heads,
+                    args.head_dim, args.dtype_bytes,
+                    {1000: 161, 2000: 293, 4000: 592, 8000: 1203,
+                     16000: 2706, 32000: 6681})
+
+        print("\n[summary] read bandwidth by residency")
         for k in ("local", "peer", "host"):
             if k in results:
-                print(f"  {k:>5} residency: {results[k]:8.1f} GB/s")
-        print("  Use these three numbers to justify the placement policy: peer HBM is")
-        print("  only worth preferring over host DRAM if its bandwidth ratio says so.")
+                extra = f"  [{results['host_kind']}]" if k == "host" and \
+                    "host_kind" in results else ""
+                print(f"  {k:>5}: {results[k]:8.1f} GB/s{extra}")
 
     finally:
         for ptr, size in mapped:
