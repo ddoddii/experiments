@@ -51,33 +51,61 @@ Intro 초안의 "CUDA Unified Memory의 공통 주소 공간과 migration mechan
 
 4× RTX A6000, driver 확인, 서버 정지 상태:
 
+4× RTX A6000, **driver CUDA 13.0**, 서버 정지 상태. NVLink: **GPU0-GPU1 = NV4, GPU2-GPU3 = NV4**
+(링크당 14.06 GB/s × 4 = 56.25 GB/s/방향), pair 간은 NODE/PHB(PCIe).
+
 | 항목 | 측정값 | 해석 |
 |---|---|---|
-| allocation granularity | **2.00 MiB** (min = recommended) | KV slab은 2 MiB의 배수 |
-| P2P 도달성 | **12개 순서쌍 전부 1** | 모든 GPU가 서로 매핑 가능 |
-| local HBM read | **331–333 GB/s** | 기준선 |
-| **peer HBM read (0←1)** | **27.2 GB/s = local의 8%** | **PCIe 속도** (NVLink 브리지면 ~50 GB/s) |
-| **host DRAM read (`CU_MEM_LOCATION_TYPE_HOST`)** | **26.1 GB/s = local의 8%** | **동작 확인.** peer와 **4% 차이** |
-| 같은 VA에서 residency 변경 | **p50 87 µs, slab 크기와 무관** (2/8/32/128 MiB 전부 87–89 µs) | **비용이 바이트가 아니라 호출당** |
-| remap된 VA로 write/read | **OK** | 메커니즘 동작 확인 |
+| allocation granularity | **2.00 MiB** (min = recommended) | 물리 handle은 2 MiB의 배수 |
+| P2P 도달성 | 12개 순서쌍 전부 1 | **대역폭과 무관** — 아래 참조 |
+| local HBM read | **331–332 GB/s** | 기준선 |
+| **NVLink peer read** | **27.2 / 52.8 GB/s** (방향 비대칭) | NV4 pair 내부 |
+| **non-NVLink peer read** | **3.3 GB/s** | pair 간 PCIe — **host보다 느리다** |
+| **host DRAM read** (`CU_MEM_LOCATION_TYPE_HOST`) | **23.7–26.1 GB/s** | **동작 확인** |
+| residency 변경, **handle 1개** | **p50 87–90 µs, 크기 무관** (2/8/32/128 MiB) | 호출당 비용 |
+| residency 변경, **handle N개** | **페이지당 ~80 µs, 배치해도 안 줄어듦** | §6 — 설계 결정적 |
 
-### 3.0 ★ 가장 중요한 결과 — peer HBM과 host DRAM이 4% 차이
+### 3.0 ★ 결과 1 — HBM 아래에 대역폭 계층이 없다
 
-**같은 주소 공간, 같은 접근 메커니즘**으로 측정했을 때:
+**같은 주소 공간, 같은 접근 경로**로 측정:
 
 | residency | 대역폭 | local 대비 |
 |---|---|---|
-| local HBM | 331.4 GB/s | 100% |
-| **peer GPU HBM** | **27.2 GB/s** | 8% |
-| **host DRAM** | **26.1 GB/s** | 8% |
+| local HBM | **331.9 GB/s** | 100% |
+| NVLink peer HBM | **27.2–52.8 GB/s** | 8–16% |
+| **host DRAM** | **23.7–26.1 GB/s** | 7–8% |
+| non-NVLink peer HBM | **3.3 GB/s** | 1% |
 
-둘 다 PCIe-bound라 **4% 안쪽에서 동일하다.** 이것이 *"CPU에서 가져오나 GPU에서 가져오나 같으니 하나로
-관리한다"*는 논문 전제의 직접 증거이고, 동시에 **CPU를 별도 tier로 둘 근거가 없다**는 뜻이다:
-tier를 나누는 유일한 정당화는 대역폭 계층인데, 여기에는 계층이 없다 — **local HBM(빠름) vs
-그 밖의 전부(PCIe, 동일)** 2층뿐이다. 기존 시스템이 host DRAM을 GPU HBM 아래의 별도 tier로 두는 것은
-**대역폭 근거 없이 자원만 예약하는 구조**다.
+**NVLink peer와 host DRAM이 같은 구간에 있다**(27.2 vs 26.1 — 4% 차; NVLink 유리 방향이면 2×).
+*"CPU에서 가져오나 유휴 GPU에서 가져오나 같다"*는 논문 전제의 직접 증거이고, **CPU를 HBM 아래의
+별도 tier로 둘 대역폭 근거가 없다**는 뜻이다 — **local HBM(빠름) vs 그 밖의 전부(≈PCIe)** 2층뿐이다.
+기존 시스템이 host DRAM을 별도 tier로 예약하는 것은 대역폭 근거 없이 **자원만 예약하는 구조**다.
 
-→ Intro에 이 표를 그대로 넣는다. 논문 전제가 가정이 아니라 측정이 된다.
+→ Intro에 이 표를 넣는다. 전제가 가정이 아니라 측정이 된다.
+
+### 3.0b ★ 결과 2 — 위치 순위가 메모리 계층 직관과 다르다
+
+`--all-pairs-bw` (행 = 읽는 GPU, 열 = 데이터 보유 GPU, GB/s):
+
+|  | 0 | 1 | 2 | 3 |
+|---|---|---|---|---|
+| **0** | — | 27.2 | **3.3** | **3.3** |
+| **1** | **52.8** | — | **3.3** | **3.3** |
+| **2** | **3.3** | 26.3 | — | 27.1 |
+| **3** | **3.3** | **3.3** | **52.6** | — |
+
+- NV4 pair 내부: **27–53 GB/s** (방향 비대칭 2× — remote read 방향 효과로 추정, 확정에는
+  write 방향/`cuMemcpyPeerAsync` 추가 측정 필요)
+- **pair 간: 3.3 GB/s** — host DRAM(24–26 GB/s)보다 **7–8× 느리다**
+
+**따라서 "GPU 먼저"는 틀린 정책이다.** 올바른 순위:
+
+> **NVLink peer (27–53) > host DRAM (24–26) ≫ non-NVLink peer (3.3) > recompute**
+
+(non-NVLink peer도 8k에서 297 ms로 recompute 1203 ms보다는 4× 낫지만, host를 쓰는 게 낫다.)
+
+이건 논문에 유리한 발견이다: **location들이 메모리 계층이 시사하는 순서로 정렬되지 않기 때문에
+"명시적 residency 정책"이 필요하다.** 고정 tier 구조로는 이 순위를 표현조차 할 수 없다.
 
 ### 3.1 이 측정이 확정한 두 가지
 
@@ -149,28 +177,42 @@ park_va[gpu] = cuMemAddressReserve(아주 큰 크기)      # 물리 0, 공짜
 
 # 파킹: 축출 위험 prefix를 어딘가에 물리 커밋
 def park(session, n_tokens):
-    loc   = choose_location()          # argmax headroom: local -> peers -> host
-    pages = [cuMemCreate(2MiB, prop(loc)) for _ in range(n_pages)]
-    for p in pages: cuMemMap(park_va + off, 2MiB, 0, p, 0)   # 2 us each
-    for r in layer_ranges: cuMemSetAccess(r, descs)          # range 단위로 배치 (§6)
-    p2p_copy_in(...)                   # 기존 IPC 경로 재사용
-    shared_index.put(hash, (gpu, off, n))
+    loc  = choose_location(n_tokens)     # §5.1 순위표
+    size = round_up(n_tokens * 128KiB, 2MiB)
+    h    = cuMemCreate(size, prop(loc))  # ★ handle 1개 (§6.3) -- 페이지로 쪼개지 말 것
+    cuMemMap(park_va + off, size, 0, h, 0)
+    cuMemSetAccess(park_va + off, size, descs)        # 합계 ~90 us
+    p2p_copy_in(...)                     # 기존 IPC/P2P 경로 재사용
+    shared_index.put(hash, (loc, off, size))          # location 기록
 
 # 다음 turn: 항상 target GPU로 가져온다 (제자리 attention 금지, §3.1a)
-def fetch(session):  copy_to_local(...)   # tool-call window 중 prefetch
+def fetch(session):  copy_to_local(...)  # tool-call window 중 prefetch
+
+# 성장: handle은 리사이즈 불가 -> turn마다 뒤에 이어 붙인다 (§6.3)
+def grow(session, extra_tokens):  # handle 하나 더, ~90 us
+    ...
 
 # 압박 시 회수: 물리 페이지를 실제로 반환
 def reclaim(gpu, need_bytes):
     for slab in lru_parked(gpu):
-        cuMemUnmap(range); cuMemRelease(pages)   # -> 그 GPU free pool로 복귀
+        cuMemUnmap(slab.va, slab.size); cuMemRelease(slab.h)  # -> free pool 복귀
         shared_index.invalidate(slab)
         if freed >= need_bytes: break
 ```
 
-**배치 정책** `choose_location()`:
-1. 여유 있는 **peer GPU** (headroom 최대, NVLink 브리지 우선 — §9로 확인)
-2. 어느 GPU에도 자리 없으면 **host** (overflow, 기본값 아님)
-3. 그것도 없으면 **drop** (victim cache 의미론: recompute가 정합성 fallback)
+### 5.1 `choose_location()` — 측정된 대역폭 순위로 (§3.0b)
+
+**"GPU 먼저"가 아니다.** non-NVLink peer(3.3 GB/s)는 host DRAM(24–26)보다 7–8× 느리다.
+
+| 순위 | location | 대역폭 | 조건 |
+|---|---|---|---|
+| 1 | **NVLink-bridged peer** with headroom | 27–53 GB/s | `nvidia-smi topo`의 NV# 쌍 |
+| 2 | **host DRAM** | 24–26 GB/s | 프로세스 로컬만 (§11: fd export 불가) |
+| 3 | non-NVLink peer with headroom | 3.3 GB/s | host도 꽉 찼을 때만 |
+| 4 | **drop** → 다음 turn recompute | — | victim cache 정합성 fallback |
+
+링크 대역폭 표는 **기동 시 1회 측정**해서 캐시한다(`vmm_probe`의 `--all-pairs-bw` 로직 재사용).
+하드코딩하지 말 것 — 노드마다 토폴로지가 다르다.
 
 **Design C가 옳은 이유**
 - ✅ 26 GB 정적 예약 제거 (①③)
@@ -185,53 +227,63 @@ def reclaim(gpu, need_bytes):
 
 ---
 
-## 6. remap 비용 — 호출당 비용이므로 배치가 필수
+## 6. ★ 결과 3 — 배치는 통하지 않는다. **park slab당 물리 handle 1개**를 써야 한다
 
-### 6.1 측정: latency가 slab 크기와 무관하다
+### 6.1 handle 1개짜리 slab: 크기와 무관하게 ~90 µs
 
-| slab | p50 (µs) | remaps/GiB | **µs/GiB** | 전송(38.6 ms/GiB) 대비 |
+| slab (handle 1개) | p50 (µs) | remaps/GiB | **µs/GiB** | 전송(38.6 ms/GiB) 대비 |
 |---|---|---|---|---|
-| 2 MiB | 87.3 | 512 | **44 692** | **116%** ✗ 전송보다 비쌈 |
-| 8 MiB | 87.4 | 128 | 11 194 | 29% |
-| 32 MiB | 87.1 | 32 | 2 788 | 7% |
-| 128 MiB | 88.6 | 8 | **708** | **1.8%** ✓ |
+| 2 MiB | 88.7 | 512 | 45 424 | **118%** ✗ |
+| 8 MiB | 89.2 | 128 | 11 419 | 30% |
+| 32 MiB | 89.6 | 32 | 2 868 | 7% |
+| 128 MiB | 90.4 | 8 | **724** | **1.9%** ✓ |
 
-**87 µs는 slab 크기에 무관하다 → 비용이 바이트가 아니라 호출당이다.** 그러므로 페이지마다
-map+setAccess+unmap을 부르면 2 MiB granularity에서 제어 오버헤드가 전송을 넘어선다.
+### 6.2 배치 실측 — 효과가 **없다**
 
-### 6.2 해법 두 가지 — 둘 다 유효
+2 MiB 페이지 N장을 매핑하고 `cuMemSetAccess`/`cuMemUnmap`을 range 단위로 **1회씩만** 호출:
 
-**(A) 큰 slab.** 128 MiB slab이면 0.71 ms/GiB (1.8%). 단순하지만 내부 파편화가 생긴다
-(6000-token 세션 = 750 MiB이므로 128 MiB 단위면 최대 127 MiB 낭비).
+| region | pages | total µs | map | **access** | unmap | **µs/GiB** |
+|---|---|---|---|---|---|---|
+| 2 MiB | 1 | 995 | 4 | 956 | 35 | 509 500 |
+| 16 MiB | 8 | 664 | 12 | 420 | 231 | 42 490 |
+| 128 MiB | 64 | 5 295 | 69 | 3 473 | 1 749 | 42 361 |
+| 768 MiB | 384 | 32 054 | 410 | 21 137 | 10 479 | 42 739 |
+| 1 024 MiB | 512 | 42 240 | 512 | 27 875 | 13 905 | 42 240 |
 
-**(B) 배치 커밋 — 권장.** `cuMemSetAccess`와 `cuMemUnmap`은 **여러 handle에 걸친 range를 받는다.**
-따라서 2 MiB 페이지를 유지하면서 비싼 호출을 region당 1회만 낸다:
+**µs/GiB가 ~42 000으로 평평하다 — 배치해도 전혀 줄지 않는다.** `cuMemSetAccess`와 `cuMemUnmap`은
+range를 받지만 **드라이버가 range 안의 mapping을 하나하나 순회**한다:
+setAccess 3 473/64 = **54 µs/페이지**, unmap 1 749/64 = **27 µs/페이지** (vAttention Table 3의
+38 + 34 µs와 일치).
 
-```
-for i, h in enumerate(pages):  cuMemMap(va + i*2MiB, 2MiB, 0, h, 0)   # N회 (싼 호출)
-cuMemSetAccess(va, region_size, descs, 1)                             # 1회
-...
-cuMemUnmap(va, region_size)                                            # 1회
-```
+**결정적 비교 — 같은 128 MiB 범위:**
 
-vAttention Table 3의 분해(2 MB 기준: map **2 µs**, setAccess **38 µs**, unmap **34 µs**)로
-6000-token 세션 slab(= 750 MiB = 2 MiB 페이지 384장)을 추정하면:
-
-| 방식 | 계산 | 비용 |
+| 물리 backing | 제어 비용 | 배수 |
 |---|---|---|
-| 페이지마다 map+setAccess+unmap | 384 × 87 µs | **33 ms** ✗ |
-| **배치 (384 map + 1 setAccess + 1 unmap)** | 384×2 + 38 + 34 µs | **≈0.8 ms** ✓ |
+| **handle 1개 (128 MiB)** | **90 µs** | 1× |
+| handle 64개 (2 MiB × 64) | 5 295 µs | **59×** |
 
-같은 slab 전송이 750 MiB / 27 GB/s = **28 ms**이므로 제어 오버헤드가 **3%**가 된다.
+→ 앞서 권고한 (B) 배치는 **폐기한다.** 비싼 것은 호출 횟수가 아니라 **mapping 개수**다.
 
-**★ 이 추정은 `--batch-pages`로 실측해야 한다** (probe에 추가됨). `cuMemMap` 384회의 실제 비용이
-vAttention의 2 µs보다 클 수 있고, 그 값이 (A)와 (B) 중 무엇을 쓸지 결정한다:
+### 6.3 그래서 설계: **park slab = 물리 handle 1개**
 
-```bash
-python benchmark/vmm_probe.py --batch-pages 1 8 64 384 512 --remap-iters 40
-```
+granularity는 2 MiB가 최소값일 뿐이고, `cuMemCreate`는 **그 배수의 아무 크기나** 만들 수 있다.
+그러므로 세션의 KV 크기에 맞춰 **큰 handle 하나**를 만든다:
 
-### 6.3 2 MB granularity는 우리에게 부담이 아니다
+| 항목 | 값 |
+|---|---|
+| 6000-token 세션 KV | 750 MiB → **handle 1개** (2 MiB로 라운딩, 낭비 ≤2 MiB) |
+| 제어 비용 (map+setAccess+unmap) | **~90 µs** |
+| 전송 비용 (27 GB/s) | 28 ms |
+| **제어 오버헤드** | **0.3%** ✓ |
+| 회수(unmap+release) | ~90 µs, 물리 페이지 즉시 반환 |
+
+**세션 성장(in-place grow)**: handle은 크기 변경이 안 되므로, turn마다 **새 handle을 VA 뒤에 이어
+붙인다.** 5턴 대화 = handle 5개 = 제어 450 µs. 여전히 무시 가능하다.
+
+**내부 파편화도 문제가 아니다** — 고정 slab 크기가 아니라 세션 실제 크기로 handle을 만들기 때문에
+낭비는 handle당 최대 2 MiB(0.3%)다. 이는 (A) 고정 128 MiB slab(최대 127 MiB 낭비)보다도 좋다.
+
+### 6.4 2 MB granularity는 우리에게 부담이 아니다
 
 vAttention이 64 KB 페이지용 CUDA 확장까지 만든 이유는 *짧은 요청*의 내부 파편화였다. 우리는 수천
 토큰짜리 대화 prefix를 통째로 파킹하므로 2 MB(= 레이어당 1024 토큰)면 충분하다.
@@ -278,14 +330,18 @@ vAttention이 64 KB 페이지용 CUDA 확장까지 만든 이유는 *짧은 요�
 - ✅ **peer 27.2 vs host 26.1 GB/s (4% 차)** — §3.0, 논문 전제의 직접 증거.
 - ✅ **remap 비용은 호출당 (87 µs, slab 크기 무관)** — §6.
 
-**남은 것:**
-1. **배치 커밋 실측** (§6.2) — `--batch-pages 1 8 64 384 512`. (A) 큰 slab vs (B) 2 MiB + 배치를
-   결정하는 값이다. **C1 착수 전에 필요.**
-2. **NVLink 브리지가 있는 쌍이 있는가?** 27.2 GB/s는 PCIe다. `--topo --all-pairs-bw` 출력이 아직
-   확인되지 않았다. 어떤 쌍이 튀어나오면 `choose_location()`이 topology-aware여야 하고 restore가
-   ~2× 빨라진다. 없으면 모든 peer가 동급이므로 정책은 headroom만 보면 된다(더 단순).
-3. `HOST_NUMA` 동작 여부 — dual-socket에서 overflow를 로컬 소켓에 붙이려면 필요. 안 되면 소켓
-   affinity 없이 진행(성능 영향 소규모).
+- ✅ **NVLink NV4가 (0,1)·(2,3)에 존재** — pair 내부 27–53 GB/s, pair 간 3.3 GB/s.
+  `choose_location()`은 **반드시 topology-aware**여야 한다(§5.1). driver CUDA 13.0.
+- ✅ **배치는 통하지 않는다** — µs/GiB가 42 000으로 평평. 비용은 **mapping 개수**에 비례.
+  → **park slab당 물리 handle 1개** (§6.3). 같은 128 MiB에서 90 µs vs 5 295 µs (59×).
+
+**C0 종료. 남은 미결(선택):**
+1. **peer read 방향 비대칭 2×** (1←0: 52.8 vs 0←1: 27.2, 같은 NV4 쌍). remote read 방향 효과로
+   추정되나 확정 안 됨. `cuMemcpyPeerAsync` 또는 write 방향 측정으로 확인 가능. **설계에는 영향
+   없음**(둘 다 host보다 빠름) — 정책이 쌍별 실측값을 캐시하므로 자동 반영된다.
+2. `HOST_NUMA` 동작 여부 — server17은 단일 NUMA(`nvidia-smi topo`의 NUMA Affinity 전부 0)이므로
+   **불필요**.
+3. host 대역폭이 실행 간 23.7–26.1 GB/s로 흔들린다(공유 서버 노이즈). 논문에는 범위로 보고.
 
 ---
 
