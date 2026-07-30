@@ -24,13 +24,19 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
 
 ### 1.1 핵심 아이디어 (Intro 본문용 불렛)
 
-- **관찰 1 — 대역폭 계층이 존재하지 않는다 (핵심 측정).** 하나의 CUDA VMM 주소 공간에서 동일한
-  접근 경로로 측정하면: **local HBM 331 GB/s, peer GPU HBM 27.2 GB/s, host DRAM 26.1 GB/s.**
-  peer와 host는 둘 다 PCIe-bound라 **4% 안쪽에서 동일**하다. 여기에 layer-wise transfer·prefill
-  overlap·tool-call window prefetch가 더해져 end-to-end TTFT 차이는 사라진다.
-  → **"local HBM(빠름) vs 그 밖의 전부(PCIe, 동일)" 2층뿐이다.** 기존 시스템이 host DRAM을 GPU HBM
-  아래의 *별도 tier*로 두는 것은 **대역폭 근거 없이 자원만 예약하는 구조**이며, KV를 CPU DRAM에
-  두느냐 유휴 GPU HBM에 두느냐는 성능 문제가 아니라 **자원 예약 문제**다. (Fig. X로 이 3-행 표를 제시)
+- **관찰 1 — HBM 아래에 대역폭 계층이 존재하지 않는다 (핵심 측정).** 하나의 CUDA VMM 주소 공간에서
+  동일한 접근 경로로 측정하면 (4× A6000, NV4 pair): **local HBM 331 GB/s, NVLink peer HBM
+  27–53 GB/s, host DRAM 24–26 GB/s.** peer와 host는 같은 구간이다(27.2 vs 26.1 = 4% 차).
+  여기에 layer-wise transfer·prefill overlap·tool-call window prefetch가 더해져 end-to-end TTFT
+  차이는 사라진다. → **"local HBM(빠름) vs 그 밖의 전부(≈PCIe)" 2층뿐이다.** 기존 시스템이 host
+  DRAM을 GPU HBM 아래의 *별도 tier*로 두는 것은 **대역폭 근거 없이 자원만 예약하는 구조**이며,
+  KV를 CPU DRAM에 두느냐 유휴 GPU HBM에 두느냐는 성능 문제가 아니라 **자원 예약 문제**다.
+  (Fig. X로 이 표를 제시)
+- **관찰 1b — 게다가 location들이 메모리 계층 직관대로 정렬되지 않는다.** 같은 노드에서
+  **non-NVLink peer는 3.3 GB/s로 host DRAM보다 7–8× 느리다.** 즉 올바른 순위는
+  *NVLink peer(27–53) > host DRAM(24–26) ≫ non-NVLink peer(3.3) > recompute*로, **"GPU 먼저"라는
+  고정 tier 규칙으로는 표현조차 불가능하다.** → 고정 tier가 아니라 **측정된 대역폭에 따라 명시적으로
+  residency를 정하는 정책**이 필요하다는 직접적 근거.
 - **관찰 2 — 기존 시스템의 비용은 "정적 예약"에 있다.** SGLang HiCache는 `--hicache-ratio`로 host
   KV pool을 **미리 확보**하며(측정 61 GB, device memory보다 크도록 강제), 캐시가 5% 찼든 95% 찼든
   같은 양을 점유한다. write policy(write_through/selective/**write_back**)나 storage backend를

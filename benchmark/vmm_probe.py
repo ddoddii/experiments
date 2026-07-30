@@ -278,9 +278,10 @@ def probe_pairs(n_dev):
             ok = _c(cuda.cuDeviceCanAccessPeer(devs[i], devs[j]))
             row.append(f"{int(ok):>3}")
         print(f"  {i:>3} " + " ".join(row))
-    print("      NOTE on RTX A6000: NVLink is bridged in PAIRS (0-1, 2-3). A pair with")
-    print("      no bridge falls back to PCIe P2P (much slower) or is unreachable --")
-    print("      zero-copy peer-resident KV is only attractive inside a bridged pair.")
+    print("      NOTE: reachability is NOT bandwidth. On server17 every pair reports 1,")
+    print("      but --all-pairs-bw measures 27-53 GB/s inside an NV4-bridged pair and")
+    print("      only 3.3 GB/s across pairs -- slower than host DRAM (~24-26 GB/s).")
+    print("      Placement must rank locations by MEASURED bandwidth, not by 'GPU first'.")
 
 
 def main():
@@ -491,6 +492,11 @@ def main():
                   f"{tm_:>8.1f}  {ta_:>8.1f}  {tu_:>8.1f}  {per_gib:>9.0f}")
         print("     -> compare us/GiB against the ~38600 us/GiB transfer time at "
               "27 GB/s.")
+        print("     MEASURED ON server17: us/GiB is FLAT (~42000) no matter how many")
+        print("     pages are batched under one cuMemSetAccess -- so the driver walks")
+        print("     each MAPPING, and batching does not help. The same 128 MiB range")
+        print("     costs 90 us when backed by ONE handle (Q2) but 5295 us when backed")
+        print("     by 64 x 2 MiB handles. => allocate ONE LARGE HANDLE per park slab.")
 
         # ---- turn bandwidth into restore-vs-recompute, the paper's actual claim
         if results:
