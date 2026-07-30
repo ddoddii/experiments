@@ -24,10 +24,13 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
 
 ### 1.1 핵심 아이디어 (Intro 본문용 불렛)
 
-- **관찰 1 — 어디서 가져오든 TTFT는 같다.** peer GPU HBM 읽기 27.2 GB/s ≈ host→GPU PCIe ~25 GB/s
-  (본 논문 측정). 둘은 같은 PCIe 대역폭이고, layer-wise transfer·prefill overlap·tool-call window
-  prefetch로 이미 가려진다. → **KV를 CPU DRAM에 두느냐 유휴 GPU HBM에 두느냐는 성능 문제가 아니라
-  자원 예약 문제다.**
+- **관찰 1 — 대역폭 계층이 존재하지 않는다 (핵심 측정).** 하나의 CUDA VMM 주소 공간에서 동일한
+  접근 경로로 측정하면: **local HBM 331 GB/s, peer GPU HBM 27.2 GB/s, host DRAM 26.1 GB/s.**
+  peer와 host는 둘 다 PCIe-bound라 **4% 안쪽에서 동일**하다. 여기에 layer-wise transfer·prefill
+  overlap·tool-call window prefetch가 더해져 end-to-end TTFT 차이는 사라진다.
+  → **"local HBM(빠름) vs 그 밖의 전부(PCIe, 동일)" 2층뿐이다.** 기존 시스템이 host DRAM을 GPU HBM
+  아래의 *별도 tier*로 두는 것은 **대역폭 근거 없이 자원만 예약하는 구조**이며, KV를 CPU DRAM에
+  두느냐 유휴 GPU HBM에 두느냐는 성능 문제가 아니라 **자원 예약 문제**다. (Fig. X로 이 3-행 표를 제시)
 - **관찰 2 — 기존 시스템의 비용은 "정적 예약"에 있다.** SGLang HiCache는 `--hicache-ratio`로 host
   KV pool을 **미리 확보**하며(측정 61 GB, device memory보다 크도록 강제), 캐시가 5% 찼든 95% 찼든
   같은 양을 점유한다. write policy(write_through/selective/**write_back**)나 storage backend를
@@ -42,8 +45,8 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
     (유휴 peer GPU HBM 우선 → 자리 없으면 host DRAM overflow → 그것도 없으면 drop/recompute).
   - **residency가 각 페이지의 속성**이 되어, "어느 고정 tier에 저장할 것인가"가
     **"시스템 전체 가용 메모리에서 이 KV의 physical residency를 어디에 둘 것인가"**로 재정의된다.
-  - `CU_MEM_LOCATION_TYPE_HOST` 덕에 **CPU가 별도 tier가 아니라 같은 주소 공간의 한 location**이
-    된다 — "CPU와 GPU를 같은 층위로 관리"가 비유가 아니라 구현이다.
+  - `CU_MEM_LOCATION_TYPE_HOST`가 **동작함을 확인**(26.1 GB/s) — **CPU가 별도 tier가 아니라 같은
+    주소 공간의 한 location**이 된다. "CPU와 GPU를 같은 층위로 관리"가 비유가 아니라 구현이다.
 - **왜 CUDA Unified Memory(UVM)가 아닌가.** UVM은 oversubscription 시 **host로만** evict하며,
   "지금 유휴한 peer GPU로 spill"을 표현하는 인터페이스가 없다. migration 시점도 access-counter
   heuristic이 소유하고, attention 커널 내 page fault는 수용 불가다. 우리는 unified space라는
