@@ -21,6 +21,49 @@ GPU HBM을 자주 놀린다. 우리는 **축출 위험 KV를 일시적 유휴 GP
   83–90% idle** (§우리 측정). P↔D/peer-GPU 링크는 빠름.
 - **아이디어**: 축출 KV를 **일시적 유휴 GPU HBM에 담는 victim cache**. GPU가 놀면 GPU에 두고,
   host는 진짜 포화일 때만 쓰는 cold overflow로 격하.
+
+### 1.1 핵심 아이디어 (Intro 본문용 불렛)
+
+- **관찰 1 — 어디서 가져오든 TTFT는 같다.** peer GPU HBM 읽기 27.2 GB/s ≈ host→GPU PCIe ~25 GB/s
+  (본 논문 측정). 둘은 같은 PCIe 대역폭이고, layer-wise transfer·prefill overlap·tool-call window
+  prefetch로 이미 가려진다. → **KV를 CPU DRAM에 두느냐 유휴 GPU HBM에 두느냐는 성능 문제가 아니라
+  자원 예약 문제다.**
+- **관찰 2 — 기존 시스템의 비용은 "정적 예약"에 있다.** SGLang HiCache는 `--hicache-ratio`로 host
+  KV pool을 **미리 확보**하며(측정 61 GB, device memory보다 크도록 강제), 캐시가 5% 찼든 95% 찼든
+  같은 양을 점유한다. write policy(write_through/selective/**write_back**)나 storage backend를
+  끄는 것으로도 줄지 않는다. 이 DRAM은 agent orchestration·scheduling·retrieval·tool execution이
+  써야 할 자원이다(측정: MemAvailable 105 GB → 44 GB).
+- **관찰 3 — 유휴 용량은 이미 값을 치른 자원이다.** 2P2D에서 decode가 평균 75% 점유일 때 prefill은
+  45%로, KV pool의 **55%가 상시 미사용**이다(Fig. 1). 이 공간은 추가 비용이 0인데 버려진다.
+- **제안 — Unified KV Memory Management.** CPU DRAM과 분산 GPU HBM을 고정 tier가 아니라 **하나의
+  논리 KV 공간**으로 관리한다. 핵심은 **가상 주소(VA)와 물리 페이지(PA)의 분리**(CUDA VMM):
+  - **VA = 광고하는 논리 용량** — local HBM + 모든 peer + host를 합친 크기로 예약하며 물리 비용 0.
+  - **PA = 실제 커밋** — 실제로 캐시된 KV만큼만, **그 순간 자리가 있는 location**에서 커밋한다
+    (유휴 peer GPU HBM 우선 → 자리 없으면 host DRAM overflow → 그것도 없으면 drop/recompute).
+  - **residency가 각 페이지의 속성**이 되어, "어느 고정 tier에 저장할 것인가"가
+    **"시스템 전체 가용 메모리에서 이 KV의 physical residency를 어디에 둘 것인가"**로 재정의된다.
+  - `CU_MEM_LOCATION_TYPE_HOST` 덕에 **CPU가 별도 tier가 아니라 같은 주소 공간의 한 location**이
+    된다 — "CPU와 GPU를 같은 층위로 관리"가 비유가 아니라 구현이다.
+- **왜 CUDA Unified Memory(UVM)가 아닌가.** UVM은 oversubscription 시 **host로만** evict하며,
+  "지금 유휴한 peer GPU로 spill"을 표현하는 인터페이스가 없다. migration 시점도 access-counter
+  heuristic이 소유하고, attention 커널 내 page fault는 수용 불가다. 우리는 unified space라는
+  **추상은 제공하되 residency·migration을 명시적으로 제어**한다.
+- **왜 정적 예약이 아니라 VA/PA 분리여야 하는가 (핵심 논거).** 유휴 GPU를 위한 park pool을 정적
+  텐서로 잡으면 예약 문제를 host DRAM에서 VRAM으로 **옮기는 것에 그친다**(현 구현: 26 GB VRAM 상시
+  점유). 더 결정적으로, 정적 텐서는 논리적 무효화만 가능해 **빌려준 GPU가 메모리를 실제로 돌려받지
+  못한다.** `cuMemUnmap`/`cuMemRelease`만이 물리 페이지를 그 GPU의 free pool로 반환한다 —
+  **돌려줄 수 있어야 빌리는 것이다(lending is only real if you can physically give it back).**
+- **결과로 주장하는 것.**
+  1. **동일 TTFT** — peer restore는 recompute를 30–43× 이기고(1k–32k 측정), host caching과 동률.
+  2. **총 예약 메모리 감소** — 동일 hit rate에서 host 61 GB → 0, 추가 VRAM 예약 0(사용량만 커밋).
+  3. **커밋 효율(commitment vs cached)** 이라는 새 지표 — HiCache는 캐시가 20% 찼을 때도 61 GB를
+     점유(효율 20%)하지만, 제안 방식은 캐시된 만큼만 커밋한다(≈100%).
+  4. **agent stack 용량 회복** — 같은 노드에서 동시 tool execution 수가 회복됨.
+- **vAttention(ASPLOS'25)과의 차별.** vAttention은 **한 GPU 안에서** paged-attention 커널을 피하고
+  요청 내부 파편화를 없애기 위해 VMM을 쓴다. 우리는 **여러 GPU와 host를 걸쳐** 탄력적 차용 용량
+  풀을 만들기 위해 쓴다: location 선택이 정책이 되고, 회수 트리거가 *다른* GPU의 serving 압박이며,
+  대상이 긴 대화 prefix라 2 MB granularity로 충분해 vAttention이 필요했던 64 KB CUDA 확장이 불필요하다.
+  (설계 상세: `paper/design_unified_kv_vmm.md`)
 - **Contributions**:
   1. **Characterization** — KV-tier-movement의 3-벽(recompute:transfer 20–40:1 / decode-bound
      saturation / host DRAM ≫ GPU HBM 용량): 왜 "latency로 host caching을 못 이기고 capacity가 knob"인지 정량화.
