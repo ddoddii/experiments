@@ -12,6 +12,7 @@
 set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
+source "$(dirname "${BASH_SOURCE[0]}")/_use_source.sh"
 
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
 GPU=${GPU:-0}
