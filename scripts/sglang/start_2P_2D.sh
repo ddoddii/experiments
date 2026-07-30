@@ -309,6 +309,50 @@ else
   echo "  Exporter: not yet responding (check logs/hicache_exporter.log)"
 fi
 
+# ─── Router readiness gate ──────────────────────────────────────────────────
+# The router is launched with & and takes seconds to come up and register workers, but
+# this script used to print "All done" right after. A benchmark started immediately got
+# HTTP 503 "No available servers" for most of its run, and one full Exp1+Exp2 sweep was
+# lost that way: every arm reported 199/220 turns failed, yet still produced a complete
+# table of plausible-looking numbers.
+#
+# /health is NOT the check. In an earlier incident the router answered /health 200 while
+# every circuit was open. The only check that means anything is a REAL request that comes
+# back non-503.
+wait_for_router() {
+  local port=$1 label=$2 deadline=$((SECONDS + ${ROUTER_WAIT_S:-180}))
+  echo -n "  waiting for router :$port ($label) to route a request"
+  while [ $SECONDS -lt $deadline ]; do
+    local body code
+    body=$(curl -s -o /tmp/.router_probe_$port -w '%{http_code}' -m 10 \
+      -X POST "http://127.0.0.1:$port/v1/chat/completions" \
+      -H 'Content-Type: application/json' \
+      -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":1,"stream":false}' \
+      2>/dev/null)
+    code="$body"
+    if [ "$code" = "200" ]; then
+      echo " OK ($((SECONDS)) s)"
+      rm -f /tmp/.router_probe_$port
+      return 0
+    fi
+    echo -n "."
+    sleep 3
+  done
+  echo " TIMEOUT"
+  echo "  ERROR: router :$port never served a request in ${ROUTER_WAIT_S:-180}s."
+  echo "         last status=$code body: $(head -c 300 /tmp/.router_probe_$port 2>/dev/null)"
+  echo "         Do NOT benchmark against this: results would be ~all 503."
+  rm -f /tmp/.router_probe_$port
+  return 1
+}
+
+echo ""
+echo "Router readiness:"
+wait_for_router 8000 "P0/all" || exit 1
+if [ "$ROUTER_MODE" = "skew" ]; then
+  wait_for_router 8001 "P1" || exit 1
+fi
+
 echo ""
 echo "All done. Logs at logs/sglang/*.log"
 echo "Router at http://127.0.0.1:8000"

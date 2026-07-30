@@ -93,7 +93,8 @@ def _gpu_keys(rows, suffix):
 
 # ----------------------------------------------------------------- one arm
 def collect(arm, bench=None, mem=None, park=None, metrics=None):
-    b = _json(bench).get("summary", {})
+    bench_all = _json(bench)
+    b = bench_all.get("summary", {})
     m = _rows(mem)
     p = _rows(park)
     sm = _json(metrics).get("summary", {})
@@ -101,9 +102,17 @@ def collect(arm, bench=None, mem=None, park=None, metrics=None):
     hbm_keys = _gpu_keys(m, "_hbm_mb")
     prompt = sm.get("prompt_tokens")
     cached = sm.get("cached_tokens (reuse/fetch)")
+    n_turns, n_err, n_empty = _turn_health(bench_all)
+    bad = (n_turns > 0 and (n_err + n_empty) / n_turns > 0.05)
 
     row = {
         "arm": arm,
+        # ---------------- validity (read this before anything else)
+        "n_turns": n_turns or None,
+        "n_errors": n_err if n_turns else None,
+        "n_empty": n_empty if n_turns else None,
+        "fail_rate": round((n_err + n_empty) / n_turns, 3) if n_turns else None,
+        "valid": (not bad) if n_turns else None,
         # ---------------- memory (peaks: commitment is set by the high-water mark)
         "peak_host_rss_gb": _div(_peak(m, "proc_rss_mb"), 1024),
         "mean_host_rss_gb": _div(_mean(m, "proc_rss_mb"), 1024),
@@ -155,6 +164,25 @@ def _min(rows, key):
     return min(v) if v else None
 
 
+def _turn_health(bench):
+    """(n_turns, n_errors, n_empty). Every other number in the row is meaningless if this
+    is bad, so it is computed for every arm and rendered first.
+
+    This exists because a full Exp1+Exp2 sweep once produced complete, plausible-looking
+    tables -- TTFT percentiles, reuse ratios, residency splits -- from runs in which
+    199 of 220 turns had failed with HTTP 503. The percentiles were over the ~20 turns
+    that happened to land after the router finally came up."""
+    turns = errors = empty = 0
+    for item in (bench.get("results") or []):
+        for t in (item.get("turns") or []):
+            turns += 1
+            if t.get("error"):
+                errors += 1
+            elif not t.get("output_tokens"):
+                empty += 1
+    return turns, errors, empty
+
+
 def _goodput(bench):
     """Output tokens per wall second counting ONLY turns that completed successfully.
 
@@ -177,6 +205,12 @@ def _goodput(bench):
 
 # ----------------------------------------------------------------- table rendering
 GROUPS = [
+    ("Validity", [
+        ("n_turns", "turns"),
+        ("n_errors", "errors"),
+        ("n_empty", "empty (200, no tokens)"),
+        ("fail_rate", "fail rate"),
+    ]),
     ("Memory (peak)", [
         ("peak_host_rss_gb", "host RSS (GB)"),
         ("peak_page_cache_gb", "page cache (GB)"),
@@ -275,6 +309,24 @@ def main():
     if missing:
         print(f"[warn] no bench summary for: {', '.join(missing)} "
               f"-- performance columns will be empty for those arms\n")
+
+    # Refuse to present a broken run as a result. The table is still printed -- it is
+    # useful for debugging -- but it must not be readable as an outcome.
+    invalid = [r for r in rows if r.get("valid") is False]
+    if invalid:
+        bar = "!" * 74
+        print(bar)
+        print("INVALID RUN -- DO NOT READ THESE NUMBERS AS A RESULT")
+        for r in invalid:
+            print(f"  {r['arm']:<12} {r['n_errors']}/{r['n_turns']} turns failed, "
+                  f"{r['n_empty']} empty  (fail rate {r['fail_rate']:.0%})")
+        print("  Every metric below is computed over the turns that DID succeed, which")
+        print("  are not a random sample -- they are whichever turns ran while the")
+        print("  system happened to be healthy. Fix the cause and re-run.")
+        print("  Most common cause: the benchmark started before the router could route.")
+        print("  Check bench_<arm>.log for 'No available servers' (HTTP 503).")
+        print(bar)
+        print()
     print(render(rows))
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
