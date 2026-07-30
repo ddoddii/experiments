@@ -23,14 +23,20 @@ Contribution 모두에 명시한다 — "새 CUDA API를 제안한다"고 쓰면
 
 하나의 주소 공간에서 동일한 접근 경로로 측정 (4× RTX A6000, driver CUDA 13.0, NV4 pair (0,1)·(2,3)):
 
-| residency | 대역폭 | local 대비 |
-|---|---|---|
-| local HBM | **331.9 GB/s** | 100% |
-| NVLink peer HBM | **27.2–52.8 GB/s** | 8–16% |
-| **CPU DRAM** | **23.7–26.1 GB/s** | 7–8% |
-| non-NVLink peer HBM | **3.3 GB/s** | 1% |
+| residency | 대역폭 | local 대비 | 측정 경로 |
+|---|---|---|---|
+| local HBM | **331.9 GB/s** | 100% | VMM local |
+| NVLink peer HBM | **27.2–52.8 GB/s** | 8–16% | VMM peer / P2P |
+| **CPU DRAM (pinned)** | **H2D 26.3 / D2H 26.4 GB/s** | 8% | **실제 구현 경로** ★ |
+| CPU DRAM (pageable) | H2D 20.6 / D2H 14.1 GB/s | 4–6% | pinned 필수임을 보임 |
+| non-NVLink peer HBM | **3.3 GB/s** | 1% | VMM peer |
 
-**NVLink peer HBM과 CPU DRAM이 같은 대역폭 구간에 있다** (27.2 vs 26.1 = 4% 차). 여기에 layer-wise
+CPU DRAM 수치는 `benchmark/pinned_host_probe.py`로 **실제 구현이 쓸 pinned host memory 경로**에서
+측정했다(H2D 26.3, D2H 26.4 GB/s, 128 MiB–2 GiB에서 안정). `vmm_probe`의 VMM host location 값
+26.1 GB/s와 일치하므로 두 측정이 서로를 검증한다. **pageable은 D2H가 14.1 GB/s로 1.9× 나쁘므로
+pinned가 필수다.**
+
+**NVLink peer HBM과 CPU DRAM이 같은 대역폭 구간에 있다** (27.2 vs 26.3 = **3.4% 차**). 여기에 layer-wise
 transfer, prefill 연산과의 overlap, tool-call window 중 prefetch가 더해지면 end-to-end TTFT 차이는
 사라진다.
 
@@ -254,10 +260,44 @@ commitment가 그만큼 줄었다"를 직접 보인다.
 
 ## 7. 구현 범위
 
+### 7.0 ★ CPU DRAM overflow를 어떻게 할당하는가 (측정으로 확정)
+
+`benchmark/pinned_host_probe.py` 결과:
+
+| 항목 | 측정값 |
+|---|---|
+| pinned 할당 (cold) | **~480–640 ms/GiB** — 750 MiB 세션이면 **~360 ms** |
+| pinned 할당 (warm, 같은 크기 재요청) | **~0.0 ms** — PyTorch caching host allocator |
+| `del` 후 RSS | **반환 안 됨** (+1024 MB 유지) |
+| **`torch._C._host_emptyCache()`** | **존재하고 동작함** → RSS +1024 MB → **+0 MB** |
+| raw `cudaHostAlloc` / `cudaFreeHost` | alloc 479–620 ms/GiB, free 130–400 ms, **OS 반환됨** |
+| 전송 (750 MiB, H2D 26.3 GB/s) | 28.6 ms |
+
+**해석**: cold pin(360 ms)은 전송(28.6 ms)의 **12배**라서 park마다 새로 pin하면 못 쓴다. 그러나
+warm은 0 ms이고, `_host_emptyCache()`로 **실제 반환도 가능**하다.
+
+**→ 결정: (a') caching allocator를 통한 on-demand.**
+
+1. host park는 `torch.empty(n, pin_memory=True)`로 받는다 (warm이면 ~0 ms).
+2. **★ host park 크기를 몇 개 버킷으로 양자화한다** (예: 256 MiB 배수 또는 2의 거듭제곱).
+   세션 크기가 매번 다르면 매번 cold pin(480 ms/GiB)이 되어 (a')가 무너진다. **이 요구사항은
+   측정에서 직접 도출된 설계 제약이다.**
+3. 파킹된 host 집합이 줄어들 때(evict/demote 누적) **`torch._C._host_emptyCache()`를 명시적으로
+   호출**해 RSS를 OS에 반환한다 → **committed host DRAM이 cached KV를 추적한다.**
+   - 주의: 이 API는 **프로세스 전역**이라 SGLang의 다른 pinned 버퍼(weight loading 등)까지 비운다.
+     매 eviction마다 부르지 말고 **히스테리시스**를 둔다(미사용 cached pinned가 임계 초과 시에만).
+   - 이 private API가 없는 torch 빌드를 위해 raw `cudaHostAlloc` 경로를 fallback으로 둔다.
+4. **pinned 필수** — pageable은 D2H 14.1 GB/s로 1.9× 느리다.
+
+이 설계로 host commitment는 **RSS로 측정**되고, 그 값이 실제 캐시된 host KV를 따라간다.
+
+### 7.1 구현 항목
+
 **한다 (기존 자산 재사용, 1–2주):**
-- `_ParkPool` 선택 로직을 §3.2의 **대역폭-정렬 우선순위**로 교체 (현재는 headroom만 봄)
+- `_ParkPool` 선택 로직을 §3.2의 **대역폭-정렬 우선순위**로 교체 (현재는 pressure+headroom만 봄)
 - **CPU DRAM overflow 경로 추가 (순위 3)** — 지금은 GPU 아니면 drop이다. 이게 없으면 "GPU-first"를
-  주장할 수 없다(비교 대상이 없으므로). **가장 중요한 신규 구현.**
+  주장할 수 없다(비교 대상이 없으므로). **가장 중요한 신규 구현.** 할당 방식은 §7.0의 (a').
+- host park 크기 **버킷 양자화** + `_host_emptyCache()` 히스테리시스 (§7.0-2,3)
 - 기동 시 링크 대역폭 측정 + 캐시 (`--all-pairs-bw` 로직 이식)
 - §3.3 demotion: pressure 신호에 반응해 GPU→GPU / GPU→CPU / drop
 - location별 카운터 (§6), shared index에 `location` 필드
@@ -301,6 +341,10 @@ probe 수치는 **UM/VMM 대안을 실측으로 배제했다는 근거**로 Disc
   같아진다. 이 구간을 평가에 포함해 보고한다(negative result가 설계 정당화에 쓰인다).
 - **process 경계**: §2.2-5는 UM의 한계이면서 우리 구현의 요구사항이다. 기존 CUDA IPC + `/dev/shm`
   shared index가 이미 이 문제를 풀고 있으므로 systems 기여로 명시한다.
-- **`vmm_probe.py`로 측정한 CPU DRAM 대역폭(23.7–26.1 GB/s)은 VMM host location 경로다.** 실제
-  구현은 pinned host memory(`cudaHostAlloc`)를 쓸 것이므로, 평가 시 그 경로로 재측정해 수치를 맞춘다
-  (같은 PCIe이므로 유사할 것이나 확인 필요).
+- **CPU DRAM 대역폭은 실제 경로로 재측정 완료** — pinned H2D 26.3 / D2H 26.4 GB/s
+  (`pinned_host_probe.py`). VMM host location 값 26.1 GB/s와 일치하므로 논문 표에 26.3을 쓰고
+  각주로 두 경로가 일치함을 밝힌다.
+- **host commitment 지표는 RSS다.** `_host_emptyCache()`가 제어하는 것이 RSS이므로, host 측
+  commitment는 `sys_mem_breakdown.py`의 `proc_rss` / 전역 `AnonPages`로 보고한다. `VmLck`/`Mlocked`는
+  **0으로 나온다** — CUDA driver가 `mlock()` 외 경로로 pin하기 때문이다. 이걸 모르고 `Mlocked`를
+  보면 "pinned 메모리가 없다"고 오판하게 되므로 논문·스크립트 모두에서 RSS를 쓴다.

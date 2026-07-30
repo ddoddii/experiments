@@ -287,6 +287,10 @@ def section_c(nbytes, reuse, dev):
     print("\n" + "=" * 78
           + f"\n[C] amortized staging: pin once ({nbytes/2**20:.0f} MiB), reuse "
           f"{reuse}x\n" + "=" * 78)
+    # Flush first: sections A/B already warmed the caching host allocator, so without
+    # this the "one-time pin" below is a cache hit (~0 ms) and the number is a lie.
+    try_host_empty_cache()
+    gc.collect()
     t0 = time.perf_counter()
     staging = alloc_torch_pinned(nbytes)
     pin_ms = (time.perf_counter() - t0) * 1e3
@@ -314,30 +318,43 @@ def section_d(sizes, bwres):
     print("=" * 78)
     print("  on-demand is viable when alloc time is a small fraction of the transfer")
     print("  it precedes AND freeing returns the memory (see [A]).")
-    print(f"\n  {'size':>9}  {'H2D (ms)':>9}  {'alloc cold (ms)':>16}  "
-          f"{'alloc as % of xfer':>19}")
+    print("  COLD = after flushing the caching host allocator (a real pin).")
+    print("  WARM = the same size requested again (a cache hit). Both matter: cold is")
+    print("  what a NEW size costs, warm is what a REUSED size costs.")
+    print(f"\n  {'size':>9}  {'H2D (ms)':>9}  {'cold (ms)':>10}  {'cold %':>7}  "
+          f"{'warm (ms)':>10}  {'warm %':>7}")
     for nbytes in sizes:
         row = bwres.get(nbytes, {})
         if "h2d_pin" not in row:
             continue
         xfer_ms = nbytes / (row["h2d_pin"] * 1e9) * 1e3
-        t0 = time.perf_counter()
+        try_host_empty_cache()          # force a genuine cold allocation
+        gc.collect()
         try:
+            t0 = time.perf_counter()
             b = alloc_torch_pinned(nbytes)
+            cold = (time.perf_counter() - t0) * 1e3
+            del b
+            gc.collect()
+            t0 = time.perf_counter()
+            b = alloc_torch_pinned(nbytes)
+            warm = (time.perf_counter() - t0) * 1e3
+            del b
+            gc.collect()
         except Exception:  # noqa: BLE001
             continue
-        a_ms = (time.perf_counter() - t0) * 1e3
-        del b
-        gc.collect()
-        print(f"  {nbytes/2**20:>7.0f}Mi  {xfer_ms:>9.1f}  {a_ms:>16.1f}  "
-              f"{100*a_ms/xfer_ms:>18.0f}%")
+        print(f"  {nbytes/2**20:>7.0f}Mi  {xfer_ms:>9.1f}  {cold:>10.1f}  "
+              f"{100*cold/xfer_ms:>6.0f}%  {warm:>10.2f}  {100*warm/xfer_ms:>6.1f}%")
     print("\n  Read it like this:")
-    print("   - alloc << transfer AND memory returns on free  -> use (a) on-demand;")
-    print("     committed host DRAM == cached KV, which is the paper's claim.")
-    print("   - alloc >> transfer, or memory does NOT return   -> use (b): one small")
-    print("     pinned staging buffer reused, with the KV body in pageable memory.")
-    print("     Still avoids a big pre-reservation; costs a second copy.")
-    print("   - only fall back to (c) pre-reserved if both fail, and then report the")
+    print("   - cold << transfer AND memory returns on free -> (a) plain on-demand.")
+    print("   - cold >> transfer but warm << transfer, and a host-cache flush DOES")
+    print("     return the memory -> (a') on-demand THROUGH the caching allocator:")
+    print("     quantize host park sizes into a few buckets so allocations are warm,")
+    print("     and flush explicitly when the parked host set shrinks. Committed host")
+    print("     DRAM then tracks cached KV without paying the pin cost per park.")
+    print("   - cold and warm both >> transfer, or memory never returns -> (b) one")
+    print("     small pinned staging buffer reused, KV body in pageable memory.")
+    print("   - (c) pre-reserved only if all of the above fail; then report the")
     print("     reservation honestly as committed host DRAM.")
 
 
