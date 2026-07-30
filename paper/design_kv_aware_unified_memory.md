@@ -291,13 +291,46 @@ warm은 0 ms이고, `_host_emptyCache()`로 **실제 반환도 가능**하다.
 
 이 설계로 host commitment는 **RSS로 측정**되고, 그 값이 실제 캐시된 host KV를 따라간다.
 
+### 7.0b ★ 구현 후 실측 검증 완료 (`benchmark/test_host_overflow.py`, 27/27 통과)
+
+`_HostParkStore` 구현체로 server17에서 재측정:
+
+| 검증 항목 | 결과 |
+|---|---|
+| cold pin | **122.1 ms / 256 MiB = 488 ms/GiB** — probe의 480–640과 일치 |
+| **warm pin (같은 버킷, 다른 세션 길이)** | **0.0 ms** — 양자화가 실제로 작동 |
+| store 생성 시 host 할당 | **RSS +0 MB** — overflow 전에는 아무것도 커밋 안 됨 |
+| 8블록(2 GiB) 파킹 후 전부 drop | **RSS +2048 MB → +256 MB** (flush 2회) |
+| steady churn (park 1 / evict 1 반복) | **flush 0회** — 히스테리시스 정상 |
+| 임의 세션 길이 → size class 수 | 1–4000 토큰이 **8개 클래스**로 수렴 |
+
+**두 방향 테스트가 모두 통과한 것이 핵심이다**: flush가 일어나야 할 때(축소) 일어나고, 일어나면 안 될
+때(churn) 일어나지 않는다. 한쪽만 맞으면 tier가 무너진다 — 전자가 깨지면 commitment가 peak에 고정되고,
+후자가 깨지면 488 ms/GiB를 반복 지불한다.
+
+→ **(a') 설계가 가정이 아니라 검증된 구현이 되었다.** 논문에서 "committed host DRAM tracks cached KV"를
+측정으로 뒷받침할 수 있다.
+
 ### 7.1 구현 항목
 
-**한다 (기존 자산 재사용, 1–2주):**
-- `_ParkPool` 선택 로직을 §3.2의 **대역폭-정렬 우선순위**로 교체 (현재는 pressure+headroom만 봄)
-- **CPU DRAM overflow 경로 추가 (순위 3)** — 지금은 GPU 아니면 drop이다. 이게 없으면 "GPU-first"를
-  주장할 수 없다(비교 대상이 없으므로). **가장 중요한 신규 구현.** 할당 방식은 §7.0의 (a').
-- host park 크기 **버킷 양자화** + `_host_emptyCache()` 히스테리시스 (§7.0-2,3)
+**완료 (2026-07, `claude/youthful-knuth-det52g`):**
+- ✅ **shared index location 필드** — `LOC_GPU`/`LOC_HOST`, host는 `dev`=owning pid
+  (pinned host memory에 IPC handle이 없으므로 소유 프로세스만 읽음). `ParkEntry` NamedTuple.
+  magic bump + reinit 시 zeroing(기존 코드의 잠재 오독 버그 수정). 테스트 23/23.
+- ✅ **대역폭-정렬 placement** — `link_bandwidth.py`가 순서쌍별 대역폭 + pinned H2D/D2H를 노드당
+  1회 측정해 `/dev/shm`에 flock으로 발행(프로세스 4개가 각자 측정하면 링크 경합으로 값이 오염).
+  `_select_pool` 키 = `(slow_link, serving_usage, -headroom)`.
+- ✅ **CPU DRAM overflow (순위 3)** — `_HostParkStore`, §7.0의 (a'). 버킷 양자화 +
+  `_host_emptyCache()` 히스테리시스. 테스트 27/27, §7.0b에 실측.
+
+**남은 것:**
+- **§3.3 demotion** — pressure 상승 시 reuse value 낮은 KV부터 `GPU→GPU` / `GPU→CPU` / `drop`.
+  현재는 파킹 시점 배치만 있고, **배치 후 재평가가 없다.** "serving이 항상 이긴다"와 §6 평가의
+  마지막 행(회수 실증)에 필요.
+- **reuse value** — 현재 순수 LRU. 최소 버전 `∝ n_tokens × recency`. UM에 없는 semantics로
+  §2.1에 열거했으므로 **우리 쪽엔 실제로 있어야 한다**(그러지 않으면 §2.1이 공허한 주장이 됨).
+- **location별 바이트 카운터** — DIAG에 host stats는 나오지만, GPU/CPU 파킹 바이트 비율 **시계열**은
+  없다. §6의 "placement가 실제로 GPU-first로 동작"을 그림으로 보이려면 필요.
 - 기동 시 링크 대역폭 측정 + 캐시 (`--all-pairs-bw` 로직 이식)
 - §3.3 demotion: pressure 신호에 반응해 GPU→GPU / GPU→CPU / drop
 - location별 카운터 (§6), shared index에 `location` 필드
