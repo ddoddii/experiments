@@ -85,6 +85,39 @@ FLOOD_DURING_DELAY = os.environ.get("FLOOD_DURING_DELAY", "1") != "0"
 FLOOD_N            = int(os.environ.get("FLOOD_N",     "30"))   # flood 요청 수 (30×3000=90k > 79k KV pool)
 FLOOD_TOKENS       = int(os.environ.get("FLOOD_TOKENS", "3000"))  # 요청당 토큰 수 (≈ chars÷5)
 
+def _model_from_server(router_url: str, timeout: float = 5.0):
+    """Ask the server which model it actually loaded, via /get_model_info.
+
+    Why this is not optional: SGLang IGNORES the `model` field in an OpenAI-style
+    request, so a wrong MODEL here does not fail -- it silently mislabels the run. This
+    already happened once: a Llama-3.1-8B server was benchmarked with the default
+    MODEL=Qwen3-14B, and the results were written to results/sglang_hicache/Qwen3-14B/
+    with summary.model claiming Qwen. The data was Llama's; only the label lied, which is
+    the worst kind of error because nothing looks broken. Trust the server, not an env
+    default."""
+    base = router_url.split("/v1/")[0].rstrip("/")
+    try:
+        import urllib.request
+
+        with urllib.request.urlopen(f"{base}/get_model_info", timeout=timeout) as r:
+            info = json.loads(r.read().decode())
+        return info.get("model_path") or info.get("model") or None
+    except Exception:  # noqa: BLE001 (router may not expose it; caller falls back)
+        return None
+
+
+_served = _model_from_server(ROUTER_URL)
+if _served:
+    if os.path.basename(_served.rstrip("/")) != os.path.basename(MODEL.rstrip("/")):
+        print(f"[model] MODEL env says {os.path.basename(MODEL.rstrip('/'))} but the "
+              f"server serves {os.path.basename(_served.rstrip('/'))} -- using the "
+              f"server's. Results would otherwise be filed under the wrong model.")
+    MODEL = _served
+else:
+    print(f"[model] WARNING: /get_model_info unreachable; trusting MODEL="
+          f"{os.path.basename(MODEL.rstrip('/'))}. VERIFY this matches the server, or "
+          f"the results will be mislabelled.")
+
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 
 # ─── Pushgateway (simple HTTP POST, no prometheus_client dependency) ─────────
