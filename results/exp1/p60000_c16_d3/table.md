@@ -1,36 +1,52 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+INVALID RUN -- DO NOT READ THESE NUMBERS AS A RESULT
+  radix        39/688 turns failed, 0 empty  (fail rate 6%)
+  park         37/698 turns failed, 0 empty  (fail rate 5%)
+  Every metric below is computed over the turns that DID succeed, which
+  are not a random sample -- they are whichever turns ran while the
+  system happened to be healthy. Fix the cause and re-run.
+  Most common cause: the benchmark started before the router could route.
+  Check bench_<arm>.log for 'No available servers' (HTTP 503).
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 | metric | radix | hicache | park |
 |---|---|---|---|
+| **Validity** | | | |
+| turns | 688 | 692 | 698 |
+| errors | 39 | 34 | 37 |
+| empty (200, no tokens) | 0 | 0 | 0 |
+| fail rate | 0.057 | 0.049 | 0.053 |
 | **Memory (peak)** | | | |
-| host RSS (GB) | 65.64 | 83.19 | 66.71 |
-| page cache (GB) | 98.68 | 86.1 | 71.99 |
-| host footprint RSS+cache (GB) | 164.3 | 169.1 | 138.7 |
-| AnonPages (GB) | 16.07 | 33.62 | 16.2 |
-| MemAvailable min (GB) | 105.4 | 87.6 | 104.3 |
-| GPU HBM total (GB) | 135 | 134.9 | 144.9 |
+| host RSS (GB) | 65.87 | 83.33 | 67.09 |
+| page cache (GB) | 53.16 | 85.33 | 31.18 |
+| host footprint RSS+cache (GB) | 119 | 168.6 | 98.27 |
+| AnonPages (GB) | 16.28 | 33.89 | 16.51 |
+| MemAvailable min (GB) | 104.6 | 86.46 | 102.5 |
+| GPU HBM total (GB) | 135 | 134.9 | 145.1 |
 | **KV residency** | | | |
-| local GPU serving (GB) | 0 | 0 | 15.63 |
+| local GPU serving (GB) | 0 | 0 | 15.66 |
 | local GPU park (GB) | 0 | 0 | 3.932 |
 | peer GPU (GB) | 0 | 0 | 3.932 |
 | CPU DRAM overflow (GB) | 0 | 0 | 0 |
 | dropped, cumulative (GB) | 0 | 0 | 0 |
-| peer share of parked | 0 | 0 | 0.4584 |
+| peer share of parked | 0 | 0 | 0.448 |
 | host share of parked | 0 | 0 | 0 |
 | **Fetch source** | | | |
-| fetch hits | 0 | 0 | 14 |
+| fetch hits | 0 | 0 | 126 |
 |   from local park | 0 | 0 | 0 |
-|   from peer GPU | 0 | 0 | 14 |
+|   from peer GPU | 0 | 0 | 126 |
 |   from CPU DRAM | 0 | 0 | 0 |
-| gave up (no space) | 0 | 0 | 11 |
+| gave up (no space) | 0 | 0 | 0 |
 | **Performance** | | | |
-| TTFT p50 (s) | 3.535 | 4.75 | 4.604 |
-| TTFT p95 (s) | 7.543 | 7.852 | 7.291 |
-| TTFT p99 (s) | 7.543 | 7.852 | 7.291 |
-| goodput (tok/s) | 6.98 | 6.99 | 6.79 |
-| prefix reuse ratio | 0.6835 | 0.7849 | 0.7253 |
-| recomputed tokens | 166,928 | 108,454 | 160,513 |
-| peak gpu0 HBM (GB) | 24.82 | 24.84 | 29.42 |
-| peak gpu1 HBM (GB) | 24.96 | 24.84 | 28.9 |
+| TTFT p50 (s) | 1.688 | 2.001 | 2.106 |
+| TTFT p95 (s) | 3.61 | 4.336 | 4.838 |
+| TTFT p99 (s) | 4.576 | 5.443 | 6.506 |
+| goodput (tok/s) | 105.7 | 102 | 122.4 |
+| prefix reuse ratio | 0.4463 | 0.4766 | 0.4972 |
+| recomputed tokens | 864,500 | 798,913 | 787,288 |
+| peak gpu0 HBM (GB) | 24.96 | 24.8 | 29.62 |
+| peak gpu1 HBM (GB) | 24.78 | 24.84 | 28.92 |
 | peak gpu2 HBM (GB) | 42.63 | 42.63 | 43.29 |
-| peak gpu3 HBM (GB) | 42.63 | 42.63 | 43.29 |
+| peak gpu3 HBM (GB) | 42.63 | 42.63 | 43.3 |
 
 [collect] -> results/exp1/p60000_c16_d3/table.json
