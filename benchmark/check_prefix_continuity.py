@@ -121,12 +121,19 @@ def main():
 
     if args.try_fixes:
         print("\n--- candidate repairs ---")
+        # The last candidate is the one that matters in a real run. With thinking left
+        # ON the model actually EMITS a "<think>...</think>" block, and if that raw
+        # output is stored verbatim the template strips it again on re-render -- so a
+        # candidate that passes with clean stored replies can still fail in practice.
+        # Storing the reply with the block removed is what the runner must do.
         cands = [
             ("as the benchmark sends it", kwargs, ""),
             ("without enable_thinking", {}, ""),
             ("echo the empty think block into stored replies",
              kwargs, "<think>\n\n</think>\n\n"),
             ("echo it, without enable_thinking", {}, "<think>\n\n</think>\n\n"),
+            ("thinking on, RAW reply stored (block left in)",
+             {}, "<think>\nreasoning here\n</think>\n\n"),
         ]
         best = None
         for name, kw, pre in cands:
