@@ -60,6 +60,10 @@ SYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT", "You are a helpful assistant.")
 # Harmless on models without a thinking mode: SGLang passes chat_template_kwargs to the
 # template, which ignores keys it does not use.
 DISABLE_THINKING = os.environ.get("DISABLE_THINKING", "1") != "0"
+# Prepended to every stored assistant reply so the re-rendered history reproduces what
+# the generation prompt actually contained. Empty for append-only templates (Llama).
+# Use the literal "\n" escapes: ASSISTANT_PREFIX='<think>\n\n</think>\n\n'
+ASSISTANT_PREFIX = os.environ.get("ASSISTANT_PREFIX", "").replace("\\n", "\n")
 
 _ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assistant",
          "system": "system", "bard": "assistant", "assistant": "assistant"}
@@ -204,7 +208,20 @@ def process_item(item):
             m["turn"] = turn_idx
             turn_metrics.append(m)
             # 모델의 생성 출력을 verbatim으로 append (다음 turn이 이 토큰을 그대로 재사용).
-            conversation.append({"role": "assistant", "content": assistant_content or ""})
+            # ASSISTANT_PREFIX repairs a template that appends a block to the assistant
+            # slot when generating but drops it when re-rendering history. Qwen3 does
+            # exactly that: with enable_thinking=False it emits
+            # "<|im_start|>assistant\n<think>\n\n</think>\n\n" as the generation prompt,
+            # and renders history as "<|im_start|>assistant\n<content>" -- so turn N's
+            # prompt is four tokens longer than the head of turn N+1's and is NOT a
+            # prefix of it. Prefix reuse then silently degrades and the parked-KV index,
+            # which hashes the exact sequence, misses every lookup (measured: 1623
+            # lookups, 0 hits, while the radix baseline still scored 45%).
+            # Writing the block back into the stored reply makes the two agree.
+            # Verify with: python benchmark/check_prefix_continuity.py --model <path>
+            #              --try-fixes     (it names the setting to use)
+            conversation.append({"role": "assistant",
+                                 "content": ASSISTANT_PREFIX + (assistant_content or "")})
         except Exception as e:  # noqa: BLE001
             turn_metrics.append({"turn": turn_idx, "error": str(e)})
             break
