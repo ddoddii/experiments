@@ -49,7 +49,7 @@ cd "$(dirname "$0")/../.."
 
 HF=${HF_HOME_MODELS:-/home/uhmturks/hf_models}
 MODELS=${MODELS:-"llama8b llama13b qwen14b"}
-ARMS=${ARMS:-"radix hicache park"}
+ARMS=${ARMS:-"recompute hicache park"}
 OUTBASE=${OUTBASE:-results/models}
 mkdir -p "$OUTBASE"
 
@@ -87,8 +87,8 @@ model_pool() {        # serving KV pool, tokens
 model_park_pool() {   # idle-GPU park buffer, tokens
   case "$1" in
     llama8b)  echo "${PARKPOOL_LLAMA8B:-30000}" ;;
-    llama13b) echo "${PARKPOOL_LLAMA13B:-4000}" ;;
-    qwen14b)  echo "${PARKPOOL_QWEN14B:-12000}" ;;
+    llama13b) echo "${PARKPOOL_LLAMA13B:-10000}" ;;
+    qwen14b)  echo "${PARKPOOL_QWEN14B:-45000}" ;;
     qwen30b)  echo "${PARKPOOL_QWEN30B:-28000}" ;;
   esac
 }
@@ -101,8 +101,8 @@ model_memfrac() {     # --mem-fraction-static for the PARK arm
   # trimmed to match.
   case "$1" in
     llama8b)  echo "${MEMFRAC_LLAMA8B:-0.70}" ;;
-    llama13b) echo "${MEMFRAC_LLAMA13B:-0.80}" ;;
-    qwen14b)  echo "${MEMFRAC_QWEN14B:-0.80}" ;;
+    llama13b) echo "${MEMFRAC_LLAMA13B:-0.74}" ;;
+    qwen14b)  echo "${MEMFRAC_QWEN14B:-0.72}" ;;
     qwen30b)  echo "${MEMFRAC_QWEN30B:-0.80}" ;;
   esac
 }
@@ -147,6 +147,36 @@ workload_for() {
   fi
 }
 
+# A parked conversation has to FIT IN ONE POOL or it can never be fetched back whole,
+# and the run then reports zero fetch hits with no error anywhere. That is exactly what
+# the first Qwen3-14B sweep did: the pools filled to capacity (1.97 GB peer, 1.97 GB
+# local) and fetch_hits stayed at 0, so its cache hit rate came out at 46.8% -- identical
+# to the no-park baseline -- while the figure showed a healthy-looking bar. Llama-3.1-8B
+# had survived only by luck: 15000 tokens per pool against a ~13200-token conversation.
+# PARK_PEER=1 splits PARK_POOL_TOKENS across two pools, so the per-pool size is half.
+model_kv_bytes() {    # KV bytes per token
+  case "$1" in
+    llama8b)  echo 131072 ;;
+    llama13b) echo 819200 ;;
+    qwen14b)  echo 163840 ;;
+    qwen30b)  echo  98304 ;;
+  esac
+}
+check_park_pool() {
+  local mk=$1 park=$2 mt=$3 turns=$4
+  local per_pool=$((park / 2))
+  local conv=$(( 1500 + turns * (mt + 150) ))     # seed + per-turn growth, approximate
+  local kvb=$(model_kv_bytes "$mk")
+  echo "   park pool/GPU $per_pool tok ($(( per_pool * kvb / 1000000000 )).$(( per_pool * kvb / 100000000 % 10 )) GB) vs one conversation ~$conv tok"
+  if [ "$per_pool" -lt "$conv" ]; then
+    echo "   ERROR: the park pool cannot hold one conversation. Parking will succeed and"
+    echo "          NOTHING WILL EVER BE FETCHED BACK -- the arm will silently score the"
+    echo "          same as no-park. Raise PARKPOOL_$(echo $mk | tr a-z A-Z) to >= $((conv * 2))"
+    echo "          (and lower MEMFRAC_$(echo $mk | tr a-z A-Z) if it no longer fits)."
+    return 1
+  fi
+}
+
 _n_models=$(echo $MODELS | wc -w); _i_model=0
 _sweep_t0=$SECONDS
 for mk in $MODELS; do
@@ -188,6 +218,7 @@ for mk in $MODELS; do
     echo "   NOTE: short-context model -- this column is measured on a SHORTER"
     echo "         conversation than the others; compare arms WITHIN it, not across."
   fi
+  check_park_pool "$mk" "$PARK_POOL_TOKENS" "$_MT" "$_TURNS" || exit 1
   echo "=========================================================="
 
   OUTDIR="$OUT" TAG="$mk" ARMS="$ARMS" \

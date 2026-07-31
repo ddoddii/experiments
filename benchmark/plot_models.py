@@ -47,19 +47,19 @@ from paperstyle import PALETTE, use_paper_style, style_axes, savefig
 # Same hue order as every other figure in this paper. Validated as a categorical trio
 # (worst adjacent CVD dE 18.0 protan, 18.7 normal).
 ARMS = [
-    ("radix",   "GPU-only",  "#E69F00"),
-    ("hicache", "HiCache",   PALETTE["hicache"]),
-    ("park",    "GPU-first", PALETTE["park"]),
+    ("recompute", "Recompute", PALETTE["recompute"]),
+    ("hicache",   "SGLang",    PALETTE["hicache"]),
+    ("park",      "Ours",      PALETTE["park"]),
 ]
 
 # key, axis label, scale, lower_is_better, ratio_vs
 #
 # ratio_vs names the arm the "N.NNx" label is computed against. It defaults to the BETTER
 # of the two baselines, which is the honest choice for hit rate, TTFT and prefill work.
-# It is NOT the honest choice for host DRAM: the GPU-only arm has no host tier at all, so
-# it wins that metric by definition and the comparison would read 0.98x -- as if the
-# proposal saved nothing. The claim there is against the incumbent that actually offloads
-# to host memory, so the mem panel is pinned to hicache.
+# It is NOT the honest choice for host DRAM: neither Recompute nor the GPU-only variant
+# has a host tier at all, so such an arm wins that metric by definition and the label
+# would read 0.98x -- as if the proposal saved nothing. The claim there is against the
+# incumbent that actually offloads to host memory, so the mem panel is pinned to SGLang.
 PANELS = {
     "hit":     ("cache_hit_rate_pct",  "Cache hit rate (%)",   1.0, False, None),
     "ttft":    ("ttft_p50_s",          "Median TTFT (s)",      1.0, True,  None),

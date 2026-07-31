@@ -46,7 +46,7 @@ export MAX_ITEMS=${MAX_ITEMS:-200}
 export TIMEOUT=${TIMEOUT:-600}
 export DATA_PATH=${DATA_PATH:-data/ShareGPT_V3_unfiltered_cleaned_split.json}
 
-ARMS=${ARMS:-"radix hicache park"}
+ARMS=${ARMS:-"recompute hicache park"}
 TAG=${TAG:-"sharegpt_p${PREFILL_MAX_TOTAL_TOKENS}_c${CONCURRENCY}_m${MAX_TOKENS}"}
 OUTDIR=${OUTDIR:-results/exp1/$TAG}
 LOG_DIR=${LOG_DIR:-logs/sglang}
@@ -66,6 +66,12 @@ echo "================================================================"
 
 start_arm() {
   case "$1" in
+    recompute)
+      # No prefix reuse at all: --disable-radix-cache, which also forces hicache off
+      # since hicache layers on top of the radix tree. Every turn re-prefills its whole
+      # context. This is the "RE" baseline of the reference figures.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 DISABLE_RADIX_CACHE=1 \
+        ./scripts/sglang/start_2P_2D.sh ;;
     radix)
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 ./scripts/sglang/start_2P_2D.sh ;;
     radix_memfrac)
