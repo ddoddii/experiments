@@ -152,7 +152,20 @@ def collect(arm, bench=None, mem=None, park=None, metrics=None):
         "errors": b.get("n_errors") if b.get("n_errors") is not None else b.get("errors"),
         # ---------------- reuse vs recompute (server-side counters, not the client's view)
         "prefix_reuse_ratio": sm.get("reuse_ratio"),
+        "cache_hit_rate_pct": (round(100 * sm["reuse_ratio"], 2)
+                               if sm.get("reuse_ratio") is not None else None),
         "recomputed_tokens": sm.get("uncached_tokens (recompute)"),
+        "wall_time_s": b.get("total_wall_time_s") or b.get("wall_time_s"),
+        # Prefill tokens the GPUs actually had to COMPUTE, per second. Not
+        # prompt_tokens/s: in a closed-loop benchmark every arm is offered the same
+        # prompt tokens and finishes in about the same wall time, so prompt_tokens/s is
+        # a property of the workload and is identical across arms by construction
+        # (measured 421 / 406 / 415 t/s). What differs is how much of it had to be
+        # recomputed. Lower is better on this metric.
+        "prefill_work_tok_s": (
+            round(sm["uncached_tokens (recompute)"] / (b.get("total_wall_time_s") or 1), 1)
+            if sm.get("uncached_tokens (recompute)") is not None
+            and (b.get("total_wall_time_s") or 0) > 0 else None),
         "prompt_tokens": prompt,
         "cached_tokens": cached,
     }
