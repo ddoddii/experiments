@@ -183,3 +183,71 @@ C는 CAL 4페이지에 다 안 들어간다. **B1 → B2 순으로만 확보하�
 
 A2(동률)는 그림 대신 본문 한 문장 + 표 한 줄로 압축한다 (3.51 vs 3.52 s).
 `fig_combined`, `fig_perturn`은 지면이 남으면 넣는다.
+
+---
+
+## E. ShareGPT 확인 (2026-07-31) — BFCL의 TTFT 결과는 placement가 아니었다
+
+### E1 BFCL exp1의 +562 ms는 park 고유 비용이 아니다
+
+`results/exp1/p60000_c16_d3` (BFCL, C=16, 688–698 turn, **infra 실패 0**):
+
+```
+ turn  ctx tok      radix          hicache            park
+    0      305      1.88s      2.09s (+0.21)    2.44s (+0.56)
+  >=3      544      1.63s      1.85s (+0.21)    2.05s (+0.42)
+```
+
+turn 0에는 재사용할 prefix도 fetch도 없으므로 **+0.56 s는 메커니즘이 아니다.**
+그리고 median context 408 토큰 → full re-prefill **66 ms**가 재사용의 이론적 상한인데,
+오버헤드가 그 8.5배다. **BFCL은 이 컨텍스트 길이에서 재사용의 TTFT 이득을 보여줄 수 없다.**
+
+기존 ShareGPT 런(C=1)과 대조하면 원인이 드러난다:
+
+| | context | TTFT |
+|---|---|---|
+| BFCL turn 0 (C=16) | 305 tok | **1.88 s** |
+| ShareGPT turn 1 (C=1) | 582 tok | **0.148 s** |
+
+**컨텍스트가 2배인데 TTFT가 1/12이다.** BFCL의 TTFT는 연산이 아니라 **C=16의 큐잉이 지배**하며,
+큐잉은 요청당 상수 오버헤드 차이를 증폭시킨다. ShareGPT에서 park의 turn-0 오버헤드는
+**+0.04 s**로, BFCL의 +0.56 s는 재현되지 않는다.
+
+### E2 ShareGPT(C=1)에서는 park가 hicache를 이기고, 격차가 컨텍스트와 함께 커진다
+
+`results/perturn_sharegpt_*` (hicache·park 각 3 rep, recompute 1 rep, **C=1**):
+
+| turn | ctx tok | prize | recompute | hicache | park |
+|---|---|---|---|---|---|
+| 0 | 60 | 10 ms | 0.061 (−0.04) | 0.102 | 0.141 (+0.04) |
+| 1 | 582 | 94 ms | 0.148 (−0.05) | 0.201 | **0.150 (−0.05)** |
+| 2 | 1102 | 175 ms | 0.246 (−0.04) | 0.287 | **0.203 (−0.08)** |
+| 3 | 1600 | 240 ms | 0.346 (−0.01) | 0.357 | **0.258 (−0.10)** |
+| ≥4 | 2163 | 317 ms | 0.461 (+0.03) | 0.434 | **0.341 (−0.09)** |
+
+median TTFT: park **0.221 s** vs hicache 0.264 s (**−16%**). turn 1 이후 모든 turn에서 park가
+빠르고, **격차가 컨텍스트와 함께 커진다** — 메커니즘이 예측하는 그대로다.
+
+### E3 정직하게 같이 적어야 할 두 가지
+
+1. **park의 tail이 제일 나쁘다**: p95 park **2.112 s** vs hicache 1.597 vs recompute 0.521.
+   C=1이므로 큐잉이 아니라 **fetch 경로가 간헐적으로 블로킹**하는 것이다.
+2. **recompute(캐시 없음)가 median에서 park와 대등**하다 (0.213 vs 0.221) **그리고 tail이 가장 좋다.**
+   2k 토큰에서는 그냥 다시 계산하는 게 충분히 싸다. 이 컨텍스트 길이는 아직 결정적이지 않다.
+
+### E4 그래서 다음 런의 조건
+
+기존 ShareGPT 기본값(median 840 tok, prize 135 ms)으로는 부족하다. 컨텍스트를 키우는 노브만
+올린다 — `MAX_TOKENS 512→1024`, `MAX_TURNS 6→10`, `MIN_TURNS 3→6`,
+`MAX_PROMPT_CHARS 6000→16000`. turn 5에서 ~6k(prize ~900 ms), turn 9에서 ~11k(~1.6 s)가 목표다.
+
+그리고 **C=1이 아니라 C=8**로 돌린다. C=1은 경합이 없어 실제 서빙 조건이 아니고, arm당 3시간이
+걸린다. C=16은 큐잉이 전부를 덮는다. C=8이면 8×11k=88k가 60k 풀을 압박하므로 축출이 실제로
+일어나면서 큐잉이 지배하지는 않는다.
+
+```bash
+./scripts/sglang/run_exp1_sharegpt.sh
+```
+
+실행 후 **먼저** `ttft_by_turn.txt`에서 median context가 4k를 넘었는지 확인한다. 안 넘었으면
+TTFT 비교는 placement에 대해 아무것도 말하지 않으므로 `MAX_TOKENS`를 더 올려 재실행한다.

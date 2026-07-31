@@ -46,8 +46,13 @@ def load(path, max_turn=3):
         for t in item.get("turns") or []:
             if t.get("ttft_s") is None:
                 continue
-            by.setdefault(min(t["turn"], max_turn), []).append(
-                (t["ttft_s"], t.get("context_chars", 0)))
+            # prompt_tokens is exact (ShareGPT runner); context_chars needs the /4
+            # estimate (BFCL runner). Prefer the exact one and mark which was used.
+            if t.get("prompt_tokens"):
+                tok, exact = float(t["prompt_tokens"]), True
+            else:
+                tok, exact = t.get("context_chars", 0), False
+            by.setdefault(min(t["turn"], max_turn), []).append((t["ttft_s"], tok, exact))
     return by
 
 
@@ -75,7 +80,9 @@ def main():
     print(hdr)
     print("-" * len(hdr))
     for k in sorted(arms[base]):
-        ctx = st.median(x[1] for x in arms[base][k]) / args.chars_per_token
+        vals = arms[base][k]
+        exact = vals[0][2] if vals else False
+        ctx = st.median(x[1] for x in vals) / (1.0 if exact else args.chars_per_token)
         label = ">=3" if k == 3 else str(k)
         row = f"{label:>5} {ctx:>8.0f} "
         b = st.median(x[0] for x in arms[base][k])
@@ -90,7 +97,8 @@ def main():
         print(row)
 
     print()
-    allctx = [x[1] / args.chars_per_token for v in arms[base].values() for x in v]
+    allctx = [x[1] / (1.0 if x[2] else args.chars_per_token)
+              for v in arms[base].values() for x in v]
     med = st.median(allctx)
     prize = reprefill_ms(med)
     t0 = {a: st.median(x[0] for x in arms[a][0]) for a in arms if 0 in arms[a]}
