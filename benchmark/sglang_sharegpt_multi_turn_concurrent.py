@@ -240,10 +240,29 @@ def main():
     t0 = time.perf_counter()
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
         futs = {ex.submit(process_item, it): it for it in items}
-        for fut in tqdm(as_completed(futs), total=len(futs), desc="items"):
+        # mininterval=15: when stdout is a pipe rather than a terminal tqdm cannot
+        # rewrite a line in place, so every refresh becomes a NEW line. At the default
+        # 0.1 s that is thousands of lines of log; at 15 s it is a readable heartbeat
+        # that also proves the run is alive.
+        bar = tqdm(as_completed(futs), total=len(futs), desc="items",
+                   mininterval=15, miniters=1)
+        _ttfts, _errs = [], 0
+        for fut in bar:
             r = fut.result()
             with lock:
                 results.append(r)
+            for t in (r.get("turns") or []):
+                if t.get("error"):
+                    _errs += 1
+                elif t.get("ttft_s") is not None:
+                    _ttfts.append(t["ttft_s"])
+            # Carry the numbers that decide whether to abort: a median TTFT drifting
+            # upward or an error count climbing means the run is already spoiled, and
+            # waiting 45 minutes to discover that has happened here before.
+            if _ttfts:
+                med = sorted(_ttfts)[len(_ttfts) // 2]
+                bar.set_postfix_str(f"turns={len(_ttfts)} med_ttft={med:.2f}s err={_errs}",
+                                    refresh=False)
     wall = time.perf_counter() - t0
 
     total_out = sum(r["total_output_tokens"] for r in results)
