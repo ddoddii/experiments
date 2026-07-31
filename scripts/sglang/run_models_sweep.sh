@@ -147,7 +147,10 @@ workload_for() {
   fi
 }
 
+_n_models=$(echo $MODELS | wc -w); _i_model=0
+_sweep_t0=$SECONDS
 for mk in $MODELS; do
+  _i_model=$((_i_model + 1))
   MP=$(model_path "$mk")
   if [ ! -d "$MP" ]; then
     echo "=========================================================="
@@ -171,7 +174,12 @@ for mk in $MODELS; do
   OUT="$OUTBASE/$mk"
 
   echo "=========================================================="
-  echo " MODEL $mk  ($(model_label "$mk"))"
+  _el=$(( (SECONDS - _sweep_t0) / 60 ))
+  _eta=""
+  if [ "$_i_model" -gt 1 ] && [ "$_el" -gt 0 ]; then
+    _eta="  eta ~$(( _el / (_i_model - 1) * (_n_models - _i_model + 1) ))m left"
+  fi
+  echo " MODEL $_i_model/$_n_models: $mk  ($(model_label "$mk"))   elapsed ${_el}m$_eta"
   echo "   path=$MODEL_PATH  parser=$TOOL_CALL_PARSER"
   echo "   serving pool=$PREFILL_MAX_TOTAL_TOKENS tok  park pool=$PARK_POOL_TOKENS tok"
   echo "   park arm --mem-fraction-static=$PARK_MEM_FRACTION"
@@ -189,6 +197,7 @@ done
 
 echo
 echo "=========================================================="
+echo "sweep finished in $(( (SECONDS - _sweep_t0) / 60 ))m"
 SPECS=""
 for mk in $MODELS; do
   [ -f "$OUTBASE/$mk/table.json" ] && SPECS="$SPECS $(model_label "$mk")=$OUTBASE/$mk/table.json"

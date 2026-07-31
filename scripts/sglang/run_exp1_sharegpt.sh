@@ -85,9 +85,12 @@ start_arm() {
   esac
 }
 
+_n_arms=$(echo $ARMS | wc -w); _i_arm=0
+_sweep_t0=$SECONDS
 for arm in $ARMS; do
+  _i_arm=$((_i_arm + 1))
   echo
-  echo "──────────────── arm: $arm ────────────────"
+  echo "──────────────── arm $_i_arm/$_n_arms: $arm ── elapsed $((  (SECONDS-_sweep_t0)/60 ))m ────────────────"
   ./scripts/sglang/stop.sh > "$OUTDIR/stop_$arm.log" 2>&1 || true
   start_arm "$arm"
 
@@ -104,9 +107,17 @@ for arm in $ARMS; do
 
   # NOTE: the ShareGPT runner takes ROUTER_URL (not SGLANG_URL) and writes to
   # results/<CONFIG>.json (not the model-slug tree the BFCL runner uses).
+  # Stream the benchmark live. It used to end in `| tail -20`, which holds every line
+  # until the process exits -- so a 45-minute arm showed nothing at all until it was
+  # done, and a hung run was indistinguishable from a slow one. `python -u` and
+  # `stdbuf -oL` are both needed: without them Python block-buffers stdout as soon as it
+  # is a pipe rather than a terminal, so even without tail the output would arrive in
+  # 4 KB bursts.
+  _arm_t0=$SECONDS
   CONFIG="exp1_${TAG}_${arm}" ROUTER_URL="http://127.0.0.1:8000/v1/chat/completions" \
-    python benchmark/sglang_sharegpt_multi_turn_concurrent.py 2>&1 \
-    | tee "$OUTDIR/bench_$arm.log" | tail -20
+    stdbuf -oL -eL python -u benchmark/sglang_sharegpt_multi_turn_concurrent.py 2>&1 \
+    | tee "$OUTDIR/bench_$arm.log"
+  echo "  [arm $arm finished in $(( (SECONDS - _arm_t0) / 60 ))m $(( (SECONDS - _arm_t0) % 60 ))s]"
 
   python benchmark/phase0_metrics_scraper.py --tag "${arm}_after" \
     --out "$OUTDIR/metrics_${arm}_after.json" > /dev/null 2>&1 || true
