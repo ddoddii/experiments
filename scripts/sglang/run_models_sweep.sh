@@ -73,6 +73,7 @@ model_path() {
     llama8b)  echo "$HF/Llama-3.1-8B-Instruct" ;;
     llama13b) echo "${LLAMA13B_PATH:-$HF/Llama-2-13b-chat-hf}" ;;
     qwen14b)  echo "$HF/Qwen3-14B" ;;
+    qwen25_14b) echo "${QWEN25_14B_PATH:-$HF/Qwen2.5-14B-Instruct}" ;;
     qwen30b)  echo "${QWEN30B_PATH:-$HF/Qwen3-30B-A3B-Instruct-2507-FP8}" ;;
   esac
 }
@@ -82,6 +83,7 @@ model_pool() {        # serving KV pool, tokens
     llama13b) echo "${POOL_LLAMA13B:-8000}" ;;
     qwen14b)  echo "${POOL_QWEN14B:-20000}" ;;
     qwen30b)  echo "${POOL_QWEN30B:-45000}" ;;
+    qwen25_14b) echo "${POOL_QWEN25_14B:-20000}" ;;
   esac
 }
 model_park_pool() {   # idle-GPU park buffer, tokens
@@ -90,6 +92,7 @@ model_park_pool() {   # idle-GPU park buffer, tokens
     llama13b) echo "${PARKPOOL_LLAMA13B:-10000}" ;;
     qwen14b)  echo "${PARKPOOL_QWEN14B:-45000}" ;;
     qwen30b)  echo "${PARKPOOL_QWEN30B:-28000}" ;;
+    qwen25_14b) echo "${PARKPOOL_QWEN25_14B:-45000}" ;;
   esac
 }
 model_memfrac() {     # --mem-fraction-static for the PARK arm
@@ -104,6 +107,7 @@ model_memfrac() {     # --mem-fraction-static for the PARK arm
     llama13b) echo "${MEMFRAC_LLAMA13B:-0.74}" ;;
     qwen14b)  echo "${MEMFRAC_QWEN14B:-0.72}" ;;
     qwen30b)  echo "${MEMFRAC_QWEN30B:-0.80}" ;;
+    qwen25_14b) echo "${MEMFRAC_QWEN25_14B:-0.72}" ;;
   esac
 }
 model_parser() {
@@ -117,18 +121,17 @@ model_label() {
     llama8b)  echo "Llama-3.1-8B" ;;
     llama13b) echo "Llama-2-13B" ;;
     qwen14b)  echo "Qwen3-14B" ;;
+    qwen25_14b) echo "Qwen2.5-14B" ;;
     qwen30b)  echo "Qwen3-30B" ;;
   esac
 }
 model_assistant_prefix() {
-  # Repairs a template that appends a block to the assistant slot when generating but
-  # drops it when re-rendering history, which makes the prompt non-append-only and
-  # silently zeroes the parked-KV index (measured on Qwen3-14B: 1623 lookups, 0 hits).
-  # Confirm per model with:
+  # Kept as a hook for templates that CAN be repaired this way. Confirm per model with:
   #   python benchmark/check_prefix_continuity.py --model <path> --try-fixes
   case "$1" in
-    qwen14b|qwen30b) echo '<think>\n\n</think>\n\n' ;;
-    *)               echo '' ;;
+    *) echo '' ;;   # measured: echoing the block back does NOT repair Qwen3 --
+                    # the template strips <think>...</think> from history content.
+                    # The working setting is DISABLE_THINKING=0 (see below).
   esac
 }
 model_max_ctx() {     # the model's own position-embedding limit
@@ -137,6 +140,7 @@ model_max_ctx() {     # the model's own position-embedding limit
     llama13b) echo 4096 ;;
     qwen14b)  echo 32768 ;;
     qwen30b)  echo 262144 ;;
+    qwen25_14b) echo 32768 ;;
   esac
 }
 
@@ -171,6 +175,7 @@ model_kv_bytes() {    # KV bytes per token
     llama13b) echo 819200 ;;
     qwen14b)  echo 163840 ;;
     qwen30b)  echo  98304 ;;
+    qwen25_14b) echo 163840 ;;
   esac
 }
 check_park_pool() {

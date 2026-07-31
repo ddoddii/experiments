@@ -59,11 +59,34 @@ DATA_PATH = os.environ.get("DATA_PATH", "data/ShareGPT_V3_unfiltered_cleaned_spl
 SYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT", "You are a helpful assistant.")
 # Harmless on models without a thinking mode: SGLang passes chat_template_kwargs to the
 # template, which ignores keys it does not use.
-DISABLE_THINKING = os.environ.get("DISABLE_THINKING", "1") != "0"
+# Measured on Qwen3-14B: passing enable_thinking=False is what BREAKS append-only
+# rendering. The template then emits "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+# as the generation prompt but renders history as "<|im_start|>assistant\n<content>",
+# leaving turn N's prompt four tokens longer than the head of turn N+1's. Not passing it
+# is append-only and passes the check. So this now defaults OFF.
+# (Echoing the block back into the stored reply does NOT work -- the template strips
+#  <think>...</think> from history content, which is why that repair failed.)
+DISABLE_THINKING = os.environ.get("DISABLE_THINKING", "0") != "0"
 # Prepended to every stored assistant reply so the re-rendered history reproduces what
 # the generation prompt actually contained. Empty for append-only templates (Llama).
 # Use the literal "\n" escapes: ASSISTANT_PREFIX='<think>\n\n</think>\n\n'
 ASSISTANT_PREFIX = os.environ.get("ASSISTANT_PREFIX", "").replace("\\n", "\n")
+# With thinking left on, the model EMITS a <think>...</think> block. Storing that raw
+# breaks append-only rendering all over again, because the template strips thinking from
+# history. Strip it here so the stored reply matches what the history will render.
+# The cost is stated rather than hidden: the thinking tokens were still generated and
+# still consumed the MAX_TOKENS budget, so a thinking model produces less visible content
+# per turn than a non-thinking one at the same setting, and the conversation grows more
+# slowly. That is a workload difference between models, not a placement effect.
+STRIP_THINK = os.environ.get("STRIP_THINK", "1") != "0"
+_THINK_RE = __import__("re").compile(r"<think>.*?</think>\s*", __import__("re").DOTALL)
+
+
+def _store_reply(text: str) -> str:
+    """The assistant text as it must be STORED so the next turn re-renders identically."""
+    if STRIP_THINK and text:
+        text = _THINK_RE.sub("", text)
+    return ASSISTANT_PREFIX + (text or "")
 
 _ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assistant",
          "system": "system", "bard": "assistant", "assistant": "assistant"}
@@ -221,7 +244,7 @@ def process_item(item):
             # Verify with: python benchmark/check_prefix_continuity.py --model <path>
             #              --try-fixes     (it names the setting to use)
             conversation.append({"role": "assistant",
-                                 "content": ASSISTANT_PREFIX + (assistant_content or "")})
+                                 "content": _store_reply(assistant_content)})
         except Exception as e:  # noqa: BLE001
             turn_metrics.append({"turn": turn_idx, "error": str(e)})
             break
