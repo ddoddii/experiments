@@ -79,17 +79,31 @@ model_path() {
 model_pool() {        # serving KV pool, tokens
   case "$1" in
     llama8b)  echo "${POOL_LLAMA8B:-60000}" ;;
-    llama13b) echo "${POOL_LLAMA13B:-11000}" ;;
-    qwen14b)  echo "${POOL_QWEN14B:-30000}" ;;
+    llama13b) echo "${POOL_LLAMA13B:-8000}" ;;
+    qwen14b)  echo "${POOL_QWEN14B:-20000}" ;;
     qwen30b)  echo "${POOL_QWEN30B:-45000}" ;;
   esac
 }
 model_park_pool() {   # idle-GPU park buffer, tokens
   case "$1" in
     llama8b)  echo "${PARKPOOL_LLAMA8B:-30000}" ;;
-    llama13b) echo "${PARKPOOL_LLAMA13B:-6000}" ;;
-    qwen14b)  echo "${PARKPOOL_QWEN14B:-18000}" ;;
+    llama13b) echo "${PARKPOOL_LLAMA13B:-4000}" ;;
+    qwen14b)  echo "${PARKPOOL_QWEN14B:-12000}" ;;
     qwen30b)  echo "${PARKPOOL_QWEN30B:-28000}" ;;
+  esac
+}
+model_memfrac() {     # --mem-fraction-static for the PARK arm
+  # This governs weights + serving KV pool. The park buffer is allocated OUTSIDE it, so
+  # the fraction has to leave room on both sides. At the 0.70 default that works for the
+  # 8B, the bigger models do not fit at all: Qwen3-14B needs 29.6 GB of weights plus a
+  # 4.9 GB pool = 34.5 GB against a 34.3 GB budget, and Llama-2-13B lands at 35.0 GB.
+  # Both would fail to allocate rather than run slowly. Raised per model, with the pools
+  # trimmed to match.
+  case "$1" in
+    llama8b)  echo "${MEMFRAC_LLAMA8B:-0.70}" ;;
+    llama13b) echo "${MEMFRAC_LLAMA13B:-0.80}" ;;
+    qwen14b)  echo "${MEMFRAC_QWEN14B:-0.80}" ;;
+    qwen30b)  echo "${MEMFRAC_QWEN30B:-0.80}" ;;
   esac
 }
 model_parser() {
@@ -152,6 +166,7 @@ for mk in $MODELS; do
   export TOOL_CALL_PARSER=$(model_parser "$mk")
   export PREFILL_MAX_TOTAL_TOKENS=$(model_pool "$mk")
   export PARK_POOL_TOKENS=$(model_park_pool "$mk")
+  export PARK_MEM_FRACTION=$(model_memfrac "$mk")
   read -r _MT _TURNS <<< "$(workload_for "$mk")"
   OUT="$OUTBASE/$mk"
 
@@ -159,6 +174,7 @@ for mk in $MODELS; do
   echo " MODEL $mk  ($(model_label "$mk"))"
   echo "   path=$MODEL_PATH  parser=$TOOL_CALL_PARSER"
   echo "   serving pool=$PREFILL_MAX_TOTAL_TOKENS tok  park pool=$PARK_POOL_TOKENS tok"
+  echo "   park arm --mem-fraction-static=$PARK_MEM_FRACTION"
   echo "   workload: MAX_TOKENS=$_MT MAX_TURNS=$_TURNS  (model max ctx $(model_max_ctx "$mk"))"
   if [ "$(model_max_ctx "$mk")" -le 8192 ]; then
     echo "   NOTE: short-context model -- this column is measured on a SHORTER"

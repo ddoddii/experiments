@@ -57,6 +57,9 @@ TIMEOUT = int(os.environ.get("TIMEOUT", "180"))
 TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "3"))
 DATA_PATH = os.environ.get("DATA_PATH", "data/ShareGPT_V3_unfiltered_cleaned_split.json")
 SYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT", "You are a helpful assistant.")
+# Harmless on models without a thinking mode: SGLang passes chat_template_kwargs to the
+# template, which ignores keys it does not use.
+DISABLE_THINKING = os.environ.get("DISABLE_THINKING", "1") != "0"
 
 _ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assistant",
          "system": "system", "bard": "assistant", "assistant": "assistant"}
@@ -128,6 +131,13 @@ def run_turn(conversation):
         # is not visible after the fact if the length was never recorded.
         "stream_options": {"include_usage": True},
     }
+    # Qwen3 ships with hybrid thinking ON by default, so every response would open with a
+    # <think> block that eats the MAX_TOKENS budget and makes the conversation grow at a
+    # completely different rate from Llama's. That is a different workload, not a
+    # different model, and it would show up in the cross-model figure as if it were a
+    # property of the placement policy. DISABLE_THINKING=0 to keep thinking on.
+    if DISABLE_THINKING:
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
     t_request = time.perf_counter()
     resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
     resp.raise_for_status()
