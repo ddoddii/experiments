@@ -102,16 +102,20 @@ def collect(arm, bench=None, mem=None, park=None, metrics=None):
     hbm_keys = _gpu_keys(m, "_hbm_mb")
     prompt = sm.get("prompt_tokens")
     cached = sm.get("cached_tokens (reuse/fetch)")
-    n_turns, n_err, n_empty = _turn_health(bench_all)
-    bad = (n_turns > 0 and (n_err + n_empty) / n_turns > 0.05)
+    n_turns, n_infra, n_work, n_empty = _turn_health(bench_all)
+    # Only outages and empty responses invalidate. Workload rejections are reported so
+    # they can be checked for symmetry across arms, but they do not bias the comparison.
+    bad = (n_turns > 0 and (n_infra + n_empty) / n_turns > 0.02)
 
     row = {
         "arm": arm,
         # ---------------- validity (read this before anything else)
         "n_turns": n_turns or None,
-        "n_errors": n_err if n_turns else None,
+        "n_infra_fail": n_infra if n_turns else None,
+        "n_workload_fail": n_work if n_turns else None,
         "n_empty": n_empty if n_turns else None,
-        "fail_rate": round((n_err + n_empty) / n_turns, 3) if n_turns else None,
+        "infra_fail_rate": round((n_infra + n_empty) / n_turns, 3) if n_turns else None,
+        "workload_fail_rate": round(n_work / n_turns, 3) if n_turns else None,
         "valid": (not bad) if n_turns else None,
         # ---------------- memory (peaks: commitment is set by the high-water mark)
         "peak_host_rss_gb": _div(_peak(m, "proc_rss_mb"), 1024),
@@ -164,23 +168,49 @@ def _min(rows, key):
     return min(v) if v else None
 
 
+# Failures that mean THE SERVER STOPPED SERVING. These bias the surviving sample, because
+# the turns that ran are whichever ones happened to precede the outage.
+_INFRA_MARKERS = (
+    "503", "server_selection_failed", "circuits open", "No available",
+    "KVTransferError", "Connection refused", "Max retries exceeded",
+    "NewConnectionError", "Read timed out", "ConnectTimeout", "skipped:",
+)
+
+
+def _classify(err: str) -> str:
+    """'infra' if the server stopped serving, else 'workload'.
+
+    The distinction decides whether a run is usable. A uniform, deterministic rejection of
+    certain inputs (HTTP 400 'Input is a zero-length, empty document', which lands on 34-39
+    turns of EVERY arm) removes the same turns from every arm and leaves the comparison
+    intact. An outage does not: it truncates each arm at a different point.
+
+    Counting the two together once flagged a healthy 3-arm run as INVALID at a 5% failure
+    rate that was entirely input validation."""
+    s = str(err)
+    return "infra" if any(m in s for m in _INFRA_MARKERS) else "workload"
+
+
 def _turn_health(bench):
-    """(n_turns, n_errors, n_empty). Every other number in the row is meaningless if this
-    is bad, so it is computed for every arm and rendered first.
+    """(n_turns, n_infra, n_workload, n_empty). Rendered first, because every other number
+    in the row is conditional on it.
 
     This exists because a full Exp1+Exp2 sweep once produced complete, plausible-looking
     tables -- TTFT percentiles, reuse ratios, residency splits -- from runs in which
     199 of 220 turns had failed with HTTP 503. The percentiles were over the ~20 turns
     that happened to land after the router finally came up."""
-    turns = errors = empty = 0
+    turns = infra = workload = empty = 0
     for item in (bench.get("results") or []):
         for t in (item.get("turns") or []):
             turns += 1
             if t.get("error"):
-                errors += 1
+                if _classify(t["error"]) == "infra":
+                    infra += 1
+                else:
+                    workload += 1
             elif not t.get("output_tokens"):
                 empty += 1
-    return turns, errors, empty
+    return turns, infra, workload, empty
 
 
 def _goodput(bench):
@@ -207,9 +237,11 @@ def _goodput(bench):
 GROUPS = [
     ("Validity", [
         ("n_turns", "turns"),
-        ("n_errors", "errors"),
+        ("n_infra_fail", "infra failures (outage)"),
         ("n_empty", "empty (200, no tokens)"),
-        ("fail_rate", "fail rate"),
+        ("infra_fail_rate", "infra fail rate"),
+        ("n_workload_fail", "workload rejections (400)"),
+        ("workload_fail_rate", "workload fail rate"),
     ]),
     ("Memory (peak)", [
         ("peak_host_rss_gb", "host RSS (GB)"),
@@ -318,8 +350,9 @@ def main():
         print(bar)
         print("INVALID RUN -- DO NOT READ THESE NUMBERS AS A RESULT")
         for r in invalid:
-            print(f"  {r['arm']:<12} {r['n_errors']}/{r['n_turns']} turns failed, "
-                  f"{r['n_empty']} empty  (fail rate {r['fail_rate']:.0%})")
+            print(f"  {r['arm']:<12} {r['n_infra_fail']}/{r['n_turns']} turns hit an "
+                  f"outage, {r['n_empty']} empty  "
+                  f"(infra fail rate {r['infra_fail_rate']:.1%})")
         print("  Every metric below is computed over the turns that DID succeed, which")
         print("  are not a random sample -- they are whichever turns ran while the")
         print("  system happened to be healthy. Fix the cause and re-run.")
