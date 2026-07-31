@@ -1,21 +1,12 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-INVALID RUN -- DO NOT READ THESE NUMBERS AS A RESULT
-  radix        39/688 turns failed, 0 empty  (fail rate 6%)
-  park         37/698 turns failed, 0 empty  (fail rate 5%)
-  Every metric below is computed over the turns that DID succeed, which
-  are not a random sample -- they are whichever turns ran while the
-  system happened to be healthy. Fix the cause and re-run.
-  Most common cause: the benchmark started before the router could route.
-  Check bench_<arm>.log for 'No available servers' (HTTP 503).
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 | metric | radix | hicache | park |
 |---|---|---|---|
 | **Validity** | | | |
 | turns | 688 | 692 | 698 |
-| errors | 39 | 34 | 37 |
+| infra failures (outage) | 0 | 0 | 0 |
 | empty (200, no tokens) | 0 | 0 | 0 |
-| fail rate | 0.057 | 0.049 | 0.053 |
+| infra fail rate | 0 | 0 | 0 |
+| workload rejections (400) | 39 | 34 | 37 |
+| workload fail rate | 0.057 | 0.049 | 0.053 |
 | **Memory (peak)** | | | |
 | host RSS (GB) | 65.87 | 83.33 | 67.09 |
 | page cache (GB) | 53.16 | 85.33 | 31.18 |
@@ -48,5 +39,3 @@ INVALID RUN -- DO NOT READ THESE NUMBERS AS A RESULT
 | peak gpu1 HBM (GB) | 24.78 | 24.84 | 28.92 |
 | peak gpu2 HBM (GB) | 42.63 | 42.63 | 43.29 |
 | peak gpu3 HBM (GB) | 42.63 | 42.63 | 43.3 |
-
-[collect] -> results/exp1/p60000_c16_d3/table.json

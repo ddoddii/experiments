@@ -149,7 +149,15 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   fi
   ENV_D0=""; ENV_D1=""
 else
-  PARK_ARG=""; MEMFRAC_P=""
+  PARK_ARG=""
+  # FORCE_MEM_FRACTION lets a NON-park arm run at the park arm's --mem-fraction-static.
+  # Without it the park arm is the only one at 0.70 while the others take SGLang's
+  # default, so any TTFT difference confounds the placement mechanism with the memory
+  # budget. Exp 1 measured park +0.56 s on TURN 0 -- where there is no prefix to reuse
+  # and no fetch to perform -- which is a constant overhead, not the mechanism; this knob
+  # is how that gets attributed.
+  MEMFRAC_P=""
+  [ -n "${FORCE_MEM_FRACTION}" ] && MEMFRAC_P="--mem-fraction-static ${FORCE_MEM_FRACTION}"
   CVD_P0=0; BASE_P0=""; CVD_P1=1; BASE_P1=""; CVD_D0=2; BASE_D0=""; CVD_D1=3; BASE_D1=""
   ENV_P0=""; ENV_P1=""; ENV_D0=""; ENV_D1=""
 fi

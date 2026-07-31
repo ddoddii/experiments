@@ -80,6 +80,15 @@ start_arm() {
       IDLE_KV_PARKING=0 HICACHE_WRITE_POLICY=write_through_selective \
         HICACHE_STORAGE_BACKEND=file \
         ./scripts/sglang/start_2P_2D.sh ;;
+    radix_memfrac)
+      # radix at the PARK arm's --mem-fraction-static. The park arm runs at 0.70 while
+      # every other arm takes SGLang's default, so "park is slower" currently confounds
+      # the placement mechanism with a smaller memory budget. Exp 1 showed park +0.56 s
+      # on turn 0, where nothing can be reused or fetched -- if this arm reproduces that
+      # penalty, it is the budget and not the mechanism.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 \
+        FORCE_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70} \
+        ./scripts/sglang/start_2P_2D.sh ;;
     hicache_wb)
       # Conservative variant: write_back never populates the L3 file backend (measured
       # hicache_dir = 0), so this arm isolates the HOST TIER from the page cache. A
