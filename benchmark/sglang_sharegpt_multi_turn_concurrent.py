@@ -71,14 +71,23 @@ DISABLE_THINKING = os.environ.get("DISABLE_THINKING", "0") != "0"
 # the generation prompt actually contained. Empty for append-only templates (Llama).
 # Use the literal "\n" escapes: ASSISTANT_PREFIX='<think>\n\n</think>\n\n'
 ASSISTANT_PREFIX = os.environ.get("ASSISTANT_PREFIX", "").replace("\\n", "\n")
-# With thinking left on, the model EMITS a <think>...</think> block. Storing that raw
-# breaks append-only rendering all over again, because the template strips thinking from
-# history. Strip it here so the stored reply matches what the history will render.
-# The cost is stated rather than hidden: the thinking tokens were still generated and
-# still consumed the MAX_TOKENS budget, so a thinking model produces less visible content
-# per turn than a non-thinking one at the same setting, and the conversation grows more
-# slowly. That is a workload difference between models, not a placement effect.
-STRIP_THINK = os.environ.get("STRIP_THINK", "1") != "0"
+# DEFAULTS OFF, and the measurement is why. I assumed a thinking model would need its
+# <think> block removed before the reply was stored; the probe says the opposite. Qwen3's
+# template strips <think>...</think> from history ONLY when enable_thinking=False. With
+# the kwarg absent nothing is injected into the generation prompt and nothing is stripped
+# from history, so storing the reply EXACTLY as generated is what keeps the rendering
+# append-only -- and stripping it would make the stored text differ from the tokens that
+# were actually generated, breaking reuse of the GENERATED KV (the n_full boundary in the
+# park index) while doing nothing for prompt continuity.
+#
+# Kept as a knob for a template that does strip history unconditionally; verify with
+#   python benchmark/check_prefix_continuity.py --model <path> --try-fixes
+# whose "thinking on, RAW reply stored" candidate covers exactly this case.
+#
+# The remaining cost is a workload one, not a correctness one: thinking tokens consume
+# the MAX_TOKENS budget, so a thinking model yields less visible content per turn and its
+# conversation grows more slowly than a non-thinking model at the same setting.
+STRIP_THINK = os.environ.get("STRIP_THINK", "0") != "0"
 _THINK_RE = __import__("re").compile(r"<think>.*?</think>\s*", __import__("re").DOTALL)
 
 
