@@ -251,3 +251,71 @@ median TTFT: park **0.221 s** vs hicache 0.264 s (**−16%**). turn 1 이후 모
 
 실행 후 **먼저** `ttft_by_turn.txt`에서 median context가 4k를 넘었는지 확인한다. 안 넘었으면
 TTFT 비교는 placement에 대해 아무것도 말하지 않으므로 `MAX_TOKENS`를 더 올려 재실행한다.
+
+---
+
+## F. ★ ShareGPT 본 실험 (2026-07-31) — 논문에 쓸 결과
+
+`results/exp1/sharegpt_p60000_c8_m1024`. C=8, pool 60k, tool delay 3 s, MAX_TOKENS=1024,
+turn 6–10. **arm당 1440 turn, 에러 0개** (infra·workload 모두 0). 세 arm 모두
+Llama-3.1-8B-Instruct, wall ~2710 s.
+
+### F1 성능 — park가 p50·p95를 모두 이긴다
+
+| | radix | hicache | **park** |
+|---|---|---|---|
+| TTFT p50 | 0.294 s | 0.296 s | **0.237 s (−19%)** |
+| TTFT p95 | 0.709 | 0.764 | **0.593 s (−16%)** |
+| TTFT p99 | **1.022** | 1.353 | 1.582 (**+55%**) |
+| prefix reuse | 0.542 | 0.523 | **0.955** |
+| recomputed tokens | 522,422 | 525,300 | **51,246 (10.2× 감소)** |
+| goodput | 248.5 | 248.3 | 247.7 tok/s |
+
+turn별로 보면 **turn 1부터 9까지 전 구간에서 park가 이긴다** (−0.06 ~ −0.08 s, 일관적):
+
+| turn | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| radix | 0.100 | 0.183 | 0.268 | 0.324 | 0.392 | 0.445 | 0.476 | 0.447 | 0.412 | 0.365 |
+| **park** | 0.209 | **0.140** | **0.194** | **0.242** | **0.312** | **0.372** | **0.402** | **0.383** | **0.346** | **0.285** |
+| Δ | +0.11 | −0.04 | −0.07 | −0.08 | −0.08 | −0.07 | −0.07 | −0.06 | −0.07 | −0.08 |
+
+turn 0(+0.11 s)이 상수 오버헤드다. BFCL C=16에서의 **+0.56 s가 재현되지 않는다** — 그건 park
+고유 비용이 아니라 C=16 큐잉의 증폭이었다는 §E1의 진단이 확인된다.
+
+**hicache는 radix와 사실상 동일하다** (모든 turn에서 ±0.02 s). 이 워크로드에서 host tier는
+TTFT를 개선하지 못하면서 host DRAM만 쓴다 — 논문의 핵심 대조군 결과.
+
+### F2 메모리 — 주장대로다
+
+| | radix | hicache | **park** | park vs hicache |
+|---|---|---|---|---|
+| host RSS peak | 65.8 | 83.5 | **67.2 GB** | **−16.3** |
+| AnonPages peak | 17.5 | 35.8 | **17.8 GB** | **−17.9** |
+| host footprint (RSS+cache) | 103.8 | 166.3 | **98.9 GB** | **−67.4** |
+| MemAvailable min | 103.9 | 84.7 | **102.6 GB** | **+17.9** |
+| **GPU HBM total** | 135.8 | 135.3 | **144.6 GB** | **+9.3** |
+
+**정확한 트레이드는 "GPU HBM +9.3 GB ↔ host DRAM −17.9 GB + TTFT −19%"다.** 이게 논문의
+논지다: 유휴 상태였던 HBM이 쓰기에 더 싼 자원이다. (page cache 열은 arm 실행 순서에 오염되므로
+인용하지 않는다 — L3 file backend를 쓰는 hicache의 82.8 GB만 의미가 있다.)
+
+### F3 residency — GPU-first가 실제로 작동한다
+
+peer GPU **3.93 GB**, CPU DRAM overflow **0 GB**, dropped **0 GB**, peer share **0.444**.
+fetch hit **1,211건이 전부 peer GPU에서** (local park 0, CPU DRAM 0), `nospace` 0.
+
+### F4 정직하게 같이 적을 것
+
+1. **p99는 park가 가장 나쁘다** (1.582 s vs radix 1.022). 다만 그 slowest 1%는 turn 3–6에
+   몰린 **15개 샘플**(1440개 중)이고 max는 6.31 s vs radix 4.96 s다. 체계적 저하가 아니라
+   fetch 경로의 간헐적 블로킹이다. **p50/p95 개선과 함께 반드시 병기한다.**
+2. **goodput은 세 arm이 동일하다** (~248 tok/s). ShareGPT는 응답이 median ~450 토큰이라
+   decode-bound이고, TTFT 개선이 처리량으로 이어지지 않는다. throughput 이득을 주장하지 않는다.
+3. **컨텍스트는 목표만큼 크지 않았다**: mean 791 토큰 (prize ~127 ms). `MAX_TOKENS=1024`는
+   적용됐지만(max 1024) 모델이 median 450–495 토큰에서 자연 종료했다. 즉 **park는 상금이 작은
+   조건에서도 그 절반 이상(60–80 ms)을 실제로 회수했다.** 더 긴 컨텍스트에서 격차가 더 벌어질
+   것이라는 예상은 §E2의 turn별 추세와 일치하지만, 이 런으로 입증된 것은 아니다.
+
+> 재현 시 주의: 이 런의 `bench_*.json`에는 per-turn `prompt_tokens`가 없다(러너가 기록하지
+> 않았음). §F4-3의 컨텍스트 길이는 `/metrics`의 prompt_tokens 총합 ÷ turn 수로 역산한 값이다.
+> 러너는 이후 `stream_options.include_usage`로 per-turn 값을 직접 기록하도록 고쳤다.

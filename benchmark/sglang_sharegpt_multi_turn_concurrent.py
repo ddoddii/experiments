@@ -120,6 +120,13 @@ def run_turn(conversation):
     payload = {
         "model": MODEL, "messages": conversation,
         "max_tokens": MAX_TOKENS, "stream": True, "temperature": 0.0,
+        # include_usage gives the SERVER's prompt_tokens on the final chunk. Without it
+        # there is no per-turn context length in the output, and context length is the
+        # precondition for reading any TTFT comparison: the most KV reuse can save on a
+        # turn is what a full re-prefill of that context costs. A run whose context never
+        # grew cannot show a reuse benefit no matter how well placement works, and that
+        # is not visible after the fact if the length was never recorded.
+        "stream_options": {"include_usage": True},
     }
     t_request = time.perf_counter()
     resp = requests.post(ROUTER_URL, json=payload, stream=True, timeout=TIMEOUT)
@@ -127,6 +134,7 @@ def run_turn(conversation):
 
     t_first = t_last = None
     token_count = 0
+    prompt_tokens = None
     content = ""
     for line in resp.iter_lines():
         if not line:
@@ -141,6 +149,11 @@ def run_turn(conversation):
             chunk = json.loads(data)
         except json.JSONDecodeError:
             continue
+        usage = chunk.get("usage")
+        if usage and usage.get("prompt_tokens"):
+            prompt_tokens = usage["prompt_tokens"]
+        if not chunk.get("choices"):
+            continue          # the usage-only final chunk carries no choices
         delta = chunk["choices"][0]["delta"]
         piece = delta.get("content")
         if piece:
@@ -159,6 +172,10 @@ def run_turn(conversation):
         "ttft_s": round(ttft, 4) if ttft else None,
         "tpot_s": round(tpot, 4) if tpot else None,
         "output_tokens": token_count,
+        # server-reported; falls back to a chars/4 estimate so the field is never absent
+        "prompt_tokens": prompt_tokens if prompt_tokens else int(
+            sum(len(str(m.get("content", "") or "")) for m in conversation) / 4),
+        "prompt_tokens_exact": prompt_tokens is not None,
         "e2e_latency_s": round(e2e, 4) if e2e else None,
         "throughput_tok_per_s": round(tput, 2) if tput else None,
     }, content)
