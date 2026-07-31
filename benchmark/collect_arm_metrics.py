@@ -208,7 +208,7 @@ def _turn_health(bench):
                     infra += 1
                 else:
                     workload += 1
-            elif not t.get("output_tokens"):
+            elif not (t.get("output_tokens") or t.get("completion_tokens")):
                 empty += 1
     return turns, infra, workload, empty
 
@@ -227,9 +227,11 @@ def _goodput(bench):
     good = 0
     for item in results:
         for t in (item.get("turns") or []):
-            if t.get("error") or not t.get("output_tokens"):
+            # BFCL records output_tokens, ShareGPT records completion_tokens
+            n = t.get("output_tokens") or t.get("completion_tokens") or 0
+            if t.get("error") or not n:
                 continue
-            good += t["output_tokens"]
+            good += n
     return round(good / wall, 2)
 
 

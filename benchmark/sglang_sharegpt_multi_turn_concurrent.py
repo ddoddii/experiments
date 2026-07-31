@@ -62,6 +62,32 @@ _ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assist
          "system": "system", "bard": "assistant", "assistant": "assistant"}
 
 
+def _model_from_server(url, timeout=5.0):
+    """Ask the server what it actually loaded. SGLang IGNORES the request's `model`
+    field, so a wrong MODEL here does not fail -- it silently mislabels the run. A
+    Llama-3.1-8B run was once filed under Qwen3-14B for exactly this reason."""
+    base = url.split("/v1/")[0].rstrip("/")
+    try:
+        import urllib.request
+
+        with urllib.request.urlopen(f"{base}/get_model_info", timeout=timeout) as r:
+            info = json.loads(r.read().decode())
+        return info.get("model_path") or info.get("model") or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+_served = _model_from_server(ROUTER_URL)
+if _served:
+    if os.path.basename(_served.rstrip("/")) != os.path.basename(MODEL.rstrip("/")):
+        print(f"[model] MODEL env says {os.path.basename(MODEL.rstrip('/'))} but the "
+              f"server serves {os.path.basename(_served.rstrip('/'))} -- using the "
+              f"server's.")
+    MODEL = _served
+else:
+    print(f"[model] WARNING: /get_model_info unreachable; trusting MODEL={MODEL}.")
+
+
 def load_conversations(path):
     """ShareGPT json -> 각 대화의 ordered user(human) turn 리스트만 추출.
 
@@ -195,8 +221,25 @@ def main():
 
     total_out = sum(r["total_output_tokens"] for r in results)
     valid = [r for r in results if r.get("avg_ttft_s")]
+    # Percentiles, not just the mean: tail TTFT is what the placement comparison turns on,
+    # and collect_arm_metrics reads these keys by name (same schema as the BFCL runner).
+    _ttfts = sorted(t["ttft_s"] for r in results for t in (r.get("turns") or [])
+                    if t.get("ttft_s") is not None)
+
+    def _pct(p):
+        if not _ttfts:
+            return None
+        k = max(0, min(len(_ttfts) - 1, int(round((p / 100.0) * (len(_ttfts) - 1)))))
+        return round(_ttfts[k], 4)
+
     summary = {
         "config": CONFIG,
+        "model": MODEL,
+        "ttft_p50_s": _pct(50),
+        "ttft_p90_s": _pct(90),
+        "ttft_p95_s": _pct(95),
+        "ttft_p99_s": _pct(99),
+        "n_ttft_samples": len(_ttfts),
         "concurrency": CONCURRENCY,
         "tool_delay_s": TOOL_DELAY,
         "total_items": len(results),
