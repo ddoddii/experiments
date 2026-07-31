@@ -120,6 +120,17 @@ model_label() {
     qwen30b)  echo "Qwen3-30B" ;;
   esac
 }
+model_assistant_prefix() {
+  # Repairs a template that appends a block to the assistant slot when generating but
+  # drops it when re-rendering history, which makes the prompt non-append-only and
+  # silently zeroes the parked-KV index (measured on Qwen3-14B: 1623 lookups, 0 hits).
+  # Confirm per model with:
+  #   python benchmark/check_prefix_continuity.py --model <path> --try-fixes
+  case "$1" in
+    qwen14b|qwen30b) echo '<think>\n\n</think>\n\n' ;;
+    *)               echo '' ;;
+  esac
+}
 model_max_ctx() {     # the model's own position-embedding limit
   case "$1" in
     llama8b)  echo 131072 ;;
@@ -201,6 +212,7 @@ for mk in $MODELS; do
   export PARK_POOL_TOKENS=$(model_park_pool "$mk")
   export PARK_MEM_FRACTION=$(model_memfrac "$mk")
   read -r _MT _TURNS <<< "$(workload_for "$mk")"
+  export ASSISTANT_PREFIX=$(model_assistant_prefix "$mk")
   OUT="$OUTBASE/$mk"
 
   echo "=========================================================="
@@ -213,6 +225,8 @@ for mk in $MODELS; do
   echo "   path=$MODEL_PATH  parser=$TOOL_CALL_PARSER"
   echo "   serving pool=$PREFILL_MAX_TOTAL_TOKENS tok  park pool=$PARK_POOL_TOKENS tok"
   echo "   park arm --mem-fraction-static=$PARK_MEM_FRACTION"
+  [ -n "$ASSISTANT_PREFIX" ] && \
+    echo "   ASSISTANT_PREFIX=$ASSISTANT_PREFIX  (template is not append-only without it)"
   echo "   workload: MAX_TOKENS=$_MT MAX_TURNS=$_TURNS  (model max ctx $(model_max_ctx "$mk"))"
   if [ "$(model_max_ctx "$mk")" -le 8192 ]; then
     echo "   NOTE: short-context model -- this column is measured on a SHORTER"

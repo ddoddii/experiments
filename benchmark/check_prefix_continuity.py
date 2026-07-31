@@ -35,6 +35,33 @@ def render(tok, messages, add_generation_prompt, kwargs):
         messages, tokenize=True, add_generation_prompt=add_generation_prompt, **kwargs)
 
 
+def continuity(tok, kwargs, turns, system, echo_prefix=""):
+    """Render `turns` turns and return (all_exact, [(len_a, len_b, common), ...]).
+
+    echo_prefix is prepended to each stored assistant message. That is the candidate
+    repair: if the template appends a block to the ASSISTANT SLOT when generating but
+    drops it when re-rendering history, writing that block back into the stored content
+    makes the two agree again and the prompt becomes append-only."""
+    msgs = [{"role": "system", "content": system}] if system else []
+    prompts = []
+    for t in range(turns):
+        msgs = msgs + [{"role": "user", "content": f"Question number {t} about a topic."}]
+        prompts.append(render(tok, msgs, True, kwargs))
+        msgs = msgs + [{"role": "assistant",
+                        "content": echo_prefix + f"This is answer number {t}. " * 8}]
+    out, ok = [], True
+    for i in range(len(prompts) - 1):
+        a, b = prompts[i], prompts[i + 1]
+        common = 0
+        for x, y in zip(a, b):
+            if x != y:
+                break
+            common += 1
+        ok &= common == len(a)
+        out.append((len(a), len(b), common))
+    return ok, out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
@@ -42,6 +69,8 @@ def main():
     ap.add_argument("--no-thinking-kwarg", action="store_true",
                     help="do NOT pass enable_thinking=False (the benchmark passes it)")
     ap.add_argument("--system", default="You are a helpful assistant.")
+    ap.add_argument("--try-fixes", action="store_true",
+                    help="also evaluate candidate repairs and name the one that works")
     args = ap.parse_args()
 
     try:
@@ -89,6 +118,36 @@ def main():
             lo = max(0, common - 6)
             print(f"    turn {i}   ...{tok.decode(a[lo:common+10])!r}")
             print(f"    turn {i+1} ...{tok.decode(b[lo:common+10])!r}")
+
+    if args.try_fixes:
+        print("\n--- candidate repairs ---")
+        cands = [
+            ("as the benchmark sends it", kwargs, ""),
+            ("without enable_thinking", {}, ""),
+            ("echo the empty think block into stored replies",
+             kwargs, "<think>\n\n</think>\n\n"),
+            ("echo it, without enable_thinking", {}, "<think>\n\n</think>\n\n"),
+        ]
+        best = None
+        for name, kw, pre in cands:
+            try:
+                good, rows = continuity(tok, kw, args.turns, args.system, pre)
+            except (TypeError, ValueError) as e:
+                print(f"  {name:<46} n/a ({type(e).__name__})")
+                continue
+            worst = min((c - a) for a, _, c in rows) if rows else 0
+            print(f"  {name:<46} {'PASS' if good else f'FAIL (short by {-worst} tok)'}")
+            if good and best is None:
+                best = (name, kw, pre)
+        print()
+        if best:
+            print(f"USE: {best[0]}")
+            print(f"     chat_template_kwargs={best[1] or '(none)'}  "
+                  f"assistant_prefix={best[2]!r}")
+        else:
+            print("No candidate makes the prompt append-only. This model cannot carry the")
+            print("reuse comparison; pick one whose template is append-only (the check")
+            print("passes on Llama-3.1-8B) rather than working around the template.")
 
     print()
     if ok:
