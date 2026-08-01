@@ -51,28 +51,43 @@ from paperstyle import PALETTE, use_paper_style, style_axes, savefig
 # Same hue order as every other figure in this paper. Validated as a categorical trio
 # (worst adjacent CVD dE 18.0 protan, 18.7 normal).
 ARMS = [
-    ("recompute", "Recompute", PALETTE["recompute"]),
+    # Recompute is the do-nothing control, so it is drawn in neutral grey: it is the
+    # reference the other two are read against, not a competing design. Same convention
+    # as the "Naive" bar in the reference figure.
+    ("recompute", "Recompute", "#BFC4C9"),
     ("hicache",   "SGLang",    PALETTE["hicache"]),
     ("park",      "Ours",      PALETTE["park"]),
 ]
 
-# key, axis label, scale, lower_is_better, ratio_vs
-#
 # ratio_vs names the arm the "N.NNx" label is computed against. It defaults to the BETTER
 # of the two baselines, which is the honest choice for hit rate, TTFT and prefill work.
 # It is NOT the honest choice for host DRAM: neither Recompute nor the GPU-only variant
 # has a host tier at all, so such an arm wins that metric by definition and the label
 # would read 0.98x -- as if the proposal saved nothing. The claim there is against the
 # incumbent that actually offloads to host memory, so the mem panel is pinned to SGLang.
+#
+# norm_to divides every arm by that arm's own value PER MODEL. TTFT is the one metric
+# whose absolute height is dominated by model size rather than by the mechanism -- a 13B
+# model is slower than an 8B one no matter which arm runs it -- so an absolute axis
+# invites reading across models, which says nothing. Normalising to Recompute puts every
+# model on the same 1.0 baseline and makes the panel show only what the arms changed.
 PANELS = {
-    "hit":     ("cache_hit_rate_pct",  "Cache hit rate (%)",   1.0, False, None),
-    "ttft":    ("ttft_p50_s",          "Median TTFT (s)",      1.0, True,  None),
-    "prefill": ("prefill_served_tok_s", "Prefill throughput (t/s)", 1.0, False, None),
-    "recompute_rate": ("prefill_work_tok_s", "Recomputed prefill (t/s)", 1.0, True, None),
-    "mem":     ("peak_anonpages_gb",   "Host DRAM (GB)",       1.0, True,  "hicache"),
-    "ttft95":  ("ttft_p95_s",          "P95 TTFT (s)",         1.0, True,  None),
-    "recomp":  ("recomputed_tokens",   "Recomputed tokens (M)", 1e-6, True, None),
-    "hbm":     ("peak_gpu_hbm_total_gb", "GPU HBM (GB)",       1.0, False, None),
+    "hit":     dict(key="cache_hit_rate_pct",   label="Cache Hit Rate (%)",
+                    lower_better=False, yticks=[0, 25, 50, 75, 100]),
+    "ttft":    dict(key="ttft_p50_s",           label="Normalized TTFT",
+                    lower_better=True, norm_to="recompute"),
+    "ttft_abs": dict(key="ttft_p50_s",          label="Median TTFT (s)",
+                     lower_better=True),
+    "prefill": dict(key="prefill_served_tok_s", label="Throughput (t/s)",
+                    lower_better=False),
+    "recompute_rate": dict(key="prefill_work_tok_s", label="Recomputed prefill (t/s)",
+                           lower_better=True),
+    "mem":     dict(key="peak_anonpages_gb",    label="Host DRAM (GB)",
+                    lower_better=True, ratio_vs="hicache"),
+    "ttft95":  dict(key="ttft_p95_s",           label="P95 TTFT (s)", lower_better=True),
+    "recomp":  dict(key="recomputed_tokens",    label="Recomputed tokens (M)",
+                    scale=1e-6, lower_better=True),
+    "hbm":     dict(key="peak_gpu_hbm_total_gb", label="GPU HBM (GB)", lower_better=False),
 }
 
 
@@ -88,31 +103,61 @@ def load(spec):
     return label, {r["arm"]: r for r in rows}
 
 
-def draw(ax, models, key, ylabel, scale, lower_better, ratio_vs, annotate):
+def draw(ax, models, spec, annotate):
+    key = spec["key"]
+    scale = spec.get("scale", 1.0)
+    lower_better = spec.get("lower_better", False)
+    ratio_vs = spec.get("ratio_vs")
+    norm_to = spec.get("norm_to")
     n = len(models)
-    width = 0.8 / len(ARMS)
+    # Bars touch inside a group and the groups stay well separated: a narrow group with
+    # no internal gap reads as one unit per model, which is what the comparison is.
+    group_w = 0.60
+    width = group_w / len(ARMS)
     xs = range(n)
     top = 0.0
+
+    # Per-model divisor, so normalisation never mixes one model's scale into another's.
+    denom = []
+    for _, byarm in models:
+        d = (byarm.get(norm_to) or {}).get(key) if norm_to else None
+        denom.append(d if isinstance(d, (int, float)) and d else None)
+
     for i, (arm, arm_label, color) in enumerate(ARMS):
         vals = []
-        for _, byarm in models:
+        for mi, (_, byarm) in enumerate(models):
             v = (byarm.get(arm) or {}).get(key)
-            vals.append(v * scale if isinstance(v, (int, float)) else 0.0)
+            v = v * scale if isinstance(v, (int, float)) else 0.0
+            if norm_to:
+                v = (v / denom[mi]) if denom[mi] else 0.0
+            vals.append(v)
         top = max(top, max(vals) if vals else 0.0)
         off = (i - (len(ARMS) - 1) / 2) * width
-        ax.bar([x + off for x in xs], vals, width * 0.92, label=arm_label,
-               color=color, edgecolor="white", linewidth=0.5, zorder=3)
+        ax.bar([x + off for x in xs], vals, width, label=arm_label,
+               color=color, edgecolor=PALETTE["ink"], linewidth=0.35, zorder=3)
+
+    if norm_to:
+        # Draw the baseline itself, so a bar below the line is unambiguously better.
+        ax.axhline(1.0, color=PALETTE["ink"], ls="--", lw=0.6, zorder=4)
+
     ax.set_xticks(list(xs))
     names = [m for m, _ in models]
-    rot = 20 if (n > 2 and max(len(m) for m in names) > 8) else 0
-    ax.set_xticklabels(names, fontsize=6.6, rotation=rot,
+    rot = 12 if (n > 2 and max(len(m) for m in names) > 8) else 0
+    ax.set_xticklabels(names, fontsize=6.0, rotation=rot,
                        ha="right" if rot else "center",
                        rotation_mode="anchor" if rot else None)
-    ax.set_ylabel(ylabel + (" \u2193" if lower_better else ""), fontsize=7.5)
-    ax.set_ylim(0, top * 1.22 if top else 1)
+    ax.set_ylabel(spec["label"], fontsize=7.0, labelpad=2)
+    if spec.get("yticks"):
+        ax.set_yticks(spec["yticks"])
+        ax.set_ylim(spec["yticks"][0], spec["yticks"][-1] * 1.20)
+    else:
+        ax.set_ylim(0, top * 1.22 if top else 1)
+    ax.set_xlim(-0.5, n - 0.5)
     ax.grid(axis="x", visible=False)
     if annotate:
         # Improvement of GPU-first over the BETTER of the two baselines, per model.
+        # Ratios are scale-free, so normalising a panel does not change them.
+        ymin, ymax = ax.get_ylim()
         for xi, (_, byarm) in enumerate(models):
             pk = (byarm.get("park") or {}).get(key)
             if ratio_vs:
@@ -127,8 +172,9 @@ def draw(ax, models, key, ylabel, scale, lower_better, ratio_vs, annotate):
             if b == 0:
                 continue
             ratio = (b / pk) if lower_better else (pk / b)
-            ax.annotate(f"{ratio:.2f}×", xy=(xi, top * 1.16), ha="center",
-                        fontsize=6.6, fontweight="bold", color=PALETTE["ink"])
+            ax.annotate(f"{ratio:.2f}×", xy=(xi, ymin + (ymax - ymin) * 0.93),
+                        ha="center", va="center", fontsize=5.8, fontweight="bold",
+                        color=PALETTE["ink"])
     style_axes(ax)
 
 
@@ -138,8 +184,10 @@ def main():
     ap.add_argument("--panels", nargs="+", default=["hit", "ttft", "prefill", "mem"],
                     choices=list(PANELS))
     ap.add_argument("--out", default="results/exp1/fig_models")
-    ap.add_argument("--width", type=float, default=7.0)
-    ap.add_argument("--height", type=float, default=2.0)
+    # Defaults are the IEEE two-column text width (7.16 in) at a height that keeps the
+    # row shallow enough to sit above or below a paragraph rather than owning the page.
+    ap.add_argument("--width", type=float, default=7.16)
+    ap.add_argument("--height", type=float, default=1.65)
     ap.add_argument("--no-ratio", action="store_true",
                     help="omit the NNx improvement labels above each model group")
     args = ap.parse_args()
@@ -163,13 +211,15 @@ def main():
     fig, axes = plt.subplots(1, len(args.panels), squeeze=False,
                              figsize=(args.width, args.height))
     for ax, p in zip(axes[0], args.panels):
-        key, ylabel, scale, lower, ratio_vs = PANELS[p]
-        draw(ax, models, key, ylabel, scale, lower, ratio_vs, not args.no_ratio)
+        draw(ax, models, PANELS[p], not args.no_ratio)
     axes[0][0].set_xlabel("")
+    # Legend above the row, as in the reference: at this height a bottom legend competes
+    # with the rotated model names for the same strip of space.
     h, l = axes[0][0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower center", ncol=len(ARMS), frameon=False, fontsize=7,
-               bbox_to_anchor=(0.5, -0.05), columnspacing=2.0, handlelength=1.4)
-    fig.tight_layout(pad=0.4, w_pad=1.2, rect=[0, 0.06, 1, 1])
+    fig.legend(h, l, loc="upper center", ncol=len(ARMS), frameon=False, fontsize=7,
+               bbox_to_anchor=(0.5, 1.045), columnspacing=1.8, handlelength=1.3,
+               handletextpad=0.5)
+    fig.tight_layout(pad=0.3, w_pad=1.0, rect=[0, 0, 1, 0.93])
     savefig(fig, args.out)
 
 
