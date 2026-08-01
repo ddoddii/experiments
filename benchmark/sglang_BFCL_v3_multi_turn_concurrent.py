@@ -144,6 +144,28 @@ else:
 
 MODEL_SLUG = os.path.basename(MODEL.rstrip("/"))
 
+
+def _atomic_dump(obj, path):
+    """Write to a sibling temp file, then rename. json.dump straight onto the final path
+    truncates it first, so a disk-full or a crash mid-write destroys the previous
+    contents and leaves a 0-byte file -- which is exactly what ended one 30-minute arm
+    here. os.replace is atomic within a filesystem, so the result is either the complete
+    new file or the untouched old one."""
+    import os as _os
+    tmp = f"{path}.tmp.{_os.getpid()}"
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(obj, fh, indent=2, ensure_ascii=False)
+            fh.flush()
+            _os.fsync(fh.fileno())
+        _os.replace(tmp, path)
+    except Exception:
+        try:
+            _os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
 # ─── Pushgateway (simple HTTP POST, no prometheus_client dependency) ─────────
 _pg_lock = threading.Lock()
 

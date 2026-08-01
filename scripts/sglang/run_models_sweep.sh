@@ -238,6 +238,18 @@ for mk in $MODELS; do
     echo "         conversation than the others; compare arms WITHIN it, not across."
   fi
   check_park_pool "$mk" "$PARK_POOL_TOKENS" "$_MT" "$_TURNS" || exit 1
+  # Disk, not GPU memory, ended one arm here: the hicache L3 file backend fills /tmp and
+  # the benchmark then died inside json.dump, leaving a 0-byte result where a completed
+  # 30-minute run had been. Check before spending the half hour, not after.
+  _free_gb=$(df -BG --output=avail /tmp 2>/dev/null | tail -1 | tr -dc '"'"'0-9'"'"')
+  _need_gb=${NEED_FREE_GB:-40}
+  if [ -n "$_free_gb" ] && [ "$_free_gb" -lt "$_need_gb" ]; then
+    echo "   ERROR: only ${_free_gb} GB free on /tmp, want >= ${_need_gb} GB."
+    echo "          The hicache arm writes its L3 tier there and will fill it."
+    echo "          Free space (rm -rf /tmp/hicache) or set NEED_FREE_GB to override."
+    exit 1
+  fi
+  echo "   disk: ${_free_gb} GB free on /tmp"
   echo "=========================================================="
 
   OUTDIR="$OUT" TAG="$mk" ARMS="$ARMS" \
