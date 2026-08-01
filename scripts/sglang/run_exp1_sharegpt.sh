@@ -142,6 +142,14 @@ for arm in $ARMS; do
     echo "  [warn] results/exp1_${TAG}_${arm}.json missing; table row will be partial"
   fi
   cp "$LOG_DIR"/p1.log "$OUTDIR/p1_$arm.log" 2>/dev/null || true
+
+  # Fold this arm into the table NOW rather than only after every arm has finished.
+  # The table is built at the end of the loop, so a crash partway -- the hicache arm
+  # once died on a full disk -- left the completed arms out of it entirely even though
+  # all their artifacts were on disk. collect_arm_metrics merges by arm, so calling it
+  # per arm is idempotent and cheap.
+  python benchmark/collect_arm_metrics.py --dir "$OUTDIR" --arms "$arm" \
+    --out "$OUTDIR/table.json" > /dev/null 2>&1 || true
 done
 
 ./scripts/sglang/stop.sh > "$OUTDIR/stop_final.log" 2>&1 || true

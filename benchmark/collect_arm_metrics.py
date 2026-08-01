@@ -402,7 +402,12 @@ def main():
             if r["arm"] not in merged:
                 order.append(r["arm"])
             merged[r["arm"]] = r
-        out_rows = [merged[a] for a in order]
+        # Canonical order first, then anything unrecognised, so a partial re-run that
+        # appends an arm does not reorder the table relative to the figure's legend.
+        canon = ["recompute", "radix", "radix_memfrac", "hicache", "hicache_wb",
+                 "park_local", "park"]
+        out_rows = ([merged[a] for a in canon if a in merged]
+                    + [merged[a] for a in order if a not in canon])
         tmp = args.out + ".tmp"
         with open(tmp, "w") as fh:
             json.dump(out_rows, fh, indent=2)
