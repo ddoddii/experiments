@@ -13,14 +13,18 @@ WHAT EACH PANEL MEANS, AND ONE THAT DOES NOT MEAN WHAT ITS NAME SUGGESTS
   TTFT             median. Bigger models are slower in absolute terms, so read the RATIO
                    between arms within a model, not the height across models.
 
-  prefill work     recomputed prefill tokens per second -- the prefill the GPUs actually
-                   had to do. LOWER IS BETTER, and the panel is drawn with that noted.
-                   It is deliberately NOT prompt_tokens/s: this is a closed-loop
-                   benchmark, every arm is offered the same prompts and finishes in
-                   about the same wall time, so prompt_tokens/s is fixed by the workload
-                   and comes out identical across arms by construction (measured
-                   421 / 406 / 415 t/s on Llama-3.1-8B). A capability-style "prefill
-                   throughput" needs a saturating open-loop run -- see qps_sweep.py.
+  prefill          prompt tokens SERVED FROM CACHE per second -- prefill the server did
+                   not have to do. Higher is better, matching how a bar chart is read by
+                   default and how the reference figure plots it. The `recompute_rate`
+                   panel is the same information inverted (tokens that DID have to be
+                   recomputed); it was the default once, and under the name "prefill
+                   work" the best arm was read as the worst.
+                   Neither is prompt_tokens/s: this is a closed-loop benchmark, every arm
+                   is offered the same prompts and finishes in about the same wall time,
+                   so prompt_tokens/s is fixed by the workload and comes out identical
+                   across arms by construction (measured 421 / 406 / 415 t/s on
+                   Llama-3.1-8B). A capability-style peak throughput needs a saturating
+                   open-loop run -- see qps_sweep.py.
 
   host DRAM        peak AnonPages: system-wide, non-reclaimable, so it is what an
                    adjacent agent process actually cannot have.
@@ -63,7 +67,8 @@ ARMS = [
 PANELS = {
     "hit":     ("cache_hit_rate_pct",  "Cache hit rate (%)",   1.0, False, None),
     "ttft":    ("ttft_p50_s",          "Median TTFT (s)",      1.0, True,  None),
-    "prefill": ("prefill_work_tok_s",  "Prefill work (t/s)",   1.0, True,  None),
+    "prefill": ("prefill_served_tok_s", "Prefill throughput (t/s)", 1.0, False, None),
+    "recompute_rate": ("prefill_work_tok_s", "Recomputed prefill (t/s)", 1.0, True, None),
     "mem":     ("peak_anonpages_gb",   "Host DRAM (GB)",       1.0, True,  "hicache"),
     "ttft95":  ("ttft_p95_s",          "P95 TTFT (s)",         1.0, True,  None),
     "recomp":  ("recomputed_tokens",   "Recomputed tokens (M)", 1e-6, True, None),
