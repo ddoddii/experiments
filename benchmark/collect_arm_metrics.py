@@ -343,7 +343,9 @@ def main():
     ap.add_argument("--metrics")
     ap.add_argument("--dir", help="multi-arm mode: directory laid out by run_exp1_placement.sh")
     ap.add_argument("--arms", nargs="*", default=["radix", "hicache", "park"])
-    ap.add_argument("--out", help="write the collected rows as JSON")
+    ap.add_argument("--out", help="write the collected rows as JSON (merged by arm)")
+    ap.add_argument("--no-merge", action="store_true",
+                    help="replace the output file instead of merging arms into it")
     args = ap.parse_args()
 
     rows = []
@@ -387,9 +389,27 @@ def main():
     print(render(rows))
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-        with open(args.out, "w") as fh:
-            json.dump(rows, fh, indent=2)
-        print(f"\n[collect] -> {args.out}")
+        # MERGE by arm rather than replace. A partial re-run -- ARMS="hicache park" after
+        # recompute already finished -- would otherwise silently drop the completed arm
+        # from the table and from every figure built off it.
+        merged, order = {}, []
+        if not args.no_merge and os.path.exists(args.out):
+            for r in _json(args.out) or []:
+                if isinstance(r, dict) and r.get("arm"):
+                    merged[r["arm"]] = r
+                    order.append(r["arm"])
+        for r in rows:
+            if r["arm"] not in merged:
+                order.append(r["arm"])
+            merged[r["arm"]] = r
+        out_rows = [merged[a] for a in order]
+        tmp = args.out + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(out_rows, fh, indent=2)
+        os.replace(tmp, args.out)
+        kept = [a for a in order if a not in {r["arm"] for r in rows}]
+        print(f"\n[collect] -> {args.out}"
+              + (f"  (kept existing: {', '.join(kept)})" if kept else ""))
 
 
 if __name__ == "__main__":

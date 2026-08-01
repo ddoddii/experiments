@@ -97,6 +97,28 @@ def _store_reply(text: str) -> str:
         text = _THINK_RE.sub("", text)
     return ASSISTANT_PREFIX + (text or "")
 
+
+def _atomic_dump(obj, path):
+    """Write to a sibling temp file, then rename. json.dump straight onto the final path
+    truncates it first, so a disk-full or a crash mid-write destroys the previous
+    contents and leaves a 0-byte file -- which is exactly what ended one 30-minute arm
+    here. os.replace is atomic within a filesystem, so the result is either the complete
+    new file or the untouched old one."""
+    import os as _os
+    tmp = f"{path}.tmp.{_os.getpid()}"
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(obj, fh, indent=2, ensure_ascii=False)
+            fh.flush()
+            _os.fsync(fh.fileno())
+        _os.replace(tmp, path)
+    except Exception:
+        try:
+            _os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
 _ROLE = {"human": "user", "user": "user", "gpt": "assistant", "chatgpt": "assistant",
          "system": "system", "bard": "assistant", "assistant": "assistant"}
 
@@ -350,7 +372,7 @@ def main():
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
-    json.dump(output, open(out_path, "w"), indent=2, ensure_ascii=False)
+    _atomic_dump(output, out_path)
 
     print(f"\n{'='*60}")
     print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개  (C={CONCURRENCY})")
