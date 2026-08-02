@@ -464,6 +464,14 @@ def main():
           f"(min_turns={MIN_TURNS}, max_turns={MAX_TURNS}) url={ROUTER_URL}")
     if not items:
         raise SystemExit("조건에 맞는 멀티턴 대화가 없음 (MIN_TURNS/MAX_PROMPT_CHARS 조정).")
+    if len(items) < MAX_ITEMS:
+        # The corpus ran out before MAX_ITEMS, so the open-loop sweep's disjoint-slice
+        # plan silently becomes a wrapping one. Say so at second zero rather than let a
+        # 2.5-hour sweep discover it point by point.
+        print(f"[warn] asked for {MAX_ITEMS} conversations at offset {ITEM_OFFSET} but "
+              f"only {len(items)} match MIN_TURNS={MIN_TURNS} / "
+              f"MAX_PROMPT_CHARS={MAX_PROMPT_CHARS}. Lower MIN_TURNS or raise "
+              f"MAX_PROMPT_CHARS if the sweep needs more.", flush=True)
 
     if SESSION_RATE > 0:
         print(f"[open-loop] rate={SESSION_RATE}/s load={LOAD_DURATION}s "

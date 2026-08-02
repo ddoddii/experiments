@@ -71,7 +71,16 @@ export DRAIN_TIMEOUT=${DRAIN_TIMEOUT:-300}
 # One rate point must never replay a conversation another point already served: a repeat
 # is a free cache hit for the two cached arms and no help to recompute. Each point gets a
 # disjoint slice via ITEM_OFFSET, so the corpus must hold sum(rate)*duration sessions.
-export MAX_ITEMS=${MAX_ITEMS:-600}
+#
+# DERIVED FROM RATES, not a constant: a hardcoded default disagrees with the default
+# sweep the moment either changes, and the first version of this script shipped with
+# exactly that bug (600 against a sweep needing 705). The preflight below stays as a
+# guard for explicit overrides.
+_need=0
+for r in $RATES; do
+  _need=$(python3 -c "print(int($_need + $r * $LOAD_DURATION + 20))")
+done
+export MAX_ITEMS=${MAX_ITEMS:-$_need}
 
 TAG=${TAG:-"qps_${MODEL_KEY}"}
 OUTDIR=${OUTDIR:-results/qps/$TAG}
@@ -85,10 +94,6 @@ if [ ! -f "$DATA_PATH" ]; then
 fi
 
 # Preflight the corpus budget before spending hours discovering it mid-run.
-_need=0
-for r in $RATES; do
-  _need=$(python3 -c "print(int($_need + $r * $LOAD_DURATION + 20))")
-done
 if [ "$MAX_ITEMS" -lt "$_need" ]; then
   echo "ERROR: MAX_ITEMS=$MAX_ITEMS but the sweep needs >= $_need disjoint conversations"
   echo "       (sum of rate x LOAD_DURATION over $(echo $RATES | wc -w) points, plus slack)."
