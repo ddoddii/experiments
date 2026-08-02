@@ -132,6 +132,16 @@ start_arm() {
     hicache)
       IDLE_KV_PARKING=0 HICACHE_WRITE_POLICY=write_through_selective \
         HICACHE_STORAGE_BACKEND=file ./scripts/sglang/start_2P_2D.sh ;;
+    hicache_memfrac)
+      # hicache at the PARK arm's --mem-fraction-static. Under load the two are not
+      # otherwise comparable: park runs at 0.70 AND allocates its park buffer outside
+      # that, so its SERVING KV pool is the smaller of the two. Pool size is what caps
+      # resident sequences before queueing starts, so at high offered rates a difference
+      # in TTFT confounds the placement mechanism with the memory budget. This arm holds
+      # the budget equal and lets the mechanism answer on its own.
+      IDLE_KV_PARKING=0 HICACHE_WRITE_POLICY=write_through_selective \
+        HICACHE_STORAGE_BACKEND=file \
+        FORCE_MEM_FRACTION=${PARK_MEM_FRACTION} ./scripts/sglang/start_2P_2D.sh ;;
     park)
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 PARK_PEER=${PARK_PEER:-1} \
         SGLANG_KV_PARK_BW_AWARE=1 \

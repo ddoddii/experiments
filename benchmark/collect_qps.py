@@ -27,6 +27,35 @@ import os
 import re
 
 
+SLOS = [0.5, 1.0, 2.0]
+
+
+def _slo_capacity(rows, slo, key="ttft_p50_s"):
+    """Delivered tok/s at the point where TTFT would cross `slo`.
+
+    Linear interpolation between the last point under budget and the first point over
+    it. Returns None if even the lightest load already exceeds the budget (the arm never
+    meets it) and the top point's throughput if the budget is never crossed (the sweep
+    did not push it far enough -- a lower bound, not a measured capacity).
+    """
+    pts = [r for r in rows if r.get(key) is not None and r.get("throughput_tok_s") is not None]
+    pts.sort(key=lambda r: r["throughput_tok_s"])
+    under = [r for r in pts if r[key] <= slo]
+    if not under:
+        return None
+    last = under[-1]
+    over = [r for r in pts if r["throughput_tok_s"] > last["throughput_tok_s"]
+            and r[key] > slo]
+    if not over:
+        return last["throughput_tok_s"]
+    nxt = over[0]
+    span = nxt[key] - last[key]
+    if span <= 0:
+        return last["throughput_tok_s"]
+    frac = (slo - last[key]) / span
+    return last["throughput_tok_s"] + frac * (nxt["throughput_tok_s"] - last["throughput_tok_s"])
+
+
 def _load(path):
     try:
         with open(path) as fh:
@@ -77,7 +106,7 @@ def main():
         print(f"[error] no open-loop points in {args.dir}")
         return
 
-    canon = ["recompute", "radix", "hicache", "park"]
+    canon = ["recompute", "radix", "hicache", "hicache_memfrac", "park"]
     order = [a for a in canon if a in curves] + [a for a in curves if a not in canon]
 
     for arm in order:
@@ -93,6 +122,36 @@ def main():
             print(f"| {r['rate']} | {r['turn_rate_s']} | {r['throughput_tok_s']} | "
                   f"{r['ttft_p50_s']} | {r['ttft_p95_s']} | {r['peak_inflight']} | "
                   f"{r['unfinished']}/{r['launched']} | {flags} |")
+
+    # SLO capacity: the most load an arm carries while STAYING under a latency budget.
+    #
+    # This, not peak throughput, is the comparison that survives a decode-bound server.
+    # Peak throughput asks "how much can it push if latency is allowed to go anywhere",
+    # and when the bottleneck is decode -- which KV placement does not touch -- every arm
+    # answers the same and the metric separates nothing. Holding latency fixed asks the
+    # question a deployment actually asks, and prefill work does move that answer.
+    print("\n### SLO capacity (delivered tok/s while median TTFT stays under budget)\n")
+    print("| arm | " + " | ".join(f"<= {s}s" for s in SLOS) + " |")
+    print("|---|" + "---|" * len(SLOS))
+    slo_cap = {}
+    for arm in order:
+        cells = []
+        for slo in SLOS:
+            cap = _slo_capacity(curves[arm], slo)
+            slo_cap.setdefault(arm, {})[slo] = cap
+            cells.append("—" if cap is None else f"{cap:.0f}")
+        print(f"| {arm} | " + " | ".join(cells) + " |")
+    for slo in SLOS:
+        p = slo_cap.get("park", {}).get(slo)
+        if not p:
+            continue
+        parts = []
+        for base in ("recompute", "hicache"):
+            b = slo_cap.get(base, {}).get(slo)
+            if b:
+                parts.append(f"{p / b:.2f}x {base}")
+        if parts:
+            print(f"\n- **at {slo}s median TTFT, Ours carries " + ", ".join(parts) + "**")
 
     # Capacity = the highest delivered throughput the arm reached. Reported alongside the
     # rate it needed, because "more tok/s" and "more tok/s at a lower offered rate" are
