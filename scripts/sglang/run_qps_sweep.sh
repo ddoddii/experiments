@@ -44,7 +44,21 @@ MODEL_KEY=${MODEL_KEY:-llama8b}
 # from the closed-loop numbers it is meant to sit beside.
 eval "$(sed -n '/^model_path()/,/^}/p;/^model_pool()/,/^}/p;/^model_park_pool()/,/^}/p;/^model_memfrac()/,/^}/p;/^model_parser()/,/^}/p;/^model_max_ctx()/,/^}/p;/^model_kv_bytes()/,/^}/p;/^workload_for()/,/^}/p' scripts/sglang/run_models_sweep.sh)"
 
+# The eval above lifts the FUNCTIONS out of run_models_sweep.sh but not the variables
+# they close over, so these have to be restated here or model_path() expands "$HF/..."
+# to "/Llama-3.1-8B-Instruct" and the server dies 40 frames deep in huggingface_hub
+# trying to resolve that as a repo id.
+HF=${HF_HOME_MODELS:-/home/uhmturks/hf_models}
+UNIFORM_WORKLOAD=${UNIFORM_WORKLOAD:-0}
+
 export MODEL_PATH=$(model_path "$MODEL_KEY")
+if [ -z "$MODEL_PATH" ] || [ ! -f "$MODEL_PATH/config.json" ]; then
+  echo "ERROR: no model at MODEL_PATH='$MODEL_PATH' (MODEL_KEY=$MODEL_KEY)"
+  echo "       Expected a directory containing config.json."
+  echo "       Point HF_HOME_MODELS at the model root, e.g."
+  echo "         HF_HOME_MODELS=/home/uhmturks/hf_models ./scripts/sglang/run_qps_sweep.sh"
+  exit 1
+fi
 export TOOL_CALL_PARSER=$(model_parser "$MODEL_KEY")
 export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-$(model_pool "$MODEL_KEY")}
 export PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-$(model_park_pool "$MODEL_KEY")}
