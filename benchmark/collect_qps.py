@@ -70,11 +70,20 @@ def main():
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    pat = re.compile(r"bench_(?P<arm>.+)_r(?P<rate>[\d.]+)\.json$")
+    pat = re.compile(r"bench_(?P<arm>.+)_r(?P<rate>[\d.]+)(?:\.summary)?\.json$")
     curves = {}
-    for path in sorted(glob.glob(os.path.join(args.dir, "bench_*_r*.json"))):
+    seen = set()
+    # Full file first, summary-only as the fallback: when a disk-full killed the big
+    # write the summary is all that survived, and it holds every field read below.
+    _all = sorted(glob.glob(os.path.join(args.dir, "bench_*_r*.json")))
+    paths = ([p for p in _all if not p.endswith(".summary.json")]
+             + [p for p in _all if p.endswith(".summary.json")])
+    for path in paths:
         m = pat.search(os.path.basename(path))
         if not m:
+            continue
+        ident = (m.group("arm"), m.group("rate"))
+        if ident in seen:
             continue
         b = _load(path)
         s = (b or {}).get("summary") or {}
@@ -97,6 +106,7 @@ def main():
             "past_saturation": unfinished > 0.10 * launched,
             "wrapped": (s.get("sessions_repeated") or 0) > 0,
         }
+        seen.add(ident)
         curves.setdefault(m.group("arm"), []).append(row)
 
     for arm in curves:
