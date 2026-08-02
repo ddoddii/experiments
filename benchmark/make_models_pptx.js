@@ -64,8 +64,13 @@ const PANELS = [
     lower: false, max: 100, unit: 25 },
   { key: "ttft_p50_s", title: "(b)  Time to first token", axis: "Normalized TTFT",
     lower: true, normTo: "recompute", max: 1.25, unit: 0.25 },
-  { key: "prefill_served_tok_s", title: "(c)  Throughput", axis: "Throughput (t/s)",
-    lower: false },
+  // `prefill_served_tok_s` (tokens served FROM CACHE per second) is 0 for Recompute by
+  // construction -- it has no cache -- so it cannot carry a Recompute-normalised axis.
+  // The complementary quantity can: prefill the server still had to do, as a fraction of
+  // what Recompute did. Lower-is-better then matches panel (b) beside it, so the dashed
+  // 1.0 line means the same thing in both.
+  { key: "prefill_work_tok_s", title: "(c)  Prefill work", axis: "Normalized Prefill Work",
+    lower: true, normTo: "recompute", max: 1.25, unit: 0.25 },
   { key: "peak_anonpages_gb", title: "(d)  Host memory", axis: "Host DRAM (GB)",
     lower: true, ratioVs: "hicache" },
 ];
@@ -207,7 +212,7 @@ ARMS.forEach((a) => {
 });
 
 slide.addText(
-  "Hit rate, throughput and host DRAM improve on all three models. Normalized TTFT is " +
+  "Hit rate, prefill work and host DRAM improve on all three models. Normalized TTFT is " +
   "the exception on Llama-2-13B (0.95×): its 4096-position limit caps conversations " +
   "at four turns, so the re-prefill a hit avoids is small enough that the fetch does not " +
   "pay for itself — the mechanism still works there (1.66× hit rate), it just " +
@@ -219,10 +224,12 @@ slide.addText(
 slide.addNotes(
   "All four are native PowerPoint charts: right-click > Edit Data to change values, or " +
   "the Chart Design / Format tabs for colours and axes.\n" +
-  "TTFT is normalised to Recompute within each model, because absolute TTFT is set " +
-  "mostly by model size and would invite comparison across models.\n" +
-  "Recompute has no cache, so its hit rate and cache-served throughput are 0 by " +
-  "construction, not missing data.\n" +
+  "TTFT and prefill work are normalised to Recompute within each model, because their " +
+  "absolute values are set mostly by model size and would invite comparison across " +
+  "models. In both, lower is better and the dashed line is Recompute.\n" +
+  "Panel (c) plots prefill work rather than cache-served throughput because Recompute " +
+  "serves 0 tokens from cache by construction (it has no cache), which cannot be a " +
+  "normalisation denominator. Its hit rate is 0 for the same reason -- not missing data.\n" +
   "Source: results/models/{llama8b,llama13b,qwen14b}/table.json"
 );
 

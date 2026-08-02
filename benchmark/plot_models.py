@@ -78,10 +78,23 @@ PANELS = {
                     lower_better=True, norm_to="recompute"),
     "ttft_abs": dict(key="ttft_p50_s",          label="Median TTFT (s)",
                      lower_better=True),
-    "prefill": dict(key="prefill_served_tok_s", label="Throughput (t/s)",
-                    lower_better=False),
-    "recompute_rate": dict(key="prefill_work_tok_s", label="Recomputed prefill (t/s)",
-                           lower_better=True),
+    # Two ways to normalise the throughput panel, and the choice is forced by a zero.
+    #
+    # `prefill_served_tok_s` is prompt tokens served FROM CACHE per second. Recompute has
+    # no cache, so its value is 0 by construction -- not small, structurally zero -- and
+    # normalising to it divides by zero. So a Recompute-based baseline is only available
+    # on the complementary quantity: `prefill_work_tok_s`, the prefill the server still
+    # had to do. Normalised to Recompute that reads "the fraction of the original prefill
+    # work left", every arm gets a visible bar, and lower-is-better matches the TTFT
+    # panel beside it so the dashed 1.0 line means the same thing in both.
+    "prefill": dict(key="prefill_work_tok_s", label="Normalized Prefill Work",
+                    lower_better=True, norm_to="recompute"),
+    # The higher-is-better alternative, kept because it is the more familiar framing.
+    # Pinned to SGLang for the reason above; Recompute's bar sits at 0.
+    "prefill_served": dict(key="prefill_served_tok_s", label="Normalized Throughput",
+                           lower_better=False, norm_to="hicache"),
+    "prefill_abs": dict(key="prefill_served_tok_s", label="Throughput (t/s)",
+                        lower_better=False),
     "mem":     dict(key="peak_anonpages_gb",    label="Host DRAM (GB)",
                     lower_better=True, ratio_vs="hicache"),
     "ttft95":  dict(key="ttft_p95_s",           label="P95 TTFT (s)", lower_better=True),
