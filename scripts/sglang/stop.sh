@@ -8,11 +8,13 @@
 # next start_*.sh binds the same ports and allocates the same GPUs, and a still-dying
 # scheduler holds both.
 #
-# Does NOT delete /tmp/hicache or the park telemetry -- use cleanup_all.sh for that.
+# Also clears the hicache file backend and the park telemetry, both of which are stale
+# the moment the servers are gone and both of which have corrupted a later run.
 #
 # 사용:
 #   ./scripts/sglang/stop.sh
-#   KEEP_PARK_DIR=1 ./scripts/sglang/stop.sh   # leave /dev/shm telemetry for inspection
+#   KEEP_PARK_DIR=1 ./scripts/sglang/stop.sh      # leave /dev/shm telemetry to inspect
+#   KEEP_HICACHE_DIR=1 ./scripts/sglang/stop.sh   # leave /tmp/hicache to inspect
 set +e
 
 PARK_DIR=${SGLANG_KV_PARK_DIR:-/dev/shm/sglang_kv_parking}
@@ -72,6 +74,19 @@ fi
 if [ -d "$PARK_DIR" ] && [ -z "$KEEP_PARK_DIR" ]; then
   rm -f "$PARK_DIR"/parked_gpu*.json "$PARK_DIR"/gpu*_usage 2>/dev/null
   echo "  cleared stale park telemetry in $PARK_DIR"
+fi
+
+# The hicache FILE backend writes KV pages to disk and never removes them: HiCacheFile
+# has a clear() but nothing calls it on shutdown, so /tmp/hicache grows across every
+# point of every hicache arm until the disk is full. That has now killed two completed
+# measurements -- a 30-minute closed-loop arm and a 10-minute open-loop point -- and both
+# times only the hicache arm, because it is the only arm that writes KV to disk.
+# KEEP_HICACHE_DIR=1 to inspect it instead.
+HICACHE_DIR=${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR:-/tmp/hicache}
+if [ -d "$HICACHE_DIR" ] && [ -z "$KEEP_HICACHE_DIR" ]; then
+  _sz=$(du -sh "$HICACHE_DIR" 2>/dev/null | cut -f1)
+  rm -rf "${HICACHE_DIR:?}"/* 2>/dev/null
+  echo "  cleared hicache file backend in $HICACHE_DIR (was ${_sz:-unknown})"
 fi
 
 if command -v nvidia-smi >/dev/null 2>&1; then

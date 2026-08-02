@@ -555,7 +555,22 @@ def _finish(results, wall, extra=None):
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
-    _atomic_dump(output, out_path)
+    # SUMMARY FIRST, then the full file. _atomic_dump already guarantees the output is
+    # never a truncated half-file, but that is not enough on a full disk: the write still
+    # fails, and with it a measurement that took ten minutes of GPU time to produce. The
+    # summary is ~1 KB and is everything collect_qps.py reads, so writing it separately
+    # means ENOSPC costs the per-turn detail rather than the point. This has now happened
+    # twice, both times on the hicache arm, whose file storage backend fills the disk.
+    try:
+        _atomic_dump({"summary": summary}, out_path.replace(".json", ".summary.json"))
+    except OSError as e:
+        print(f"[error] could not even write the summary: {e}")
+    try:
+        _atomic_dump(output, out_path)
+    except OSError as e:
+        print(f"[error] full results not written ({e}); the summary survived at "
+              f"{out_path.replace('.json', '.summary.json')} and carries every number "
+              f"the collector needs.")
 
     print(f"\n{'='*60}")
     print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개  (C={CONCURRENCY})")
