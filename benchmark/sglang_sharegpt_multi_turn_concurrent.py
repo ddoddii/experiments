@@ -34,6 +34,7 @@ park의 SGLANG_KV_PARK_GEN(생성 KV 파킹) 기여를 여기서 크게 볼 수 
 """
 import json
 import os
+import random
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -49,6 +50,7 @@ _max_items = int(os.environ.get("MAX_ITEMS", "200"))
 # 0/미설정 -> 200 (ShareGPT는 대화가 수만 개라 "전체"는 무의미; BFCL 러너의 0="전체" 관례와
 # 충돌하므로 여기서 sane default로 매핑. run_park_gen_ab.sh가 MAX_ITEMS=0을 export함.)
 MAX_ITEMS = _max_items if _max_items > 0 else 200
+ITEM_OFFSET = int(os.environ.get("ITEM_OFFSET", "0"))
 MIN_TURNS = int(os.environ.get("MIN_TURNS", "3"))
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "6"))
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
@@ -88,6 +90,30 @@ ASSISTANT_PREFIX = os.environ.get("ASSISTANT_PREFIX", "").replace("\\n", "\n")
 # the MAX_TOKENS budget, so a thinking model yields less visible content per turn and its
 # conversation grows more slowly than a non-thinking model at the same setting.
 STRIP_THINK = os.environ.get("STRIP_THINK", "0") != "0"
+
+# ---------------------------------------------------------------- open-loop mode
+# SESSION_RATE > 0 switches from CLOSED loop (a fixed pool of CONCURRENCY workers, each
+# starting a new session only when its previous one finishes) to OPEN loop (sessions
+# arrive as a Poisson process at SESSION_RATE/s regardless of whether the server is
+# keeping up).
+#
+# WHY THIS EXISTS
+#   In closed loop the CLIENT is the bottleneck, so total throughput is fixed by the
+#   workload: the same conversations at the same concurrency finish in the same wall
+#   time no matter how fast the server is. Measured on the three arms it is flat to
+#   within 1% (245.9 / 249.1 / 247.8 tok/s), which says nothing about the mechanism.
+#   Under open-loop arrivals the SERVER is the bottleneck, so an arm that spends less
+#   GPU time on prefill sustains a higher rate before its latency knee -- which is the
+#   throughput claim the paper actually wants to make.
+SESSION_RATE = float(os.environ.get("SESSION_RATE", "0"))     # sessions/s; >0 = open loop
+LOAD_DURATION = float(os.environ.get("LOAD_DURATION", "240"))  # seconds of arrivals
+# Sessions launched during warmup still run and still load the server; their turns are
+# just not counted, so the window measures steady state rather than an empty pipeline.
+WARMUP_S = float(os.environ.get("WARMUP_S", "45"))
+DRAIN_TIMEOUT = float(os.environ.get("DRAIN_TIMEOUT", "420"))
+OPEN_WORKERS = int(os.environ.get("OPEN_WORKERS", "3072"))
+
+T0 = time.perf_counter()
 _THINK_RE = __import__("re").compile(r"<think>.*?</think>\s*", __import__("re").DOTALL)
 
 
@@ -171,9 +197,13 @@ def load_conversations(path):
             continue
         items.append({"id": conv.get("id", f"conv_{len(items)}"),
                       "user_turns": user_turns[:MAX_TURNS]})
-        if len(items) >= MAX_ITEMS:
+        if len(items) >= MAX_ITEMS + ITEM_OFFSET:
             break
-    return items
+    # ITEM_OFFSET hands each point of a sweep a DISJOINT slice of the corpus. Without it
+    # every rate point on a given arm replays the same conversations against a server
+    # left warm by the previous point, so each point after the first starts with a cache
+    # already holding its own prompts -- free hits that belong to no arm's mechanism.
+    return items[ITEM_OFFSET:ITEM_OFFSET + MAX_ITEMS]
 
 
 def run_turn(conversation):
@@ -246,6 +276,12 @@ def run_turn(conversation):
         "prompt_tokens_exact": prompt_tokens is not None,
         "e2e_latency_s": round(e2e, 4) if e2e else None,
         "throughput_tok_per_s": round(tput, 2) if tput else None,
+        # Absolute clock, relative to the run's T0. Closed-loop metrics never need these,
+        # but the open-loop sweep does: throughput there is tokens COMPLETED INSIDE a
+        # measurement window, and a turn cannot be assigned to a window without knowing
+        # when it finished.
+        "t_start_s": round(t_request - T0, 3),
+        "t_done_s": round((t_last or t_request) - T0, 3),
     }, content)
 
 
@@ -292,6 +328,129 @@ def process_item(item):
     }
 
 
+def run_open_loop(items):
+    """Poisson session arrivals at SESSION_RATE for LOAD_DURATION seconds, then drain.
+
+    Returns (results, stats). Sessions are drawn cyclically from `items`, because the
+    arrival process is driven by the clock rather than by the size of the corpus: at a
+    high rate a 200-conversation list is exhausted long before the window closes.
+
+    CYCLING BIASES THE RESULT IF IT ACTUALLY WRAPS. A repeated conversation replays a
+    prompt the cache has already seen, which is a free hit for every arm that HAS a
+    cache and no help at all to Recompute -- so a wrapped run flatters exactly the arms
+    under test. `sessions_repeated` records it and the run warns loudly; keep MAX_ITEMS
+    above the highest rate x duration in the sweep so it stays 0.
+
+    Unbounded-ish worker pool ON PURPOSE. Capping it would re-introduce exactly the
+    closed-loop coupling this mode exists to remove -- arrivals would block on
+    completions and the offered rate would silently become the served rate.
+    """
+    global T0
+    results, lock = [], threading.Lock()
+    inflight = [0]
+    peak_inflight = [0]
+    rng = random.Random(0xC0FFEE ^ int(SESSION_RATE * 1000))
+
+    def task(item):
+        with lock:
+            inflight[0] += 1
+            peak_inflight[0] = max(peak_inflight[0], inflight[0])
+        try:
+            r = process_item(item)
+        except Exception as e:  # noqa: BLE001
+            r = {"id": item.get("id"), "turns": [{"turn": 0, "error": str(e)}],
+                 "total_output_tokens": 0, "num_turns": 0}
+        with lock:
+            inflight[0] -= 1
+            results.append(r)
+
+    pool = ThreadPoolExecutor(max_workers=OPEN_WORKERS)
+    futs = []
+    T0 = time.perf_counter()
+    launched = 0
+    next_report = WARMUP_S
+    with pool:
+        while True:
+            elapsed = time.perf_counter() - T0
+            if elapsed >= LOAD_DURATION:
+                break
+            it = dict(items[launched % len(items)])
+            it["id"] = f"{it.get('id')}#{launched}"
+            futs.append(pool.submit(task, it))
+            launched += 1
+            time.sleep(rng.expovariate(SESSION_RATE))
+            if elapsed >= next_report:
+                with lock:
+                    n_done, n_live = len(results), inflight[0]
+                print(f"  [t={elapsed:6.0f}s] launched={launched:4d} done={n_done:4d} "
+                      f"inflight={n_live:4d}", flush=True)
+                next_report += 60
+        t_load_end = time.perf_counter() - T0
+        print(f"  [load window closed at {t_load_end:.0f}s] launched={launched}, "
+              f"draining up to {DRAIN_TIMEOUT:.0f}s ...", flush=True)
+        deadline = time.perf_counter() + DRAIN_TIMEOUT
+        n_unfinished = 0
+        for f in futs:
+            try:
+                f.result(timeout=max(0.0, deadline - time.perf_counter()))
+            except Exception:  # noqa: BLE001
+                n_unfinished += 1
+
+    # Throughput over the STEADY-STATE window only: tokens from turns that both started
+    # after warmup and finished before the load window closed. Counting the drain would
+    # credit the arm with work that arrived under a rate it never actually sustained.
+    lo, hi = WARMUP_S, t_load_end
+    win_tokens = win_turns = 0
+    win_ttfts = []
+    for r in results:
+        for t in (r.get("turns") or []):
+            ts, td = t.get("t_start_s"), t.get("t_done_s")
+            if ts is None or td is None or t.get("error"):
+                continue
+            if ts >= lo and td <= hi:
+                win_tokens += t.get("output_tokens") or 0
+                win_turns += 1
+                if t.get("ttft_s") is not None:
+                    win_ttfts.append(t["ttft_s"])
+    win = max(1e-9, hi - lo)
+    win_ttfts.sort()
+
+    def _p(p):
+        if not win_ttfts:
+            return None
+        k = max(0, min(len(win_ttfts) - 1, int(round((p / 100.0) * (len(win_ttfts) - 1)))))
+        return round(win_ttfts[k], 4)
+
+    stats = {
+        "mode": "open_loop",
+        "session_rate": SESSION_RATE,
+        "load_duration_s": round(t_load_end, 2),
+        "warmup_s": WARMUP_S,
+        "window_s": round(win, 2),
+        "sessions_launched": launched,
+        "sessions_repeated": max(0, launched - len(items)),
+        "sessions_completed": len(results),
+        "sessions_unfinished_at_drain": n_unfinished,
+        "peak_inflight_sessions": peak_inflight[0],
+        # The headline: tokens actually delivered per second at this offered rate.
+        "window_throughput_tok_s": round(win_tokens / win, 2),
+        "window_turns": win_turns,
+        # Turn rate is the load the server really saw; it diverges from
+        # session_rate * turns_per_session once the server stops keeping up.
+        "window_turn_rate_s": round(win_turns / win, 3),
+        "window_ttft_p50_s": _p(50),
+        "window_ttft_p95_s": _p(95),
+        "window_ttft_p99_s": _p(99),
+    }
+    if stats["sessions_repeated"] > 0:
+        print(f"\n  *** WARNING: the corpus wrapped -- {stats['sessions_repeated']} of "
+              f"{launched} sessions replayed a conversation already served. Repeats are "
+              f"free cache hits for SGLang and Ours and no help to Recompute, so this "
+              f"point OVERSTATES the cached arms. Re-run with "
+              f"MAX_ITEMS >= {launched + 50}.\n", flush=True)
+    return results, stats
+
+
 def main():
     if not os.path.exists(DATA_PATH):
         raise SystemExit(
@@ -305,6 +464,15 @@ def main():
           f"(min_turns={MIN_TURNS}, max_turns={MAX_TURNS}) url={ROUTER_URL}")
     if not items:
         raise SystemExit("조건에 맞는 멀티턴 대화가 없음 (MIN_TURNS/MAX_PROMPT_CHARS 조정).")
+
+    if SESSION_RATE > 0:
+        print(f"[open-loop] rate={SESSION_RATE}/s load={LOAD_DURATION}s "
+              f"warmup={WARMUP_S}s drain<={DRAIN_TIMEOUT}s", flush=True)
+        t0 = time.perf_counter()
+        results, open_stats = run_open_loop(items)
+        wall = time.perf_counter() - t0
+        _finish(results, wall, extra=open_stats)
+        return
 
     results = []
     lock = threading.Lock()
@@ -335,7 +503,12 @@ def main():
                 bar.set_postfix_str(f"turns={len(_ttfts)} med_ttft={med:.2f}s err={_errs}",
                                     refresh=False)
     wall = time.perf_counter() - t0
+    _finish(results, wall)
 
+
+def _finish(results, wall, extra=None):
+    """Summarise, write, print. Shared by the closed- and open-loop paths so both write
+    the same schema and collect_arm_metrics.py needs no mode-specific branch."""
     total_out = sum(r["total_output_tokens"] for r in results)
     valid = [r for r in results if r.get("avg_ttft_s")]
     # Percentiles, not just the mean: tail TTFT is what the placement comparison turns on,
@@ -369,6 +542,8 @@ def main():
         "avg_tpot_s": round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
         "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / len(valid), 2) if valid else None,
     }
+    if extra:
+        summary.update(extra)
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
@@ -378,6 +553,13 @@ def main():
     print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개  (C={CONCURRENCY})")
     print(f"전체 소요시간: {wall:.2f}s  overall throughput: {summary['overall_throughput_tok_per_s']} tok/s")
     print(f"평균 TTFT: {summary['avg_ttft_s']}s  평균 TPOT: {summary['avg_tpot_s']}s")
+    if extra:
+        print(f"[open-loop] offered {extra['session_rate']}/s -> "
+              f"{extra['window_throughput_tok_s']} tok/s in window, "
+              f"turn rate {extra['window_turn_rate_s']}/s, "
+              f"TTFT p50 {extra['window_ttft_p50_s']}s p95 {extra['window_ttft_p95_s']}s, "
+              f"peak inflight {extra['peak_inflight_sessions']}, "
+              f"unfinished {extra['sessions_unfinished_at_drain']}")
     print(f"결과 저장: {out_path}")
 
 
