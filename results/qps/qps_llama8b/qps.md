@@ -31,6 +31,20 @@
 | 0.5 | 2.895 | 1135.08 | 1.0653 | 20.6407 | 90 | 0/162 |  |
 | 0.75 | 2.728 | 1135.47 | 2.7348 | 40.6641 | 136 | 80/200 | SATURATED |
 
+### SLO capacity (delivered tok/s while median TTFT stays under budget)
+
+| arm | <= 0.5s | <= 1.0s | <= 2.0s |
+|---|---|---|---|
+| recompute | 883 | 928 | 987 |
+| hicache | 1000 | 1153 | 1153 |
+| park | 947 | 1113 | 1135 |
+
+- **at 0.5s median TTFT, Ours carries 1.07x recompute, 0.95x hicache**
+
+- **at 1.0s median TTFT, Ours carries 1.20x recompute, 0.97x hicache**
+
+- **at 2.0s median TTFT, Ours carries 1.15x recompute, 0.98x hicache**
+
 ### capacity (peak delivered throughput)
 
 | arm | peak tok/s | at rate | TTFT p50 there |

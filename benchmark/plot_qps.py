@@ -25,6 +25,7 @@ from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
 ARMS = [
     ("recompute", "Recompute", "#8A9199", "recompute"),
     ("hicache",   "SGLang",    PALETTE["hicache"], "hicache"),
+    ("hicache_memfrac", "SGLang (equal mem)", PALETTE["both"], "both"),
     ("park",      "Ours",      PALETTE["park"],    "park"),
 ]
 
