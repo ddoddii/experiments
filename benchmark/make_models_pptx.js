@@ -64,13 +64,14 @@ const PANELS = [
     lower: false, max: 100, unit: 25 },
   { key: "ttft_p50_s", title: "(b)  Time to first token", axis: "Normalized TTFT",
     lower: true, normTo: "recompute", max: 1.25, unit: 0.25 },
-  // `prefill_served_tok_s` (tokens served FROM CACHE per second) is 0 for Recompute by
-  // construction -- it has no cache -- so it cannot carry a Recompute-normalised axis.
-  // The complementary quantity can: prefill the server still had to do, as a fraction of
-  // what Recompute did. Lower-is-better then matches panel (b) beside it, so the dashed
-  // 1.0 line means the same thing in both.
-  { key: "prefill_work_tok_s", title: "(c)  Prefill work", axis: "Normalized Prefill Work",
-    lower: true, normTo: "recompute", max: 1.25, unit: 0.25 },
+  // Overall output throughput -- the conventional t/s. This comes out FLAT across arms
+  // (1.00 / 1.01 / 1.01 on Llama-3.1-8B) because the benchmark is closed-loop: the same
+  // conversations at the same fixed concurrency, all turns completing, so wall time is
+  // the same and throughput is (fixed work)/(same wall) by construction. A null result
+  // for a reason unrelated to the mechanism, not a bug. Separating the arms on
+  // throughput needs an open-loop saturating run -- see qps_sweep.py.
+  { key: "goodput_tok_s", title: "(c)  Throughput", axis: "Normalized Throughput",
+    lower: false, normTo: "recompute", max: 1.25, unit: 0.25 },
   { key: "peak_anonpages_gb", title: "(d)  Host memory", axis: "Host DRAM (GB)",
     lower: true, ratioVs: "hicache" },
 ];
@@ -212,11 +213,12 @@ ARMS.forEach((a) => {
 });
 
 slide.addText(
-  "Hit rate, prefill work and host DRAM improve on all three models. Normalized TTFT is " +
-  "the exception on Llama-2-13B (0.95×): its 4096-position limit caps conversations " +
-  "at four turns, so the re-prefill a hit avoids is small enough that the fetch does not " +
-  "pay for itself — the mechanism still works there (1.66× hit rate), it just " +
-  "has less to win.",
+  "Hit rate and host DRAM improve on all three models. Throughput is flat by " +
+  "construction — the benchmark is closed-loop, so every arm does the same work in the " +
+  "same wall time. Normalized TTFT is the exception on Llama-2-13B (0.95×): its " +
+  "4096-position limit caps conversations at four turns, so the re-prefill a hit avoids " +
+  "is small enough that the fetch does not pay for itself — the mechanism still works " +
+  "there (1.66× hit rate), it just has less to win.",
   { x: 0.45, y: 6.25, w: 12.4, h: 0.8,
     fontFace: FONT, fontSize: 11, color: MUTED, margin: 0 }
 );
@@ -224,12 +226,14 @@ slide.addText(
 slide.addNotes(
   "All four are native PowerPoint charts: right-click > Edit Data to change values, or " +
   "the Chart Design / Format tabs for colours and axes.\n" +
-  "TTFT and prefill work are normalised to Recompute within each model, because their " +
+  "TTFT and throughput are normalised to Recompute within each model, because their " +
   "absolute values are set mostly by model size and would invite comparison across " +
-  "models. In both, lower is better and the dashed line is Recompute.\n" +
-  "Panel (c) plots prefill work rather than cache-served throughput because Recompute " +
-  "serves 0 tokens from cache by construction (it has no cache), which cannot be a " +
-  "normalisation denominator. Its hit rate is 0 for the same reason -- not missing data.\n" +
+  "models. The dashed line is Recompute.\n" +
+  "Panel (c) is FLAT ON PURPOSE: the benchmark is closed-loop, so all three arms are " +
+  "handed the same conversations at the same concurrency and finish in the same wall " +
+  "time. Throughput = fixed work / same wall, identical by construction. Use qps_sweep " +
+  "(open-loop, server-saturating) if the throughput claim needs to separate the arms.\n" +
+  "Recompute's hit rate is 0 by construction -- it has no cache -- not missing data.\n" +
   "Source: results/models/{llama8b,llama13b,qwen14b}/table.json"
 );
 

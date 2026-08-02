@@ -78,7 +78,21 @@ PANELS = {
                     lower_better=True, norm_to="recompute"),
     "ttft_abs": dict(key="ttft_p50_s",          label="Median TTFT (s)",
                      lower_better=True),
-    # Two ways to normalise the throughput panel, and the choice is forced by a zero.
+    # Overall output throughput -- the conventional t/s. READ THE CAVEAT BEFORE USING IT:
+    # this is a CLOSED-LOOP benchmark. Every arm is handed the same conversations at the
+    # same fixed concurrency, all turns complete, and wall time lands within ~1% across
+    # arms, so throughput is (fixed work)/(same wall) and comes out flat by construction
+    # -- measured 245.9 / 249.1 / 247.8 t/s on Llama-3.1-8B, i.e. 1.00 / 1.01 / 1.01
+    # normalised. The panel is a genuine null result, not a bug, and it is null for a
+    # reason that has nothing to do with the mechanism. A throughput number that can
+    # actually separate the arms needs an OPEN-LOOP saturating run where the server is
+    # the bottleneck -- see qps_sweep.py.
+    "tput":    dict(key="goodput_tok_s", label="Normalized Throughput",
+                    lower_better=False, norm_to="recompute"),
+    "tput_abs": dict(key="goodput_tok_s", label="Throughput (t/s)", lower_better=False),
+
+    # Two ways to normalise the PREFILL throughput panel, and the choice is forced by a
+    # zero.
     #
     # `prefill_served_tok_s` is prompt tokens served FROM CACHE per second. Recompute has
     # no cache, so its value is 0 by construction -- not small, structurally zero -- and
