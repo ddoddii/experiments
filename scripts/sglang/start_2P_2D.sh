@@ -67,7 +67,8 @@ D_MTT=""; [ -n "$DECODE_MAX_TOTAL_TOKENS" ] && D_MTT="--max-total-tokens $DECODE
 # procs SEE all 4 GPUs (CUDA IPC) -> full visibility + --base-gpu-id; park pool on
 # each P's own GPU (P0->gpu0, P1->gpu1); reduced --mem-fraction-static to leave HBM
 # for the park buffer. All nodes of one run share SGLANG_KV_PARK_EPOCH.
-PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park buffer (~4GB @ 30k)
+PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park BUDGET, split over candidates
+PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-}  # if set, size EACH pool instead
 PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}         # leave room for the park buffer
 
 # --- PD_LAYOUT: which GPU each role sits on ------------------------------------------
@@ -193,6 +194,17 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
     local _list="$1"
     local _n; _n=$(awk -F, '{print NF}' <<< "$_list")
     local _per=$(( PARK_POOL_TOKENS / _n ))
+    # PARK_POOL_TOKENS_PER_GPU fixes the allocation on EACH GPU instead of the total
+    # across them, so arms differ only in how many GPUs they reach.
+    #
+    # Which of the two to hold constant is not a detail, it decides what the comparison
+    # means. Equalising the TOTAL asks "given a fixed HBM budget, does spreading it help?"
+    # -- and the answer measured in Exp 2 is no, because one big pool evicts less than
+    # several small ones. Equalising PER GPU asks "given that each GPU can spare this
+    # much, does reaching more of them help?", which is the question the paper's premise
+    # actually poses: idle HBM is claimed to be free where it exists, so a policy that
+    # reaches three GPUs should be allowed three GPUs' worth.
+    [ -n "${PARK_POOL_TOKENS_PER_GPU}" ] && _per=${PARK_POOL_TOKENS_PER_GPU}
     echo "SGLANG_KV_PARK_GPUS=${_list} ${_PENV/SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}/SGLANG_KV_PARK_POOL_TOKENS=${_per}}"
   }
   if [ "${PARK_PEER:-0}" = "1" ]; then
@@ -205,7 +217,11 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   fi
   ENV_P0="$(_park_env_for "$_L0")"
   ENV_P1="$(_park_env_for "$_L1")"
-  echo "park: P0 -> GPU[$_L0]   P1 -> GPU[$_L1]   budget ${PARK_POOL_TOKENS} tok/prefill, split evenly"
+  if [ -n "${PARK_POOL_TOKENS_PER_GPU}" ]; then
+    echo "park: P0 -> GPU[$_L0]   P1 -> GPU[$_L1]   ${PARK_POOL_TOKENS_PER_GPU} tok on EACH pool"
+  else
+    echo "park: P0 -> GPU[$_L0]   P1 -> GPU[$_L1]   budget ${PARK_POOL_TOKENS} tok/prefill, split evenly"
+  fi
   ENV_D0=""; ENV_D1=""
 else
   PARK_ARG=""

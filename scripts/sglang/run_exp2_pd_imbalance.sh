@@ -61,6 +61,13 @@ export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-60000}
 # park pools need ~2.44 GB per decode GPU (2 prefills x 10k tokens x 128 KiB).
 export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.80}
 export PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}
+# Set PARK_POOL_TOKENS_PER_GPU to fix the allocation on each GPU rather than the total
+# across them. That is the comparison the paper's premise calls for: idle HBM is claimed
+# to be free WHERE IT EXISTS, so an arm reaching three GPUs may use three GPUs' worth,
+# and the arms then differ only in reach. Equalising the total instead asks a different
+# and already-answered question -- Exp 2 v1..v4 measured that one, and concentrating a
+# fixed budget in one pool beat spreading it, because small pools evict independently.
+export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-}
 export ROUTER_MODE=balanced
 
 ARMS=${ARMS:-"hicache park_local park_pd park_pd_blind park_slowlink"}
