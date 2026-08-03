@@ -55,7 +55,14 @@ export TIMEOUT=${TIMEOUT:-600}
 
 # --- server ---
 export PD_LAYOUT=b
-export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-60000}
+# ${VAR-default}, NOT ${VAR:-default}. With the colon an explicitly EMPTY value is
+# replaced by the default, so `PREFILL_MAX_TOTAL_TOKENS= ./run...` -- the natural way to
+# ask for "no cap" -- silently ran with the 60000 cap still in place and produced a probe
+# that looked like a valid uncapped measurement. Without the colon, empty means empty,
+# and start_2P_2D.sh already omits --max-total-tokens when the value is empty.
+export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS-60000}
+export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS-}
+export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}
 # Decode keeps as much of its pool as the park pools allow: the decode headroom is the
 # resource under study, so trimming it hard would erase the effect being measured. The
 # park pools need ~2.44 GB per decode GPU (2 prefills x 10k tokens x 128 KiB).
@@ -77,6 +84,12 @@ mkdir -p "$OUTDIR"
 echo "================================================================"
 echo " EXP2 P/D imbalance   layout=b pool=$PREFILL_MAX_TOTAL_TOKENS C=$CONCURRENCY"
 echo " decode mem-fraction=$PARK_MEM_FRACTION_D   arms: $ARMS"
+# Echo what the pool knobs RESOLVED to, not what was requested. The uncapped probe was
+# indistinguishable from the capped run in its own output until the pool sizes were read
+# back out of imbalance.json afterwards.
+echo " prefill pool : ${PREFILL_MAX_TOTAL_TOKENS:-UNCAPPED}  (mem-fraction $PARK_MEM_FRACTION)"
+echo " decode  pool : ${DECODE_MAX_TOTAL_TOKENS:-UNCAPPED}  (mem-fraction $PARK_MEM_FRACTION_D)"
+echo " park pool    : ${PARK_POOL_TOKENS_PER_GPU:+${PARK_POOL_TOKENS_PER_GPU} tok/GPU}${PARK_POOL_TOKENS_PER_GPU:-${PARK_POOL_TOKENS} tok budget}"
 echo " -> $OUTDIR"
 echo "================================================================"
 
