@@ -89,7 +89,11 @@ echo " decode mem-fraction=$PARK_MEM_FRACTION_D   arms: $ARMS"
 # back out of imbalance.json afterwards.
 echo " prefill pool : ${PREFILL_MAX_TOTAL_TOKENS:-UNCAPPED}  (mem-fraction $PARK_MEM_FRACTION)"
 echo " decode  pool : ${DECODE_MAX_TOTAL_TOKENS:-UNCAPPED}  (mem-fraction $PARK_MEM_FRACTION_D)"
-echo " park pool    : ${PARK_POOL_TOKENS_PER_GPU:+${PARK_POOL_TOKENS_PER_GPU} tok/GPU}${PARK_POOL_TOKENS_PER_GPU:-${PARK_POOL_TOKENS} tok budget}"
+if [ -n "$PARK_POOL_TOKENS_PER_GPU" ]; then
+  echo " park pool    : $PARK_POOL_TOKENS_PER_GPU tok on EACH candidate GPU"
+else
+  echo " park pool    : $PARK_POOL_TOKENS tok budget per prefill, split over candidates"
+fi
 echo " -> $OUTDIR"
 echo "================================================================"
 
