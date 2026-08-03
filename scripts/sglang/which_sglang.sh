@@ -66,9 +66,19 @@ fi
 
 echo
 echo "=== 5. verdict ==="
-echo "  If (2)/(3) point INTO $SRC and the count is >=2, but the live server still does"
-echo "  not export the gauge, the servers were started BEFORE the pull. Restart them:"
-echo "     ./scripts/sglang/stop.sh && ./scripts/sglang/probe_cache_metric.sh"
-echo "  If (3)'s file is under the conda env (site-packages), PYTHONPATH is not reaching"
-echo "  the server processes; reinstall editable:"
-echo "     cd $SRC/python && pip install -e . --no-deps --no-build-isolation"
+_c=$(grep -c cache_occupancy "$SRC/python/sglang/srt/metrics/collector.py" 2>/dev/null || true)
+[ -z "$_c" ] && _c=0
+if [ "$_c" -lt 2 ] 2>/dev/null; then
+  echo "  The SOURCE TREE is stale: collector.py has $_c references to cache_occupancy."
+  echo "  Nothing is wrong with the path or the servers. Pull, then restart:"
+  echo "     git -C $SRC pull"
+  echo "     ./scripts/sglang/stop.sh && ./scripts/sglang/probe_cache_metric.sh"
+elif python -c "import sglang" 2>/dev/null && \
+     ! python -c "import sglang, sys; sys.exit(0 if '"'"'$SRC'"'"' in sglang.__file__ else 1)" 2>/dev/null; then
+  echo "  sglang imports from OUTSIDE $SRC. PYTHONPATH is not reaching the servers:"
+  echo "     cd $SRC/python && pip install -e . --no-deps --no-build-isolation"
+else
+  echo "  Source is current and the path is right, so the running servers predate the"
+  echo "  pull. Restart them:"
+  echo "     ./scripts/sglang/stop.sh && ./scripts/sglang/probe_cache_metric.sh"
+fi

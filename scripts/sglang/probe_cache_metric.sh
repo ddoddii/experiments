@@ -30,10 +30,18 @@ if [ -d "$SRC/.git" ]; then
   echo "  branch : $(git -C "$SRC" rev-parse --abbrev-ref HEAD)"
   echo "  commit : $(git -C "$SRC" rev-parse --short HEAD)"
 fi
-_n=$(grep -c "cache_occupancy" "$SRC/python/sglang/srt/metrics/collector.py" 2>/dev/null || echo 0)
-if [ "$_n" -lt 2 ]; then
+# NOT `$(grep -c ... || echo 0)`. grep -c prints 0 AND exits 1 when there is no match, so
+# the || appends a SECOND line, `[ "0\n0" -lt 2 ]` dies with "integer expression expected",
+# and the guard fails OPEN -- which is exactly what happened: this script declared the
+# patch present against a tree two commits behind, and the whole probe ran on a stale
+# server. `|| true` swallows the exit status without touching stdout.
+_f="$SRC/python/sglang/srt/metrics/collector.py"
+_n=$(grep -c "cache_occupancy" "$_f" 2>/dev/null || true)
+[ -z "$_n" ] && _n=0
+if [ "$_n" -lt 2 ] 2>/dev/null; then
   echo
-  echo "  >>> collector.py does NOT contain sglang:cache_occupancy."
+  echo "  >>> $_f"
+  echo "  >>> does NOT contain sglang:cache_occupancy (found $_n references)."
   echo "  >>> The source tree is stale. Fix and stop here:"
   echo "  >>>     git -C $SRC pull"
   echo "  >>> Nothing below would be meaningful, so not starting any servers."
