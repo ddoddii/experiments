@@ -87,8 +87,9 @@ for port, name in ((30000, "P0"), (30001, "P1"), (30002, "D0"), (30003, "D1")):
     occ, ev, cap = (vals.get("sglang:cache_occupancy"), vals.get("sglang:evictable_tokens"),
                     vals.get("sglang:max_total_num_tokens"))
     if occ is None:
-        print("   -> gauge ABSENT even though the source has it: the server is running an"
-              "\n      installed sglang, not the source tree. Check [env] in /tmp/probe_start.log.")
+        print("   -> gauge ABSENT although the source tree has it. Either this server was"
+              "\n      started before the pull, or it imports sglang from somewhere else."
+              "\n      Run ./scripts/sglang/which_sglang.sh to find out which.")
     elif ev is not None and cap:
         print(f"   -> {ev:.0f} of {cap:.0f} tokens are prefix-cached on this GPU "
               f"({ev/cap*100:.1f}% of the pool)")
