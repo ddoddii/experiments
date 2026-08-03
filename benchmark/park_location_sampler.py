@@ -66,8 +66,19 @@ def read_all(park_dir, stale_s):
         meta["writers"] += 1
         writer = int(d.get("writer_gpu", -1))
         for g, b in (d.get("gpu_bytes") or {}).items():
-            # last writer wins per target GPU: each park pool has exactly one owner
-            per_gpu[int(g)] = int(b)
+            # SUM across writers. The old comment here said "last writer wins per target
+            # GPU: each park pool has exactly one owner", which held while every prefill
+            # parked only onto its own GPU or onto a disjoint peer. It stopped holding
+            # the moment two prefills were given OVERLAPPING candidate lists
+            # (PARK_GPUS_P0=0,1,3 with PARK_GPUS_P1=2,3,1): both then own a pool on gpu1
+            # and gpu3, and last-writer-wins silently discarded one of each pair.
+            #
+            # It reported the wrong number in the direction that looks like a bug in the
+            # mechanism. In Exp 2 it showed gpu1 holding 0.00 GB for an entire run while
+            # the server log had that very pool at 10000/10000 tokens -- P1's empty gpu1
+            # entry, read second, overwrote P0's full one. Every gpu*_gb column and
+            # gpu_total_gb in a run with overlapping candidates is understated.
+            per_gpu[int(g)] = per_gpu.get(int(g), 0) + int(b)
             key = "park_local_bytes" if int(g) == writer else "park_peer_bytes"
             meta[key] += int(b)
         host += int(d.get("host_bytes") or 0)
