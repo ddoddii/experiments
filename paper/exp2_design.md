@@ -181,6 +181,10 @@ bandwidth-aware 강등이라는 설계 결정이 정당화된다. *시간 없으
 
 ## 4. 측정 지표 — 4계층
 
+> **이 실험의 결과물은 메모리다.** M1·M2가 헤드라인이고, M3은 그 메커니즘의 증거,
+> M4는 "균형을 지연으로 산 게 아니다"를 보이는 방어선이다. TTFT/throughput은 **결과가
+> 아니라 부작용 없음의 확인**으로만 싣는다 (성능 주장은 Exp 1이 한다).
+
 ### M1. 낭비된 헤드룸 (전제 확립, `hicache` arm에서 측정)
 
 > "P가 축출하고 있던 바로 그 순간, 클러스터 어딘가에 놀고 있던 메모리가 얼마였나?"
@@ -232,13 +236,18 @@ park 결정마다 JSONL 한 줄:
 그 튜플을 파일에 append만 하면 된다. `SGLANG_KV_PARK_DECISION_LOG=<path>`로 게이팅해
 기본 off (핫 패스). ~25줄.
 
-### M4. 유용성 (M2의 gameability 방어 — **빼면 안 됨**)
+### M4. 유용성 + 부작용 없음 (M2의 gameability 방어 — **빼면 안 됨**)
+
+*유용성* (균일해진 메모리가 실제로 일을 하는가):
 
 - **park→fetch 전환율** = `fetched_tokens / parked_tokens` (`parked_gpu*.json`에 이미 있음)
 - **fetch 출처 분해**: local / peer / host (`fetch_local_hits`, `fetch_peer_hits`, `fetch_host_hits` — 존재)
 - **버려진 바이트** `dropped_bytes` (존재)
-- **fetch 평균 지연** `fetch_ms_sum / fetch_hits` — P→D가 PCIe면 여기서 드러난다
-- **성능**: cache hit rate, TTFT p50/p95, goodput
+
+*부작용 없음* (결과가 아니라 확인용 — 표 하단에 작게):
+
+- **fetch 평균 지연** `fetch_ms_sum / fetch_hits` — P→D 링크가 실제로 NVLink였는지 검증
+- TTFT p50/p95, cache hit rate — **악화되지 않았음**만 보이면 된다
 
 ---
 
@@ -253,6 +262,25 @@ park 결정마다 JSONL 한 줄:
    `park_pd_blind`를 회색으로 겹쳐 그리면 대조가 한눈에 보인다.
 
 M2/M4 숫자는 본문 표. 막대 그래프는 굳이 안 만든다 (패널 2개로 충분).
+
+**캡션에 반드시 들어갈 것**: "arm 간 비교는 동일 layout·동일 decode mem-fraction·동일
+park 토큰 예산에서 수행됨. Layout B는 Mooncake P→D 전송 절반을 NVLink로 옮기므로
+**절대 지연을 Exp 1과 비교하지 말 것.**"
+
+---
+
+## 5-1. 구현 상태 (M1 프로브 실행 가능)
+
+| 항목 | 상태 |
+|---|---|
+| `start_2P_2D.sh` `PD_LAYOUT=a\|b` | ✅ |
+| `start_2P_2D.sh` `PARK_MEM_FRACTION_D` (D0/D1에 적용) | ✅ |
+| park 예산을 후보 GPU 수로 균등 분할 (`_park_env_for`) | ✅ |
+| `kv_occupancy_timeseries.py` 풀 용량 컬럼 (+ /metrics 1회 요청으로 통합) | ✅ |
+| `collect_imbalance.py` (M1/M2, 합성 데이터로 손계산 검증 완료) | ✅ |
+| `run_exp2_pd_imbalance.sh` (5 arm) | ✅ |
+| `_select_pool()` 배치 결정 로그 (M3) | ⬜ — park arm 돌리기 전까지 불필요 |
+| `plot_imbalance.py` (2패널) | ⬜ — M1 통과 후 |
 
 ---
 

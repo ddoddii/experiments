@@ -69,6 +69,46 @@ D_MTT=""; [ -n "$DECODE_MAX_TOTAL_TOKENS" ] && D_MTT="--max-total-tokens $DECODE
 # for the park buffer. All nodes of one run share SGLANG_KV_PARK_EPOCH.
 PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}          # per-P park buffer (~4GB @ 30k)
 PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}         # leave room for the park buffer
+
+# --- PD_LAYOUT: which GPU each role sits on ------------------------------------------
+# server17's `nvidia-smi topo -m` has exactly TWO NVLink bridges, (0,1) and (2,3);
+# every other pair is PCIe (NODE/PHB), measured at 3.3 GB/s against 27-53 GB/s for a
+# bridged pair and 26 GB/s for pinned host memory. Two bridges over four GPUs means each
+# GPU has exactly ONE fast partner, so "both prefills fast to each other" and "each
+# prefill fast to a decode" are mutually exclusive. That is the hardware, not a choice.
+#
+#   a (default) P0=0 P1=1 D0=2 D1=3   -- P<->P is NVLink; every P->D link is PCIe.
+#   b           P0=0 D0=1 P1=2 D1=3   -- each NVLink island holds one P and one D.
+#
+# Layout b is what Exp 2 (P/D imbalance) needs: a prefill's one fast park target becomes
+# a decode GPU, so parking into idle decode HBM survives the bandwidth-aware demotion in
+# _select_pool() instead of being ranked below the local pool.
+#
+# Layout b also puts HALF the Mooncake P->D KV transfers on NVLink (P0->D0, P1->D1),
+# which moves baseline TTFT on its own. Run every arm of a comparison under the SAME
+# layout, and do not place layout-b absolute latencies beside layout-a ones.
+PD_LAYOUT=${PD_LAYOUT:-a}
+case "$PD_LAYOUT" in
+  a) GPU_P0=0; GPU_P1=1; GPU_D0=2; GPU_D1=3 ;;
+  b) GPU_P0=0; GPU_D0=1; GPU_P1=2; GPU_D1=3 ;;
+  *) echo "PD_LAYOUT must be 'a' or 'b', got '$PD_LAYOUT'" >&2; exit 1 ;;
+esac
+
+# Decode-side --mem-fraction-static. Until now only the PREFILLS got one, so decode took
+# SGLang's default and held ~42.6 of 49 GB -- no room for a prefill to allocate a park
+# pool on a decode GPU, which is the whole mechanism Exp 2 measures.
+#
+# Keep the cut SMALL. Lowering this shrinks decode's KV pool, and decode's spare KV pool
+# is precisely the headroom the experiment claims to harvest: trim it too hard and the
+# measurement destroys the thing being measured. 0.80 leaves ~10 GB, and the pools need
+# 2.44 GB (2 prefills x 10k tokens x 128 KiB at PARK_POOL_TOKENS=30000 over 3 candidates).
+#
+# Set it on the BASELINE arms too. Otherwise the baseline is the only arm with full-size
+# decode pools and every occupancy comparison confounds placement with capacity -- the
+# same trap FORCE_MEM_FRACTION already exists to close on the prefill side.
+PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-}
+MEMFRAC_D=""
+[ -n "${PARK_MEM_FRACTION_D}" ] && MEMFRAC_D="--mem-fraction-static ${PARK_MEM_FRACTION_D}"
 SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN:-1}
 SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE:-1}
 # session-keyed parking (task 7): free superseded per-conversation versions -> small pool
@@ -121,10 +161,10 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
   PARK_ARG="--disaggregation-enable-idle-kv-parking"
   MEMFRAC_P="--mem-fraction-static ${PARK_MEM_FRACTION}"
-  CVD_P0="0,1,2,3"; BASE_P0="--base-gpu-id 0"
-  CVD_P1="0,1,2,3"; BASE_P1="--base-gpu-id 1"
-  CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id 2"
-  CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id 3"
+  CVD_P0="0,1,2,3"; BASE_P0="--base-gpu-id ${GPU_P0}"
+  CVD_P1="0,1,2,3"; BASE_P1="--base-gpu-id ${GPU_P1}"
+  CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id ${GPU_D0}"
+  CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id ${GPU_D1}"
   _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE} SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED} SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS} SGLANG_KV_PARK_BW_AWARE=${SGLANG_KV_PARK_BW_AWARE} SGLANG_KV_PARK_HOST_OVERFLOW=${SGLANG_KV_PARK_HOST_OVERFLOW} SGLANG_KV_PARK_HOST_BUCKET_TOKENS=${SGLANG_KV_PARK_HOST_BUCKET_TOKENS} SGLANG_KV_PARK_HOST_MAX_GB=${SGLANG_KV_PARK_HOST_MAX_GB} SGLANG_KV_PARK_REUSE_AWARE=${SGLANG_KV_PARK_REUSE_AWARE} SGLANG_KV_PARK_REUSE_HALFLIFE_S=${SGLANG_KV_PARK_REUSE_HALFLIFE_S}"
   # Which GPUs each prefill may park ONTO.
   #
@@ -137,16 +177,30 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   # the peer-placement mechanism Exp 2 measures. Pool tokens are HALVED so the total park
   # HBM per GPU is unchanged: otherwise the peer arm would win simply by having twice the
   # park capacity, which is not the claim.
+  # PARK_POOL_TOKENS is the per-prefill park BUDGET, split evenly over that prefill's
+  # candidate GPUs -- not a per-pool size. _init_park_gpu_pool() builds one pool of
+  # SGLANG_KV_PARK_POOL_TOKENS on EVERY listed GPU, so passing the budget through
+  # unchanged would give a 3-candidate arm three times the park cache of a 1-candidate
+  # arm and "placement freedom won" would really be "three times the cache won".
+  # The PARK_PEER branch has always halved for this reason; this generalises it so the
+  # PARK_GPUS_* overrides get the same treatment.
+  _park_env_for() {   # $1 = comma-separated GPU list -> echoes the env prefix
+    local _list="$1"
+    local _n; _n=$(awk -F, '{print NF}' <<< "$_list")
+    local _per=$(( PARK_POOL_TOKENS / _n ))
+    echo "SGLANG_KV_PARK_GPUS=${_list} ${_PENV/SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}/SGLANG_KV_PARK_POOL_TOKENS=${_per}}"
+  }
   if [ "${PARK_PEER:-0}" = "1" ]; then
-    _HALF=$(( PARK_POOL_TOKENS / 2 ))
-    _PENV_PEER="${_PENV/SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}/SGLANG_KV_PARK_POOL_TOKENS=${_HALF}}"
-    ENV_P0="SGLANG_KV_PARK_GPUS=0,1 ${_PENV_PEER}"
-    ENV_P1="SGLANG_KV_PARK_GPUS=1,0 ${_PENV_PEER}"
-    echo "park: PEER placement ON -- each P owns pools on GPU0+GPU1 at ${_HALF} tokens each"
+    # Peer = the OTHER PREFILL, which is layout-dependent: under PD_LAYOUT=b the GPU
+    # numbered 1 is a decode node, so hardcoding "0,1" here would silently mean
+    # something else entirely.
+    _L0="${GPU_P0},${GPU_P1}"; _L1="${GPU_P1},${GPU_P0}"
   else
-    ENV_P0="SGLANG_KV_PARK_GPUS=${PARK_GPUS_P0:-0} ${_PENV}"
-    ENV_P1="SGLANG_KV_PARK_GPUS=${PARK_GPUS_P1:-1} ${_PENV}"
+    _L0="${PARK_GPUS_P0:-${GPU_P0}}"; _L1="${PARK_GPUS_P1:-${GPU_P1}}"
   fi
+  ENV_P0="$(_park_env_for "$_L0")"
+  ENV_P1="$(_park_env_for "$_L1")"
+  echo "park: P0 -> GPU[$_L0]   P1 -> GPU[$_L1]   budget ${PARK_POOL_TOKENS} tok/prefill, split evenly"
   ENV_D0=""; ENV_D1=""
 else
   PARK_ARG=""
@@ -158,7 +212,8 @@ else
   # is how that gets attributed.
   MEMFRAC_P=""
   [ -n "${FORCE_MEM_FRACTION}" ] && MEMFRAC_P="--mem-fraction-static ${FORCE_MEM_FRACTION}"
-  CVD_P0=0; BASE_P0=""; CVD_P1=1; BASE_P1=""; CVD_D0=2; BASE_D0=""; CVD_D1=3; BASE_D1=""
+  CVD_P0=${GPU_P0}; BASE_P0=""; CVD_P1=${GPU_P1}; BASE_P1=""
+  CVD_D0=${GPU_D0}; BASE_D0=""; CVD_D1=${GPU_D1}; BASE_D1=""
   ENV_P0=""; ENV_P1=""; ENV_D0=""; ENV_D1=""
 fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -199,7 +254,7 @@ sleep 2
 
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
-echo "[2/6] Starting Prefill server 1 (GPU 0, port 30000, bootstrap 8998)  park=${IDLE_KV_PARKING:-0}..."
+echo "[2/6] Starting Prefill server 1 (GPU ${GPU_P0}, port 30000, bootstrap 8998)  park=${IDLE_KV_PARKING:-0}..."
 env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 ${BASE_P0} \
   --enable-metrics \
@@ -212,7 +267,7 @@ env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
 echo "  PID: $!"
 sleep 3
 
-echo "[3/6] Starting Prefill server 2 (GPU 1, port 30001, bootstrap 8999)..."
+echo "[3/6] Starting Prefill server 2 (GPU ${GPU_P1}, port 30001, bootstrap 8999)..."
 env CUDA_VISIBLE_DEVICES=${CVD_P1} ${ENV_P1} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30001 ${BASE_P1} \
   --enable-metrics \
@@ -229,11 +284,11 @@ sleep 3
 # 실제 경로가 다른 경우: HICACHE_DIRS="p1:/actual/path,p2:/actual/path" 로 오버라이드
 sleep 3
 
-echo "[4/6] Starting Decode server 1 (GPU 2, port 30002)..."
+echo "[4/6] Starting Decode server 1 (GPU ${GPU_D0}, port 30002)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D0} ${ENV_D0} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30002 ${BASE_D0} \
   --enable-metrics \
-  ${D_MTT} ${PARK_ARG} ${RADIX_ARG} \
+  ${D_MTT} ${PARK_ARG} ${MEMFRAC_D} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \
@@ -241,11 +296,11 @@ env CUDA_VISIBLE_DEVICES=${CVD_D0} ${ENV_D0} python3 -m sglang.launch_server \
 echo "  PID: $!"
 sleep 3
 
-echo "[5/6] Starting Decode server 2 (GPU 3, port 30003)..."
+echo "[5/6] Starting Decode server 2 (GPU ${GPU_D1}, port 30003)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D1} ${ENV_D1} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30003 ${BASE_D1} \
   --enable-metrics \
-  ${D_MTT} ${PARK_ARG} ${RADIX_ARG} \
+  ${D_MTT} ${PARK_ARG} ${MEMFRAC_D} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
   --disaggregation-mode decode --disaggregation-transfer-backend mooncake \
   --tool-call-parser $TOOL_CALL_PARSER \

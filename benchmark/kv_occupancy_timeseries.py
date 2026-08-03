@@ -33,26 +33,45 @@ import urllib.request
 DEFAULT_TARGETS = "30000:P0:P 30001:P1:P 30002:D0:D 30003:D1:D"
 METRICS = ("sglang:token_usage", "sglang:num_used_tokens", "sglang:num_running_reqs")
 
+# Pool CAPACITY, so free space can be reported in absolute tokens (and thus GB) and not
+# only as a saturation fraction. A fraction alone cannot answer "was the headroom big
+# enough to be worth borrowing?", which is the question the imbalance analysis exists to
+# ask -- and the prefill pool is capped (--max-total-tokens) while decode's is not, so
+# equal fractions on the two sides mean very different numbers of free tokens.
+#
+# The metric's name has moved between SGLang versions, so try several and take the first
+# that resolves; the collector falls back to used/usage if none of them exist.
+CAPACITY_METRICS = (
+    "sglang:max_total_num_tokens",
+    "sglang:max_total_tokens",
+    "sglang:token_capacity",
+)
 
-def scrape_value(url, metric, timeout=3.0):
-    """Return the float value of a prometheus gauge line `metric{...} value`, or None."""
+
+def scrape_all(url, timeout=3.0):
+    """Fetch /metrics ONCE and return {metric_name: float} for every gauge on the page.
+
+    One request per target per tick instead of one per metric: the previous version
+    opened a connection for each of the three metrics, which at 4 targets and 0.5 s was
+    24 requests/s of self-inflicted load onto the servers being measured."""
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             text = r.read().decode("utf-8", errors="replace")
-    except Exception:  # noqa: BLE001 (server busy / transient) -> None this tick
-        return None
-    val = None
+    except Exception:  # noqa: BLE001 (server busy / transient) -> empty this tick
+        return {}
+    out = {}
     for line in text.splitlines():
-        if line.startswith("#") or not line.startswith(metric):
+        if line.startswith("#"):
             continue
-        # metric may be `name value` or `name{labels} value`; take the last field.
         parts = line.rsplit(None, 1)
-        if len(parts) == 2:
-            try:
-                val = float(parts[1])
-            except ValueError:
-                continue
-    return val
+        if len(parts) != 2:
+            continue
+        name = parts[0].split("{", 1)[0]
+        try:
+            out[name] = float(parts[1])
+        except ValueError:
+            continue
+    return out
 
 
 def main():
@@ -73,7 +92,7 @@ def main():
     # header: t, then per-target token_usage / used_tokens / running
     cols = ["t_s"]
     for _, label, _ in targets:
-        cols += [f"{label}_use", f"{label}_used_tok", f"{label}_running"]
+        cols += [f"{label}_use", f"{label}_used_tok", f"{label}_running", f"{label}_cap_tok"]
     f = open(args.out, "w", buffering=1)  # line-buffered -> survives kill
     f.write(",".join(cols) + "\n")
     # also stash the role map as a comment for the plotter
@@ -88,13 +107,20 @@ def main():
             t = time.time() - t0
             row = [f"{t:.2f}"]
             for port, _, _ in targets:
-                base = f"http://{args.host}:{port}/metrics"
-                use = scrape_value(base, "sglang:token_usage")
-                used = scrape_value(base, "sglang:num_used_tokens")
-                run = scrape_value(base, "sglang:num_running_reqs")
+                m = scrape_all(f"http://{args.host}:{port}/metrics")
+                use = m.get("sglang:token_usage")
+                used = m.get("sglang:num_used_tokens")
+                run = m.get("sglang:num_running_reqs")
+                cap = next((m[k] for k in CAPACITY_METRICS if k in m), None)
+                # Derive capacity when the server exposes no capacity gauge. Only valid
+                # while the pool is meaningfully occupied: at usage ~0 the ratio is
+                # 0/0-ish and rounding turns it into noise or a divide-by-zero.
+                if cap is None and use is not None and used is not None and use > 0.02:
+                    cap = used / use
                 row += ["" if use is None else f"{use:.4f}",
                         "" if used is None else f"{used:.0f}",
-                        "" if run is None else f"{run:.0f}"]
+                        "" if run is None else f"{run:.0f}",
+                        "" if cap is None else f"{cap:.0f}"]
             f.write(",".join(row) + "\n")
             n += 1
             if args.duration and t >= args.duration:
