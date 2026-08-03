@@ -48,10 +48,15 @@ HI_CURVE = (0.70, 0.80, 0.85, 0.90, 0.95)
 
 def load(csv_path):
     """Return (labels, roles, rows) where each row is {label: {use, used, run, cap}}."""
-    roles, rows, labels = {}, [], []
+    roles, rows, labels, metric_src = {}, [], [], {}
     with open(csv_path) as fh:
         header = None
         for raw in fh:
+            if raw.startswith("# metric:"):
+                for tok in raw.split(":", 1)[1].split():
+                    lab, _, m = tok.partition(":")
+                    metric_src[lab] = m
+                continue
             if raw.startswith("# roles:"):
                 for tok in raw.split(":", 1)[1].split():
                     lab, _, role = tok.partition(":")
@@ -76,7 +81,7 @@ def load(csv_path):
                             "run": g("_running"), "cap": g("_cap_tok"),
                             "pressure": g("_pressure")}
             rows.append((float(d["t_s"]), rec))
-    return labels, roles, rows
+    return labels, roles, rows, metric_src
 
 
 def fill_capacity(labels, rows):
@@ -223,45 +228,43 @@ def per_gpu(labels, roles, rows, caps, kib):
     return out, roll
 
 
-def check_metric(labels, rows):
-    """Warn if the occupancy column is really token_usage.
+def check_metric(labels, rows, metric_src):
+    """Report which occupancy metric the CSV actually holds.
 
-    The first M1 probe returned a flat 0.0 GB*s not because the premise was wrong but
-    because sglang:token_usage subtracts the prefix cache, so a prefill pool full of
-    retained prefixes read as 1.9% occupied. Any CSV recorded before sglang:cache_occupancy
-    existed has that defect baked in, and it fails toward 'no imbalance' -- the one
-    direction that looks like a legitimate negative result. Say so loudly."""
-    have_pressure = any(r[lab]["pressure"] is not None for _, r in rows for lab in labels)
-    if not have_pressure:
-        print("[WARN] no _pressure column: this CSV predates sglang:cache_occupancy, so "
-              "the occupancy below is token_usage, which EXCLUDES prefix-cached KV. A "
-              "small imbalance here is not evidence of a small imbalance.")
-        return False
-    # Both columns present: if they are identical the server did not export
-    # cache_occupancy and the sampler silently fell back.
-    same = all(
-        r[lab]["pressure"] is None or r[lab]["use"] is None
-        or abs(r[lab]["use"] - r[lab]["pressure"]) < 1e-9
-        for _, r in rows for lab in labels
-    )
-    if same:
-        print("[WARN] occupancy == pressure on every sample: the server did not export "
-              "sglang:cache_occupancy and the sampler fell back to token_usage. Rebuild "
-              "the SGLang source tree before trusting these numbers.")
-        return False
-    return True
+    sglang:token_usage subtracts the prefix cache, so a prefill pool full of retained
+    prefixes reads as ~2% occupied; a probe built on it returned a flat 0.0 GB*s and
+    looked like a legitimate negative result. The sampler now records the metric it found
+    per server in a `# metric:` header.
+
+    Do NOT infer this from the values. Occupancy == pressure has two opposite causes --
+    the sampler fell back to token_usage (broken measurement), or the prefix cache really
+    holds nothing on that GPU (a finding, and for a HiCache prefill that offloads to host
+    DRAM, the expected one). Only the recorded source separates them."""
+    if not metric_src:
+        print("[WARN] CSV predates the `# metric:` header, so which gauge it holds is "
+              "unknown. If occupancy == pressure below, that is ambiguous between a "
+              "sampler fallback and an genuinely empty GPU-resident cache -- re-run "
+              "rather than interpret it.")
+        return "unknown"
+    fallback = sorted(k for k, v in metric_src.items() if v != "cache_occupancy")
+    if fallback:
+        print(f"[WARN] {fallback} reported via {metric_src}. Those servers do not export "
+              f"sglang:cache_occupancy, so their occupancy EXCLUDES prefix-cached KV. "
+              f"Pull the SGLang source tree and restart before trusting them.")
+        return "token_usage (FALLBACK)"
+    return "cache_occupancy"
 
 
 def analyse(csv_path, kib, hi, lo):
-    labels, roles, rows = load(csv_path)
+    labels, roles, rows, metric_src = load(csv_path)
     if not rows:
         return {"error": f"no samples in {csv_path}"}
-    trustworthy = check_metric(labels, rows)
+    metric = check_metric(labels, rows, metric_src)
     caps = fill_capacity(labels, rows)
     gpus, roll = per_gpu(labels, roles, rows, caps, kib)
     return {
         "csv": csv_path,
-        "metric": "cache_occupancy" if trustworthy else "token_usage (FALLBACK)",
+        "metric": metric,
         "samples": len(rows),
         "duration_s": round(rows[-1][0] - rows[0][0], 1),
         "per_gpu": gpus,

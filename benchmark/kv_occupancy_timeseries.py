@@ -106,8 +106,30 @@ def main():
     # also stash the role map as a comment for the plotter
     f.write("# roles: " + " ".join(f"{lab}:{role}" for _, lab, role in targets) + "\n")
 
+    # Record WHICH occupancy metric each server actually exposes, rather than leaving the
+    # reader to infer it. When cache_occupancy is missing the sampler falls back to
+    # token_usage and writes identical values into both columns -- which is also what a
+    # server with a genuinely empty prefix cache produces. Those two cases have opposite
+    # meanings ("the measurement is broken" vs "the cache really is on another tier") and
+    # nothing downstream could tell them apart.
+    src = {}
+    for port, label, _ in targets:
+        m = scrape_all(f"http://{args.host}:{port}/metrics")
+        if not m:
+            src[label] = "unreachable"
+        elif "sglang:cache_occupancy" in m:
+            src[label] = "cache_occupancy"
+        else:
+            src[label] = "token_usage"
+    f.write("# metric: " + " ".join(f"{k}:{v}" for k, v in src.items()) + "\n")
+    bad = sorted(k for k, v in src.items() if v == "token_usage")
+    if bad:
+        print(f"[kv-ts] WARNING: {bad} do not export sglang:cache_occupancy. Occupancy "
+              f"for them will be token_usage, which EXCLUDES prefix-cached KV. Pull and "
+              f"restart the SGLang source tree if the prefix cache matters.")
+
     print(f"[kv-ts] sampling {len(targets)} servers every {args.interval}s -> {args.out} "
-          f"(Ctrl-C / kill to stop)")
+          f"(metric: {src}; Ctrl-C / kill to stop)")
     t0 = time.time()
     n = 0
     try:
