@@ -48,33 +48,61 @@
 (`start_2P_2D.sh:206,219`). Decode는 기본값(~0.87)으로 떠서 49 GB 중 42.6 GB를 이미 잡고
 있다 (기존 exp2 table.md의 `peak gpu2/gpu3 HBM = 42.63`). **park pool을 만들 자리가 없어
 OOM 난다.**
-→ `PARK_MEM_FRACTION_D`(제안: 0.70)를 추가하고 D0/D1 launch에 붙일 것.
+→ `PARK_MEM_FRACTION_D`를 추가하고 D0/D1 launch에 붙일 것.
 
-**(b) `BW_AWARE=1`이 decode GPU를 후보에서 강등시킬 수 있다 — 설계를 바꾸는 문제**
+필요량 계산: 후보 3개이므로 pool은 GPU당 `30000/3 = 10000` 토큰. Layout B에서 GPU1(D0)에는
+P0의 pool과 P1의 pool이 **둘 다** 놓이므로 20000 토큰 × 128 KiB = **2.44 GB**. GPU3도 동일.
+→ `PARK_MEM_FRACTION_D=0.80` (49 GB 중 ~39 GB) 이면 ~10 GB 여유로 충분하다.
+
+> **0.70이 아니라 0.80을 쓰는 이유 — 이게 미묘한 함정이다.**
+> decode의 mem-fraction을 낮추면 **decode의 KV 풀 용량 자체가 줄어든다.** 그런데 우리가
+> 활용하겠다고 주장하는 것이 바로 그 decode 헤드룸이다. 과하게 낮추면 *측정하려는 대상을
+> 측정 행위가 파괴한다.* 필요한 최소한만 깎는다.
+> **그리고 `hicache` baseline arm에도 같은 `PARK_MEM_FRACTION_D`를 적용해야 한다.**
+> 안 그러면 baseline만 decode 풀이 커서 M1/M2 비교가 용량 차이와 교란된다
+> (prefill 쪽 `FORCE_MEM_FRACTION`이 이미 같은 이유로 존재한다).
+
+**(b) GPU 배치를 바꿔야 한다 — `BW_AWARE`가 decode GPU를 강등시키므로**
 
 `_select_pool()`의 정렬 키는 `(slow_link, serving_usage, -headroom)`이고, `slow_link`는
 "이 링크가 host DRAM보다 느린가"다. 측정치: NVLink 27–53 GB/s, **non-NVLink peer 3.3 GB/s**,
 pinned host 26 GB/s. → **PCIe로만 붙은 GPU는 무조건 후순위로 밀린다.**
 
-A6000 4장은 보통 브릿지가 **쌍**으로 붙는다(0-1, 2-3). 현재 배치가 P={0,1}, D={2,3}이면
-**모든 P→D 링크가 PCIe-only**라서, `park_pd` arm이 `park_local`로 퇴화한다.
+**server17 실측 토폴로지** (`nvidia-smi topo -m`):
 
-→ **해결: GPU 배치를 바꿔 P와 D를 브릿지 쌍으로 묶는다.**
+```
+      GPU0   GPU1   GPU2   GPU3
+GPU0   X     NV4    NODE   NODE
+GPU1  NV4     X     PHB    NODE
+GPU2  NODE   PHB     X     NV4
+GPU3  NODE   NODE   NV4     X
+```
 
-| | 현재 | 제안 |
-|---|---|---|
-| GPU0 | P0 | P0 |
-| GPU1 | P1 | **D0** |
-| GPU2 | D0 | **P1** |
-| GPU3 | D1 | D1 |
+**브릿지는 (0,1)과 (2,3) 두 쌍뿐**이고 나머지는 전부 PCIe다. 브릿지가 2개이므로
+**각 GPU의 빠른 파트너는 정확히 하나**다. 따라서:
 
-→ 브릿지가 (0,1),(2,3)이면 P0↔D0, P1↔D1이 각각 NVLink. `BW_AWARE=1`(정직한 기본값)을
-유지한 채로 P→D 파킹이 27–53 GB/s로 동작한다.
+> **P↔P 빠름과 P→D 빠름은 동시에 성립할 수 없다.**
+> 두 P를 한 섬에 두면(현재 배치) P→D가 전부 PCIe. 각 섬에 P+D를 하나씩 두면 P↔P가 PCIe.
+> 하드웨어의 제약이지 설계 선택의 여지가 아니다.
 
-> **선행 확인 필수** (서버17에서 1분): `nvidia-smi topo -m`
-> `NV1`/`NV2`/`NV4`가 어느 쌍에 있는지 보고 위 매핑을 확정한다. 전부 `PHB`/`SYS`(브릿지 없음)로
-> 나오면 P/D 파킹은 3.3 GB/s로만 가능하고, 그때는 "능력은 보이되 이 하드웨어에선 경제성이
-> 없다 + 인터커넥트 의존성"으로 정직하게 서술해야 한다 (§6 참조).
+이번 질문이 P/D 불균형이므로 **후자를 택한다**:
+
+| GPU | 현재 (Layout A) | **Exp 2 (Layout B)** | 링크 |
+|---|---|---|---|
+| GPU0 | P0 | **P0** | ┐ NV4 |
+| GPU1 | P1 | **D0** | ┘ |
+| GPU2 | D0 | **P1** | ┐ NV4 |
+| GPU3 | D1 | **D1** | ┘ |
+
+→ P0↔D0, P1↔D1이 각각 NV4. `BW_AWARE=1`(정직한 기본값)을 켠 채로 P→D 파킹이
+27–53 GB/s로 동작한다. 각 prefill의 **빠른 park 후보가 정확히 decode GPU 하나**가 되므로,
+"유휴 decode HBM으로 빌려쓴다"가 배치 정책의 자연스러운 1순위가 된다.
+
+**부수 효과 (반드시 명시할 것):** Layout B는 Mooncake **P→D KV 전송**도 바꾼다.
+Layout A에서는 4개 P→D 경로가 전부 PCIe(NODE/PHB)지만, Layout B에서는 P0→D0, P1→D1이
+NVLink라 **절반이 빨라진다.** 즉 Layout B는 baseline TTFT 자체를 개선한다.
+→ **모든 arm(baseline 포함)을 Layout B에서 돌린다.** arm 간 비교는 유효하지만
+**Exp 2의 절대 TTFT를 Exp 1과 나란히 놓으면 안 된다.**
 
 **(c) 후보 GPU 수가 늘면 park HBM 총량이 늘어 arm 비교가 불공정**
 
@@ -117,17 +145,35 @@ P↔P가 아니라 P↔D 불균형**이고, 이건 강제할 필요가 없다. �
 
 전부 **동일 서버 설정 + 동일 park HBM 총량**, 차이는 오직 *배치가 어디로 갈 수 있는가*.
 
-| arm | park 후보 GPU | 압력 인지 | 이 arm이 답하는 질문 |
-|---|---|---|---|
-| `hicache` | — (파킹 없음) | — | 불균형이 실재하고 낭비되는가? **(M1의 기준선)** |
-| `park_local` | 자기 GPU만 | — | 파킹 자체의 효과 vs 배치의 효과 분리 |
-| `park_pp` | P0+P1 | O | 기존 peer 주장 (P↔P) — *선택적, 시간 없으면 생략* |
-| **`park_pd`** | 자기 P + D0 + D1 | **O** | **← 사용자 질문의 본 arm** |
-| **`park_pd_blind`** | 자기 P + D0 + D1 | **X** (`PRESSURE_AWARE=0`) | **균일성이 gameable함을 보이는 대조군** |
+전부 **Layout B + 동일 park 토큰 총량 + 동일 `PARK_MEM_FRACTION_D`**, 차이는 오직
+*배치가 어디로 갈 수 있는가*.
 
-`park_pd_blind`가 왜 핵심인가: 후보는 같지만 헤드룸만 보고 고른다(실시간 점유 무시).
+| arm | P0 / P1 후보 GPU | 압력 인지 | BW 인지 | 이 arm이 답하는 질문 |
+|---|---|---|---|---|
+| `hicache` | — (파킹 없음) | — | — | 불균형이 실재하고 낭비되는가? **(M1의 기준선)** |
+| `park_local` | `0` / `2` | — | — | 파킹 자체의 효과 vs *배치*의 효과 분리 |
+| **`park_pd`** | `0,1,3` / `2,3,1` | **O** | O | **← 질문의 본 arm.** 자기 P + 빠른 D + 느린 D |
+| **`park_pd_blind`** | `0,1,3` / `2,3,1` | **X** | O | **균일성이 gameable함을 보이는 대조군** |
+| `park_slowlink` | `0,2` / `2,0` | O | **X** | PCIe 너머로 빌리면? **BW 강등이 옳았음을 검증** |
+
+**`park_pd_blind`가 왜 핵심인가**: 후보는 같지만 헤드룸만 보고 고른다(실시간 점유 무시).
 → 점유는 비슷하게 균일해지지만 **엉뚱한 시점에 바쁜 GPU를 때린다.** M2는 비슷하고 M4는
-갈라져야 한다. 이게 갈라지지 않으면 압력 인지 배치는 논문에서 뺄 근거가 된다 (= 반증 가능).
+갈라져야 한다. 갈라지지 않으면 압력 인지 배치는 논문에서 뺄 근거가 된다 (= 반증 가능).
+
+**`park_slowlink`가 왜 필요한가**: Layout B에서 peer prefill로 가는 링크는 PCIe(NODE)다.
+`BW_AWARE=1`이면 강등되어 절대 안 골리므로 `park_local`로 퇴화한다 → **이 arm은
+`BW_AWARE=0`으로 강제로 PCIe 배치를 시킨다.** 3.3 GB/s 배치가 실제로 손해임을 보이면
+bandwidth-aware 강등이라는 설계 결정이 정당화된다. *시간 없으면 이 arm부터 생략.*
+
+> **P↔P peer arm은 Exp 2에서 뺀다.** Layout B에서 P0↔P1은 PCIe라 Exp 1의 peer 주장
+> (Layout A, NV4에서 측정)과 **비교 불가능**하다. 같은 이름으로 두면 Exp 1 결과를
+> 뒤집는 것처럼 읽힌다.
+
+**pool 토큰은 후보 수로 나눈다** (`PARK_PEER` 분기가 이미 하는 것을 일반화).
+`park_local`은 자기 GPU에 30000, `park_pd`는 3개 GPU에 10000씩 = **총량 동일**.
+→ 배치 자유도만 다르고 캐시 용량은 같다.
+부작용으로 `park_pd`의 *로컬* pool은 1/3로 작아지는데, 이건 분산의 대가이지 버그가 아니다.
+비교를 **보수적으로** 만드는 방향이라 결과가 나오면 오히려 강해진다.
 
 **실행 시간 추정**: arm당 (기동 4분 + 벤치 20분 + 정지 1분) ≈ 25분 → **5 arm ≈ 2시간 10분.**
 
@@ -214,7 +260,9 @@ M2/M4 숫자는 본문 표. 막대 그래프는 굳이 안 만든다 (패널 2�
 
 | 위험 | 징후 | 대응 |
 |---|---|---|
-| P/D 간 NVLink 없음 | `nvidia-smi topo -m`이 전부 PHB/SYS | GPU 재배치 불가 → `BW_AWARE=0` arm 추가하고, "메커니즘은 동작하나 이 박스의 P→D 링크(3.3 GB/s)가 host DRAM(26)보다 느려 경제성 없음"으로 **정직하게 한계 서술**. 이건 실패가 아니라 인터커넥트 의존성이라는 발견 |
+| ~~P/D 간 NVLink 없음~~ | — | **해소됨.** 실측 브릿지 (0,1)/(2,3) → Layout B로 P0↔D0, P1↔D1이 NV4 |
+| Layout B가 baseline TTFT를 바꿈 | Exp 1보다 전 arm이 빨라짐 | 예상된 동작 (P→D 전송 절반이 NVLink). arm 간 비교는 유효. **Exp 1과 절대값 병치 금지**를 캡션에 명시 |
+| decode 풀 축소가 헤드룸을 지움 | `hicache` arm의 D 점유율이 낮지 않음 | `PARK_MEM_FRACTION_D`를 0.80보다 낮추지 말 것. M1이 이걸 잡아낸다 |
 | M1이 작게 나옴 | `stranded` ≈ 0 | 전제 붕괴. `CONCURRENCY`↑ 또는 `PREFILL_MAX_TOTAL_TOKENS`↓로 P측 압력을 더 준다. **이건 M1을 먼저 재는 이유** |
 | D 서버 OOM | 기동 실패 | `PARK_MEM_FRACTION_D` 더 낮추기 (0.70 → 0.62) |
 | `park_pd_blind`가 안 갈라짐 | M2/M4 모두 동일 | 압력 인지가 무효라는 뜻. 논문에서 해당 주장 삭제 (반증됨) |
@@ -224,8 +272,10 @@ M2/M4 숫자는 본문 표. 막대 그래프는 굳이 안 만든다 (패널 2�
 
 ## 7. 착수 순서
 
-1. **[서버17, 1분]** `nvidia-smi topo -m` → 브릿지 쌍 확정 → GPU 매핑 결정
-2. **[코드]** `start_2P_2D.sh`: `PARK_MEM_FRACTION_D` 추가 + 후보 수로 pool 토큰 나누기 + GPU 매핑 파라미터화
+1. ~~`nvidia-smi topo -m`~~ → **완료.** 브릿지 (0,1)/(2,3) 확인, Layout B 확정
+2. **[코드]** `start_2P_2D.sh`: (i) `PD_LAYOUT=b` — P0=g0, D0=g1, P1=g2, D1=g3,
+   (ii) `PARK_MEM_FRACTION_D` 추가해 D0/D1 launch에 적용, (iii) `PARK_GPUS_*` 분기에서
+   `PARK_POOL_TOKENS`를 후보 수로 나누기
 3. **[코드]** `idle_kv_parking.py`: `_select_pool()` 결정 로그 (~25줄, 기본 off)
 4. **[코드]** `scripts/sglang/run_exp2_pd_imbalance.sh` (기존 스크립트 기반, 라우터 skew 제거)
 5. **[코드]** `benchmark/collect_imbalance.py` — occ CSV + 결정 로그 → M1~M4 표
