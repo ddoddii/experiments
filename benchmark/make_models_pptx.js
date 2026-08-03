@@ -1,4 +1,4 @@
-// The cross-model figure as an EDITABLE PowerPoint slide: four NATIVE bar charts.
+// The cross-model figure as an EDITABLE PowerPoint slide: three NATIVE bar charts.
 //
 // Native means each chart carries its own worksheet, so numbers, colours, fonts and axis
 // ranges are all editable in PowerPoint. A PNG placed on a slide is not -- and "I want to
@@ -64,15 +64,11 @@ const PANELS = [
     lower: false, max: 100, unit: 25 },
   { key: "ttft_p50_s", title: "(b)  Time to first token", axis: "Normalized TTFT",
     lower: true, normTo: "recompute", max: 1.25, unit: 0.25 },
-  // Overall output throughput -- the conventional t/s. This comes out FLAT across arms
-  // (1.00 / 1.01 / 1.01 on Llama-3.1-8B) because the benchmark is closed-loop: the same
-  // conversations at the same fixed concurrency, all turns completing, so wall time is
-  // the same and throughput is (fixed work)/(same wall) by construction. A null result
-  // for a reason unrelated to the mechanism, not a bug. Separating the arms on
-  // throughput needs an open-loop saturating run -- see qps_sweep.py.
-  { key: "goodput_tok_s", title: "(c)  Throughput", axis: "Normalized Throughput",
-    lower: false, normTo: "recompute", max: 1.25, unit: 0.25 },
-  { key: "peak_anonpages_gb", title: "(d)  Host memory", axis: "Host DRAM (GB)",
+  // Throughput is deliberately NOT a panel here. Closed-loop it is flat by
+  // construction, and the open-loop sweep showed the server saturates on decode, which
+  // KV placement does not touch (peak 1105/1249/1135 tok/s across arms). Neither
+  // version separates the arms, so neither earns a quarter of the figure.
+  { key: "peak_anonpages_gb", title: "(c)  Host memory", axis: "Host DRAM (GB)",
     lower: true, ratioVs: "hicache" },
 ];
 
@@ -156,7 +152,7 @@ const common = {
   titleColor: INK,
 };
 
-const X0 = 0.45, W = 3.02, GAP = 0.13, Y = 1.15, H = 4.3;
+const X0 = 0.7, W = 3.85, GAP = 0.25, Y = 1.15, H = 4.3;
 
 PANELS.forEach((p, i) => {
   const x = X0 + i * (W + GAP);
@@ -197,7 +193,7 @@ PANELS.forEach((p, i) => {
   });
 });
 
-// One legend for all four panels, as text: it serves every chart and stays put when any
+// One legend for all three panels, as text: it serves every chart and stays put when any
 // of them is resized.
 let lx = 4.6;
 ARMS.forEach((a) => {
@@ -213,9 +209,8 @@ ARMS.forEach((a) => {
 });
 
 slide.addText(
-  "Hit rate and host DRAM improve on all three models. Throughput is flat by " +
-  "construction — the benchmark is closed-loop, so every arm does the same work in the " +
-  "same wall time. Normalized TTFT is the exception on Llama-2-13B (0.95×): its " +
+  "Hit rate and host DRAM improve on all three models. Normalized TTFT is the " +
+  "exception on Llama-2-13B (0.95×): its " +
   "4096-position limit caps conversations at four turns, so the re-prefill a hit avoids " +
   "is small enough that the fetch does not pay for itself — the mechanism still works " +
   "there (1.66× hit rate), it just has less to win.",
