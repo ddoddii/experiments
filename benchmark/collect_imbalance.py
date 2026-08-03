@@ -73,7 +73,8 @@ def load(csv_path):
                     v = d.get(f"{lab}{suffix}", "")
                     return float(v) if v not in ("", None) else None
                 rec[lab] = {"use": g("_use"), "used": g("_used_tok"),
-                            "run": g("_running"), "cap": g("_cap_tok")}
+                            "run": g("_running"), "cap": g("_cap_tok"),
+                            "pressure": g("_pressure")}
             rows.append((float(d["t_s"]), rec))
     return labels, roles, rows
 
@@ -197,6 +198,7 @@ def per_gpu(labels, roles, rows, caps, kib):
     out, by_role = {}, {}
     for lab in labels:
         us = [r[lab]["use"] for _, r in rows if r[lab]["use"] is not None]
+        ps = [r[lab]["pressure"] for _, r in rows if r[lab]["pressure"] is not None]
         fs = [free_tokens(r, lab, caps[lab]) for _, r in rows if r[lab]["use"] is not None]
         fs = [f for f in fs if f is not None]
         if not us:
@@ -206,6 +208,10 @@ def per_gpu(labels, roles, rows, caps, kib):
             "cap_tokens": int(caps[lab]) if caps[lab] else None,
             "cap_gb": round(caps[lab] * kib / (1024 * 1024), 2) if caps[lab] else None,
             "use_mean": round(st.mean(us), 4),
+            # Active working set only. occupancy - pressure IS the prefix cache, which is
+            # what a prefill node is holding and a decode node is not.
+            "pressure_mean": round(st.mean(ps), 4) if ps else None,
+            "cached_mean": round(st.mean(us) - st.mean(ps), 4) if ps else None,
             "use_p95": round(pct(us, 95), 4),
             "free_gb_mean": round(st.mean(fs) * kib / (1024 * 1024), 2) if fs else None,
             "frac_time_over_90": round(sum(1 for u in us if u > 0.90) / len(us), 4),
@@ -217,14 +223,45 @@ def per_gpu(labels, roles, rows, caps, kib):
     return out, roll
 
 
+def check_metric(labels, rows):
+    """Warn if the occupancy column is really token_usage.
+
+    The first M1 probe returned a flat 0.0 GB*s not because the premise was wrong but
+    because sglang:token_usage subtracts the prefix cache, so a prefill pool full of
+    retained prefixes read as 1.9% occupied. Any CSV recorded before sglang:cache_occupancy
+    existed has that defect baked in, and it fails toward 'no imbalance' -- the one
+    direction that looks like a legitimate negative result. Say so loudly."""
+    have_pressure = any(r[lab]["pressure"] is not None for _, r in rows for lab in labels)
+    if not have_pressure:
+        print("[WARN] no _pressure column: this CSV predates sglang:cache_occupancy, so "
+              "the occupancy below is token_usage, which EXCLUDES prefix-cached KV. A "
+              "small imbalance here is not evidence of a small imbalance.")
+        return False
+    # Both columns present: if they are identical the server did not export
+    # cache_occupancy and the sampler silently fell back.
+    same = all(
+        r[lab]["pressure"] is None or r[lab]["use"] is None
+        or abs(r[lab]["use"] - r[lab]["pressure"]) < 1e-9
+        for _, r in rows for lab in labels
+    )
+    if same:
+        print("[WARN] occupancy == pressure on every sample: the server did not export "
+              "sglang:cache_occupancy and the sampler fell back to token_usage. Rebuild "
+              "the SGLang source tree before trusting these numbers.")
+        return False
+    return True
+
+
 def analyse(csv_path, kib, hi, lo):
     labels, roles, rows = load(csv_path)
     if not rows:
         return {"error": f"no samples in {csv_path}"}
+    trustworthy = check_metric(labels, rows)
     caps = fill_capacity(labels, rows)
     gpus, roll = per_gpu(labels, roles, rows, caps, kib)
     return {
         "csv": csv_path,
+        "metric": "cache_occupancy" if trustworthy else "token_usage (FALLBACK)",
         "samples": len(rows),
         "duration_s": round(rows[-1][0] - rows[0][0], 1),
         "per_gpu": gpus,
@@ -243,11 +280,14 @@ def report(tag, a):
         print(f"\n### {tag}: {a['error']}")
         return
     print(f"\n### {tag}   ({a['samples']} samples, {a['duration_s']}s)")
-    print(f"{'gpu':>5} {'role':>5} {'cap(GB)':>8} {'use_mean':>9} {'use_p95':>8} "
-          f"{'free(GB)':>9} {'>90%':>7}")
+    print(f"  metric: {a['metric']}")
+    print(f"{'gpu':>5} {'role':>5} {'cap(GB)':>8} {'occup':>7} {'active':>7} {'cached':>7} "
+          f"{'p95':>7} {'free(GB)':>9} {'>90%':>7}")
     for lab, g in a["per_gpu"].items():
-        print(f"{lab:>5} {g['role']:>5} {str(g['cap_gb']):>8} {g['use_mean']:>9.3f} "
-              f"{g['use_p95']:>8.3f} {str(g['free_gb_mean']):>9} "
+        pm = "  --  " if g["pressure_mean"] is None else f"{g['pressure_mean']:>6.3f}"
+        cm = "  --  " if g["cached_mean"] is None else f"{g['cached_mean']:>6.3f}"
+        print(f"{lab:>5} {g['role']:>5} {str(g['cap_gb']):>8} {g['use_mean']:>7.3f} "
+              f"{pm:>7} {cm:>7} {g['use_p95']:>7.3f} {str(g['free_gb_mean']):>9} "
               f"{g['frac_time_over_90']*100:>6.1f}%")
     r = a["role_rollup"]
     if "pd_gap" in r:
