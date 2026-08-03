@@ -100,7 +100,7 @@ def main():
     cols = ["t_s"]
     for _, label, _ in targets:
         cols += [f"{label}_use", f"{label}_used_tok", f"{label}_running",
-                 f"{label}_cap_tok", f"{label}_pressure"]
+                 f"{label}_cap_tok", f"{label}_pressure", f"{label}_hit"]
     f = open(args.out, "w", buffering=1)  # line-buffered -> survives kill
     f.write(",".join(cols) + "\n")
     # also stash the role map as a comment for the plotter
@@ -112,31 +112,17 @@ def main():
     # server with a genuinely empty prefix cache produces. Those two cases have opposite
     # meanings ("the measurement is broken" vs "the cache really is on another tier") and
     # nothing downstream could tell them apart.
-    src = {}
-    for port, label, _ in targets:
-        m = scrape_all(f"http://{args.host}:{port}/metrics")
-        if not m:
-            src[label] = "unreachable"
-        elif "sglang:cache_occupancy" in m:
-            src[label] = "cache_occupancy"
-        else:
-            src[label] = "token_usage"
-    f.write("# metric: " + " ".join(f"{k}:{v}" for k, v in src.items()) + "\n")
-    bad = sorted(k for k, v in src.items() if v == "token_usage")
-    if bad:
-        print(f"[kv-ts] WARNING: {bad} do not export sglang:cache_occupancy. Occupancy "
-              f"for them will be token_usage, which EXCLUDES prefix-cached KV. Pull and "
-              f"restart the SGLang source tree if the prefix cache matters.")
-
+    src = {}          # label -> metric name actually used, updated as servers warm up
     print(f"[kv-ts] sampling {len(targets)} servers every {args.interval}s -> {args.out} "
-          f"(metric: {src}; Ctrl-C / kill to stop)")
+          f"(Ctrl-C / kill to stop)")
     t0 = time.time()
     n = 0
     try:
         while True:
             t = time.time() - t0
             row = [f"{t:.2f}"]
-            for port, _, _ in targets:
+            new_src = dict(src)
+            for port, _lab, _ in targets:
                 m = scrape_all(f"http://{args.host}:{port}/metrics")
                 # PRIMARY: cache_occupancy = (used + evictable) / capacity. Prefer it over
                 # token_usage, which subtracts the prefix cache and therefore reports a
@@ -146,10 +132,14 @@ def main():
                 # record both so the difference stays visible in the CSV.
                 use = m.get("sglang:cache_occupancy")
                 pressure = m.get("sglang:token_usage")
+                new_src[_lab] = ("cache_occupancy" if use is not None
+                                 else ("token_usage" if pressure is not None
+                                       else new_src.get(_lab, "unreachable")))
                 if use is None:
                     use = pressure
                 used = m.get("sglang:num_used_tokens")
                 run = m.get("sglang:num_running_reqs")
+                hit = m.get("sglang:cache_hit_rate")
                 cap = next((m[k] for k in CAPACITY_METRICS if k in m), None)
                 # Derive capacity when the server exposes no capacity gauge. Only valid
                 # while the pool is meaningfully occupied: at usage ~0 the ratio is
@@ -160,7 +150,16 @@ def main():
                         "" if used is None else f"{used:.0f}",
                         "" if run is None else f"{run:.0f}",
                         "" if cap is None else f"{cap:.0f}",
-                        "" if pressure is None else f"{pressure:.4f}"]
+                        "" if pressure is None else f"{pressure:.4f}",
+                        "" if hit is None else f"{hit:.4f}"]
+            # Emit the metric map whenever it changes rather than once at startup. A
+            # gauge is absent from /metrics until something sets it, so an idle decode
+            # node reports no cache_occupancy for the first few ticks and then acquires
+            # it -- which the old one-shot probe recorded permanently as a fallback.
+            if new_src != src:
+                src = dict(new_src)
+                f.write("# metric: " + " ".join(f"{k}:{v}" for k, v in src.items()) + "\n")
+                print(f"[kv-ts] metric source now {src}")
             f.write(",".join(row) + "\n")
             n += 1
             if args.duration and t >= args.duration:
