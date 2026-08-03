@@ -36,6 +36,17 @@ SERIES = {
     "D0": ("#E69F00", "-"),
     "D1": ("#D55E00", "--"),
 }
+# Role-agnostic palette for --rename. The claim this figure carries is "at any instant
+# some GPU is out of room while another has plenty", which is a statement about four
+# GPUs, not about prefill versus decode -- and deliberately so: the DIRECTION of the P/D
+# imbalance is not fixed. Under a 20k prefill pool at C=24 the decode pools ran hotter
+# (0.75 vs 0.44); under a 60k pool at C=16 the prefill pools do (0.89 vs 0.06). A figure
+# that names roles commits the paper to one of those, and the other configuration then
+# reads as a contradiction. Naming GPUs commits it to neither, and the mechanism does not
+# depend on the answer: _select_pool() reads live occupancy and places into whatever is
+# idle at that instant.
+GPU_SERIES = ["#0072B2", "#E69F00", "#56B4E9", "#D55E00"]
+GPU_STYLES = ["-", "-", "--", "--"]
 SHADE = "#9C7A3C"   # muted amber/brown wash for opportunity spans
 INK, MUTED = PALETTE["ink"], PALETTE["muted"]
 MAX_COL = MIN_COL = INK  # both black; separated by linestyle only (solid vs dashed)
@@ -46,6 +57,7 @@ def load(csv_path):
     reader = csv.DictReader(rows)
     labels = [c[:-4] for c in reader.fieldnames if c.endswith("_use")]
     data = {"t": []} | {l: [] for l in labels}
+    caps = {l: [] for l in labels}
     for r in reader:
         try:
             data["t"].append(float(r["t_s"]))
@@ -54,7 +66,26 @@ def load(csv_path):
         for l in labels:
             v = r.get(f"{l}_use", "")
             data[l].append(float(v) if v not in ("", None) else None)
-    return data, labels
+            c = r.get(f"{l}_cap_tok", "")
+            if c not in ("", None):
+                caps[l].append(float(c))
+    # Pool capacity, so headroom can also be stated in GB. The fraction alone cannot:
+    # a prefill capped at 60k tokens holds 7.3 GB and a decode 22.6 GB, so equal-looking
+    # occupancies on the two sides are very different amounts of free memory.
+    cap = {l: (sorted(v)[len(v) // 2] if v else None) for l, v in caps.items()}
+    return data, labels, cap
+
+
+def rename(data, labels, cap, spec):
+    """Apply --rename P0=GPU0,D0=GPU1,... and return the reordered label list."""
+    mapping = dict(kv.split("=", 1) for kv in spec.split(",") if "=" in kv)
+    missing = [l for l in labels if l not in mapping]
+    if missing:
+        raise SystemExit(f"--rename does not cover {missing}; got {sorted(mapping)}")
+    for old, new in mapping.items():
+        data[new] = data.pop(old)
+        cap[new] = cap.pop(old)
+    return sorted(mapping.values())
 
 
 def opp_spans(t, opp):
@@ -148,9 +179,18 @@ def main():
                     "Roles inferred from labels starting with P/D.")
     ap.add_argument("--d-hi", type=float, default=0.85, help="decode saturation threshold (--role mode)")
     ap.add_argument("--p-lo", type=float, default=0.30, help="prefill headroom threshold (--role mode)")
+    ap.add_argument("--rename", default="",
+                    help="relabel series role-agnostically, e.g. "
+                         "'P0=GPU0,D0=GPU1,P1=GPU2,D1=GPU3' (PD_LAYOUT=b)")
+    ap.add_argument("--kib-per-token", type=float, default=128.0,
+                    help="KV bytes/token for the GB figures (Llama-3.1-8B=128)")
     args = ap.parse_args()
 
-    data, labels = load(args.csv)
+    data, labels, cap = load(args.csv)
+    if args.rename:
+        labels = rename(data, labels, cap, args.rename)
+        for i, l in enumerate(labels):
+            SERIES[l] = (GPU_SERIES[i % len(GPU_SERIES)], GPU_STYLES[i % len(GPU_STYLES)])
     t = data["t"]
     if not t:
         raise SystemExit(f"no samples in {args.csv}")
@@ -177,6 +217,24 @@ def main():
         if vv:
             print(f"  {l}: mean={sum(vv)/len(vv):.2f} max={max(vv):.2f} min={min(vv):.2f}")
     print(f"  OPPORTUNITY (some GPU>={args.hi} AND some GPU<={args.lo}): {opp_frac*100:.1f}% of time")
+    # How much memory the opportunity is worth: free capacity on the slack GPUs at the
+    # instants a saturated one coexists with them. A percentage of time says the chance
+    # arises; this says whether it is worth taking.
+    if all(cap.get(l) for l in labels):
+        tot, cnt = 0.0, 0
+        for i in range(len(t)):
+            if not opp[i]:
+                continue
+            g = sum((1.0 - data[l][i]) * cap[l] for l in labels
+                    if data[l][i] is not None and data[l][i] <= args.lo)
+            tot += g * args.kib_per_token / (1024 * 1024)
+            cnt += 1
+        if cnt:
+            print(f"  STRANDED while the opportunity holds: {tot / cnt:.1f} GB on average")
+        for l in labels:
+            vv = [x for x in data[l] if x is not None]
+            print(f"    {l}: pool {cap[l] * args.kib_per_token / (1024*1024):.2f} GB, "
+                  f"free {sum((1 - x) for x in vv) / len(vv) * cap[l] * args.kib_per_token / (1024*1024):.2f} GB avg")
 
     use_paper_style()
 
@@ -249,7 +307,7 @@ def main():
                  va="top", ha="right")
         ax1.set_ylabel("KV pool usage")
         ax1.set_ylim(0, 1.03)
-        ax1.set_title("(a) Per-GPU KV occupancy (2P2D)")
+        ax1.set_title("(a) Per-GPU KV occupancy")
         ax1.legend(ncol=4, loc="upper center", handlelength=1.6, columnspacing=1.2,
                    borderaxespad=0.2)
         style_axes(ax1)
