@@ -1,0 +1,226 @@
+{
+  "park_local": {
+    "csv": "results/exp2/pd_layoutb_c32_pergpu10k/occ_park_local.csv",
+    "metric": "cache_occupancy",
+    "samples": 1902,
+    "duration_s": 950.6,
+    "per_gpu": {
+      "P0": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.9051,
+        "pressure_mean": 0.0347,
+        "cached_mean": 0.8704,
+        "hit_rate_final": 0.9804,
+        "use_p95": 0.9941,
+        "free_gb_mean": 0.69,
+        "frac_time_over_90": 0.8864
+      },
+      "P1": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.9045,
+        "pressure_mean": 0.037,
+        "cached_mean": 0.8675,
+        "hit_rate_final": 0.9957,
+        "use_p95": 0.9955,
+        "free_gb_mean": 0.7,
+        "frac_time_over_90": 0.8722
+      },
+      "D0": {
+        "role": "D",
+        "cap_tokens": 185482,
+        "cap_gb": 22.64,
+        "use_mean": 0.1319,
+        "pressure_mean": 0.1319,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.2237,
+        "free_gb_mean": 19.66,
+        "frac_time_over_90": 0.0
+      },
+      "D1": {
+        "role": "D",
+        "cap_tokens": 185482,
+        "cap_gb": 22.64,
+        "use_mean": 0.1416,
+        "pressure_mean": 0.1416,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.2219,
+        "free_gb_mean": 19.44,
+        "frac_time_over_90": 0.0
+      }
+    },
+    "role_rollup": {
+      "P_use_mean": 0.9048,
+      "D_use_mean": 0.1367,
+      "pd_gap": 0.7681
+    },
+    "M1_stranded": {
+      "stranded_gb_s": 33627.8,
+      "saturated_s": 864.6,
+      "measured_s": 950.6,
+      "saturated_frac": 0.9095,
+      "mean_stranded_gb": 38.89,
+      "by_gpu_gb_s": {
+        "P0": 0.0,
+        "P1": 0.0,
+        "D0": 16910.1,
+        "D1": 16717.7
+      }
+    },
+    "M1_threshold_curve": {
+      "hi=0.7": 34015.5,
+      "hi=0.8": 33764.5,
+      "hi=0.85": 33647.4,
+      "hi=0.9": 33627.8,
+      "hi=0.95": 29765.8
+    },
+    "M2_imbalance": {
+      "cov_mean": 0.7246,
+      "cov_p95": 0.8716,
+      "spread_mean": 0.8131,
+      "spread_p95": 0.9346,
+      "jain_mean": 0.6559,
+      "samples": 1902
+    },
+    "gpu_hbm": {
+      "gpu0": {
+        "used_gb_mean": 27.23,
+        "used_gb_peak": 27.42,
+        "free_gb_at_peak": 21.58
+      },
+      "gpu1": {
+        "used_gb_mean": 40.41,
+        "used_gb_peak": 40.41,
+        "free_gb_at_peak": 8.59
+      },
+      "gpu2": {
+        "used_gb_mean": 26.49,
+        "used_gb_peak": 26.57,
+        "free_gb_at_peak": 22.43
+      },
+      "gpu3": {
+        "used_gb_mean": 40.41,
+        "used_gb_peak": 40.41,
+        "free_gb_at_peak": 8.59
+      },
+      "total_free_gb_at_peak": 61.19
+    }
+  },
+  "park_pd": {
+    "csv": "results/exp2/pd_layoutb_c32_pergpu10k/occ_park_pd.csv",
+    "metric": "cache_occupancy",
+    "samples": 1923,
+    "duration_s": 961.1,
+    "per_gpu": {
+      "P0": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.9032,
+        "pressure_mean": 0.0397,
+        "cached_mean": 0.8635,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.9946,
+        "free_gb_mean": 0.71,
+        "frac_time_over_90": 0.8648
+      },
+      "P1": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.9057,
+        "pressure_mean": 0.04,
+        "cached_mean": 0.8657,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.9936,
+        "free_gb_mean": 0.69,
+        "frac_time_over_90": 0.8414
+      },
+      "D0": {
+        "role": "D",
+        "cap_tokens": 165101,
+        "cap_gb": 20.15,
+        "use_mean": 0.1415,
+        "pressure_mean": 0.1415,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.2305,
+        "free_gb_mean": 17.3,
+        "frac_time_over_90": 0.0
+      },
+      "D1": {
+        "role": "D",
+        "cap_tokens": 165101,
+        "cap_gb": 20.15,
+        "use_mean": 0.1644,
+        "pressure_mean": 0.1644,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.2568,
+        "free_gb_mean": 16.84,
+        "frac_time_over_90": 0.0
+      }
+    },
+    "role_rollup": {
+      "P_use_mean": 0.9044,
+      "D_use_mean": 0.153,
+      "pd_gap": 0.7515
+    },
+    "M1_stranded": {
+      "stranded_gb_s": 29816.8,
+      "saturated_s": 878.1,
+      "measured_s": 961.1,
+      "saturated_frac": 0.9136,
+      "mean_stranded_gb": 33.96,
+      "by_gpu_gb_s": {
+        "P0": 0.0,
+        "P1": 0.0,
+        "D0": 15109.0,
+        "D1": 14707.8
+      }
+    },
+    "M1_threshold_curve": {
+      "hi=0.7": 30203.7,
+      "hi=0.8": 30118.4,
+      "hi=0.85": 30033.4,
+      "hi=0.9": 29816.8,
+      "hi=0.95": 26391.5
+    },
+    "M2_imbalance": {
+      "cov_mean": 0.6996,
+      "cov_p95": 0.8846,
+      "spread_mean": 0.798,
+      "spread_p95": 0.9138,
+      "jain_mean": 0.6715,
+      "samples": 1923
+    },
+    "gpu_hbm": {
+      "gpu0": {
+        "used_gb_mean": 27.03,
+        "used_gb_peak": 27.13,
+        "free_gb_at_peak": 21.87
+      },
+      "gpu1": {
+        "used_gb_mean": 40.42,
+        "used_gb_peak": 40.42,
+        "free_gb_at_peak": 8.58
+      },
+      "gpu2": {
+        "used_gb_mean": 26.28,
+        "used_gb_peak": 26.37,
+        "free_gb_at_peak": 22.63
+      },
+      "gpu3": {
+        "used_gb_mean": 40.41,
+        "used_gb_peak": 40.42,
+        "free_gb_at_peak": 8.58
+      },
+      "total_free_gb_at_peak": 61.66
+    }
+  }
+}
