@@ -71,7 +71,7 @@
 
 ## 3. 메모리
 
-### 3-1. Host DRAM 사용량 — SGLang 대비 **1.45 ~ 2.05배 절감**
+### 3-1. Host DRAM 사용량 — **host tier의 100%를 반환**
 
 | 모델 | Recompute | SGLang | Ours | 절감량 | **SGLang 대비** |
 |---|---|---|---|---|---|
@@ -79,8 +79,22 @@
 | Llama-2-13B | 14.8 GB | 29.8 GB | **15.2 GB** | −14.6 GB | **1.96×** |
 | Qwen3-14B | 16.5 GB | 23.4 GB | **16.2 GB** | −7.2 GB | **1.45×** |
 
-- Ours는 host DRAM 사용량이 **Recompute 수준(캐시 없는 하한선)으로 복귀** — 캐시를 유지하면서 host 비용은 0에 수렴
-- 비교 기준을 SGLang으로 잡은 이유: Recompute는 **host tier 자체가 없어** 정의상 이기므로 기준이 될 수 없음
+- Ours의 값이 **Recompute(캐시가 아예 없는 하한선)와 동일** — 즉 절감량 = **host tier 전부**. 일부가 아님
+
+**절감량의 절대값은 pool 크기에 비례한다 (숫자를 그대로 인용하면 안 되는 이유)**
+
+- HiCache의 host 예약 = `hicache_ratio × (device KV pool)` 이고, device pool = `PREFILL_MAX_TOTAL_TOKENS × KV bytes/token × 2 (prefill GPU 수)`
+- 이 식이 세 모델을 **0.1 GB 이내로 예측**함:
+
+  | 모델 | pool (tok) | KiB/tok | device KV | ×1.2 = 예측 | 실측 |
+  |---|---|---|---|---|---|
+  | Llama-3.1-8B | 60,000 | 128 | 14.6 GB | 17.6 GB | **17.5 GB** |
+  | Llama-2-13B | 8,000 | 800 | 12.2 GB | 14.6 GB | **14.6 GB** |
+  | Qwen3-14B | 20,000 | 160 | 6.1 GB | 7.3 GB | **7.2 GB** |
+
+- 본 sweep이 pool을 60k 토큰으로 **일부러 제한**한 이유: 8 concurrent × 11k 토큰 = 88k 가 60k pool을 넘어야 **실제 eviction이 발생**함. 제한을 풀면 캐시 압력 자체가 사라져 hit rate·TTFT 측정이 무의미해짐
+- **SGLang 기본 pool(제한 없음)에서 같은 메커니즘을 측정하면 −61.2 GB** (`results/mem/bd_*.csv`, §3-2)
+- 따라서 주장은 "17.5 GB를 아낀다"가 아니라 **"host tier를 통째로 반환하며, 그 크기는 pool에 비례한다"**
 
 **측정 방법 (본문 한 줄, 자세한 건 각주로)**
 
@@ -97,10 +111,21 @@
   → 지표 선택이 결과를 만든 것이 아님. 리뷰어의 "왜 하필 그 지표냐"에 대한 답이 이 표
 - 절대값으로 anonymous를 고른 이유는 단순함: RSS는 모델 가중치 등 **비교와 무관한 ~65 GB 상수**를 포함해 비율을 1.24×로 희석시킴
 
-### 3-2. HiCache의 host 사용량은 write policy와 무관한 **정적 예약**
+### 3-2. ★ 기본 pool에서의 주 결과 — **−61.2 GB** (`results/mem/bd_*.csv`, 215 samples/arm)
 
-- `write_through` / `write_through_selective` / `write_back` / L2-only 4개 구성에서 host DRAM 사용량 편차 **0.4 GB 이내**
-- 즉 "실제로 얼마나 쓰느냐"가 아니라 **서버 기동 시 예약하고 반납하지 않는 양** → 워크로드를 조정해도 줄지 않음
+| arm | host DRAM peak (GB) | MemAvailable min (GB) | page cache (GB) |
+|---|---|---|---|
+| `write_through` | 76.2 | 43.1 | 37.7 |
+| `write_through_selective` | 76.6 | 42.6 | 33.6 |
+| `write_back` | 76.2 | 44.0 | 17.0 |
+| L2-only | 76.1 | 44.2 | 16.5 |
+| **Ours** | **15.1** | **104.6** | 16.7 |
+
+- **host DRAM −61.2 GB, MemAvailable +61.2 GB** — 이것이 메모리 쪽 헤드라인 숫자
+- **write policy·storage backend를 바꿔도 76 GB로 동일** (4개 구성 편차 0.4 GB)
+  → HiCache의 host 점유는 *정책이 아니라 정적 예약*. 서버 기동 시 잡고 반납하지 않으므로 **기존 시스템 안에서 튜닝으로 해결 불가능**함을 직접 측정으로 보임
+- **page cache를 희생해서 만든 절약이 아님**: Ours의 page cache 16.7 GB는 L2-only의 16.5 GB와 동일. 줄어든 것은 회수 불가능한 anonymous 예약뿐
+- 인용 문장: *HiCache commits 61 GB of host DRAM regardless of write policy or storage backend; GPU-first placement returns all of it, raising MemAvailable from 44.3 GB to 105.5 GB.*
 
 ### 3-3. Trade-off (숨기지 말 것)
 
@@ -135,4 +160,4 @@
 
 ## 5. 한 문장 요약
 
-> GPU-first KV placement는 PD disaggregation에서 **decode가 생성한 KV를 prefill 측이 재사용 가능하게** 만들어, cache hit rate를 SGLang 대비 **1.38~1.72배**로 올리고 host DRAM을 **최대 2.05배** 줄인다. 대가는 유휴 GPU HBM이며, 이득은 **중저 동시성 구간**에 한정된다.
+> GPU-first KV placement는 PD disaggregation에서 **decode가 생성한 KV를 prefill 측이 재사용 가능하게** 만들어, cache hit rate를 SGLang 대비 **1.38~1.72배**로 올리면서, HiCache가 정적으로 예약하는 host DRAM을 **전부 반환한다 (기본 pool 기준 61 GB)**. 대가는 유휴 GPU HBM이며, 이득은 **중저 동시성 구간**에 한정된다.
