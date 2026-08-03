@@ -31,6 +31,7 @@ alongside so a spiky arm is visible as such.
 import argparse
 import csv
 import json
+import statistics as _st
 import os
 
 
@@ -147,6 +148,13 @@ def collect(arm, bench=None, mem=None, park=None, metrics=None):
         "ttft_p95_s": b.get("ttft_p95_s"),
         "ttft_p99_s": b.get("ttft_p99_s"),
         "ttft_avg_s": b.get("avg_ttft_s"),
+        # TPOT: decode-side latency. KV placement acts on prefill, so this is a
+        # NON-REGRESSION check rather than a result -- it says the balance was not bought
+        # with per-token latency. The median is over per-conversation averages, which is
+        # the finest granularity the harness records (it stores avg_tpot_s per item, not
+        # per turn), and it resists the few very short conversations whose TPOT is noisy.
+        "tpot_avg_s": b.get("avg_tpot_s"),
+        "tpot_p50_s": _tpot_p50(_json(bench)),
         "throughput_tok_s": b.get("overall_throughput_tok_s") or b.get("throughput_tok_s"),
         "goodput_tok_s": _goodput(_json(bench)),
         "errors": b.get("n_errors") if b.get("n_errors") is not None else b.get("errors"),
@@ -235,6 +243,15 @@ def _turn_health(bench):
     return turns, infra, workload, empty
 
 
+def _tpot_p50(d):
+    """Median of the per-conversation average TPOT, or None."""
+    if not isinstance(d, dict):
+        return None
+    vals = [r.get("avg_tpot_s") for r in d.get("results", [])
+            if isinstance(r, dict) and r.get("avg_tpot_s")]
+    return round(_st.median(vals), 5) if vals else None
+
+
 def _goodput(bench):
     """Output tokens per wall second counting ONLY turns that completed successfully.
 
@@ -293,6 +310,7 @@ GROUPS = [
     ]),
     ("Performance", [
         ("ttft_p50_s", "TTFT p50 (s)"),
+        ("tpot_p50_s", "TPOT p50 (s/token)"),
         ("ttft_p95_s", "TTFT p95 (s)"),
         ("ttft_p99_s", "TTFT p99 (s)"),
         ("throughput_tok_s", "throughput (tok/s)"),
