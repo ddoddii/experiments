@@ -1,55 +1,64 @@
 {
   "hicache": {
     "csv": "results/exp2/pd_layoutb_p60000_c16/occ_hicache.csv",
-    "samples": 1847,
-    "duration_s": 923.1,
+    "metric": "token_usage (FALLBACK)",
+    "samples": 1889,
+    "duration_s": 944.1,
     "per_gpu": {
       "P0": {
         "role": "P",
         "cap_tokens": 60000,
         "cap_gb": 7.32,
-        "use_mean": 0.0193,
-        "use_p95": 0.071,
-        "free_gb_mean": 7.18,
+        "use_mean": 0.0222,
+        "pressure_mean": 0.0222,
+        "cached_mean": 0.0,
+        "use_p95": 0.0751,
+        "free_gb_mean": 7.16,
         "frac_time_over_90": 0.0
       },
       "P1": {
         "role": "P",
         "cap_tokens": 60000,
         "cap_gb": 7.32,
-        "use_mean": 0.0186,
-        "use_p95": 0.0665,
-        "free_gb_mean": 7.19,
+        "use_mean": 0.0206,
+        "pressure_mean": 0.0206,
+        "cached_mean": 0.0,
+        "use_p95": 0.0683,
+        "free_gb_mean": 7.17,
         "frac_time_over_90": 0.0
       },
       "D0": {
         "role": "D",
         "cap_tokens": 185484,
         "cap_gb": 22.64,
-        "use_mean": 0.0602,
-        "use_p95": 0.1265,
-        "free_gb_mean": 21.28,
+        "use_mean": 0.062,
+        "pressure_mean": 0.062,
+        "cached_mean": 0.0,
+        "use_p95": 0.1136,
+        "free_gb_mean": 21.24,
         "frac_time_over_90": 0.0
       },
       "D1": {
         "role": "D",
         "cap_tokens": 185484,
         "cap_gb": 22.64,
-        "use_mean": 0.0638,
-        "use_p95": 0.1085,
-        "free_gb_mean": 21.2,
+        "use_mean": 0.065,
+        "pressure_mean": 0.065,
+        "cached_mean": 0.0,
+        "use_p95": 0.1143,
+        "free_gb_mean": 21.17,
         "frac_time_over_90": 0.0
       }
     },
     "role_rollup": {
-      "P_use_mean": 0.0189,
-      "D_use_mean": 0.062,
-      "pd_gap": -0.0431
+      "P_use_mean": 0.0214,
+      "D_use_mean": 0.0635,
+      "pd_gap": -0.0421
     },
     "M1_stranded": {
       "stranded_gb_s": 0.0,
       "saturated_s": 0.0,
-      "measured_s": 923.1,
+      "measured_s": 944.1,
       "saturated_frac": 0.0,
       "mean_stranded_gb": 0.0,
       "by_gpu_gb_s": {
@@ -67,12 +76,12 @@
       "hi=0.95": 0.0
     },
     "M2_imbalance": {
-      "cov_mean": 0.8011,
-      "cov_p95": 1.267,
-      "spread_mean": 0.076,
-      "spread_p95": 0.1229,
-      "jain_mean": 0.6237,
-      "samples": 1847
+      "cov_mean": 0.7585,
+      "cov_p95": 1.1605,
+      "spread_mean": 0.0761,
+      "spread_p95": 0.1249,
+      "jain_mean": 0.6438,
+      "samples": 1889
     }
   }
 }
