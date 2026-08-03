@@ -1,6 +1,6 @@
 # Exp 2 결과 — P/D 불균형
 
-> **그림**: `results/exp2/fig_exp2_harvest.{pdf,png}` (`benchmark/plot_exp2_harvest.py`, v5 기준)
+> **그림**: `results/exp2/fig_exp2_stack.{pdf,png}` (`benchmark/plot_exp2_gpu_stack.py`, v5 기준)
 > **최종 주장 (§7-2)**: GPU-first placement는 배치가 헤드룸을 정확히 따라가며
 > (usage gap −0.38, 널 모델 대비 3배 이상), **per-GPU park 용량이 제약인 구성에서**
 > cache hit rate를 **47.1% → 55.7%**, median TTFT를 **8.9%** 개선한다.
@@ -276,7 +276,31 @@ p95 **+67%**, p99 **+47%**. 파킹의 97.7%가 cross-GPU이므로 **거의 모�
    → v1/v2의 residency 수치는 전부 과소 보고이며 v3만 신뢰할 수 있다.
 2. **M1/M2로 (A)를 측정하려 한 설계** → §3. serving 풀만 보는 지표로는 원리적으로 불가능했다.
 
-## 9. Exp 2 그림 (`fig_exp2_harvest`) — **정책이 아니라 자원을 그린다**
+## 9. Exp 2 그림 (`fig_exp2_stack`) — GPU별 KV 풀을 **자기 캐시 / 빌려준 캐시 / 빈 공간**으로 쌓기
+
+GPU 4개 각각에 local-only vs Ours 막대 한 쌍. 세 층으로 쌓는다:
+
+| 층 | 뜻 |
+|---|---|
+| **own cache** (회색) | 그 GPU가 자기 작업을 위해 들고 있는 캐시 |
+| **parked** (초록) | 다른 노드가 여기에 올려둔 재사용 캐시 ← **메커니즘** |
+| **unused** (점선 빈칸) | 아직 안 쓴 풀 용량 ← **낭비** |
+
+**낭비와 그것을 채우는 것이 같은 막대, 같은 축척에 있다.** 비율이나 집계 막대로는
+보여줄 수 없는 것이다:
+
+- **prefill(GPU0/2)**: 회색이 천장까지 차 있고 빈칸이 거의 없다 — 더 담을 데가 없다
+- **decode(GPU1/3)**: local-only는 3.0 GB만 쓰고 **19.7 GB가 점선 빈칸**.
+  Ours에서 그 빈칸 안에 **2.6 GB 초록 블록이 생긴다**
+
+막대 총높이 = serving 풀 + 그 GPU의 park 풀. 두 arm의 총높이가 거의 같다(22.64 vs 22.77 GB).
+park 풀은 serving 풀이 가져갔을 HBM에서 잘라낸 것이므로 **없던 메모리를 만들어낸 게 아니라
+재분할한 것**이며, 그림이 그 사실을 그대로 보여준다.
+
+오른쪽: hit rate 47.1 → 55.7%, TTFT p50 0.34 → 0.31, **p95 2.43 → 4.06 (빨강)**.
+
+> 앞선 두 버전은 남겨둠. `plot_exp2.py`(결정 로그: usage gap·널 모델)는 **배치가 우연이
+> 아님**의 증거로 부록에, `plot_exp2_harvest.py`(시계열 + 3.0× 캐시)는 대체안으로.
 
 첫 버전(`plot_exp2.py`)은 *정책*을 그렸다: 선택된 GPU의 점유율 vs 거부된 GPU의 점유율.
 그건 "선택기가 한가한 GPU를 선호하는가"에 답할 뿐이고 **selector 소스코드의 재진술에
