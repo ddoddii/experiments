@@ -71,7 +71,7 @@
 
 ## 3. 메모리
 
-### 3-1. Host DRAM (peak AnonPages) — SGLang 대비 **1.45 ~ 2.05배 절감**
+### 3-1. Host DRAM 사용량 — SGLang 대비 **1.45 ~ 2.05배 절감**
 
 | 모델 | Recompute | SGLang | Ours | 절감량 | **SGLang 대비** |
 |---|---|---|---|---|---|
@@ -79,13 +79,27 @@
 | Llama-2-13B | 14.8 GB | 29.8 GB | **15.2 GB** | −14.6 GB | **1.96×** |
 | Qwen3-14B | 16.5 GB | 23.4 GB | **16.2 GB** | −7.2 GB | **1.45×** |
 
-- **AnonPages를 쓴 이유**: system-wide이며 **회수 불가능**한 메모리 — 옆에서 도는 agent 프로세스가 실제로 못 쓰는 양
 - Ours는 host DRAM 사용량이 **Recompute 수준(캐시 없는 하한선)으로 복귀** — 캐시를 유지하면서 host 비용은 0에 수렴
 - 비교 기준을 SGLang으로 잡은 이유: Recompute는 **host tier 자체가 없어** 정의상 이기므로 기준이 될 수 없음
 
+**측정 방법 (본문 한 줄, 자세한 건 각주로)**
+
+- `/proc/meminfo`의 anonymous 메모리를 1초 간격으로 샘플링한 peak 값
+- 파일 캐시를 제외한 이유: 파일 캐시는 메모리가 부족하면 커널이 **버릴 수 있어서** 다른 프로세스를 실제로 막지 않음
+- **어떤 지표를 써도 결론이 같음** — 절감량 (GB):
+
+  | 모델 | anonymous | 프로세스 RSS | MemAvailable 감소분 |
+  |---|---|---|---|
+  | Llama-3.1-8B | 17.5 | 16.4 | 17.3 |
+  | Llama-2-13B | 14.6 | 13.7 | 14.8 |
+  | Qwen3-14B | 7.2 | 6.2 | 7.1 |
+
+  → 지표 선택이 결과를 만든 것이 아님. 리뷰어의 "왜 하필 그 지표냐"에 대한 답이 이 표
+- 절대값으로 anonymous를 고른 이유는 단순함: RSS는 모델 가중치 등 **비교와 무관한 ~65 GB 상수**를 포함해 비율을 1.24×로 희석시킴
+
 ### 3-2. HiCache의 host 사용량은 write policy와 무관한 **정적 예약**
 
-- `write_through` / `write_through_selective` / `write_back` / L2-only 4개 구성에서 AnonPages 편차 **0.4 GB 이내**
+- `write_through` / `write_through_selective` / `write_back` / L2-only 4개 구성에서 host DRAM 사용량 편차 **0.4 GB 이내**
 - 즉 "실제로 얼마나 쓰느냐"가 아니라 **서버 기동 시 예약하고 반납하지 않는 양** → 워크로드를 조정해도 줄지 않음
 
 ### 3-3. Trade-off (숨기지 말 것)
