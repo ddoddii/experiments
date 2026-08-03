@@ -168,6 +168,19 @@ for arm in $ARMS; do
   for rate in $RATES; do
     echo
     echo "──────── $arm @ ${rate} sessions/s  (offset=$_off) ────────"
+    # Check the disk BEFORE the ten minutes, not after. The hicache file backend fills
+    # it, and the failure lands on json.dump at the very end -- so the cost of finding
+    # out late is the whole measurement, not a retry.
+    _free_gb=$(df -BG --output=avail . | tail -1 | tr -dc '0-9')
+    _hc_gb=$(du -sBG /tmp/hicache 2>/dev/null | cut -f1 | tr -dc '0-9')
+    echo "  disk free: ${_free_gb}G   /tmp/hicache: ${_hc_gb:-0}G"
+    if [ "${_free_gb:-0}" -lt "${NEED_FREE_GB:-10}" ]; then
+      echo "  ERROR: only ${_free_gb}G free (need ${NEED_FREE_GB:-10}G). The hicache file"
+      echo "         backend at /tmp/hicache is the usual culprit; stop.sh now clears it."
+      echo "         Free space and re-run this arm:"
+      echo "           ARMS=\"$arm\" RATES=\"$RATES\" ./scripts/sglang/run_qps_sweep.sh"
+      exit 1
+    fi
     _t0=$SECONDS
     CONFIG="qps_${TAG}_${arm}_r${rate}" \
       ROUTER_URL="http://127.0.0.1:8000/v1/chat/completions" \
@@ -178,6 +191,12 @@ for arm in $ARMS; do
 
     if [ -f "results/qps_${TAG}_${arm}_r${rate}.json" ]; then
       cp "results/qps_${TAG}_${arm}_r${rate}.json" "$OUTDIR/bench_${arm}_r${rate}.json"
+    elif [ -f "results/qps_${TAG}_${arm}_r${rate}.summary.json" ]; then
+      # The full write hit ENOSPC but the summary survived; it carries every number the
+      # collector reads, so the point is not lost -- only its per-turn detail.
+      cp "results/qps_${TAG}_${arm}_r${rate}.summary.json" \
+         "$OUTDIR/bench_${arm}_r${rate}.summary.json"
+      echo "  [warn] only the summary survived for $arm r$rate (disk was full)"
     else
       echo "  [warn] results/qps_${TAG}_${arm}_r${rate}.json missing"
     fi
