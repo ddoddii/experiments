@@ -78,6 +78,17 @@ PANELS = {
                     lower_better=True, norm_to="recompute"),
     "ttft_abs": dict(key="ttft_p50_s",          label="Median TTFT (s)",
                      lower_better=True),
+    # TPOT is available but makes a poor panel: every bar lands within 0.8% of 1.0,
+    # because KV placement acts on PREFILL while TPOT is decode-side. That flatness is
+    # worth STATING -- it is the evidence that balance was not bought with per-token
+    # latency -- but three identical trios of bars state it less clearly than one
+    # sentence, and at this figure's scale the differences are thinner than the bar
+    # outlines. Measured p50 s/token: 0.0250/0.0251/0.0252 (Llama-3.1-8B),
+    # 0.0430/0.0431/0.0433 (Llama-2-13B), 0.0438/0.0439/0.0439 (Qwen3-14B).
+    "tpot":    dict(key="tpot_p50_s",           label="Normalized TPOT",
+                    lower_better=True, norm_to="recompute"),
+    "tpot_abs": dict(key="tpot_p50_s",          label="Median TPOT (s/token)",
+                     lower_better=True),
     # Overall output throughput -- the conventional t/s. READ THE CAVEAT BEFORE USING IT:
     # this is a CLOSED-LOOP benchmark. Every arm is handed the same conversations at the
     # same fixed concurrency, all turns complete, and wall time lands within ~1% across

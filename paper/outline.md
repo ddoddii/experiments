@@ -60,6 +60,24 @@
 - 절대 TTFT는 **메커니즘보다 모델 크기가 좌우**하므로 정규화 — 그래야 모델 간 높이 비교라는 무의미한 읽기를 막음
 - P95도 같은 방향: Llama-3.1-8B 0.955 / 0.765 / **0.620**, Qwen3-14B 1.589 / 1.195 / **0.913**
 
+### 2-3. TPOT — **변화 없음 (0.8% 이내)**. 이건 결과가 아니라 *대가를 치르지 않았다*는 증거
+
+| 모델 | Recompute | SGLang | Ours | Ours/Recompute |
+|---|---|---|---|---|
+| Llama-3.1-8B | 0.0250 | 0.0251 | 0.0252 | **1.008** |
+| Llama-2-13B | 0.0430 | 0.0431 | 0.0433 | **1.007** |
+| Qwen3-14B | 0.0438 | 0.0439 | 0.0439 | **1.002** |
+> per-conversation 평균의 중앙값 (s/token). 하네스가 턴 단위 TPOT을 기록하지 않아 이게 최소 granularity.
+
+- **평평한 게 당연하다**: KV 배치는 **prefill**에 작용하고 TPOT은 **decode** 지표다. 메커니즘이
+  건드리지 않는 것을 재고 있으므로 차이가 없어야 정상
+- 따라서 이건 **그림 패널이 아니라 한 문장**으로 쓴다 — 세 모델 전부 1.00 근처인 막대 9개는
+  이 그림 크기에서 **막대 테두리보다 얇은 차이**를 보여줄 뿐이다
+  (`--panels hit ttft tpot mem`로 언제든 그릴 수는 있음: `results/models/fig_models_with_tpot.pdf`)
+- 논문 문장: *"TPOT is unchanged across all arms and models (within 0.8%), as expected for a
+  mechanism that acts on prefill: the balance is not bought with per-token decode latency."*
+- 같은 이유로 throughput도 평평하다 (§4) — **둘은 같은 사실의 두 얼굴**이고, 별개의 두 한계가 아니다
+
 **Llama-2-13B가 예외인 이유 (반드시 명시)**
 
 - position limit 4096 → 4턴, 컨텍스트 ~3k 토큰으로 제한
