@@ -79,7 +79,7 @@ def load(csv_path):
                     return float(v) if v not in ("", None) else None
                 rec[lab] = {"use": g("_use"), "used": g("_used_tok"),
                             "run": g("_running"), "cap": g("_cap_tok"),
-                            "pressure": g("_pressure")}
+                            "pressure": g("_pressure"), "hit": g("_hit")}
             rows.append((float(d["t_s"]), rec))
     return labels, roles, rows, metric_src
 
@@ -204,6 +204,7 @@ def per_gpu(labels, roles, rows, caps, kib):
     for lab in labels:
         us = [r[lab]["use"] for _, r in rows if r[lab]["use"] is not None]
         ps = [r[lab]["pressure"] for _, r in rows if r[lab]["pressure"] is not None]
+        hs = [r[lab]["hit"] for _, r in rows if r[lab]["hit"] is not None]
         fs = [free_tokens(r, lab, caps[lab]) for _, r in rows if r[lab]["use"] is not None]
         fs = [f for f in fs if f is not None]
         if not us:
@@ -217,6 +218,10 @@ def per_gpu(labels, roles, rows, caps, kib):
             # what a prefill node is holding and a decode node is not.
             "pressure_mean": round(st.mean(ps), 4) if ps else None,
             "cached_mean": round(st.mean(us) - st.mean(ps), 4) if ps else None,
+            # A cache that is full AND missing is thrashing; a full cache at 100% hit is
+            # simply well-sized. Saturation alone cannot tell those apart, so the
+            # imbalance claim has to be read together with this number.
+            "hit_rate_final": round(hs[-1], 4) if hs else None,
             "use_p95": round(pct(us, 95), 4),
             "free_gb_mean": round(st.mean(fs) * kib / (1024 * 1024), 2) if fs else None,
             "frac_time_over_90": round(sum(1 for u in us if u > 0.90) / len(us), 4),
@@ -329,13 +334,14 @@ def report(tag, a):
     print(f"\n### {tag}   ({a['samples']} samples, {a['duration_s']}s)")
     print(f"  metric: {a['metric']}")
     print(f"{'gpu':>5} {'role':>5} {'cap(GB)':>8} {'occup':>7} {'active':>7} {'cached':>7} "
-          f"{'p95':>7} {'free(GB)':>9} {'>90%':>7}")
+          f"{'p95':>7} {'free(GB)':>9} {'>90%':>7} {'hit':>6}")
     for lab, g in a["per_gpu"].items():
         pm = "  --  " if g["pressure_mean"] is None else f"{g['pressure_mean']:>6.3f}"
         cm = "  --  " if g["cached_mean"] is None else f"{g['cached_mean']:>6.3f}"
         print(f"{lab:>5} {g['role']:>5} {str(g['cap_gb']):>8} {g['use_mean']:>7.3f} "
               f"{pm:>7} {cm:>7} {g['use_p95']:>7.3f} {str(g['free_gb_mean']):>9} "
-              f"{g['frac_time_over_90']*100:>6.1f}%")
+              f"{g['frac_time_over_90']*100:>6.1f}% "
+              f"{'   -- ' if g['hit_rate_final'] is None else format(g['hit_rate_final'],'>6.3f')}")
     r = a["role_rollup"]
     if "pd_gap" in r:
         print(f"  P mean {r['P_use_mean']:.3f} vs D mean {r['D_use_mean']:.3f}"
