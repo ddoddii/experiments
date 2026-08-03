@@ -111,6 +111,10 @@ for arm in $ARMS; do
   echo
   echo "──────────────── arm: $arm ────────────────"
   ./scripts/sglang/stop.sh > "$OUTDIR/stop_$arm.log" 2>&1 || true
+  # M3: every park records the candidates it did NOT pick. Only meaningful for the park
+  # arms; harmless for hicache, which never calls _select_pool.
+  rm -f "$OUTDIR/decisions_$arm".*.jsonl
+  export SGLANG_KV_PARK_DECISION_LOG="$PWD/$OUTDIR/decisions_$arm"
   start_arm "$arm"
 
   # The occupancy series IS the result here, so it is sampled fast (0.5 s) and started
@@ -145,6 +149,10 @@ done
 echo
 python benchmark/collect_imbalance.py --dir "$OUTDIR" --arms $ARMS \
   --out "$OUTDIR/imbalance.json" | tee "$OUTDIR/imbalance.md"
+
+echo
+python benchmark/collect_decisions.py --dir "$OUTDIR" \
+  --out "$OUTDIR/decisions.json" | tee "$OUTDIR/decisions.md"
 
 cat <<'EOF'
 
