@@ -1,0 +1,114 @@
+{
+  "park_pd": {
+    "csv": "results/exp2/pd_layoutb_p60000_c16_bigpool/occ_park_pd.csv",
+    "metric": "cache_occupancy",
+    "samples": 1864,
+    "duration_s": 931.6,
+    "per_gpu": {
+      "P0": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.8664,
+        "pressure_mean": 0.0346,
+        "cached_mean": 0.8318,
+        "hit_rate_final": 0.9974,
+        "use_p95": 0.9894,
+        "free_gb_mean": 0.98,
+        "frac_time_over_90": 0.7269
+      },
+      "P1": {
+        "role": "P",
+        "cap_tokens": 60000,
+        "cap_gb": 7.32,
+        "use_mean": 0.8341,
+        "pressure_mean": 0.0307,
+        "cached_mean": 0.8035,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.9886,
+        "free_gb_mean": 1.21,
+        "frac_time_over_90": 0.6465
+      },
+      "D0": {
+        "role": "D",
+        "cap_tokens": 132333,
+        "cap_gb": 16.15,
+        "use_mean": 0.086,
+        "pressure_mean": 0.086,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.1789,
+        "free_gb_mean": 14.76,
+        "frac_time_over_90": 0.0
+      },
+      "D1": {
+        "role": "D",
+        "cap_tokens": 132333,
+        "cap_gb": 16.15,
+        "use_mean": 0.0899,
+        "pressure_mean": 0.0899,
+        "cached_mean": 0.0,
+        "hit_rate_final": 0.0,
+        "use_p95": 0.1597,
+        "free_gb_mean": 14.7,
+        "frac_time_over_90": 0.0
+      }
+    },
+    "role_rollup": {
+      "P_use_mean": 0.8503,
+      "D_use_mean": 0.0879,
+      "pd_gap": 0.7623
+    },
+    "M1_stranded": {
+      "stranded_gb_s": 21273.7,
+      "saturated_s": 725.1,
+      "measured_s": 931.6,
+      "saturated_frac": 0.7783,
+      "mean_stranded_gb": 29.34,
+      "by_gpu_gb_s": {
+        "P0": 0.0,
+        "P1": 0.0,
+        "D0": 10683.2,
+        "D1": 10590.5
+      }
+    },
+    "M1_threshold_curve": {
+      "hi=0.7": 24511.9,
+      "hi=0.8": 23932.8,
+      "hi=0.85": 23799.2,
+      "hi=0.9": 21273.7,
+      "hi=0.95": 14661.1
+    },
+    "M2_imbalance": {
+      "cov_mean": 0.792,
+      "cov_p95": 0.8986,
+      "spread_mean": 0.8161,
+      "spread_p95": 0.9565,
+      "jain_mean": 0.6153,
+      "samples": 1864
+    },
+    "gpu_hbm": {
+      "gpu0": {
+        "used_gb_mean": 28.88,
+        "used_gb_peak": 28.95,
+        "free_gb_at_peak": 20.05
+      },
+      "gpu1": {
+        "used_gb_mean": 41.42,
+        "used_gb_peak": 41.42,
+        "free_gb_at_peak": 7.58
+      },
+      "gpu2": {
+        "used_gb_mean": 28.36,
+        "used_gb_peak": 28.39,
+        "free_gb_at_peak": 20.61
+      },
+      "gpu3": {
+        "used_gb_mean": 41.42,
+        "used_gb_peak": 41.42,
+        "free_gb_at_peak": 7.58
+      },
+      "total_free_gb_at_peak": 55.82
+    }
+  }
+}
