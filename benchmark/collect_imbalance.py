@@ -255,7 +255,50 @@ def check_metric(labels, rows, metric_src):
     return "cache_occupancy"
 
 
-def analyse(csv_path, kib, hi, lo):
+# A6000. Used to turn per-GPU HBM into a free-space figure; override with --gpu-total-gb.
+DEFAULT_GPU_TOTAL_GB = 49.0
+
+
+def gpu_hbm(mem_csv, gpu_total_gb):
+    """Per-GPU HBM from sys_mem_breakdown.py's CSV.
+
+    The KV-pool view and the hardware view disagree, and the disagreement is the point.
+    A prefill capped at --max-total-tokens 60000 reserves 7.3 GB of pool on a 49 GB card,
+    so its pool can read 'full' while 24 GB of the GPU is untouched; a decode reserves
+    almost the whole card via --mem-fraction-static and then leaves most of that pool
+    empty. Only the hardware numbers say how much HBM is actually available to borrow."""
+    if not os.path.exists(mem_csv):
+        return None
+    cols, rows = None, []
+    with open(mem_csv) as fh:
+        for raw in csv.reader(fh):
+            if cols is None:
+                cols = raw
+                continue
+            if len(raw) == len(cols):
+                rows.append(dict(zip(cols, raw)))
+    if not rows:
+        return None
+    out = {}
+    for i in range(4):
+        key = f"gpu{i}_hbm_mb"
+        vals = [float(r[key]) for r in rows if r.get(key) not in ("", None)]
+        if not vals:
+            continue
+        out[f"gpu{i}"] = {
+            "used_gb_mean": round(st.mean(vals) / 1024, 2),
+            "used_gb_peak": round(max(vals) / 1024, 2),
+            # Free at PEAK usage: the conservative figure, i.e. what could have been
+            # borrowed for the whole run without ever colliding with the server.
+            "free_gb_at_peak": round(gpu_total_gb - max(vals) / 1024, 2),
+        }
+    if out:
+        out["total_free_gb_at_peak"] = round(
+            sum(v["free_gb_at_peak"] for k, v in out.items() if k.startswith("gpu")), 2)
+    return out
+
+
+def analyse(csv_path, kib, hi, lo, mem_csv=None, gpu_total_gb=DEFAULT_GPU_TOTAL_GB):
     labels, roles, rows, metric_src = load(csv_path)
     if not rows:
         return {"error": f"no samples in {csv_path}"}
@@ -275,6 +318,7 @@ def analyse(csv_path, kib, hi, lo):
             for h in HI_CURVE
         },
         "M2_imbalance": imbalance(labels, rows),
+        "gpu_hbm": gpu_hbm(mem_csv, gpu_total_gb) if mem_csv else None,
     }
 
 
@@ -306,6 +350,13 @@ def report(tag, a):
     m2 = a["M2_imbalance"]
     print(f"  M2 imbalance         : CoV {m2['cov_mean']}  spread mean {m2['spread_mean']}"
           f"  p95 {m2['spread_p95']}  Jain {m2['jain_mean']}")
+    g = a.get("gpu_hbm")
+    if g:
+        parts = " ".join(f"{k}:{v['used_gb_peak']}/{v['free_gb_at_peak']}free"
+                         for k, v in g.items() if k.startswith("gpu"))
+        print(f"  GPU HBM peak/free    : {parts}")
+        print(f"     idle HBM cluster-wide (at each GPU's peak): "
+              f"{g['total_free_gb_at_peak']} GB")
 
 
 def main():
@@ -316,6 +367,7 @@ def main():
     ap.add_argument("--kib-per-token", type=float, default=DEFAULT_KIB_PER_TOKEN)
     ap.add_argument("--hi", type=float, default=HI_DEFAULT)
     ap.add_argument("--lo", type=float, default=LO_DEFAULT)
+    ap.add_argument("--gpu-total-gb", type=float, default=DEFAULT_GPU_TOTAL_GB)
     ap.add_argument("--out")
     args = ap.parse_args()
 
@@ -337,7 +389,9 @@ def main():
         if not os.path.exists(path):
             print(f"[skip] {path} missing")
             continue
-        out[tag] = analyse(path, args.kib_per_token, args.hi, args.lo)
+        mem = os.path.join(os.path.dirname(path), f"mem_{tag}.csv")
+        out[tag] = analyse(path, args.kib_per_token, args.hi, args.lo,
+                           mem_csv=mem, gpu_total_gb=args.gpu_total_gb)
         report(tag, out[tag])
 
     if args.out:
