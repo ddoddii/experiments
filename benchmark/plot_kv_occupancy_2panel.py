@@ -196,6 +196,20 @@ def render_overlay(args, t, data, p_labels, d_labels):
     g_avg = sum(gap) / len(gap)
     frac_d_above = 100.0 * sum(1 for g in gap if g > 0) / len(gap)
 
+    if args.export_json:
+        import json
+        # Decimated hard: a native PowerPoint chart embeds its own worksheet, and ~950
+        # points x 2 series makes the deck slow to open and painful to edit by hand.
+        # Stride, never average -- averaging would round off the saturation plateau that
+        # is the point of the figure.
+        step = max(1, len(xs) // 220)
+        json.dump({"metric": args.metric, "csv": os.path.basename(args.csv),
+                   "t": xs[::step], "decode": dm[::step], "prefill": pm[::step],
+                   "decode_avg": d_avg, "prefill_avg": p_avg, "gap_avg": g_avg,
+                   "frac_decode_above": frac_d_above, "n_full": len(xs)},
+                  open(args.export_json, "w"), indent=1)
+        print(f"[export] {args.export_json}  ({len(xs[::step])} of {len(xs)} samples)")
+
     c_dec = COLOR["D"]["fill"] if args.color else "#BFBFBF"
     c_pre = COLOR["P"]["fill"] if args.color else "#333333"
 
@@ -302,6 +316,11 @@ def main():
                          "(recommended at --width 3.5, where it would cover the data)")
     ap.add_argument("--no-avg", action="store_true",
                     help="--overlay: drop the dashed time-average lines and their labels")
+    # Emitted from inside the renderer, after the same role-averaging and the same metric
+    # check the figure uses, so the deck and the PDF cannot drift apart. A separate CSV
+    # parser for the PPTX would be a second place for the gauge confusion to reappear.
+    ap.add_argument("--export-json", default=None,
+                    help="also write the overlay series to JSON (for make_*_pptx.js)")
     ap.add_argument("--width", type=float, default=6.4,
                     help="figure width (in); 3.5 = one IEEE/CAL column")
     ap.add_argument("--height", type=float, default=1.85,
