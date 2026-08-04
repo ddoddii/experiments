@@ -2,32 +2,32 @@
 1 repeats: big_c32_r1
 
   park-fetch hit rate (%)
-      79.51→78.76  
-    Ours worse in ALL, median |Δ| = 1.0%
+      64.00→77.92  
+    Ours better in ALL, median |Δ| = 21.8%
 
   park-fetch misses
-     286.00→297.00 
-    Ours worse in ALL, median |Δ| = 3.8%
+     522.00→321.00 
+    Ours better in ALL, median |Δ| = 38.5%
 
   parked KV (GB)   [configured, not measured]
-       5.19→15.50  
-    Ours better in ALL, median |Δ| = 198.6%
+       4.02→20.79  
+    Ours better in ALL, median |Δ| = 417.0%
 
   TTFT p50 (s)
-       0.58→5.98   
-    Ours worse in ALL, median |Δ| = 925.3%
+       0.30→0.28   
+    Ours better in ALL, median |Δ| = 8.2%
 
   TTFT p95 (s)
-      10.53→18.43  
-    Ours worse in ALL, median |Δ| = 75.0%
+       3.61→4.81   
+    Ours worse in ALL, median |Δ| = 33.2%
 
   TTFT p99 (s)
-      16.77→21.84  
-    Ours worse in ALL, median |Δ| = 30.2%
+      11.37→11.78  
+    Ours worse in ALL, median |Δ| = 3.6%
 
   throughput (t/s)
-     789.01→669.82 
-    Ours worse in ALL, median |Δ| = 15.1%
+     834.30→842.83 
+    Ours better in ALL, median |Δ| = 1.0%
 
 ================================================================
   Every metric kept its sign across all repeats.

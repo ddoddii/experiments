@@ -1,0 +1,314 @@
+===== HEAD (pool sizes, park pools, CLAMPED) =====
+[2026-08-04 06:35:36] INFO server_args.py:1656: Attention backend not specified. Use flashinfer backend by default.
+[2026-08-04 06:35:36] WARNING server_args.py:2301: Cuda graph is disabled for prefill server when piecewise cuda graph is not enabled.
+[2026-08-04 06:35:36] server_args=ServerArgs(model_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_mode='auto', tokenizer_worker_num=1, skip_tokenizer_init=False, load_format='auto', model_loader_extra_config='{}', trust_remote_code=False, context_length=None, is_embedding=False, enable_multimodal=None, revision=None, model_impl='auto', host='127.0.0.1', port=30001, fastapi_root_path='', grpc_mode=False, skip_server_warmup=False, warmups=None, nccl_port=None, checkpoint_engine_wait_weights_before_ready=False, dtype='auto', quantization=None, quantization_param_path=None, kv_cache_dtype='auto', enable_fp32_lm_head=False, modelopt_quant=None, modelopt_checkpoint_restore_path=None, modelopt_checkpoint_save_path=None, modelopt_export_path=None, quantize_and_serve=False, rl_quant_profile=None, mem_fraction_static=0.85, max_running_requests=None, max_queued_requests=None, max_total_tokens=None, chunked_prefill_size=4096, enable_dynamic_chunking=False, max_prefill_tokens=16384, prefill_max_requests=None, schedule_policy='fcfs', enable_priority_scheduling=False, abort_on_priority_when_disabled=False, schedule_low_priority_values_first=False, priority_scheduling_preemption_threshold=10, schedule_conservativeness=1.0, page_size=1, swa_full_tokens_ratio=0.8, disable_hybrid_swa_memory=False, radix_eviction_policy='lru', enable_prefill_delayer=False, prefill_delayer_max_delay_passes=30, prefill_delayer_token_usage_low_watermark=None, prefill_delayer_forward_passes_buckets=None, prefill_delayer_wait_seconds_buckets=None, device='cuda', tp_size=1, pp_size=1, pp_max_micro_batch_size=None, pp_async_batch_depth=0, stream_interval=1, stream_output=False, random_seed=47660793, constrained_json_whitespace_pattern=None, constrained_json_disable_any_whitespace=False, watchdog_timeout=300, soft_watchdog_timeout=None, dist_timeout=None, download_dir=None, model_checksum=None, base_gpu_id=2, gpu_id_step=1, sleep_on_idle=False, custom_sigquit_handler=None, log_level='info', log_level_http=None, log_requests=False, log_requests_level=2, log_requests_format='text', log_requests_target=None, crash_dump_folder=None, show_time_cost=False, enable_metrics=True, enable_metrics_for_all_schedulers=False, tokenizer_metrics_custom_labels_header='x-custom-labels', tokenizer_metrics_allowed_custom_labels=None, bucket_time_to_first_token=None, bucket_inter_token_latency=None, bucket_e2e_request_latency=None, collect_tokens_histogram=False, prompt_tokens_buckets=None, generation_tokens_buckets=None, gc_warning_threshold_secs=0.0, decode_log_interval=40, enable_request_time_stats_logging=False, kv_events_config=None, enable_trace=False, otlp_traces_endpoint='localhost:4317', export_metrics_to_file=False, export_metrics_to_file_dir=None, api_key=None, admin_api_key=None, served_model_name='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', weight_version='default', chat_template=None, completion_template=None, file_storage_path='sglang_storage', enable_cache_report=False, reasoning_parser=None, tool_call_parser=None, tool_server=None, sampling_defaults='model', dp_size=1, load_balance_method='follow_bootstrap_room', dist_init_addr=None, nnodes=1, node_rank=0, json_model_override_args='{}', preferred_sampling_params=None, enable_lora=None, max_lora_rank=None, lora_target_modules=None, lora_paths=None, max_loaded_loras=None, max_loras_per_batch=8, lora_eviction_policy='lru', lora_backend='csgmv', max_lora_chunk_size=16, attention_backend='flashinfer', decode_attention_backend=None, prefill_attention_backend=None, sampling_backend='flashinfer', grammar_backend='xgrammar', mm_attention_backend=None, fp8_gemm_runner_backend='auto', nsa_prefill_backend='flashmla_sparse', nsa_decode_backend='fa3', disable_flashinfer_autotune=False, speculative_algorithm=None, speculative_draft_model_path=None, speculative_draft_model_revision=None, speculative_draft_load_format=None, speculative_num_steps=None, speculative_eagle_topk=None, speculative_num_draft_tokens=None, speculative_accept_threshold_single=1.0, speculative_accept_threshold_acc=1.0, speculative_token_map=None, speculative_attention_mode='prefill', speculative_draft_attention_backend=None, speculative_moe_runner_backend='auto', speculative_moe_a2a_backend=None, speculative_draft_model_quantization=None, speculative_ngram_min_match_window_size=1, speculative_ngram_max_match_window_size=12, speculative_ngram_min_bfs_breadth=1, speculative_ngram_max_bfs_breadth=10, speculative_ngram_match_type='BFS', speculative_ngram_branch_length=18, speculative_ngram_capacity=10000000, enable_multi_layer_eagle=False, ep_size=1, moe_a2a_backend='none', moe_runner_backend='auto', flashinfer_mxfp4_moe_precision='default', enable_flashinfer_allreduce_fusion=False, deepep_mode='auto', ep_num_redundant_experts=0, ep_dispatch_algorithm=None, init_expert_location='trivial', enable_eplb=False, eplb_algorithm='auto', eplb_rebalance_num_iterations=1000, eplb_rebalance_layers_per_chunk=None, eplb_min_rebalancing_utilization_threshold=1.0, expert_distribution_recorder_mode=None, expert_distribution_recorder_buffer_size=1000, enable_expert_distribution_metrics=False, deepep_config=None, moe_dense_tp_size=None, elastic_ep_backend=None, mooncake_ib_device=None, max_mamba_cache_size=None, mamba_ssm_dtype='float32', mamba_full_memory_ratio=0.9, mamba_scheduler_strategy='no_buffer', mamba_track_interval=256, enable_hierarchical_cache=False, hicache_ratio=2.0, hicache_size=0, hicache_write_policy='write_through', hicache_io_backend='kernel', hicache_mem_layout='layer_first', hicache_storage_backend=None, hicache_storage_prefetch_policy='best_effort', hicache_storage_backend_extra_config=None, hierarchical_sparse_attention_extra_config=None, enable_lmcache=False, kt_weight_path=None, kt_method='AMXINT4', kt_cpuinfer=None, kt_threadpool_count=2, kt_num_gpu_experts=None, kt_max_deferred_experts_per_token=None, dllm_algorithm=None, dllm_algorithm_config=None, enable_double_sparsity=False, ds_channel_config_path=None, ds_heavy_channel_num=32, ds_heavy_token_num=256, ds_heavy_channel_type='qk', ds_sparse_decode_threshold=4096, cpu_offload_gb=0, offload_group_size=-1, offload_num_in_group=1, offload_prefetch_step=1, offload_mode='cpu', multi_item_scoring_delimiter=None, disable_radix_cache=False, cuda_graph_max_bs=32, cuda_graph_bs=[1, 2, 4, 8, 12, 16, 24, 32], disable_cuda_graph=True, disable_cuda_graph_padding=False, enable_profile_cuda_graph=False, enable_cudagraph_gc=False, enable_layerwise_nvtx_marker=False, enable_nccl_nvls=False, enable_symm_mem=False, disable_flashinfer_cutlass_moe_fp4_allgather=False, enable_tokenizer_batch_encode=False, disable_tokenizer_batch_decode=False, disable_outlines_disk_cache=False, disable_custom_all_reduce=False, enable_mscclpp=False, enable_torch_symm_mem=False, disable_overlap_schedule=False, enable_mixed_chunk=False, enable_dp_attention=False, enable_dp_lm_head=False, enable_two_batch_overlap=False, enable_single_batch_overlap=False, tbo_token_distribution_threshold=0.48, enable_torch_compile=False, enable_piecewise_cuda_graph=False, enable_torch_compile_debug_mode=False, torch_compile_max_bs=32, piecewise_cuda_graph_max_tokens=4096, piecewise_cuda_graph_tokens=[4, 8, 12, 16, 20, 24, 28, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 640, 704, 768, 832, 896, 960, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096], piecewise_cuda_graph_compiler='eager', torchao_config='', enable_nan_detection=False, enable_p2p_check=False, triton_attention_reduce_in_fp32=False, triton_attention_num_kv_splits=8, triton_attention_split_tile_size=None, num_continuous_decode_steps=1, delete_ckpt_after_loading=False, enable_memory_saver=False, enable_weights_cpu_backup=False, enable_draft_weights_cpu_backup=False, allow_auto_truncate=False, enable_custom_logit_processor=False, flashinfer_mla_disable_ragged=False, disable_shared_experts_fusion=False, disable_chunked_prefix_cache=False, disable_fast_image_processor=False, keep_mm_feature_on_device=False, enable_return_hidden_states=False, enable_return_routed_experts=False, scheduler_recv_interval=1, numa_node=None, enable_deterministic_inference=False, rl_on_policy_target=None, enable_attn_tp_input_scattered=False, enable_nsa_prefill_context_parallel=False, nsa_prefill_cp_mode='in-seq-split', enable_fused_qk_norm_rope=False, enable_precise_embedding_interpolation=False, enable_dynamic_batch_tokenizer=False, dynamic_batch_tokenizer_batch_size=32, dynamic_batch_tokenizer_batch_timeout=0.002, debug_tensor_dump_output_folder=None, debug_tensor_dump_layers=None, debug_tensor_dump_input_file=None, debug_tensor_dump_inject=False, disaggregation_mode='prefill', disaggregation_transfer_backend='mooncake', disaggregation_bootstrap_port=8999, disaggregation_decode_tp=1, disaggregation_decode_dp=1, disaggregation_prefill_pp=1, disaggregation_ib_device=None, disaggregation_decode_enable_offload_kvcache=False, disaggregation_enable_idle_kv_parking=True, disaggregation_decode_enable_fake_auto=False, num_reserved_decode_tokens=512, disaggregation_decode_polling_interval=1, encoder_only=False, language_only=False, encoder_transfer_backend='zmq_to_scheduler', encoder_urls=[], custom_weight_loader=[], weight_loader_disable_mmap=False, remote_instance_weight_loader_seed_instance_ip=None, remote_instance_weight_loader_seed_instance_service_port=None, remote_instance_weight_loader_send_weights_group_ports=None, remote_instance_weight_loader_backend='nccl', remote_instance_weight_loader_start_seed_via_transfer_engine=False, enable_pdmux=False, pdmux_config_path=None, sm_group_num=8, mm_max_concurrent_calls=32, mm_per_request_timeout=10.0, enable_broadcast_mm_inputs_process=False, enable_prefix_mm_cache=False, mm_enable_dp_encoder=False, mm_process_config={}, limit_mm_data_per_request=None, decrypted_config_file=None, decrypted_draft_config_file=None, forward_hooks=None)
+[2026-08-04 06:35:37] Using default HuggingFace chat template with detected content format: string
+[2026-08-04 06:35:43] Init torch distributed begin.
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[2026-08-04 06:35:43] Init torch distributed ends. mem usage=0.00 GB
+[2026-08-04 06:35:43] MOE_RUNNER_BACKEND is not initialized, the backend will be automatically selected
+[2026-08-04 06:35:43] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+[2026-08-04 06:35:44] Load weight begin. avail mem=47.14 GB
+Loading safetensors checkpoint shards:   0% Completed | 0/4 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards:  25% Completed | 1/4 [00:00<00:01,  1.68it/s]
+Loading safetensors checkpoint shards:  50% Completed | 2/4 [00:01<00:01,  1.44it/s]
+Loading safetensors checkpoint shards:  75% Completed | 3/4 [00:01<00:00,  1.95it/s]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.77it/s]
+Loading safetensors checkpoint shards: 100% Completed | 4/4 [00:02<00:00,  1.74it/s]
+
+[2026-08-04 06:35:46] Load weight end. type=LlamaForCausalLM, dtype=torch.bfloat16, avail mem=32.07 GB, mem usage=15.06 GB.
+[2026-08-04 06:35:46] Using KV cache dtype: torch.bfloat16
+[2026-08-04 06:35:46] KV Cache is allocated. #tokens: 204789, K size: 12.50 GB, V size: 12.50 GB
+[2026-08-04 06:35:46] Memory pool end. avail mem=6.05 GB
+[2026-08-04 06:35:47] max_total_num_tokens=204789, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=5.60 GB
+[2026-08-04 06:35:47] Idle KV parking enabled (role=prefill, gpu_id=2, layers=32, page_size=1); slice 2a: CUDA IPC handle exchange via /dev/shm/sglang_kv_parking
+[2026-08-04 06:35:47] Idle KV parking [prefill]: 3 idle-GPU park pool(s) on GPU[2, 3, 1] = [15344, 32000, 32000] tokens x 32 layers each (~10.4 GB total) [CLAMPED from 32000 to fit]. Parking picks the pool with most headroom.
+[2026-08-04 06:35:47] Idle KV parking [prefill]: GPU2 has 4.00 GB unallocated after parking; still to come are CUDA graph capture, activations, and at least 0.56 GB of peer IPC contexts (>=2 peers x ~0.28 GB).
+[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: shared park index attached (/dev/shm/sglang_kv_parking/park_index.bin).
+[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: PULL bound at tcp://127.0.0.1:36305, published 3 park-pool handle set(s) to /dev/shm/sglang_kv_parking/prefill_2.pkl (epoch=1785825320)
+[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu0 (32 layers) for cross-P fetch.
+[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu1 (32 layers) for cross-P fetch.
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+W0804 06:35:47.917019 2676270 transfer_engine_py.cpp:92] Using default malloc/free for protocol: rdma
+I0804 06:35:47.917092 2676270 transfer_engine_impl.cpp:757] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0804 06:35:47.917106 2676270 transfer_engine_impl.cpp:107] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 12001
+I0804 06:35:47.917132 2676270 transfer_engine_impl.cpp:174] Transfer Engine RPC using P2P handshake, listening on 127.0.0.1:16490
+I0804 06:35:47.917196 2676270 transfer_engine_impl.cpp:229] Auto-discovering topology...
+W0804 06:35:47.917261 2676270 topology.cpp:156] No RDMA devices found, check your device installation
+I0804 06:35:47.917317 2676270 transfer_engine_impl.cpp:244] Topology discovery complete. Found 0 HCAs.
+E0804 06:35:47.917346 2676270 transfer_metadata.cpp:863] Local segment descriptor not found
+I0804 06:35:47.917363 2676270 tcp_transport.cpp:541] TcpTransport: listen on port 16809
+[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu3 (32 layers) for cross-P fetch.
+[2026-08-04 06:35:48] INFO:     Started server process [2675989]
+[2026-08-04 06:35:48] INFO:     Waiting for application startup.
+[2026-08-04 06:35:48] Using default chat sampling params from model generation config: {'repetition_penalty': 1.0, 'temperature': 0.6, 'top_k': 50, 'top_p': 0.9}
+[2026-08-04 06:35:48] Reranker yes/no token IDs: yes=9891, no=2201
+[2026-08-04 06:35:48] Using default chat sampling params from model generation config: {'repetition_penalty': 1.0, 'temperature': 0.6, 'top_k': 50, 'top_p': 0.9}
+[2026-08-04 06:35:48] INFO:     Application startup complete.
+[2026-08-04 06:35:48] INFO:     Uvicorn running on http://127.0.0.1:30001 (Press CTRL+C to quit)
+[2026-08-04 06:35:49] INFO:     127.0.0.1:49300 - "GET /model_info HTTP/1.1" 200 OK
+[2026-08-04 06:35:49] Start of pd disaggregation warmup ...
+[2026-08-04 06:35:49] Prefill batch, #new-seq: 1, #new-token: 4, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.00, 
+[2026-08-04 06:35:50] INFO:     127.0.0.1:49314 - "POST /generate HTTP/1.1" 200 OK
+[2026-08-04 06:35:50] End of prefill disaggregation mode warmup with status 200, resp: [{'text': ' The', 'output_ids': [578], 'meta_info': {'id': '46866d689c16426395b6ef861c7985cc', 'finish_reason': {'type': 'length', 'length': 0}, 'prompt_tokens': 4, 'weight_version': 'default', 'total_retractions': 0, 'queue_time': 0.002323809079825878, 'prefill_launch_delay': 0.2697748360224068, 'prefill_launch_latency': 0.5355752279283479, 'prefill_finished_ts': 1785825350.2435195, 'completion_tokens': 1, 'cached_tokens': 0, 'e2e_latency': 0.8132503032684326, 'request_received_ts': 1785825349.4331813, 'decode_finished_ts': 1785825350.2464316, 'inference_time': 0.8084558019181713, 'response_sent_to_client_ts': 1785825350.2474213}}]
+[2026-08-04 06:35:50] The server is fired up and ready to roll!
+[2026-08-04 06:35:54] Idle KV parking [prefill]: park control channel OK — received ping from decode (gpu1). Ready for slice 3b park messages.
+[2026-08-04 06:35:55] Idle KV parking [prefill gpu2]: opened decode gpu1 KV pool (32 layers, p2p=True).
+[2026-08-04 06:35:55] Idle KV parking [prefill gpu2]: decode gpu1 IPC verify MATCH.
+[2026-08-04 06:35:56] link_bw: measured in 157 ms -> /dev/shm/sglang_kv_parking/link_bw.json
+[2026-08-04 06:35:56] Idle KV parking: link bandwidth -> host_h2d=25.11 host_d2h=26.35 GB/s | peer: 1->2=26.15, 1->3=26.17, 2->1=26.1, 2->3=52.06, 3->1=26.12, 3->2=51.79
+[2026-08-04 06:35:56] Idle KV parking [prefill] GPU3-park: 11 tok x 32 layers in 43.2ms. pool headroom=31989, index=2. (pools: g2:hr=15344, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:35:57] Idle KV parking [prefill]: park control channel OK — received ping from decode (gpu3). Ready for slice 3b park messages.
+[2026-08-04 06:36:01] INFO:     127.0.0.1:34226 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:01] Idle KV parking [prefill gpu2]: opened decode gpu3 KV pool (32 layers, p2p=True).
+[2026-08-04 06:36:02] INFO:     127.0.0.1:44518 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-08-04 06:36:02] WARNING:  Invalid HTTP request received.
+[2026-08-04 06:36:02] INFO:     127.0.0.1:44532 - "PRI %2A HTTP/2.0" 404 Not Found
+[2026-08-04 06:36:02] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.30, 
+[2026-08-04 06:36:02] WARNING:  Invalid HTTP request received.
+[2026-08-04 06:36:03] INFO:     127.0.0.1:44504 - "GET /health HTTP/1.1" 200 OK
+[2026-08-04 06:36:03] INFO:     127.0.0.1:44540 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:03] INFO:     127.0.0.1:44540 - "GET /model_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44548 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44554 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44566 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44578 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] Prefill batch, #new-seq: 1, #new-token: 36, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.56, 
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:04] INFO:     127.0.0.1:44594 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:05] INFO:     127.0.0.1:44608 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:05] INFO:     127.0.0.1:44624 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:06] INFO:     127.0.0.1:44636 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:06] INFO:     127.0.0.1:44642 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44648 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44652 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44658 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44664 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44678 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44694 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44726 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44728 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44742 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:07] Prefill batch, #new-seq: 1, #new-token: 50, #cached-token: 25, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 11.74, 
+[2026-08-04 06:36:07] Prefill batch, #new-seq: 11, #new-token: 519, #cached-token: 275, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1930.90, 
+[2026-08-04 06:36:07] INFO:     127.0.0.1:44762 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:08] INFO:     127.0.0.1:44764 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:08] INFO:     127.0.0.1:44766 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:09] Idle KV parking [prefill] GPU2-park: 90 tok x 32 layers in 134.5ms. pool headroom=15254, index=2. (pools: g2:hr=15254, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:36:09] Idle KV parking [prefill] GPU2-park: 82 tok x 32 layers in 143.7ms. pool headroom=15172, index=4. (pools: g2:hr=15172, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:36:09] INFO:     127.0.0.1:44778 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:09] INFO:     127.0.0.1:44784 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:09] INFO:     127.0.0.1:44790 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:09] Idle KV parking [prefill] GPU2-park: 98 tok x 32 layers in 145.3ms. pool headroom=15074, index=6. (pools: g2:hr=15074, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:36:09] Idle KV parking [prefill] GPU2-park: 123 tok x 32 layers in 147.0ms. pool headroom=14951, index=8. (pools: g2:hr=14951, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:36:09] INFO:     127.0.0.1:44792 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:10] Idle KV parking [prefill] GPU2-park: 136 tok x 32 layers in 147.0ms. pool headroom=14815, index=10. (pools: g2:hr=14815, g3:hr=31989, g1:hr=32000)
+[2026-08-04 06:36:10] INFO:     127.0.0.1:44796 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:10] INFO:     127.0.0.1:44806 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:11] INFO:     127.0.0.1:45668 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:11] INFO:     127.0.0.1:45678 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:12] Idle KV parking [prefill] DIAG: recv=10 processed=10 backlog=0 | skip=1(10%) copy=9 avg-P-had=0.00 | survival=100% (9/9) | FETCH: hits=0(cross-P=0,host=0,evict-to-room=0) tok=0 avg=0.0ms | miss=15 already=0 nospace=0 (of 15) | pools[live/N(idx)]: g2:1034/15344(16,use=0.00) g3:11/32000(2,use=0.02) g1:0/32000(0,use=0.02)
+[2026-08-04 06:36:12] INFO:     127.0.0.1:45682 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:12] INFO:     127.0.0.1:45686 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:13] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:13] Idle KV parking [prefill gpu2]-fetch: rid=35ac07efc242458eb3f3fe30c1b773f5 pulled 99 tok (P had 37 of 136) from gpu2 in 0.8ms. hits=1 (cross-P=0, host=0), tokens=99, avg=0.8ms.
+[2026-08-04 06:36:13] Prefill batch, #new-seq: 1, #new-token: 160, #cached-token: 136, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 93.74, 
+[2026-08-04 06:36:13] INFO:     127.0.0.1:45714 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:13] INFO:     127.0.0.1:45716 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:14] INFO:     127.0.0.1:45728 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:36:14] INFO:     127.0.0.1:45740 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:14] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:14] Idle KV parking [prefill gpu2]-fetch: rid=1204558947a04d37ae556b4165faf2e8 pulled 145 tok (P had 36 of 181) from gpu2 in 0.7ms. hits=2 (cross-P=0, host=0), tokens=244, avg=0.7ms.
+[2026-08-04 06:36:14] Prefill batch, #new-seq: 1, #new-token: 57, #cached-token: 181, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 140.47, 
+[2026-08-04 06:36:14] INFO:     127.0.0.1:45748 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:14] INFO:     127.0.0.1:45758 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:15] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:15] Idle KV parking [prefill gpu2]-fetch: rid=88ece760a96e435d81cc8cfdd5bbbdff pulled 98 tok (P had 36 of 134) from gpu2 in 0.7ms. hits=3 (cross-P=0, host=0), tokens=342, avg=0.7ms.
+[2026-08-04 06:36:15] Prefill batch, #new-seq: 1, #new-token: 26, #cached-token: 134, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 70.93, 
+[2026-08-04 06:36:15] INFO:     127.0.0.1:45762 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:15] INFO:     127.0.0.1:45764 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:16] INFO:     127.0.0.1:45770 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:16] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:16] Idle KV parking [prefill gpu2]-fetch: rid=c015c95d1ab94735a49f1560b5d9dca7 pulled 133 tok (P had 37 of 170) from gpu2 in 0.6ms. hits=4 (cross-P=0, host=0), tokens=475, avg=0.7ms.
+[2026-08-04 06:36:16] Prefill batch, #new-seq: 1, #new-token: 47, #cached-token: 170, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 19.42, 
+[2026-08-04 06:36:16] INFO:     127.0.0.1:45776 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:17] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:17] Idle KV parking [prefill gpu2]-fetch: rid=56d8b3367b9e4b1ab375b4f2c043c587 pulled 141 tok (P had 57 of 198) from gpu2 in 0.6ms. hits=5 (cross-P=0, host=0), tokens=616, avg=0.7ms.
+[2026-08-04 06:36:17] Prefill batch, #new-seq: 1, #new-token: 18, #cached-token: 198, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 92.86, 
+[2026-08-04 06:36:17] INFO:     127.0.0.1:45788 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:17] INFO:     127.0.0.1:45792 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:18] INFO:     127.0.0.1:45802 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:18] Idle KV parking [prefill] DIAG: recv=20 processed=20 backlog=0 | skip=1(5%) copy=19 avg-P-had=0.00 | survival=100% (19/19) | FETCH: hits=5(cross-P=0,host=0,evict-to-room=0) tok=616 avg=0.7ms | miss=15 already=0 nospace=0 (of 20) | pools[live/N(idx)]: g2:4692/15344(36,use=0.01) g3:11/32000(2,use=0.04) g1:0/32000(0,use=0.04)
+[2026-08-04 06:36:18] INFO:     127.0.0.1:45816 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:36:19] INFO:     127.0.0.1:45702 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:36:19] Prefill batch, #new-seq: 1, #new-token: 77, #cached-token: 419, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 9.02, 
+
+===== MATCHED (errors, OOM, park pool, exit) =====
+3:[2026-08-04 06:35:36] server_args=ServerArgs(model_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_path='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', tokenizer_mode='auto', tokenizer_worker_num=1, skip_tokenizer_init=False, load_format='auto', model_loader_extra_config='{}', trust_remote_code=False, context_length=None, is_embedding=False, enable_multimodal=None, revision=None, model_impl='auto', host='127.0.0.1', port=30001, fastapi_root_path='', grpc_mode=False, skip_server_warmup=False, warmups=None, nccl_port=None, checkpoint_engine_wait_weights_before_ready=False, dtype='auto', quantization=None, quantization_param_path=None, kv_cache_dtype='auto', enable_fp32_lm_head=False, modelopt_quant=None, modelopt_checkpoint_restore_path=None, modelopt_checkpoint_save_path=None, modelopt_export_path=None, quantize_and_serve=False, rl_quant_profile=None, mem_fraction_static=0.85, max_running_requests=None, max_queued_requests=None, max_total_tokens=None, chunked_prefill_size=4096, enable_dynamic_chunking=False, max_prefill_tokens=16384, prefill_max_requests=None, schedule_policy='fcfs', enable_priority_scheduling=False, abort_on_priority_when_disabled=False, schedule_low_priority_values_first=False, priority_scheduling_preemption_threshold=10, schedule_conservativeness=1.0, page_size=1, swa_full_tokens_ratio=0.8, disable_hybrid_swa_memory=False, radix_eviction_policy='lru', enable_prefill_delayer=False, prefill_delayer_max_delay_passes=30, prefill_delayer_token_usage_low_watermark=None, prefill_delayer_forward_passes_buckets=None, prefill_delayer_wait_seconds_buckets=None, device='cuda', tp_size=1, pp_size=1, pp_max_micro_batch_size=None, pp_async_batch_depth=0, stream_interval=1, stream_output=False, random_seed=47660793, constrained_json_whitespace_pattern=None, constrained_json_disable_any_whitespace=False, watchdog_timeout=300, soft_watchdog_timeout=None, dist_timeout=None, download_dir=None, model_checksum=None, base_gpu_id=2, gpu_id_step=1, sleep_on_idle=False, custom_sigquit_handler=None, log_level='info', log_level_http=None, log_requests=False, log_requests_level=2, log_requests_format='text', log_requests_target=None, crash_dump_folder=None, show_time_cost=False, enable_metrics=True, enable_metrics_for_all_schedulers=False, tokenizer_metrics_custom_labels_header='x-custom-labels', tokenizer_metrics_allowed_custom_labels=None, bucket_time_to_first_token=None, bucket_inter_token_latency=None, bucket_e2e_request_latency=None, collect_tokens_histogram=False, prompt_tokens_buckets=None, generation_tokens_buckets=None, gc_warning_threshold_secs=0.0, decode_log_interval=40, enable_request_time_stats_logging=False, kv_events_config=None, enable_trace=False, otlp_traces_endpoint='localhost:4317', export_metrics_to_file=False, export_metrics_to_file_dir=None, api_key=None, admin_api_key=None, served_model_name='/home/uhmturks/hf_models/Llama-3.1-8B-Instruct', weight_version='default', chat_template=None, completion_template=None, file_storage_path='sglang_storage', enable_cache_report=False, reasoning_parser=None, tool_call_parser=None, tool_server=None, sampling_defaults='model', dp_size=1, load_balance_method='follow_bootstrap_room', dist_init_addr=None, nnodes=1, node_rank=0, json_model_override_args='{}', preferred_sampling_params=None, enable_lora=None, max_lora_rank=None, lora_target_modules=None, lora_paths=None, max_loaded_loras=None, max_loras_per_batch=8, lora_eviction_policy='lru', lora_backend='csgmv', max_lora_chunk_size=16, attention_backend='flashinfer', decode_attention_backend=None, prefill_attention_backend=None, sampling_backend='flashinfer', grammar_backend='xgrammar', mm_attention_backend=None, fp8_gemm_runner_backend='auto', nsa_prefill_backend='flashmla_sparse', nsa_decode_backend='fa3', disable_flashinfer_autotune=False, speculative_algorithm=None, speculative_draft_model_path=None, speculative_draft_model_revision=None, speculative_draft_load_format=None, speculative_num_steps=None, speculative_eagle_topk=None, speculative_num_draft_tokens=None, speculative_accept_threshold_single=1.0, speculative_accept_threshold_acc=1.0, speculative_token_map=None, speculative_attention_mode='prefill', speculative_draft_attention_backend=None, speculative_moe_runner_backend='auto', speculative_moe_a2a_backend=None, speculative_draft_model_quantization=None, speculative_ngram_min_match_window_size=1, speculative_ngram_max_match_window_size=12, speculative_ngram_min_bfs_breadth=1, speculative_ngram_max_bfs_breadth=10, speculative_ngram_match_type='BFS', speculative_ngram_branch_length=18, speculative_ngram_capacity=10000000, enable_multi_layer_eagle=False, ep_size=1, moe_a2a_backend='none', moe_runner_backend='auto', flashinfer_mxfp4_moe_precision='default', enable_flashinfer_allreduce_fusion=False, deepep_mode='auto', ep_num_redundant_experts=0, ep_dispatch_algorithm=None, init_expert_location='trivial', enable_eplb=False, eplb_algorithm='auto', eplb_rebalance_num_iterations=1000, eplb_rebalance_layers_per_chunk=None, eplb_min_rebalancing_utilization_threshold=1.0, expert_distribution_recorder_mode=None, expert_distribution_recorder_buffer_size=1000, enable_expert_distribution_metrics=False, deepep_config=None, moe_dense_tp_size=None, elastic_ep_backend=None, mooncake_ib_device=None, max_mamba_cache_size=None, mamba_ssm_dtype='float32', mamba_full_memory_ratio=0.9, mamba_scheduler_strategy='no_buffer', mamba_track_interval=256, enable_hierarchical_cache=False, hicache_ratio=2.0, hicache_size=0, hicache_write_policy='write_through', hicache_io_backend='kernel', hicache_mem_layout='layer_first', hicache_storage_backend=None, hicache_storage_prefetch_policy='best_effort', hicache_storage_backend_extra_config=None, hierarchical_sparse_attention_extra_config=None, enable_lmcache=False, kt_weight_path=None, kt_method='AMXINT4', kt_cpuinfer=None, kt_threadpool_count=2, kt_num_gpu_experts=None, kt_max_deferred_experts_per_token=None, dllm_algorithm=None, dllm_algorithm_config=None, enable_double_sparsity=False, ds_channel_config_path=None, ds_heavy_channel_num=32, ds_heavy_token_num=256, ds_heavy_channel_type='qk', ds_sparse_decode_threshold=4096, cpu_offload_gb=0, offload_group_size=-1, offload_num_in_group=1, offload_prefetch_step=1, offload_mode='cpu', multi_item_scoring_delimiter=None, disable_radix_cache=False, cuda_graph_max_bs=32, cuda_graph_bs=[1, 2, 4, 8, 12, 16, 24, 32], disable_cuda_graph=True, disable_cuda_graph_padding=False, enable_profile_cuda_graph=False, enable_cudagraph_gc=False, enable_layerwise_nvtx_marker=False, enable_nccl_nvls=False, enable_symm_mem=False, disable_flashinfer_cutlass_moe_fp4_allgather=False, enable_tokenizer_batch_encode=False, disable_tokenizer_batch_decode=False, disable_outlines_disk_cache=False, disable_custom_all_reduce=False, enable_mscclpp=False, enable_torch_symm_mem=False, disable_overlap_schedule=False, enable_mixed_chunk=False, enable_dp_attention=False, enable_dp_lm_head=False, enable_two_batch_overlap=False, enable_single_batch_overlap=False, tbo_token_distribution_threshold=0.48, enable_torch_compile=False, enable_piecewise_cuda_graph=False, enable_torch_compile_debug_mode=False, torch_compile_max_bs=32, piecewise_cuda_graph_max_tokens=4096, piecewise_cuda_graph_tokens=[4, 8, 12, 16, 20, 24, 28, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 640, 704, 768, 832, 896, 960, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096], piecewise_cuda_graph_compiler='eager', torchao_config='', enable_nan_detection=False, enable_p2p_check=False, triton_attention_reduce_in_fp32=False, triton_attention_num_kv_splits=8, triton_attention_split_tile_size=None, num_continuous_decode_steps=1, delete_ckpt_after_loading=False, enable_memory_saver=False, enable_weights_cpu_backup=False, enable_draft_weights_cpu_backup=False, allow_auto_truncate=False, enable_custom_logit_processor=False, flashinfer_mla_disable_ragged=False, disable_shared_experts_fusion=False, disable_chunked_prefix_cache=False, disable_fast_image_processor=False, keep_mm_feature_on_device=False, enable_return_hidden_states=False, enable_return_routed_experts=False, scheduler_recv_interval=1, numa_node=None, enable_deterministic_inference=False, rl_on_policy_target=None, enable_attn_tp_input_scattered=False, enable_nsa_prefill_context_parallel=False, nsa_prefill_cp_mode='in-seq-split', enable_fused_qk_norm_rope=False, enable_precise_embedding_interpolation=False, enable_dynamic_batch_tokenizer=False, dynamic_batch_tokenizer_batch_size=32, dynamic_batch_tokenizer_batch_timeout=0.002, debug_tensor_dump_output_folder=None, debug_tensor_dump_layers=None, debug_tensor_dump_input_file=None, debug_tensor_dump_inject=False, disaggregation_mode='prefill', disaggregation_transfer_backend='mooncake', disaggregation_bootstrap_port=8999, disaggregation_decode_tp=1, disaggregation_decode_dp=1, disaggregation_prefill_pp=1, disaggregation_ib_device=None, disaggregation_decode_enable_offload_kvcache=False, disaggregation_enable_idle_kv_parking=True, disaggregation_decode_enable_fake_auto=False, num_reserved_decode_tokens=512, disaggregation_decode_polling_interval=1, encoder_only=False, language_only=False, encoder_transfer_backend='zmq_to_scheduler', encoder_urls=[], custom_weight_loader=[], weight_loader_disable_mmap=False, remote_instance_weight_loader_seed_instance_ip=None, remote_instance_weight_loader_seed_instance_service_port=None, remote_instance_weight_loader_send_weights_group_ports=None, remote_instance_weight_loader_backend='nccl', remote_instance_weight_loader_start_seed_via_transfer_engine=False, enable_pdmux=False, pdmux_config_path=None, sm_group_num=8, mm_max_concurrent_calls=32, mm_per_request_timeout=10.0, enable_broadcast_mm_inputs_process=False, enable_prefix_mm_cache=False, mm_enable_dp_encoder=False, mm_process_config={}, limit_mm_data_per_request=None, decrypted_config_file=None, decrypted_draft_config_file=None, forward_hooks=None)
+23:[2026-08-04 06:35:46] KV Cache is allocated. #tokens: 204789, K size: 12.50 GB, V size: 12.50 GB
+24:[2026-08-04 06:35:46] Memory pool end. avail mem=6.05 GB
+25:[2026-08-04 06:35:47] max_total_num_tokens=204789, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=5.60 GB
+27:[2026-08-04 06:35:47] Idle KV parking [prefill]: 3 idle-GPU park pool(s) on GPU[2, 3, 1] = [15344, 32000, 32000] tokens x 32 layers each (~10.4 GB total) [CLAMPED from 32000 to fit]. Parking picks the pool with most headroom.
+31:[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu0 (32 layers) for cross-P fetch.
+32:[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu1 (32 layers) for cross-P fetch.
+43:[2026-08-04 06:35:47] Idle KV parking [prefill gpu2]: opened peer P park pool on gpu3 (32 layers) for cross-P fetch.
+56:[2026-08-04 06:35:50] The server is fired up and ready to roll!
+
+===== TAIL =====
+[2026-08-04 06:51:16] INFO:     127.0.0.1:33816 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:17] INFO:     127.0.0.1:33818 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:17] INFO:     127.0.0.1:33834 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:18] INFO:     127.0.0.1:33844 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:18] INFO:     127.0.0.1:33850 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:19] INFO:     127.0.0.1:33860 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:19] INFO:     127.0.0.1:33864 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:19] INFO:     127.0.0.1:33874 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:19] INFO:     127.0.0.1:33886 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:20] INFO:     127.0.0.1:33894 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:20] INFO:     127.0.0.1:33900 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:21] INFO:     127.0.0.1:33908 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:21] INFO:     127.0.0.1:48604 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:22] INFO:     127.0.0.1:48618 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:22] INFO:     127.0.0.1:48632 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:23] INFO:     127.0.0.1:48638 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:23] INFO:     127.0.0.1:48644 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:23] Prefill batch, #new-seq: 1, #new-token: 18, #cached-token: 3523, token usage: 0.02, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 8.98, 
+[2026-08-04 06:51:23] INFO:     127.0.0.1:48648 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:24] INFO:     127.0.0.1:48656 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:24] INFO:     127.0.0.1:48662 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:24] INFO:     127.0.0.1:48674 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:24] INFO:     127.0.0.1:48690 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:25] INFO:     127.0.0.1:48698 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:25] INFO:     127.0.0.1:48708 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:26] INFO:     127.0.0.1:48716 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:26] INFO:     127.0.0.1:48726 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:26] INFO:     127.0.0.1:48740 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:26] Prefill batch, #new-seq: 1, #new-token: 17, #cached-token: 1857, token usage: 0.03, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 1, input throughput (token/s): 5.46, 
+[2026-08-04 06:51:26] INFO:     127.0.0.1:48748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:26] Prefill batch, #new-seq: 1, #new-token: 20, #cached-token: 2440, token usage: 0.04, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 1, input throughput (token/s): 433.71, 
+[2026-08-04 06:51:27] INFO:     127.0.0.1:48760 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:27] INFO:     127.0.0.1:48774 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:28] INFO:     127.0.0.1:48788 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:28] INFO:     127.0.0.1:48796 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:29] INFO:     127.0.0.1:48806 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:29] INFO:     127.0.0.1:48816 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:29] INFO:     127.0.0.1:48832 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:29] INFO:     127.0.0.1:48848 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:30] INFO:     127.0.0.1:48854 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:30] INFO:     127.0.0.1:48868 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:31] INFO:     127.0.0.1:48884 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:31] INFO:     127.0.0.1:36736 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:32] INFO:     127.0.0.1:36740 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:32] INFO:     127.0.0.1:36752 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:33] INFO:     127.0.0.1:36756 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:33] INFO:     127.0.0.1:36764 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:34] INFO:     127.0.0.1:36778 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:34] INFO:     127.0.0.1:36792 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:34] INFO:     127.0.0.1:36798 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:34] INFO:     127.0.0.1:36806 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:35] INFO:     127.0.0.1:36816 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:35] INFO:     127.0.0.1:36818 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:36] INFO:     127.0.0.1:36820 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:36] INFO:     127.0.0.1:36834 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:36] INFO:     127.0.0.1:36836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:36] Prefill batch, #new-seq: 1, #new-token: 11, #cached-token: 1812, token usage: 0.01, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1.97, 
+[2026-08-04 06:51:37] INFO:     127.0.0.1:36844 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:37] INFO:     127.0.0.1:36850 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:38] INFO:     127.0.0.1:36858 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:38] INFO:     127.0.0.1:36860 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:39] INFO:     127.0.0.1:36862 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:39] INFO:     127.0.0.1:36874 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:39] INFO:     127.0.0.1:36888 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:39] INFO:     127.0.0.1:36894 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:40] INFO:     127.0.0.1:36906 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:40] INFO:     127.0.0.1:36920 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:41] INFO:     127.0.0.1:36924 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:41] INFO:     127.0.0.1:56492 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:42] INFO:     127.0.0.1:56508 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:42] INFO:     127.0.0.1:56522 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:43] INFO:     127.0.0.1:56524 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:43] INFO:     127.0.0.1:56528 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:44] INFO:     127.0.0.1:56534 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:44] INFO:     127.0.0.1:56548 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:44] INFO:     127.0.0.1:56554 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:44] INFO:     127.0.0.1:56570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:44] Prefill batch, #new-seq: 1, #new-token: 45, #cached-token: 2403, token usage: 0.01, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1.53, 
+[2026-08-04 06:51:44] INFO:     127.0.0.1:56586 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:45] INFO:     127.0.0.1:56598 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:45] INFO:     127.0.0.1:56614 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:46] INFO:     127.0.0.1:56620 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:46] INFO:     127.0.0.1:56632 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:47] INFO:     127.0.0.1:56648 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:47] INFO:     127.0.0.1:56654 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:48] INFO:     127.0.0.1:56658 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:48] INFO:     127.0.0.1:56570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:51:48] Prefill batch, #new-seq: 1, #new-token: 22, #cached-token: 2075, token usage: 0.01, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 11.43, 
+[2026-08-04 06:51:48] INFO:     127.0.0.1:56670 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:49] INFO:     127.0.0.1:56676 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:49] INFO:     127.0.0.1:56688 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:49] INFO:     127.0.0.1:56700 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:49] INFO:     127.0.0.1:56716 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:50] INFO:     127.0.0.1:56718 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:50] INFO:     127.0.0.1:56734 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:51] INFO:     127.0.0.1:56740 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:51] INFO:     127.0.0.1:48166 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:52] INFO:     127.0.0.1:48170 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:52] INFO:     127.0.0.1:48180 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:53] INFO:     127.0.0.1:48188 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:53] INFO:     127.0.0.1:48196 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:54] INFO:     127.0.0.1:48204 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:54] INFO:     127.0.0.1:48208 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:54] INFO:     127.0.0.1:48212 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:54] INFO:     127.0.0.1:48216 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:55] INFO:     127.0.0.1:48228 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:55] INFO:     127.0.0.1:48244 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:56] INFO:     127.0.0.1:48246 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:56] INFO:     127.0.0.1:48258 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:57] INFO:     127.0.0.1:48264 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:57] INFO:     127.0.0.1:48280 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:58] INFO:     127.0.0.1:48284 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:58] INFO:     127.0.0.1:48298 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:59] INFO:     127.0.0.1:48306 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:59] INFO:     127.0.0.1:48308 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:51:59] INFO:     127.0.0.1:48324 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:51:59] INFO:     127.0.0.1:48332 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:00] INFO:     127.0.0.1:48342 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:00] INFO:     127.0.0.1:48346 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:01] INFO:     127.0.0.1:48354 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:01] INFO:     127.0.0.1:47138 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:02] INFO:     127.0.0.1:47154 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:02] INFO:     127.0.0.1:47156 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:02] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1.49, 
+[2026-08-04 06:52:03] INFO:     127.0.0.1:47176 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:03] INFO:     127.0.0.1:47188 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:03] INFO:     127.0.0.1:47200 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-04 06:52:03] Prefill batch, #new-seq: 1, #new-token: 22, #cached-token: 4727, token usage: 0.02, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1.08, 
+[2026-08-04 06:52:03] INFO:     127.0.0.1:47168 - "GET /health HTTP/1.1" 200 OK
+[2026-08-04 06:52:04] INFO:     127.0.0.1:47212 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:04] INFO:     127.0.0.1:47220 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:52:04] INFO:     127.0.0.1:47234 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:04] INFO:     127.0.0.1:47248 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:05] INFO:     127.0.0.1:47256 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:05] INFO:     127.0.0.1:47268 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:06] INFO:     127.0.0.1:47274 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:06] Idle KV parking [prefill] DIAG: recv=840 processed=840 backlog=0 | skip=2(0%) copy=838 avg-P-had=0.00 | survival=34% (11/32) | FETCH: hits=559(cross-P=540,host=0,evict-to-room=97) tok=492735 avg=4.0ms | miss=154 already=11 nospace=0 (of 724) | pools[live/N(idx)]: g2:15305/15344(76,use=0.96) g3:32000/32000(34,use=0.03) g1:32000/32000(22,use=0.00)
+[2026-08-04 06:52:06] INFO:     127.0.0.1:47280 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:07] INFO:     127.0.0.1:47284 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:07] INFO:     127.0.0.1:47298 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:08] INFO:     127.0.0.1:47310 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:08] INFO:     127.0.0.1:47324 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:09] INFO:     127.0.0.1:47338 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:09] INFO:     127.0.0.1:47348 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-04 06:52:09] INFO:     127.0.0.1:47360 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:09] INFO:     127.0.0.1:47374 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:10] INFO:     127.0.0.1:47386 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:10] INFO:     127.0.0.1:47398 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:11] INFO:     127.0.0.1:47404 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-04 06:52:11] INFO:     127.0.0.1:56272 - "GET /metrics HTTP/1.1" 200 OK
