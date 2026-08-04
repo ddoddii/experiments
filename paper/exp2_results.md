@@ -14,7 +14,7 @@ park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
 | — 유휴 GPU 위 | 0.00 | **5.24 GB (67%)** | — |
 | fetch hits | 639 | **715** | +11.9% |
 | **fetch miss** | 793 | **713** | **−10.1%** |
-| park hit rate | 44.6% | **50.1%** | **+5.4%p** |
+| park-fetch hit rate | 44.6% | **50.1%** | **+5.4%p** |
 | fetched tokens | 485,192 | **570,949** | **+17.7%** |
 | TTFT p50 | 0.370 | **0.286** | **−22.8%** |
 | **TTFT p95** | 6.582 | **2.006** | **−69.5%** ✅ |
@@ -50,9 +50,26 @@ park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
 > cache — onto those otherwise-idle GPUs**, tripling the cache from 2.62 to 7.86 GB.
 > Park-fetch misses fall 10.1%, median TTFT 22.8%, and p95 TTFT from 6.58 s to 2.01 s.
 
-> ⚠ **용어 주의**: 위 "hit rate"는 **park fetch** 적중률이지 전체 prefix cache 적중률이
-> 아니다. radix cache가 직접 처리한 요청은 park fetch를 시도하지 않으므로 이 분모에
-> 들어가지 않는다. 논문에서는 *park-fetch hit rate*로 명시할 것.
+> ⚠ **용어 주의 — Exp 1의 hit rate와 단위가 다르다. 절대 나란히 비교하지 말 것.**
+>
+> | | Exp 1 "cache hit rate" | Exp 2 "park-fetch hit rate" |
+> |---|---|---|
+> | 정의 | `cached_tokens / prompt_tokens` | `fetch_hits / (fetch_hits + fetch_miss)` |
+> | 가중 | **토큰** 가중 | **요청** 가중 |
+> | 분모 | 전체 요청 | radix가 **못** 준 요청만 |
+>
+> park 카운터는 prefill 요청을 4개 배타 버킷으로 나눈다 (final_nocap_c32, park_pd):
+> `park-hit 715 + miss 713 + radix-already 56 + nospace 0 = 1484`.
+> 도표의 50.1%는 `715/(715+713)`으로 **radix-already를 분모에서 뺀 값**이다.
+> 전체 요청 기준으로는 `(715+56)/1484 = 52.0%`이며, 두 값의 차이는 3.7%p로 작지만
+> **단위 자체가 Exp 1과 다르므로** "Exp 1은 55.7%인데 Exp 2는 50.1%밖에 안 된다"는
+> 식의 독해가 가능한 라벨을 쓰면 안 된다.
+>
+> 특히 **v5의 park-fetch hit rate 55.7%는 Exp 1의 token-weighted hit rate 55.7%와
+> 숫자가 우연히 일치한다** (아래 §v5, `exp2_design.md:196`). 서로 다른 두 지표가 같은
+> 숫자로 같은 이름을 달고 있으므로, 논문에서는 반드시 *park-fetch hit rate*로 표기한다.
+> 코드/그림 라벨은 수정 완료 (`plot_exp2_gpu_stack.py`, `plot_exp2_harvest.py`,
+> `collect_repeats.py`).
 
 ---
 
@@ -60,7 +77,7 @@ park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
 > **그림**: `results/exp2/fig_exp2_stack.{pdf,png}` (`benchmark/plot_exp2_gpu_stack.py`, v5 기준)
 > **최종 주장 (§7-2)**: GPU-first placement는 배치가 헤드룸을 정확히 따라가며
 > (usage gap −0.38, 널 모델 대비 3배 이상), **per-GPU park 용량이 제약인 구성에서**
-> cache hit rate를 **47.1% → 55.7%**, median TTFT를 **8.9%** 개선한다.
+> park-fetch hit rate를 **47.1% → 55.7%**, median TTFT를 **8.9%** 개선한다.
 > 대가는 원격 fetch로 인한 **p95 지연 +67%**다.
 
 ---
@@ -282,7 +299,7 @@ P→D 차용은 **로컬 GPU가 제약일 때만** 값을 한다.
 | park 용량 | 2.62 GB | **7.86 GB** | 3× 도달 (GPU당은 동일) |
 | **fetch miss** | 763 | **629** | **−17.6%** |
 | **fetch hits** | 680 | **791** | **+16.3%** |
-| hit rate | 47.1% | **55.7%** | **+8.6%p** |
+| park-fetch hit rate | 47.1% | **55.7%** | **+8.6%p** |
 | fetched tokens | 534,037 | **635,169** | **+18.9%** |
 | TTFT p50 | 0.3400 | **0.3096** | **−8.9%** |
 | **TTFT p95** | **2.4339** | 4.0619 | **+67%** ❌ |
@@ -311,7 +328,7 @@ p95 **+67%**, p99 **+47%**. 파킹의 97.7%가 cross-GPU이므로 **거의 모�
 |---|---|
 | 총 예산 고정 (v1~v3) | ❌ 열세 — 작은 풀들이 독립 축출 |
 | 총 예산 3배 (v4) | ➖ 동률 — `fetch_miss` 179로 동일, 더 잡을 게 없음 |
-| **GPU당 고정 + C=32 (v5)** | ✅ **hit rate +8.6%p, median TTFT −8.9%** / ❌ **p95 +67%** |
+| **GPU당 고정 + C=32 (v5)** | ✅ **park-fetch hit rate +8.6%p, median TTFT −8.9%** / ❌ **p95 +67%** |
 
 **operating regime: GPU당 park 용량이 binding constraint일 때만 값을 한다.**
 로컬 GPU가 working set 전체를 담을 수 있으면(v4: prefill GPU에 20 GB 유휴) 이득이 없다.
@@ -354,7 +371,7 @@ GPU 4개 각각에 local-only vs Ours 막대 한 쌍. 세 층으로 쌓는다:
 park 풀은 serving 풀이 가져갔을 HBM에서 잘라낸 것이므로 **없던 메모리를 만들어낸 게 아니라
 재분할한 것**이며, 그림이 그 사실을 그대로 보여준다.
 
-오른쪽: hit rate 47.1 → 55.7%, TTFT p50 0.34 → 0.31, **p95 2.43 → 4.06 (빨강)**.
+오른쪽: park-fetch hit rate 47.1 → 55.7%, TTFT p50 0.34 → 0.31, **p95 2.43 → 4.06 (빨강)**.
 
 > 앞선 두 버전은 남겨둠. `plot_exp2.py`(결정 로그: usage gap·널 모델)는 **배치가 우연이
 > 아님**의 증거로 부록에, `plot_exp2_harvest.py`(시계열 + 3.0× 캐시)는 대체안으로.
@@ -370,7 +387,7 @@ park 풀은 serving 풀이 가져갔을 HBM에서 잘라낸 것이므로 **없�
 - **(b) 빌려온 유휴 메모리** — 2.62 GB → **7.86 GB (3.0× 캐시)**, 그중 **5.24 GB(67%)가
   원래 놀던 decode GPU** 위에 있다. 점선 테두리는 **아직 안 쓴 유휴 용량**(34 GB)이며,
   이걸 그려야 "유휴 메모리를 다 썼다"로 오독되지 않는다
-- **(c) 이득과 대가** — hit rate 47.1 → 55.7%, TTFT p50 0.34 → 0.31,
+- **(c) 이득과 대가** — park-fetch hit rate 47.1 → 55.7%, TTFT p50 0.34 → 0.31,
   **p95 2.43 → 4.06 (빨간색)**
 
 **(b)에서 인용할 숫자는 "유휴 메모리의 15%를 썼다"가 아니라 "캐시가 3배가 됐다"이다.**

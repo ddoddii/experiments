@@ -57,11 +57,24 @@ def arm_data(d, arm, order):
 
 
 def stats(d, arm):
+    """PARK-FETCH hit rate: of the prefill requests the local radix could not serve,
+    the share that a parked prefix rescued.
+
+    Not the same quantity as Exp 1's "cache hit rate", and must not be printed under that
+    name. Exp 1 reports reuse_ratio = cached_tokens/prompt_tokens -- TOKEN-weighted, over
+    every request. This is REQUEST-weighted, and its denominator deliberately excludes
+    fetch_already (requests whose prefix was still in the local radix, so parking was
+    never consulted). Both are "hit rates" in English and neither is the other in units;
+    labelling this one "cache hit rate" invites the reader to compare 50.1% against Exp 1's
+    55.7% as if one were lower than the other.
+    """
     rows = list(csv.DictReader(open(os.path.join(d, f"parked_{arm}.csv"))))
     f = lambda k: float(rows[-1].get(k, "") or 0)
-    h, m = f("fetch_hits"), f("fetch_miss")
+    h, m, al, ns = (f("fetch_hits"), f("fetch_miss"),
+                    f("fetch_already"), f("fetch_nospace"))
     s = json.load(open(os.path.join(d, f"bench_{arm}.json")))["summary"]
     return {"hit": 100 * h / (h + m) if h + m else 0.0,
+            "hits": h, "miss": m, "already": al, "nospace": ns,
             "p50": s["ttft_p50_s"], "p95": s["ttft_p95_s"]}
 
 
@@ -85,6 +98,14 @@ def main():
         onD = sum(r["parked"] for r in rows if r["role"] == "D")
         print(f"  {name:11s} parked {tot:5.2f} GB  (on idle/decode GPUs {onD:.2f})  "
               + "  ".join(f"gpu{r['gpu']}:{r['parked']:.2f}" for r in rows))
+    # Print the full partition, so the plotted rate can never be mistaken for a hit rate
+    # over all requests. The four buckets are disjoint and cover every prefill request.
+    for name, s in ((BASE, sb), (OURS, so)):
+        n = s["hits"] + s["miss"] + s["already"] + s["nospace"]
+        print(f"  {name:11s} prefill reqs {n:.0f} = park-hit {s['hits']:.0f} + miss "
+              f"{s['miss']:.0f} + radix-already {s['already']:.0f} + nospace "
+              f"{s['nospace']:.0f}   -> park-fetch hit rate {s['hit']:.1f}% "
+              f"(denominator excludes radix-already)")
 
     use_paper_style()
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(args.width, args.height),
@@ -139,7 +160,7 @@ def main():
         ax2.text(x, v, f"{v:.1f}", ha="center", va="bottom", fontsize=7, color=INK)
     ax2.set_xlim(-0.6, 1.5)
     ax2.set_xticks([0])
-    ax2.set_xticklabels(["cache hit rate (%)"], fontsize=7)
+    ax2.set_xticklabels(["park-fetch hit rate (%)"], fontsize=7)
     ax2.set_ylim(0, max(sb["hit"], so["hit"]) * 1.5)
     ax2.set_ylabel("%")
     ax2.set_title("What it buys, and costs")
