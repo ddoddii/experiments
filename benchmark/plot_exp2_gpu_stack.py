@@ -139,6 +139,10 @@ def main():
     # PD_LAYOUT=b physical order, passed rather than inferred so a layout-a run cannot be
     # silently mislabelled.
     ap.add_argument("--order", default="P0:0,D0:1,P1:2,D1:3")
+    ap.add_argument("--only", choices=("both", "ours", "local"), default="both",
+                    help="draw one arm instead of the pair. 'ours' drops the placement "
+                         "control, so the figure shows where KV lives but no longer "
+                         "separates parking from placement.")
     ap.add_argument("--by-role", action="store_true",
                     help="one bar pair per ROLE (mean over that role's GPUs) instead of "
                          "one per GPU")
@@ -186,14 +190,29 @@ def main():
               f"(denominator excludes radix-already)")
 
     use_paper_style()
-    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(args.width, args.height),
-                                  gridspec_kw={"width_ratios": [2.5, 1]})
+    # The payoff panel IS a comparison, so it cannot ride along on a single-arm figure:
+    # the left half would have no "local" bar while the right half showed one, unlabelled.
+    # Single arm -> one full-width panel answering only "where does the KV live".
+    if args.only == "both":
+        fig, (ax, ax2) = plt.subplots(1, 2, figsize=(args.width, args.height),
+                                      gridspec_kw={"width_ratios": [2.5, 1]})
+    else:
+        fig, ax = plt.subplots(1, 1, figsize=(args.width * 0.62, args.height))
+        ax2 = None
 
-    # Bars get slab-like with only two groups; scale the width to the count.
-    w, gap = (0.34 if len(B) > 2 else 0.22), 0.04
+    # Which arms to draw. "local" is NOT a no-parking baseline -- it parks, but only onto
+    # the prefill's own GPU, so the two arms differ in PLACEMENT alone. Dropping it gives
+    # a plain "where does the reusable KV live" picture at the cost of that control.
+    drawn = [("local", B), ("ours", O)] if args.only == "both" else \
+            ([("ours", O)] if args.only == "ours" else [("local", B)])
+    # Bars get slab-like with few groups; scale the width to the count.
+    w = (0.34 if len(B) > 2 else 0.22) * (1.0 if len(drawn) > 1 else 1.6)
+    gap = 0.04
     xs = range(len(B))
-    for i, (b, o) in enumerate(zip(B, O)):
-        for j, (r, off) in enumerate(((b, -(w + gap) / 2), (o, (w + gap) / 2))):
+    offs = ([-(w + gap) / 2, (w + gap) / 2] if len(drawn) > 1 else [0.0])
+    for i in xs:
+        for j, ((_, rows), off) in enumerate(zip(drawn, offs)):
+            r = rows[i]
             x = i + off
             ax.bar(x, r["own"], width=w, color=C_OWN, edgecolor=INK, lw=0.4, zorder=3)
             ax.bar(x, r["parked"], width=w, bottom=r["own"], color=C_PARK,
@@ -208,9 +227,10 @@ def main():
                         va="center", fontsize=6, color="white", zorder=4, fontweight="bold")
 
     minor, minor_lab = [], []
-    for i in xs:
-        minor += [i - (w + gap) / 2, i + (w + gap) / 2]
-        minor_lab += ["local", "ours"]
+    if len(drawn) > 1:
+        for i in xs:
+            minor += [i + o for o in offs]
+            minor_lab += [name for name, _ in drawn]
     ax.set_xticks(minor, minor=True)
     ax.set_xticklabels(minor_lab, minor=True, fontsize=5.5, color=MUTED)
     ax.tick_params(axis="x", which="minor", length=0, pad=1)
@@ -223,18 +243,31 @@ def main():
         ax.set_xticklabels([f"GPU{g}\n({lab[0]}{'refill' if lab[0]=='P' else 'ecode'})"
                             for lab, g in order], fontsize=7)
     ax.set_ylabel("KV pool (GB)")
-    ax.set_title("Borrowed cache lands where the pool was empty", pad=16)
+    ax.set_title("Borrowed cache lands where the pool was empty" if args.only != "local"
+                 else "Local-only parking: the empty pools stay empty", pad=16)
     # Bar height = serving pool + park pools on that GPU, i.e. all of its KV-capable
     # memory. The two arms come out nearly equal in total (22.64 vs 22.77 GB on a decode
     # GPU) because a park pool is carved from the same HBM the serving pool would have
     # taken -- which is the honest picture: nothing was conjured, it was re-partitioned.
-    ax.set_ylim(0, max(r["cap"] + r["parked"] for r in B + O) * 1.02)
+    ax.set_ylim(0, max(r["cap"] + r["parked"]
+                       for _, rows in drawn for r in rows) * 1.02)
+    # "borrowed" is only true of the ours bars. The local arm parks too -- onto its own
+    # GPU -- so labelling every green block "borrowed" mislabels half the figure, and a
+    # reader seeing green on a local bar has no way to tell what it is.
+    park_lab = ("parked on an idle GPU" if args.only == "ours"
+                else "parked (green on 'local' = onto its own GPU)")
     ax.legend(handles=[Patch(facecolor=C_OWN, edgecolor=INK, lw=0.4, label="own cache"),
-                       Patch(facecolor=C_PARK, edgecolor=INK, lw=0.4, label="parked (borrowed)"),
+                       Patch(facecolor=C_PARK, edgecolor=INK, lw=0.4, label=park_lab),
                        Patch(facecolor=C_FREE, edgecolor=MUTED, lw=0.5, label="unused")],
               loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False,
               fontsize=6.5, handlelength=1.2, columnspacing=1.4, borderaxespad=0.35)
     style_axes(ax)
+
+    if ax2 is None:
+        fig.tight_layout(pad=0.5)
+        stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out
+        savefig(fig, stem)
+        return
 
     # Right: what borrowing bought, with every repeat's value drawn on the bar. The bar is
     # the median; the dots are the runs. A reader can see at a glance whether the gap
