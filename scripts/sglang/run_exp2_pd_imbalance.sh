@@ -179,8 +179,25 @@ for arm in $ARMS; do
   sleep 2
   cp "results/exp2pd_$arm.json" "$OUTDIR/bench_$arm.json" 2>/dev/null \
     || echo "  [warn] results/exp2pd_$arm.json not found"
+  # Server-log DIGEST, not the raw log, and named .txt on purpose: .gitignore has a
+  # blanket '*.log', so every raw log this loop used to copy was silently dropped before
+  # it could be pushed. Three separate crashes have now been undiagnosable for that
+  # reason -- park_pd_blind's missing P0, and both arms of the big-pool run, where a
+  # prefill died 25 s in and the only evidence left was a decision log that stopped.
+  # The digest keeps startup (pool + park sizes, CLAMPED), every error line, and the tail.
   for f in p1 p2 d1 d2; do
-    cp "logs/sglang/$f.log" "$OUTDIR/${f}_$arm.log" 2>/dev/null || true
+    src="logs/sglang/$f.log"
+    [ -f "$src" ] || continue
+    {
+      echo "===== HEAD (pool sizes, park pools, CLAMPED) ====="
+      head -150 "$src"
+      printf '\n===== MATCHED (errors, OOM, park pool, exit) =====\n'
+      grep -nE "Traceback|OutOfMemory|out of memory|CUDA error|Exception|sigquit|Aborted|\
+CLAMPED|SKIPPING park|park pool|Memory pool end|KV Cache is allocated|max_total_num_tokens|\
+ready to roll" "$src" | head -250
+      printf '\n===== TAIL =====\n'
+      tail -150 "$src"
+    } > "$OUTDIR/${f}_$arm.digest.txt" 2>/dev/null || true
   done
 done
 
