@@ -209,11 +209,17 @@ def main():
     # Start after the warm-up transient: the first few requests give a rate of 0 or 100%
     # and an auto-scaled axis spends most of its height on that artefact.
     ax2.set_xlim(30, span)
-    # A zoomed y-range. The quantity is a rate whose interesting variation lives in a
-    # 15-point window, and a 0-based axis renders both arms as the same flat line; the
-    # tick labels carry the absolute level so the zoom cannot be read as a bigger effect
-    # than it is.
-    ax2.set_ylim(35, 72)
+    # Zoomed, but derived from the data. A 0-based axis renders both arms as the same
+    # flat line, so the window is tightened around what was actually measured -- and it
+    # must be measured, not remembered: a hardcoded (35, 72) tuned on the small-pool runs
+    # silently clipped the big-pool curve, which reaches 77.9%, so the winning arm
+    # appeared to stop halfway through the run. Tick labels carry the absolute level, so
+    # the zoom cannot be read as a bigger effect than it is.
+    seen = [v for a in (BASE, OURS) for d in dirs for v in rate_series(d, a)[1]
+            if v > 0]
+    lo, hi = min(seen), max(seen)
+    pad = max(2.0, 0.08 * (hi - lo))
+    ax2.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
     ax2.legend(loc="lower right", frameon=False, fontsize=6, handlelength=1.6,
                borderaxespad=0.3, ncol=2)
     style_axes(ax2)

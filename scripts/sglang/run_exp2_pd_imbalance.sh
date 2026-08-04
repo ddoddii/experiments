@@ -86,10 +86,22 @@ export PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}
 #     at mem-fraction 0.85 the prefill has 6.05 GB left, at 0.80 a decode has ~9.5 GB, and
 #     each decode GPU hosts TWO pools (one per prefill).
 # Sizing from the first number produced a 60000-token request that OOM'd the scheduler at
-# startup. At ~119 KiB/token the ceiling with today's fractions is ~35k tokens/GPU
-# (decode-bound). To go past that, lower PARK_MEM_FRACTION_D: the decode serving pool runs
-# at 14% occupancy, so converting it into park pools leaves the decode GPU's TOTAL
-# KV-capable memory roughly unchanged and merely re-partitions it.
+# startup. The rate is 128 KiB/token exactly (25.0 GiB / 204,790 tokens).
+#
+# LOWERING PARK_MEM_FRACTION_D DOES NOT MAKE ROOM -- that was wrong and cost a run. The
+# prefills start first, so their park pools are already allocated when a decode sizes its
+# own pool, and sglang computes  pool = avail_after_weights - CARD*(1-mem_fraction). The
+# (1-fraction) term is memory left unused by everything, so lowering the fraction only
+# grows that dead reserve and shrinks the decode pool; at 0.60 the decode pool fell to
+# 6.85 GiB and decode itself came under pressure. Set the park size directly with
+# PARK_POOL_TOKENS_PER_GPU and keep mem_fraction_D HIGH so the decode pool keeps what is
+# left. Verified: 32000/GPU at 0.88 gave decode an 18.84 GiB pool (15% occupied, p95 25%)
+# alongside 7.81 GiB of park pools -- 26.65 GiB of KV-capable memory against the
+# baseline's 26.41 GiB, i.e. the same memory, re-partitioned.
+#
+# The prefill's OWN GPU is the binding constraint and cannot be relieved this way: its
+# pool is 81% occupied and only ~6 GB of HBM is unallocated, so the local pool clamps to
+# ~15k tokens whatever is asked for. That asymmetry is the point -- see paper/exp2_results.
 export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-}
 export ROUTER_MODE=balanced
 
@@ -190,9 +202,9 @@ for arm in $ARMS; do
     [ -f "$src" ] || continue
     {
       echo "===== HEAD (pool sizes, park pools, CLAMPED) ====="
-      head -150 "$src"
+      grep -v "^\[.*\] server_args=ServerArgs(" "$src" | head -150
       printf '\n===== MATCHED (errors, OOM, park pool, exit) =====\n'
-      grep -nE "Traceback|OutOfMemory|out of memory|CUDA error|Exception|sigquit|Aborted|\
+      grep -nE "Traceback|OutOfMemory|out of memory|CUDA error|Exception|SIGQUIT received|Aborted by|\
 CLAMPED|SKIPPING park|park pool|Memory pool end|KV Cache is allocated|max_total_num_tokens|\
 ready to roll" "$src" | head -250
       printf '\n===== TAIL =====\n'
