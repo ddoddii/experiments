@@ -54,8 +54,17 @@ def request(url, input_ids, gen=1, timeout=900):
     t0 = time.time()
     r = requests.post(
         f"{url}/generate",
+        # ignore_eos is what makes the throughput panel a measurement. The prompts are
+        # random token ids, so the model hits EOS at an unpredictable point: without this
+        # the same nominal 128-token request produced ~28 tokens at L=1k and ~128 at
+        # L=2k, and since decode dominates the wall time, the throughput curve became a
+        # plot of how long each random prompt happened to babble -- both arms dipping at
+        # the same lengths, non-monotonic, unrelated to context length or to caching.
+        # Recording the true n_out (below) fixes the numerator but not the denominator;
+        # the output length has to be held CONSTANT, not merely counted.
         json={"input_ids": input_ids,
-              "sampling_params": {"max_new_tokens": gen, "temperature": 0.0},
+              "sampling_params": {"max_new_tokens": gen, "temperature": 0.0,
+                                  "ignore_eos": True},
               "stream": True},
         stream=True, timeout=timeout,
     )
@@ -69,7 +78,8 @@ def request(url, input_ids, gen=1, timeout=900):
         last = line
     total = time.time() - t0
     r.close()
-    # Prefer the server's own count; a stop token can end generation before `gen`.
+    # The server's own count. With ignore_eos it should always equal `gen`; it is
+    # read back rather than assumed so the caller can verify that (see the warn).
     if last:
         try:
             txt = last.decode() if isinstance(last, bytes) else last
@@ -127,6 +137,7 @@ def main():
         base = gen_ids(L, rng)             # fixed base prefix for this L
         cac, rec = [], []
         cac_tp, rec_tp = [], []
+        cac_n, rec_n = [], []
         try:
             for _ in range(args.reps):
                 ttft(args.url, base)                                   # 1) warm/refresh prefix
@@ -139,9 +150,11 @@ def main():
                 # all L of them, and charging only the 8 fresh ones would credit the
                 # cached arm with doing less work rather than with doing it faster.
                 cac_tp.append((L + args.delta + n) / tot if tot else None)
+                cac_n.append(n)
                 f, tot, n = request(args.url, gen_ids(L, rng), gen=G)   # 3) cold miss
                 rec.append(f)
                 rec_tp.append((L + n) / tot if tot else None)
+                rec_n.append(n)
         except Exception as e:  # noqa: BLE001
             # one bad length (usually L > server --context-length, or KV OOM) must not
             # discard the lengths that already succeeded -> skip it and keep going.
@@ -154,8 +167,20 @@ def main():
         rt = round(st.mean([x for x in rec_tp if x]), 1) if any(rec_tp) else None
         lengths.append(L); cached_ms.append(cm); recompute_ms.append(rm)
         cached_tps.append(ct); recompute_tps.append(rt)
+        # n_out is recorded, not just used: when the throughput panel came out
+        # non-monotonic the output length was the cause, and it had to be reverse-solved
+        # from the token rate because nothing stored it.
         raw[str(L)] = {"cached": cac, "recompute": rec,
-                       "cached_tps": cac_tp, "recompute_tps": rec_tp}
+                       "cached_tps": cac_tp, "recompute_tps": rec_tp,
+                       "cached_n_out": cac_n, "recompute_n_out": rec_n}
+        # With ignore_eos every request must emit exactly G tokens. If it does not, the
+        # decode time varies per request and the throughput panel is measuring output
+        # length rather than prefill -- say so loudly instead of plotting it.
+        odd = [x for x in cac_n + rec_n if x != G]
+        if odd:
+            print(f"  [warn] L={L}: {len(odd)}/{len(cac_n) + len(rec_n)} requests "
+                  f"returned n_out != {G} (saw {sorted(set(odd))}). Decode time is not "
+                  f"constant, so the throughput panel is NOT comparable across lengths.")
         ratio = f"{rm / cm:.1f}x" if (cm and rm) else "-"
         print(f"{L:>8}  {str(cm)+'ms':>9}  {str(rm)+'ms':>10}  {ratio:>6}"
               f"  {str(ct):>11}  {str(rt):>11}")
