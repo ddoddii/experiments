@@ -1,5 +1,62 @@
 # Exp 2 결과 — P/D 불균형
 
+## ★ 최종 결과 (`results/exp2/final_nocap_c32`) — 인위적 캡 없음
+
+C=32, 288세션×12턴, **`--max-total-tokens` 없음**, prefill mem-fraction 0.85,
+park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
+
+| | `park_local` | **`park_pd` (Ours)** | Δ |
+|---|---|---|---|
+| KV 풀 크기 | P 25.0 / D 22.6 GB | P 25.0 / D 20.2 GB | **거의 동일 — 캡 없음** |
+| prefill 점유 | 0.822 (p95 0.999) | 0.816 (p95 0.998) | 실행의 **70%가 90% 초과** |
+| decode 점유 | 0.139 | 0.157 | **19.5 GB씩 유휴** |
+| park 총량 | 2.62 GB | **7.86 GB** | **3.0×** |
+| — 유휴 GPU 위 | 0.00 | **5.24 GB (67%)** | — |
+| fetch hits | 639 | **715** | +11.9% |
+| **fetch miss** | 793 | **713** | **−10.1%** |
+| park hit rate | 44.6% | **50.1%** | **+5.4%p** |
+| fetched tokens | 485,192 | **570,949** | **+17.7%** |
+| TTFT p50 | 0.370 | **0.286** | **−22.8%** |
+| **TTFT p95** | 6.582 | **2.006** | **−69.5%** ✅ |
+| **TTFT p99** | 13.648 | **7.749** | **−43.2%** ✅ |
+| throughput | 826.4 | **838.2** | +1.4% |
+
+배치 품질: usage gap **−0.308**, cross-GPU **93.5%**, 대상의 93.5%가 decode GPU
+(gpu1 45.5% + gpu3 48.0%), 정책 0.164 vs random 0.375.
+
+### 캡을 없앤 것이 두 가지를 동시에 해결했다
+
+1. **"prefill 풀만 작게 만들었다"는 반론 소멸.** 캡을 빼니 두 풀이 **25.0 vs 22.6 GB로
+   거의 같아진다.** 그런데도 prefill은 82%, decode는 14%다 — **점유율 차이가 순전히
+   워크로드에서 나온다.** 압력도 살아 있다 (실행의 70%가 90% 초과, p95 0.999)
+2. **꼬리 지연이 역전됐다.** 캡 있을 때는 p95가 **+67% 악화**였는데(2.43→4.06),
+   캡을 빼니 **−70% 개선**(6.58→2.01)이다
+
+### 꼬리 역전에 대한 가설 (검증 안 됨 — 그대로 적을 것)
+
+캡을 빼면서 prefill GPU의 유휴 HBM이 **21.8 → 4.4 GB**로 줄었다. 이 상태에서
+`park_local`은 **이미 포화된 바로 그 GPU에서** park 복사·할당을 수행하며 serving
+할당자와 경합한다(p95 6.58s). `park_pd`는 그 트래픽을 여유 8.6 GB인 decode GPU로
+내보낸다(p95 2.01s).
+
+> **1회 측정이고 메커니즘은 가설이다.** p95는 변동이 큰 통계이므로, 논문에 쓰려면
+> 최소 3회 반복이 필요하다. 반복 없이 "−70%"를 인용하면 안 된다.
+
+### 인용 문장
+
+> With no artificial cap on either pool (25.0 GB prefill against 22.6 GB decode), the
+> prefill pools run at 82% occupancy for 70% of the run while the decode pools sit at
+> 14%. GPU-first placement moves **5.24 GB of reusable KV — two thirds of the resident
+> cache — onto those otherwise-idle GPUs**, tripling the cache from 2.62 to 7.86 GB.
+> Park-fetch misses fall 10.1%, median TTFT 22.8%, and p95 TTFT from 6.58 s to 2.01 s.
+
+> ⚠ **용어 주의**: 위 "hit rate"는 **park fetch** 적중률이지 전체 prefix cache 적중률이
+> 아니다. radix cache가 직접 처리한 요청은 park fetch를 시도하지 않으므로 이 분모에
+> 들어가지 않는다. 논문에서는 *park-fetch hit rate*로 명시할 것.
+
+---
+
+
 > **그림**: `results/exp2/fig_exp2_stack.{pdf,png}` (`benchmark/plot_exp2_gpu_stack.py`, v5 기준)
 > **최종 주장 (§7-2)**: GPU-first placement는 배치가 헤드룸을 정확히 따라가며
 > (usage gap −0.38, 널 모델 대비 3배 이상), **per-GPU park 용량이 제약인 구성에서**

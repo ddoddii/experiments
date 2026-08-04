@@ -148,9 +148,16 @@ def main():
     ax2.text(0.95, y * 0.80, f"p50  {sb['p50']:.2f} → {so['p50']:.2f}", fontsize=6.5,
              color=INK, ha="center", va="top")
     ax2.text(0.95, y * 0.65, f"p95  {sb['p95']:.2f} → {so['p95']:.2f}", fontsize=6.5,
-             color=PALETTE["recompute"], ha="center", va="top")
-    ax2.text(0.95, y * 0.44, "median improves,\nthe tail does not", fontsize=5.8,
-             color=MUTED, ha="center", va="top", style="italic")
+             color=PALETTE["recompute"] if so["p95"] > sb["p95"] else INK,
+             ha="center", va="top")
+    # Colour and wording follow the DATA rather than a remembered conclusion. On the
+    # capped configuration the tail regressed and this line said so; uncapped it improves,
+    # and a hardcoded "the tail does not" would have quietly mislabelled the new result.
+    worse = so["p95"] > sb["p95"]
+    ax2.text(0.95, y * 0.44,
+             "median improves,\nthe tail does not" if worse
+             else f"tail improves too\n(p95 {sb['p95']/so['p95']:.1f}x better)",
+             fontsize=5.8, color=MUTED, ha="center", va="top", style="italic")
     style_axes(ax2)
 
     fig.tight_layout(pad=0.5)
