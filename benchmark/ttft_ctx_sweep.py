@@ -15,7 +15,8 @@ exact and controllable. For each length L, per rep:
 Ordering (warm -> cached -> recompute) each rep guarantees the cached measurement can't
 be contaminated by the recompute prompt evicting the base.
 
-Output: JSON {lengths, cached_ms, recompute_ms, raw} + a single-panel figure (log2 x).
+Output: JSON {lengths, cached_ms, recompute_ms, *_tps, *_n_out, raw} + a figure with
+log2 x -- one panel for TTFT, plus a throughput panel when --gen-tokens > 1.
 
 사용:
   # the server's --context-length must exceed the LARGEST sweep length (+delta).
