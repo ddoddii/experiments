@@ -7,6 +7,7 @@
         "ttft_p99_s": 6.3199,
         "overall_throughput_tok_per_s": 834.21,
         "park_hit_rate_pct": 46.86192468619247,
+        "fetch_already": 52.0,
         "fetch_miss": 762.0,
         "parked_gb": 2.6214,
         "items": 288,
@@ -18,8 +19,9 @@
         "ttft_p99_s": 8.2182,
         "overall_throughput_tok_per_s": 843.09,
         "park_hit_rate_pct": 48.68701206529453,
+        "fetch_already": 75.0,
         "fetch_miss": 723.0,
-        "parked_gb": 7.8572,
+        "parked_gb": 7.857199999999999,
         "items": 288,
         "errors": 0
       }
@@ -31,6 +33,7 @@
         "ttft_p99_s": 7.0531,
         "overall_throughput_tok_per_s": 762.83,
         "park_hit_rate_pct": 45.73699421965318,
+        "fetch_already": 32.0,
         "fetch_miss": 751.0,
         "parked_gb": 2.6214,
         "items": 288,
@@ -42,8 +45,9 @@
         "ttft_p99_s": 8.3328,
         "overall_throughput_tok_per_s": 759.19,
         "park_hit_rate_pct": 49.56268221574344,
+        "fetch_already": 44.0,
         "fetch_miss": 692.0,
-        "parked_gb": 7.8622000000000005,
+        "parked_gb": 7.8622,
         "items": 288,
         "errors": 0
       }
@@ -55,6 +59,7 @@
         "ttft_p99_s": 4.0964,
         "overall_throughput_tok_per_s": 803.88,
         "park_hit_rate_pct": 44.67005076142132,
+        "fetch_already": 32.0,
         "fetch_miss": 763.0,
         "parked_gb": 2.6214,
         "items": 288,
@@ -66,6 +71,7 @@
         "ttft_p99_s": 7.3016,
         "overall_throughput_tok_per_s": 804.52,
         "park_hit_rate_pct": 50.18642803877703,
+        "fetch_already": 70.0,
         "fetch_miss": 668.0,
         "parked_gb": 7.8622,
         "items": 288,
@@ -84,7 +90,10 @@
       "losses": 0,
       "n": 3,
       "verdict": "Ours better in ALL",
-      "rel_pct_median": 8.4
+      "rel_pct_median": 8.4,
+      "baseline_spread_pct": 4.8,
+      "below_baseline_spread": false,
+      "configured": false
     },
     "fetch_miss": {
       "deltas": [
@@ -96,7 +105,10 @@
       "losses": 0,
       "n": 3,
       "verdict": "Ours better in ALL",
-      "rel_pct_median": 7.9
+      "rel_pct_median": 7.9,
+      "baseline_spread_pct": 1.6,
+      "below_baseline_spread": false,
+      "configured": false
     },
     "parked_gb": {
       "deltas": [
@@ -108,7 +120,10 @@
       "losses": 0,
       "n": 3,
       "verdict": "Ours better in ALL",
-      "rel_pct_median": 199.9
+      "rel_pct_median": 199.9,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": true
     },
     "ttft_p50_s": {
       "deltas": [
@@ -120,7 +135,10 @@
       "losses": 0,
       "n": 3,
       "verdict": "Ours better in ALL",
-      "rel_pct_median": 7.5
+      "rel_pct_median": 7.5,
+      "baseline_spread_pct": 5.7,
+      "below_baseline_spread": false,
+      "configured": false
     },
     "ttft_p95_s": {
       "deltas": [
@@ -132,7 +150,10 @@
       "losses": 2,
       "n": 3,
       "verdict": "SPLIT 1 better / 2 worse / 0 tied",
-      "rel_pct_median": 64.7
+      "rel_pct_median": 64.7,
+      "baseline_spread_pct": 89.4,
+      "below_baseline_spread": true,
+      "configured": false
     },
     "ttft_p99_s": {
       "deltas": [
@@ -144,7 +165,10 @@
       "losses": 3,
       "n": 3,
       "verdict": "Ours worse in ALL",
-      "rel_pct_median": 30.0
+      "rel_pct_median": 30.0,
+      "baseline_spread_pct": 46.8,
+      "below_baseline_spread": true,
+      "configured": false
     },
     "overall_throughput_tok_per_s": {
       "deltas": [
@@ -156,7 +180,10 @@
       "losses": 0,
       "n": 3,
       "verdict": "SPLIT 1 better / 0 worse / 2 tied",
-      "rel_pct_median": 0.5
+      "rel_pct_median": 0.5,
+      "baseline_spread_pct": 8.9,
+      "below_baseline_spread": true,
+      "configured": false
     }
   }
 }

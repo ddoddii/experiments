@@ -24,8 +24,10 @@ resource actually being contended for.
 """
 import argparse
 import csv
+import glob
 import json
 import os
+import statistics as st
 
 import matplotlib
 matplotlib.use("Agg")
@@ -75,12 +77,30 @@ def stats(d, arm):
     s = json.load(open(os.path.join(d, f"bench_{arm}.json")))["summary"]
     return {"hit": 100 * h / (h + m) if h + m else 0.0,
             "hits": h, "miss": m, "already": al, "nospace": ns,
-            "p50": s["ttft_p50_s"], "p95": s["ttft_p95_s"]}
+            "p50": s["ttft_p50_s"], "p95": s["ttft_p95_s"], "p99": s["ttft_p99_s"]}
+
+
+def agg(dirs, arm):
+    """Median over repeats, keeping the per-repeat values so the figure can show spread.
+
+    Quoting one run here produced a caption that claimed a 3.3x tail improvement. Three
+    repeats later the baseline's p95 alone ranged over 4.5x and the sign flipped twice:
+    that figure was the baseline drawing its worst value, not an effect. Anything the
+    panel states now is a median across repeats with the range attached.
+    """
+    per = [stats(d, arm) for d in dirs]
+    out = {k: st.median([p[k] for p in per]) for k in per[0]}
+    out["n"] = len(per)
+    out["all"] = {k: [p[k] for p in per] for k in per[0]}
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dir", required=True)
+    # Several repeat directories, not one run. The memory panel is drawn from the first
+    # (the layout is configured and came out identical in all three); the payoff panel is
+    # aggregated over all of them.
+    ap.add_argument("--dirs", nargs="+", required=True)
     # PD_LAYOUT=b physical order, passed rather than inferred so a layout-a run cannot be
     # silently mislabelled.
     ap.add_argument("--order", default="P0:0,D0:1,P1:2,D1:3")
@@ -89,9 +109,13 @@ def main():
     ap.add_argument("--out", default="results/exp2/fig_exp2")
     args = ap.parse_args()
 
+    dirs = sorted(sum((glob.glob(x) for x in args.dirs), []))
+    if not dirs:
+        raise SystemExit(f"no directories matched {args.dirs}")
     order = [(t.split(":")[0], int(t.split(":")[1])) for t in args.order.split(",")]
-    B, O = arm_data(args.dir, BASE, order), arm_data(args.dir, OURS, order)
-    sb, so = stats(args.dir, BASE), stats(args.dir, OURS)
+    B, O = arm_data(dirs[0], BASE, order), arm_data(dirs[0], OURS, order)
+    sb, so = agg(dirs, BASE), agg(dirs, OURS)
+    print(f"  aggregating {len(dirs)} run(s): " + ", ".join(os.path.basename(d) for d in dirs))
 
     for name, rows in ((BASE, B), (OURS, O)):
         tot = sum(r["parked"] for r in rows)
@@ -153,33 +177,60 @@ def main():
               fontsize=6.5, handlelength=1.2, columnspacing=1.4, borderaxespad=0.35)
     style_axes(ax)
 
-    # Right: what borrowing bought and what it cost, on one axis each.
-    ax2.bar(0 - 0.19, sb["hit"], width=0.36, color=C_OWN, edgecolor=INK, lw=0.4, zorder=3)
-    ax2.bar(0 + 0.19, so["hit"], width=0.36, color=C_PARK, edgecolor=INK, lw=0.4, zorder=3)
-    for x, v in ((-0.19, sb["hit"]), (0.19, so["hit"])):
-        ax2.text(x, v, f"{v:.1f}", ha="center", va="bottom", fontsize=7, color=INK)
-    ax2.set_xlim(-0.6, 1.5)
+    # Right: what borrowing bought, with every repeat's value drawn on the bar. The bar is
+    # the median; the dots are the runs. A reader can see at a glance whether the gap
+    # between the two bars is bigger than the scatter within each of them.
+    for x, s, c in ((-0.19, sb, C_OWN), (0.19, so, C_PARK)):
+        ax2.bar(x, s["hit"], width=0.36, color=c, edgecolor=INK, lw=0.4, zorder=3)
+        ax2.scatter([x] * s["n"], s["all"]["hit"], s=7, color=INK, zorder=5,
+                    linewidths=0, alpha=0.85)
+        ax2.text(x, max(s["all"]["hit"]), f"{s['hit']:.1f}", ha="center", va="bottom",
+                 fontsize=7, color=INK)
+    # Room to the right of the bars for the TTFT block; at the old 1.5 the range
+    # annotations ran back over the bars themselves.
+    ax2.set_xlim(-0.55, 2.6)
     ax2.set_xticks([0])
-    ax2.set_xticklabels(["park-fetch hit rate (%)"], fontsize=7)
+    ax2.set_xticklabels([f"park-fetch hit rate (%)\nmedian of {sb['n']} runs"], fontsize=7)
     ax2.set_ylim(0, max(sb["hit"], so["hit"]) * 1.5)
     ax2.set_ylabel("%")
     ax2.set_title("What it buys, and costs")
     y = ax2.get_ylim()[1]
-    ax2.text(0.95, y * 0.95, "TTFT (s)", fontsize=6.5, color=INK, ha="center", va="top")
-    ax2.text(0.95, y * 0.80, f"p50  {sb['p50']:.2f} → {so['p50']:.2f}", fontsize=6.5,
-             color=INK, ha="center", va="top")
-    ax2.text(0.95, y * 0.65, f"p95  {sb['p95']:.2f} → {so['p95']:.2f}", fontsize=6.5,
-             color=PALETTE["recompute"] if so["p95"] > sb["p95"] else INK,
+    ax2.text(1.5, y * 0.97, f"TTFT (s), median of {sb['n']}", fontsize=6.5, color=INK,
              ha="center", va="top")
-    # Colour and wording follow the DATA rather than a remembered conclusion. On the
-    # capped configuration the tail regressed and this line said so; uncapped it improves,
-    # and a hardcoded "the tail does not" would have quietly mislabelled the new result.
-    worse = so["p95"] > sb["p95"]
-    ax2.text(0.95, y * 0.44,
-             "median improves,\nthe tail does not" if worse
-             else f"tail improves too\n(p95 {sb['p95']/so['p95']:.1f}x better)",
-             fontsize=5.8, color=MUTED, ha="center", va="top", style="italic")
+    # Every TTFT line carries the baseline's own range across repeats. The single-run
+    # version of this panel reported "p95 3.3x better"; repeated, the baseline's p95 alone
+    # spanned 1.45-6.58 s and the sign of the difference flipped twice. A tail number
+    # without its spread beside it is not reportable at this n.
+    for j, k in enumerate(("p50", "p95", "p99")):
+        lo, hi = min(sb["all"][k]), max(sb["all"][k])
+        worse = so[k] > sb[k]
+        unstable = (hi - lo) > abs(so[k] - sb[k])
+        ax2.text(1.5, y * (0.84 - 0.15 * j),
+                 f"{k}  {sb[k]:.2f} → {so[k]:.2f}"
+                 + (f"   (base {lo:.1f}–{hi:.1f})" if unstable else ""),
+                 fontsize=6.0,
+                 color=MUTED if unstable else (PALETTE["recompute"] if worse else INK),
+                 ha="center", va="top")
+    # Derived, never remembered. The previous hardcoded caption survived a configuration
+    # change and asserted a tail win that three repeats then contradicted.
+    hit_consistent = (sb["n"] > 1
+                      and all(o > b for b, o in zip(sb["all"]["hit"], so["all"]["hit"]))
+                      and abs(so["hit"] - sb["hit"]) > (max(sb["all"]["hit"])
+                                                        - min(sb["all"]["hit"])))
+    tail_noisy = (max(sb["all"]["p95"]) - min(sb["all"]["p95"])) > abs(so["p95"] - sb["p95"])
+    cap = ("hit rate holds" if hit_consistent else "hit rate varies by run") + ";\n" + \
+          ("tail is inside run-to-run noise" if tail_noisy
+           else ("tail worsens" if so["p95"] > sb["p95"] else "tail improves"))
+    ax2.text(1.5, y * 0.36, cap, fontsize=5.8, color=MUTED, ha="center", va="top",
+             style="italic")
     style_axes(ax2)
+
+    print(f"  park-fetch hit rate  {sb['hit']:.1f} -> {so['hit']:.1f} "
+          f"(base range {min(sb['all']['hit']):.1f}-{max(sb['all']['hit']):.1f})")
+    for k in ("p50", "p95", "p99"):
+        print(f"  TTFT {k}  {sb[k]:.3f} -> {so[k]:.3f}   base range "
+              f"{min(sb['all'][k]):.2f}-{max(sb['all'][k]):.2f}   ours range "
+              f"{min(so['all'][k]):.2f}-{max(so['all'][k]):.2f}")
 
     fig.tight_layout(pad=0.5)
     stem = args.out[:-4] if args.out.endswith((".png", ".pdf")) else args.out

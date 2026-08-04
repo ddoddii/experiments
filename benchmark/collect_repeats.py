@@ -80,13 +80,17 @@ def main():
               f"has a tail statistic computed over the survivors")
 
     print(f"\n{len(runs)} repeats: " + ", ".join(n for n, _ in runs))
-    rows = [("park-fetch hit rate (%)", "park_hit_rate_pct", False),
-            ("park-fetch misses", "fetch_miss", True),
-            ("parked KV (GB)", "parked_gb", False)] + \
-           [(lab, k, lo) for k, lab, lo in METRICS]
+    # parked_gb is CONFIGURED, not measured: PARK_POOL_TOKENS_PER_GPU x candidate count,
+    # and both arms fill their pools to capacity. Reporting it as "Ours better in ALL,
+    # median |Δ| = 199.9%" dresses a constant up as an experimental win. Kept because
+    # "the pools did fill" is worth confirming, flagged so it is never read as evidence.
+    rows = [("park-fetch hit rate (%)", "park_hit_rate_pct", False, False),
+            ("park-fetch misses", "fetch_miss", True, False),
+            ("parked KV (GB)", "parked_gb", False, True)] + \
+           [(lab, k, lo, False) for k, lab, lo in METRICS]
 
     summary = {}
-    for lab, key, lower in rows:
+    for lab, key, lower, configured in rows:
         deltas, line = [], []
         for _, r in runs:
             b, o = r[BASE][key], r[OURS][key]
@@ -113,23 +117,42 @@ def main():
                    f"SPLIT {wins} better / {losses} worse / {n - wins - losses} tied")
         rel = [abs(d) / abs(r[BASE][key]) * 100 for d, (_, r) in zip(deltas, runs)
                if r[BASE][key]]
+        # How much the BASELINE alone moves between repeats. An effect smaller than the
+        # baseline's own run-to-run spread is not measurable at this n, however consistent
+        # its sign happens to look -- a single run of this comparison reported p95 -70%
+        # while the baseline's p95 by itself ranged over 4.5x across runs.
+        spread = (100 * (max(bases) - min(bases)) / abs(st.median(bases))
+                  if len(bases) > 1 and st.median(bases) else None)
+        med = st.median(rel) if rel else None
+        drowned = (med is not None and spread is not None and med < spread
+                   and not configured)
         summary[key] = {"deltas": [round(d, 4) for d in deltas], "wins": wins,
                         "losses": losses, "n": n, "verdict": verdict,
-                        "rel_pct_median": round(st.median(rel), 1) if rel else None}
+                        "rel_pct_median": round(med, 1) if med is not None else None,
+                        "baseline_spread_pct": round(spread, 1) if spread else None,
+                        "below_baseline_spread": drowned, "configured": configured}
         flag = "  <-- SPLIT" if "SPLIT" in verdict else ""
-        print(f"\n  {lab}")
+        print(f"\n  {lab}" + ("   [configured, not measured]" if configured else ""))
         print(f"    " + "   ".join(line))
-        print(f"    {verdict}"
-              + (f", median |Δ| = {st.median(rel):.1f}%" if rel else "") + flag)
+        print(f"    {verdict}" + (f", median |Δ| = {med:.1f}%" if med is not None else "")
+              + flag)
+        if spread is not None and not configured:
+            print(f"    baseline alone varies {spread:.1f}% across repeats"
+                  + ("   <-- EFFECT IS SMALLER THAN THIS" if drowned else ""))
 
     print("\n" + "=" * 64)
     split = [k for k, v in summary.items() if "SPLIT" in v["verdict"]]
+    weak = [k for k, v in summary.items() if v["below_baseline_spread"]]
     if split:
         print(f"  NOT reproducible on: {split}")
         print(f"  Do not quote a single-run figure for these; report the range, or run "
               f"more repeats.")
     else:
         print("  Every metric kept its sign across all repeats.")
+    if weak:
+        print(f"  Effect smaller than the baseline's own run-to-run spread: {weak}")
+        print(f"  A consistent sign here is not yet evidence -- n is too small to "
+              f"separate the effect from the noise the baseline shows on its own.")
 
     if args.out:
         json.dump({"runs": {n: r for n, r in runs}, "summary": summary},
