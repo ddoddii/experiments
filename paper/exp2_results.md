@@ -1,5 +1,69 @@
 # Exp 2 결과 — P/D 불균형
 
+## ★★ 큰 park 풀 (`results/exp2/big_c32_r1`) — 유휴 메모리를 실제로 쓸 때
+
+`PARK_POOL_TOKENS_PER_GPU=32000`, `PARK_MEM_FRACTION_D=0.88`, C=32, 288세션×12턴.
+클램프가 prefill 자기 GPU만 15,344로 줄였고(여유 HBM 부족), decode GPU에는 32,000이
+그대로 들어갔다. 8개 서버 전부 `ready to roll`, 두 prefill 모두 ~950초 완주, 에러 0.
+
+| | `park_local` | **`park_pd` (Ours)** | Δ |
+|---|---|---|---|
+| prefill이 도달 가능한 캐시 | 15,344 tok (2.01 GB) | **79,344 tok (10.40 GB)** | **5.2×** |
+| park 총량 | 4.02 GB | **20.79 GB** | 5.2× |
+| — 유휴 decode GPU 위 | 0.00 | **16.78 GB** | — |
+| **park-fetch miss** | 522 | **321** | **−38.5%** |
+| **park-fetch hit rate** | 64.0% | **77.9%** | **+13.9%p** |
+| TTFT p50 | 0.301 | **0.277** | −8.2% |
+| TTFT p95 | 3.609 | 4.806 | +33.2% ⚠ |
+| TTFT p99 | 11.372 | 11.780 | +3.6% ⚠ |
+| throughput | 834.3 | 842.8 | +1.0% |
+
+### 용량을 주니 효과가 비례해서 커졌다 — 메커니즘은 수요가 아니라 용량에 막혀 있었다
+
+| park 크기 | park-fetch miss | hit rate |
+|---|---|---|
+| 10,000 tok/GPU (3회 반복) | −5.1 ~ −12.5% | +1.8 ~ +5.5%p |
+| **32,000 tok/GPU** | **−38.5%** | **+13.9%p** |
+
+작은 풀에서 park 풀이 항상 100% 포화였던 것이 수요 부족이 아니라 **용량 부족**이었음을
+확인해 준다.
+
+### 핵심: 로컬 GPU에는 자랄 자리가 없고, 유휴 GPU에는 있다
+
+두 arm 모두 "GPU당 32,000 토큰"을 요청했지만 결과가 다르다.
+
+- `park_local`은 **자기 prefill GPU 하나뿐**이고 그 GPU는 여유 HBM이 6.05 GB라
+  15,344로 클램프됐다 → 2.01 GB
+- `park_pd`는 **유휴 decode GPU 2개에 32,000씩 그대로** 받았다 → 10.40 GB
+
+**같은 정책, 같은 요청 크기, 5.2배 차이.** 차이를 만든 것은 정책의 공격성이 아니라
+**닿을 수 있는 GPU가 몇 개인가**다. 이것이 §7-2의 주장이다.
+
+### 메모리는 여전히 만들어낸 것이 아니라 재분할이다
+
+decode GPU의 KV 가용 메모리 총량:
+
+| | serving 풀 | park 풀 | 합 |
+|---|---|---|---|
+| `park_local` | 26.41 GiB | 0 | **26.41** |
+| `park_pd` | 18.84 GiB | 7.81 GiB | **26.65** |
+
+decode serving 풀이 park 풀만큼 정확히 줄었다. decode 점유는 15.4% (p95 24.9%)로
+여전히 여유가 크다 — 압박을 옮긴 것이 아니다.
+
+유휴 활용률: **9% → 29%** (decode GPU의 idle-ish 26.6 GiB 중 7.81 GiB).
+
+### ⚠ 꼬리는 1회 측정이다 — 인용 금지
+
+p95 +33.2%, p99 +3.6%. 방향은 3회 반복(p99 3/3 악화)과 일치하지만 **이 run은 n=1이고,
+기준선 p95는 단독으로 4.5배(1.45~6.58s) 흔들린 전력이 있다.** +33%는 그 변동폭 안이다.
+꼬리를 논문에 쓰려면 이 설정으로 3회 반복해야 한다.
+
+> **그림**: `results/exp2/fig_exp2_timeline_big.{pdf,png}`, `fig_exp2_stack_big.{pdf,png}`
+> `python benchmark/plot_exp2_timeline.py --dirs results/exp2/big_c32_r1`
+
+---
+
 ## ★ 최종 결과 — 3회 반복 (`results/exp2/repeat_nocap_c32_r{1,2,3}`)
 
 C=32, 288세션×12턴, **`--max-total-tokens` 없음**, prefill mem-fraction 0.85,
