@@ -146,6 +146,10 @@ def main():
     ap.add_argument("--by-role", action="store_true",
                     help="one bar pair per ROLE (mean over that role's GPUs) instead of "
                          "one per GPU")
+    # Same code path as the figure -- same averaging, same by-role collapse, same arm
+    # selection -- so the deck and the PDF cannot disagree about what they are showing.
+    ap.add_argument("--export-json", default=None,
+                    help="also write the drawn bars to JSON (for make_*_pptx.js)")
     ap.add_argument("--width", type=float, default=7.16)
     ap.add_argument("--height", type=float, default=2.45)
     ap.add_argument("--out", default="results/exp2/fig_exp2")
@@ -188,6 +192,21 @@ def main():
               f"{s['miss']:.0f} + radix-already {s['already']:.0f} + nospace "
               f"{s['nospace']:.0f}   -> park-fetch hit rate {s['hit']:.1f}% "
               f"(denominator excludes radix-already)")
+
+    if args.export_json:
+        import json as _json
+        _json.dump({
+            "only": args.only, "by_role": args.by_role, "n_runs": len(dirs),
+            "dirs": [os.path.basename(d) for d in dirs],
+            "arms": {name: [{"label": r["label"], "role": r["role"],
+                             "own": round(r["own"], 4), "parked": round(r["parked"], 4),
+                             "unused": round(r["free"], 4), "cap": round(r["cap"], 4),
+                             "members": r.get("members")}
+                            for r in rows]
+                     for name, rows in (("local", B), ("ours", O))},
+            "hit": {"local": sb["hit"], "ours": so["hit"]},
+        }, open(args.export_json, "w"), indent=1)
+        print(f"[export] {args.export_json}")
 
     use_paper_style()
     # The payoff panel IS a comparison, so it cannot ride along on a single-arm figure:
