@@ -2,26 +2,26 @@
   "runs": {
     "big_c32_r1": {
       "park_local": {
-        "ttft_p50_s": 0.5829,
-        "ttft_p95_s": 10.5321,
-        "ttft_p99_s": 16.7715,
-        "overall_throughput_tok_per_s": 789.01,
-        "park_hit_rate_pct": 79.51289398280802,
-        "fetch_already": 29.0,
-        "fetch_miss": 286.0,
-        "parked_gb": 5.1902,
+        "ttft_p50_s": 0.3015,
+        "ttft_p95_s": 3.6089,
+        "ttft_p99_s": 11.3719,
+        "overall_throughput_tok_per_s": 834.3,
+        "park_hit_rate_pct": 64.0,
+        "fetch_already": 36.0,
+        "fetch_miss": 522.0,
+        "parked_gb": 4.0224,
         "items": 288,
         "errors": 0
       },
       "park_pd": {
-        "ttft_p50_s": 5.9766,
-        "ttft_p95_s": 18.4289,
-        "ttft_p99_s": 21.8411,
-        "overall_throughput_tok_per_s": 669.82,
-        "park_hit_rate_pct": 78.75536480686695,
-        "fetch_already": 25.0,
-        "fetch_miss": 297.0,
-        "parked_gb": 15.4969,
+        "ttft_p50_s": 0.2767,
+        "ttft_p95_s": 4.8062,
+        "ttft_p99_s": 11.7797,
+        "overall_throughput_tok_per_s": 842.83,
+        "park_hit_rate_pct": 77.92297111416781,
+        "fetch_already": 32.0,
+        "fetch_miss": 321.0,
+        "parked_gb": 20.7941,
         "items": 288,
         "errors": 0
       }
@@ -30,91 +30,91 @@
   "summary": {
     "park_hit_rate_pct": {
       "deltas": [
-        -0.7575
+        13.923
       ],
-      "wins": 0,
-      "losses": 1,
+      "wins": 1,
+      "losses": 0,
       "n": 1,
-      "verdict": "Ours worse in ALL",
-      "rel_pct_median": 1.0,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 21.8,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
     },
     "fetch_miss": {
       "deltas": [
-        -11.0
+        201.0
       ],
-      "wins": 0,
-      "losses": 1,
+      "wins": 1,
+      "losses": 0,
       "n": 1,
-      "verdict": "Ours worse in ALL",
-      "rel_pct_median": 3.8,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 38.5,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
     },
     "parked_gb": {
       "deltas": [
-        10.3067
+        16.7717
       ],
       "wins": 1,
       "losses": 0,
       "n": 1,
       "verdict": "Ours better in ALL",
-      "rel_pct_median": 198.6,
+      "rel_pct_median": 417.0,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": true
     },
     "ttft_p50_s": {
       "deltas": [
-        -5.3937
+        0.0248
       ],
-      "wins": 0,
-      "losses": 1,
+      "wins": 1,
+      "losses": 0,
       "n": 1,
-      "verdict": "Ours worse in ALL",
-      "rel_pct_median": 925.3,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 8.2,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
     },
     "ttft_p95_s": {
       "deltas": [
-        -7.8968
+        -1.1973
       ],
       "wins": 0,
       "losses": 1,
       "n": 1,
       "verdict": "Ours worse in ALL",
-      "rel_pct_median": 75.0,
+      "rel_pct_median": 33.2,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
     },
     "ttft_p99_s": {
       "deltas": [
-        -5.0696
+        -0.4078
       ],
       "wins": 0,
       "losses": 1,
       "n": 1,
       "verdict": "Ours worse in ALL",
-      "rel_pct_median": 30.2,
+      "rel_pct_median": 3.6,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
     },
     "overall_throughput_tok_per_s": {
       "deltas": [
-        -119.19
+        8.53
       ],
-      "wins": 0,
-      "losses": 1,
+      "wins": 1,
+      "losses": 0,
       "n": 1,
-      "verdict": "Ours worse in ALL",
-      "rel_pct_median": 15.1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 1.0,
       "baseline_spread_pct": null,
       "below_baseline_spread": false,
       "configured": false
