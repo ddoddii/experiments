@@ -77,6 +77,19 @@ export PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-30000}
 # and the arms then differ only in reach. Equalising the total instead asks a different
 # and already-answered question -- Exp 2 v1..v4 measured that one, and concentrating a
 # fixed budget in one pool beat spreading it, because small pools evict independently.
+#
+# SIZING IT: there are two different "free" numbers and only one of them is usable.
+#   free INSIDE the serving KV pool  -- what sglang:cache_occupancy reports, ~35 GB across
+#     the two decode GPUs here. This is the waste Exp 2 is ABOUT, but it is already
+#     allocated to the serving pool and a park pool cannot be carved from it.
+#   free UNALLOCATED HBM             -- what a park pool actually needs. On a 47.4 GiB card
+#     at mem-fraction 0.85 the prefill has 6.05 GB left, at 0.80 a decode has ~9.5 GB, and
+#     each decode GPU hosts TWO pools (one per prefill).
+# Sizing from the first number produced a 60000-token request that OOM'd the scheduler at
+# startup. At ~119 KiB/token the ceiling with today's fractions is ~35k tokens/GPU
+# (decode-bound). To go past that, lower PARK_MEM_FRACTION_D: the decode serving pool runs
+# at 14% occupancy, so converting it into park pools leaves the decode GPU's TOTAL
+# KV-capable memory roughly unchanged and merely re-partitions it.
 export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-}
 export ROUTER_MODE=balanced
 
