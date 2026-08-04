@@ -10,10 +10,18 @@ Deliberately plain -- one filled band per panel, in the style of the classic
   light fill : min-max spread across that role's GPUs (omitted with --no-band)
   dotted line: that role's time-average, labelled
 
-The message is read off the two panels directly: decode sits near saturation
-while prefill runs far below it, so at any instant there is HBM in the prefill
-GPUs that no one is using -- the victim-cache opportunity. --headroom makes that
-explicit by hatching the unused capacity above the prefill curve.
+The message is read off the two panels directly: one role sits near saturation while
+the other runs far below it, so at any instant there is HBM that no one is using --
+the victim-cache opportunity. --headroom hatches that unused capacity.
+
+WHICH role is saturated depends on the gauge, and the difference is not cosmetic:
+  token_usage       counts only in-flight KV (num_used = max_total - available -
+                    evictable), so a prefill pool 80% full of retained prefixes reads
+                    ~1%. On this gauge DECODE looks busier.
+  cache_occupancy   counts retained prefixes too. On this gauge PREFILL is the busy one
+                    (82% vs 11% measured), which is the resource the paper argues about.
+An earlier version of this figure was drawn on token_usage and labelled "KV memory
+utilization", which inverted the claim. The axis now names the gauge.
 
 Reads the same CSV as plot_kv_imbalance.py (kv_occupancy_timeseries.py output):
 columns t_s, <label>_use, ... with a "# roles: P0:P ..." comment line.
@@ -41,6 +49,39 @@ GRAY = {"fill": "#3B3B3B", "band": "#C9C9C9", "line": "#000000"}
 COLOR = {"D": {"fill": "#E69F00", "band": "#F6DFB0", "line": "#8A6100"},
          "P": {"fill": "#0072B2", "band": "#BBD9EC", "line": "#00456B"}}
 MUTED = PALETTE["muted"]
+
+
+def read_metric(csv_path):
+    """Which gauge the '_use' columns actually hold, from the sampler's '# metric:' line.
+
+    This matters more than it looks. The same column name has carried two different
+    quantities: sglang:token_usage, which SUBTRACTS the radix cache (num_used =
+    max_total - available - evictable), and sglang:cache_occupancy, which includes it.
+    On a prefill node the two differ by ~90x, and the motivation figure was drawn on the
+    first without saying so -- reading it as pool occupancy inverted the paper's claim.
+    The plotter used to discard this line with the rest of the comments; now it names the
+    gauge on the axis so a figure cannot be mistaken for the other measurement.
+    """
+    # Scan the whole file, not just a header block. The column header is line 1 and the
+    # '# metric:' lines come after it, so stopping at the first non-comment line found
+    # nothing and reported UNRECORDED on files that do record the gauge. The sampler also
+    # re-detects every tick and appends a new line whenever the answer changes (a gauge is
+    # absent until first set, so idle nodes start as 'unreachable'), so every line counts.
+    names = set()
+    for ln in open(csv_path):
+        if ln.startswith("# metric:"):
+            names.update(p.split(":", 1)[1] for p in ln.split()[2:] if ":" in p)
+    names.discard("unreachable")
+    return "/".join(sorted(names)) if names else None
+
+
+def use_axis_label(metric):
+    """Axis label that names the gauge, so the two cannot be confused on sight."""
+    if metric == "token_usage":
+        return "In-flight KV\n(token_usage, %)"
+    if metric == "cache_occupancy":
+        return "KV pool occupancy\n(cache_occupancy, %)"
+    return f"KV memory\nutilization (%)" if not metric else f"KV ({metric}, %)"
 
 
 def load(csv_path):
@@ -138,11 +179,13 @@ def both_roles(t, data, p_labels, d_labels):
 
 
 def render_overlay(args, t, data, p_labels, d_labels):
-    """Single-axes version (saves ~half the vertical space): decode drawn as the
-    LIGHT area behind, prefill as the DARK area in front. Because decode sits above
-    prefill nearly everywhere, the light band left visible between the two curves IS
-    the imbalance -- the HBM that is busy on decode and idle on prefill at the same
-    instant. Same idiom as the classic occupied-vs-demanded utilization figure."""
+    """Single-axes version (saves ~half the vertical space): the BUSIER role is drawn as
+    the area behind, the idler in front, so the band left visible between the two curves
+    IS the imbalance -- HBM busy on one role and idle on the other at the same instant.
+
+    Which role is busier is decided by the data, not assumed. It flips with the gauge:
+    on token_usage decode reads higher, on cache_occupancy prefill does. See
+    read_metric()."""
     xs, dm, pm = both_roles(t, data, p_labels, d_labels)
     if not xs:
         raise SystemExit("no samples where both roles report")
@@ -161,8 +204,17 @@ def render_overlay(args, t, data, p_labels, d_labels):
     # thinner outlines at column width -- 0.6pt over a dense series turns the whole
     # band black once the figure is scaled down to ~3.5in
     olw = 0.6 if args.width >= 4.5 else 0.45
-    ax.fill_between(xs, 0, dm, color=c_dec, lw=0, zorder=2, label="Decode instance")
-    ax.fill_between(xs, 0, pm, color=c_pre, lw=0, zorder=3, label="Prefill instance")
+    # Both areas start at 0 and overlap, so the BUSIER role has to be drawn behind or it
+    # is hidden completely and the visible band stops being the gap. Which role that is
+    # depends on the gauge: on token_usage decode reads higher (it holds in-flight KV,
+    # while prefill's pool is mostly retained prefixes that token_usage subtracts); on
+    # cache_occupancy prefill reads higher. This used to be fixed at decode-behind, so
+    # re-running it on cache_occupancy data buried the decode curve under a solid prefill
+    # area and still printed "idle on prefill while decode is busy".
+    busy_first = ((dm, c_dec, "Decode instance"), (pm, c_pre, "Prefill instance")) \
+        if d_avg >= p_avg else ((pm, c_pre, "Prefill instance"), (dm, c_dec, "Decode instance"))
+    for z, (series, colour, lab) in enumerate(busy_first):
+        ax.fill_between(xs, 0, series, color=colour, lw=0, zorder=2 + z, label=lab)
     ax.plot(xs, dm, color="#000000", lw=olw, zorder=4)
     ax.plot(xs, pm, color="#000000", lw=olw, zorder=5)
 
@@ -182,15 +234,19 @@ def render_overlay(args, t, data, p_labels, d_labels):
         ax.annotate("", xy=(xs[0] + 0.16 * (xs[-1] - xs[0]), d_avg),
                     xytext=(xs[0] + 0.16 * (xs[-1] - xs[0]), p_avg),
                     arrowprops=dict(arrowstyle="<->", lw=0.8, color="#000000"), zorder=7)
+        # Direction read off the data, never assumed. With the sign hardcoded this label
+        # rendered as "-71 pts idle on prefill while decode is busy" on a run where
+        # prefill was the busy one -- wrong sign and wrong roles in the same sentence.
+        idle, busy = ("prefill", "decode") if g_avg > 0 else ("decode", "prefill")
         ax.text(xs[0] + 0.195 * (xs[-1] - xs[0]), (d_avg + p_avg) / 2,
-                f"{g_avg:.0f} pts idle on prefill\nwhile decode is busy",
+                f"{abs(g_avg):.0f} pts idle on {idle}\nwhile {busy} is busy",
                 ha="left", va="center", fontsize=6.4, zorder=8,
                 bbox=dict(facecolor="white", edgecolor="none", pad=1.0))
 
     ax.set_ylim(0, 100)
     ax.set_xlim(min(xs), max(xs))
     ax.set_yticks([0, 25, 50, 75, 100])
-    ax.set_ylabel("KV memory\nutilization (%)")
+    ax.set_ylabel(use_axis_label(args.metric))
     ax.set_xlabel("time (s)")
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
@@ -252,6 +308,18 @@ def main():
                     help="figure height (in); only used by --overlay")
     args = ap.parse_args()
 
+    args.metric = read_metric(args.csv)
+    print(f"  gauge in '_use' columns: {args.metric or 'UNRECORDED'}")
+    if args.metric == "token_usage":
+        print("  [warn] token_usage EXCLUDES the radix cache (num_used = max_total - "
+              "available - evictable), so a prefill pool full of retained prefixes reads "
+              "near zero. This is in-flight KV, not pool occupancy -- do not label the "
+              "result 'KV memory utilization'.")
+    elif args.metric is None:
+        print("  [warn] the CSV has no '# metric:' line, so which gauge these numbers "
+              "came from is unrecorded. Re-sample with the current "
+              "kv_occupancy_timeseries.py before using this in the paper.")
+
     t, data, labels = load(args.csv)
     if not t:
         raise SystemExit(f"no samples in {args.csv}")
@@ -281,8 +349,8 @@ def main():
     p_avg = panel(axP, px, pmean, plo, phi, "Prefill Instance", csP, args,
                   headroom=args.headroom)
 
-    axD.set_ylabel("KV memory\nutilization (%)")
-    axP.set_ylabel("KV memory\nutilization (%)")
+    axD.set_ylabel(use_axis_label(args.metric))
+    axP.set_ylabel(use_axis_label(args.metric))
     axP.set_xlabel("time (s)")
     handles, hlabels = axD.get_legend_handles_labels()
     fig.legend(handles, hlabels, loc="upper center", ncol=len(hlabels), frameon=False,
