@@ -1,0 +1,71 @@
+{
+ "models": [
+  {
+   "key": "llama8b",
+   "label": "Llama-3.1-8B",
+   "arms": {
+    "hicache": {
+     "prefill": 50.805,
+     "decode": 85.252,
+     "dram": 32.013,
+     "disk": 78.256
+    },
+    "park": {
+     "prefill": 58.383,
+     "decode": 86.578,
+     "dram": 15.595,
+     "disk": 0.0
+    }
+   }
+  },
+  {
+   "key": "llama13b",
+   "label": "Llama-2-13B",
+   "arms": {
+    "hicache": {
+     "prefill": 63.99,
+     "decode": 83.031,
+     "dram": 28.196,
+     "disk": 182.704
+    },
+    "park": {
+     "prefill": 80.385,
+     "decode": 84.633,
+     "dram": 14.321,
+     "disk": 0.0
+    }
+   }
+  },
+  {
+   "key": "qwen14b",
+   "label": "Qwen3-14B",
+   "arms": {
+    "hicache": {
+     "prefill": 67.102,
+     "decode": 84.119,
+     "dram": 22.111,
+     "disk": 92.839
+    },
+    "park": {
+     "prefill": 79.762,
+     "decode": 85.449,
+     "dram": 15.834,
+     "disk": 0.0
+    }
+   }
+  }
+ ],
+ "arm_labels": {
+  "hicache": "SGLang",
+  "park": "Ours"
+ },
+ "prefill_gpus": [
+  0,
+  1
+ ],
+ "decode_gpus": [
+  2,
+  3
+ ],
+ "dram_column": "proc_pss_mb"
+}
