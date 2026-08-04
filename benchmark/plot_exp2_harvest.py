@@ -60,6 +60,9 @@ def roles(d, arm):
 
 
 def stats(d, arm):
+    """Park-fetch hit rate -- see plot_exp2_gpu_stack.stats(). Request-weighted, and the
+    denominator excludes fetch_already; NOT comparable to Exp 1's token-weighted
+    cached/prompt reuse ratio."""
     rows = list(csv.DictReader(open(os.path.join(d, f"parked_{arm}.csv"))))
     f = lambda k: float(rows[-1].get(k, "") or 0)
     hits, miss = f("fetch_hits"), f("fetch_miss")
@@ -167,7 +170,7 @@ def main():
             ax3.text(x, v, f"{v:.1f}", ha="center", va="bottom", fontsize=7, color=INK)
     ax3.set_xlim(-0.55, 1.75)
     ax3.set_xticks([0])
-    ax3.set_xticklabels(["Cache hit rate (%)"], fontsize=7)
+    ax3.set_xticklabels(["Park-fetch hit rate (%)"], fontsize=7)
     ax3.set_ylabel("%")
     ax3.set_ylim(0, max(sb["hit_rate"], so["hit_rate"]) * 1.45)
     ax3.set_title("(c) What it buys, and costs")
