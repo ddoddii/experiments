@@ -70,6 +70,10 @@ def main():
                     help="dir:label pairs, in plot order")
     ap.add_argument("--prefill-gpus", nargs="+", type=int, default=[0, 1])
     ap.add_argument("--decode-gpus", nargs="+", type=int, default=[2, 3])
+    # Same code path as the figure, so the deck cannot disagree with the PDF about which
+    # GPUs are prefill or which column counts as DRAM.
+    ap.add_argument("--export-json", default=None,
+                    help="also write the drawn bars to JSON (for make_*_pptx.js)")
     ap.add_argument("--width", type=float, default=4.6)
     ap.add_argument("--height", type=float, default=3.1)
     ap.add_argument("--out", default="results/models/fig_peak_memory")
@@ -92,6 +96,21 @@ def main():
         print(f"{'':>12} {'delta':>8} {p['prefill'] - h['prefill']:>+7.1f} "
               f"{p['decode'] - h['decode']:>+7.1f} {p['dram'] - h['dram']:>+7.1f} "
               f"{tp - th:>+8.1f}")
+
+    if args.export_json:
+        import json as _json
+        _json.dump({
+            "models": [{"key": k, "label": l,
+                        "arms": {a: {"prefill": round(data[(k, a)]["prefill"], 3),
+                                     "decode": round(data[(k, a)]["decode"], 3),
+                                     "dram": round(data[(k, a)]["dram"], 3),
+                                     "disk": round(data[(k, a)]["disk"], 3)}
+                                 for a, _ in ARMS}} for k, l in models],
+            "arm_labels": {a: lab for a, lab in ARMS},
+            "prefill_gpus": args.prefill_gpus, "decode_gpus": args.decode_gpus,
+            "dram_column": "proc_pss_mb",
+        }, open(args.export_json, "w"), indent=1)
+        print(f"[export] {args.export_json}")
 
     use_paper_style()
     fig, ax = plt.subplots(1, 1, figsize=(args.width, args.height))
