@@ -1,54 +1,77 @@
 # Exp 2 결과 — P/D 불균형
 
-## ★ 최종 결과 (`results/exp2/final_nocap_c32`) — 인위적 캡 없음
+## ★ 최종 결과 — 3회 반복 (`results/exp2/repeat_nocap_c32_r{1,2,3}`)
 
 C=32, 288세션×12턴, **`--max-total-tokens` 없음**, prefill mem-fraction 0.85,
-park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
+park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 반복마다 **서로 겹치지 않는 ShareGPT
+슬라이스** (`ITEM_OFFSET` 0/288/576). 전 실행 에러 0.
 
-| | `park_local` | **`park_pd` (Ours)** | Δ |
+| | `park_local` | **`park_pd` (Ours)** | 3회 판정 |
 |---|---|---|---|
-| KV 풀 크기 | P 25.0 / D 22.6 GB | P 25.0 / D 20.2 GB | **거의 동일 — 캡 없음** |
-| prefill 점유 | 0.822 (p95 0.999) | 0.816 (p95 0.998) | 실행의 **70%가 90% 초과** |
-| decode 점유 | 0.139 | 0.157 | **19.5 GB씩 유휴** |
-| park 총량 | 2.62 GB | **7.86 GB** | **3.0×** |
-| — 유휴 GPU 위 | 0.00 | **5.24 GB (67%)** | — |
-| fetch hits | 639 | **715** | +11.9% |
-| **fetch miss** | 793 | **713** | **−10.1%** |
-| park-fetch hit rate | 44.6% | **50.1%** | **+5.4%p** |
-| fetched tokens | 485,192 | **570,949** | **+17.7%** |
-| TTFT p50 | 0.370 | **0.286** | **−22.8%** |
-| **TTFT p95** | 6.582 | **2.006** | **−69.5%** ✅ |
-| **TTFT p99** | 13.648 | **7.749** | **−43.2%** ✅ |
-| throughput | 826.4 | **838.2** | +1.4% |
+| park 총량 | 2.62 GB | **7.86 GB** | 3회 동일 — **설정값, 결과 아님** |
+| — 유휴 GPU 위 | 0.00 | **5.24 GB (67%)** | 3회 동일 |
+| **park-fetch miss** | 762 / 751 / 763 | **723 / 692 / 668** | ✅ **3/3 개선** (−5.1/−7.9/−12.5%) |
+| **park-fetch hit rate** | 46.9 / 45.7 / 44.7% | **48.7 / 49.6 / 50.2%** | ✅ **3/3 개선** (+1.8/+3.8/+5.5%p) |
+| TTFT p50 | 0.317 / 0.316 / 0.299 | 0.315 / 0.271 / 0.277 | ⚠ 3/3 개선이나 **r1은 −0.7%로 노이즈 내부** |
+| **TTFT p95** | 1.82 / 3.08 / 1.45 | 4.33 / 1.97 / 2.39 | ❌ **SPLIT 1승 2패** |
+| **TTFT p99** | 6.32 / 7.05 / 4.10 | 8.22 / 8.33 / 7.30 | ❌ **3/3 악화** (+30%) |
+| throughput | 834 / 763 / 804 | 843 / 759 / 805 | ➖ 변화 없음 (median 0.5%) |
 
-배치 품질: usage gap **−0.308**, cross-GPU **93.5%**, 대상의 93.5%가 decode GPU
-(gpu1 45.5% + gpu3 48.0%), 정책 0.164 vs random 0.375.
+### ⛔ 단일 측정의 "p95 −70%"는 취소한다
 
-### 캡을 없앤 것이 두 가지를 동시에 해결했다
+이전 `final_nocap_c32` 1회 실행은 p95 **6.58 → 2.01 (−69.5%)**, p99 **13.65 → 7.75
+(−43.2%)**를 보고했다. **둘 다 재현되지 않았고, 원인은 기준선의 이상치였다.**
 
-1. **"prefill 풀만 작게 만들었다"는 반론 소멸.** 캡을 빼니 두 풀이 **25.0 vs 22.6 GB로
-   거의 같아진다.** 그런데도 prefill은 82%, decode는 14%다 — **점유율 차이가 순전히
-   워크로드에서 나온다.** 압력도 살아 있다 (실행의 70%가 90% 초과, p95 0.999)
-2. **꼬리 지연이 역전됐다.** 캡 있을 때는 p95가 **+67% 악화**였는데(2.43→4.06),
-   캡을 빼니 **−70% 개선**(6.58→2.01)이다
+결정적 증거 — **r1은 `ITEM_OFFSET=0`으로 원본과 동일한 슬라이스·동일한 설정이다**
+(출력 토큰 798,564 vs 803,194):
 
-### 꼬리 역전에 대한 가설 (검증 안 됨 — 그대로 적을 것)
+| `park_local` p95 | 같은 워크로드, 같은 설정 |
+|---|---|
+| `final_nocap_c32` | **6.582 s** |
+| `repeat_r1` | **1.824 s** |
+| | **3.6× 차이 — 순수 run-to-run 변동** |
 
-캡을 빼면서 prefill GPU의 유휴 HBM이 **21.8 → 4.4 GB**로 줄었다. 이 상태에서
-`park_local`은 **이미 포화된 바로 그 GPU에서** park 복사·할당을 수행하며 serving
-할당자와 경합한다(p95 6.58s). `park_pd`는 그 트래픽을 여유 8.6 GB인 decode GPU로
-내보낸다(p95 2.01s).
+4회 관측 전체에서 기준선 p95는 **1.45 ~ 6.58 s (4.5×, CoV 0.72)** 범위다.
+−70%는 **기준선이 4개 관측 중 최악값을 뽑은 결과**였지 효과가 아니다.
+`park_local`이 포화된 자기 GPU에서 할당 경합을 일으킨다는 §"꼬리 역전 가설"도
+함께 폐기한다 — 설명해야 할 현상이 존재하지 않는다.
 
-> **1회 측정이고 메커니즘은 가설이다.** p95는 변동이 큰 통계이므로, 논문에 쓰려면
-> 최소 3회 반복이 필요하다. 반복 없이 "−70%"를 인용하면 안 된다.
+### 꼬리는 비용이다 (개선이 아니라)
 
-### 인용 문장
+p99는 **3회 모두 악화**했다 (6.32→8.22, 7.05→8.33, 4.10→7.30, median +30%).
+원격 fetch가 가장 느린 요청들에 지연을 더한다는 해석과 일치한다.
+
+한 가지 관찰: `park_pd`의 p99는 4회 관측에서 **7.30~8.33 s (CoV 0.06)**로 극히 안정적인
+반면 `park_local`은 **4.10~13.65 s (CoV 0.53)**로 요동친다. "꼬리를 낮추지는 않지만
+꼬리에 천장을 씌운다"는 해석이 가능하다. **그러나 이 해석은 13.65 s 관측 하나에
+전적으로 의존한다** — 그 하나를 빼면 기준선 p99는 4.10~7.05로 우리보다 항상 낫다.
+**방금 −70%를 취소한 것과 정확히 같은 오류이므로, 반복을 더 하기 전에는 쓰지 않는다.**
+
+### 남는 주장 (이건 견고하다)
+
+**메모리 배치와 캐시 회수는 3회 모두 일관되게 개선됐고, 효과가 기준선 자체의 변동폭보다
+크다** — 유일하게 그 조건을 만족하는 지표들이다:
+
+| 지표 | 효과 (median) | 기준선 자체 변동폭 | |
+|---|---|---|---|
+| park-fetch miss | **7.9%** | 1.6% | ✅ 효과가 5배 크다 |
+| park-fetch hit rate | **8.4%** | 4.8% | ✅ 효과가 크다 |
+| TTFT p50 | 7.5% | 5.7% | ⚠ 아슬아슬 |
+| TTFT p95 | 64.7% | **89.4%** | ❌ 노이즈에 묻힘 |
+| TTFT p99 | 30.0% | **46.8%** | ❌ 노이즈에 묻힘 |
+| throughput | 0.5% | 8.9% | ❌ 노이즈에 묻힘 |
+
+### 인용 문장 (반복 반영)
 
 > With no artificial cap on either pool (25.0 GB prefill against 22.6 GB decode), the
 > prefill pools run at 82% occupancy for 70% of the run while the decode pools sit at
 > 14%. GPU-first placement moves **5.24 GB of reusable KV — two thirds of the resident
 > cache — onto those otherwise-idle GPUs**, tripling the cache from 2.62 to 7.86 GB.
-> Park-fetch misses fall 10.1%, median TTFT 22.8%, and p95 TTFT from 6.58 s to 2.01 s.
+> Across three repeats on disjoint workload slices, park-fetch misses fall by
+> **5.1–12.5%** and the park-fetch hit rate rises by **1.8–5.5 pp**, in every repeat.
+> Throughput is unchanged. **Tail latency is not improved: p99 is 30% worse in all three
+> repeats, and p95 varies by more between repeats of the baseline alone (1.45–3.08 s)
+> than it does between the two policies.**
 
 > ⚠ **용어 주의 — Exp 1의 hit rate와 단위가 다르다. 절대 나란히 비교하지 말 것.**
 >
@@ -74,11 +97,15 @@ park 풀은 **건드리는 모든 GPU에 10,000 토큰씩**. 양쪽 에러 0.
 ---
 
 
-> **그림**: `results/exp2/fig_exp2_stack.{pdf,png}` (`benchmark/plot_exp2_gpu_stack.py`, v5 기준)
+> **그림**: `results/exp2/fig_exp2_stack.{pdf,png}`
+> `python benchmark/plot_exp2_gpu_stack.py --dirs 'results/exp2/repeat_nocap_c32_r*'`
+> — **3회 반복의 median**을 그리고, 막대 위에 각 반복 값을 점으로 찍는다. 단일 실행을
+> 인용하던 버전은 "p95 3.3× 개선" 캡션을 달았고 그건 틀린 진술이었다.
+>
 > **최종 주장 (§7-2)**: GPU-first placement는 배치가 헤드룸을 정확히 따라가며
-> (usage gap −0.38, 널 모델 대비 3배 이상), **per-GPU park 용량이 제약인 구성에서**
-> park-fetch hit rate를 **47.1% → 55.7%**, median TTFT를 **8.9%** 개선한다.
-> 대가는 원격 fetch로 인한 **p95 지연 +67%**다.
+> (usage gap −0.31, 널 모델 대비 2배 이상), 유휴 decode GPU로 **재사용 가능 KV의 3배**를
+> 옮겨 **park-fetch miss를 3회 반복 전부에서 5.1~12.5% 줄인다.**
+> 처리량은 불변. **꼬리 지연은 개선하지 못하며, p99는 3회 모두 30% 악화한다.**
 
 ---
 
