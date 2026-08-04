@@ -44,7 +44,11 @@ def run_data(d):
         f = lambda k: float(rows[-1].get(k, "") or 0)
         h, m = f("fetch_hits"), f("fetch_miss")
         rec = {k: s.get(k) for k, _, _ in METRICS}
+        # Share of radix-MISSING prefill requests that a parked prefix rescued. Not Exp 1's
+        # token-weighted cached/prompt ratio, and not a hit rate over all requests --
+        # fetch_already is excluded from the denominator by design.
         rec["park_hit_rate_pct"] = 100 * h / (h + m) if h + m else 0.0
+        rec["fetch_already"] = f("fetch_already")
         rec["fetch_miss"] = m
         rec["parked_gb"] = max(
             sum(float(r.get(f"gpu{g}_gb", "") or 0) for g in range(4)) for r in rows)
@@ -76,7 +80,7 @@ def main():
               f"has a tail statistic computed over the survivors")
 
     print(f"\n{len(runs)} repeats: " + ", ".join(n for n, _ in runs))
-    rows = [("park hit rate (%)", "park_hit_rate_pct", False),
+    rows = [("park-fetch hit rate (%)", "park_hit_rate_pct", False),
             ("park-fetch misses", "fetch_miss", True),
             ("parked KV (GB)", "parked_gb", False)] + \
            [(lab, k, lo) for k, lab, lo in METRICS]
