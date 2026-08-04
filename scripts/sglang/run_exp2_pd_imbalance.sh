@@ -50,6 +50,9 @@ export MAX_TOKENS=${MAX_TOKENS:-1024}
 export MAX_TURNS=${MAX_TURNS:-10}
 export MIN_TURNS=${MIN_TURNS:-3}
 export MAX_ITEMS=${MAX_ITEMS:-144}
+# Which slice of the corpus. Repeats use disjoint slices so a result that only holds for
+# one particular set of conversations shows up as a sign flip rather than as an average.
+export ITEM_OFFSET=${ITEM_OFFSET:-0}
 export TOOL_DELAY=${TOOL_DELAY:-3}
 export TIMEOUT=${TIMEOUT:-600}
 
