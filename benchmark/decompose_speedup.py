@@ -85,7 +85,8 @@ def load_park(d, arm):
            "parked_tokens": 0, "fetch_ms_sum": 0.0,
            "ms": {"local": 0.0, "peer": 0.0, "host": 0.0},
            "tok": {"local": 0, "peer": 0, "host": 0},
-           "n": {"local": 0, "peer": 0, "host": 0}, "sync": set(), "files": len(files)}
+           "n": {"local": 0, "peer": 0, "host": 0}, "sync": set(), "files": len(files),
+           "phase": {}, "miss_find_ms": 0.0}
     for f in files:
         try:
             j = json.load(open(f))
@@ -99,6 +100,9 @@ def load_park(d, arm):
             agg["tok"][tier] += (j.get("fetch_tok_tier") or {}).get(tier, 0)
             agg["n"][tier] += (j.get("fetch_n_tier") or {}).get(tier, 0)
         agg["sync"].add(j.get("sync_fetch", 0))
+        for k, v in (j.get("fetch_phase_ms") or {}).items():
+            agg["phase"][k] = agg["phase"].get(k, 0.0) + v
+        agg["miss_find_ms"] += j.get("miss_find_ms_sum", 0.0) or 0.0
     return agg
 
 
@@ -215,6 +219,20 @@ def main():
             print(f"     {tier:>5}: {n:>5} fetches  {tk:>9} tok  {ms:>9.1f} ms  "
                   f"{ms / max(1, n):>7.2f} ms/fetch  {1000 * ms / max(1, tk):>7.3f} us/tok"
                   f"  ({100 * n / max(1, tot_n):.0f}% of fetches)")
+        # Where the scheduler thread went. Published on every run, so this does not
+        # need the COSTMODEL trace -- and it is the number that explains the result.
+        if pk["phase"]:
+            grand = sum(pk["phase"].values())
+            nf = max(1, sum(pk["n"].values()))
+            print(f"     scheduler-thread cost, {grand / nf:.1f} ms/fetch total:")
+            for k, v in sorted(pk["phase"].items(), key=lambda kv: -kv[1]):
+                if v <= 0:
+                    continue
+                print(f"       {k:>13} {v / nf:>7.2f} ms/fetch  "
+                      f"{100 * v / grand if grand else 0:>5.1f}%")
+            if pk["miss_find_ms"]:
+                print(f"       {'(misses)':>13} {pk['miss_find_ms']:>7.0f} ms total spent "
+                      f"on index scans that found nothing")
         hit = pk["fetch_hits"] / max(1, pk["fetch_hits"] + pk["fetch_miss"])
         print(f"     hit {100 * hit:.1f}%  fetched {pk['fetched_tokens']} tok  "
               f"parked {pk['parked_tokens']} tok  already-had {pk['fetch_already']}")

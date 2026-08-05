@@ -51,18 +51,78 @@ MICRO_GBPS = {"local": 52.7, "peer": 52.7, "host": 26.3}
 PREFILL_MS_PER_TOK = 0.131656
 
 
+PHASES = ("find", "match", "alloc", "evict", "copy_to", "copy_scatter", "copy_sync",
+          "insert")
+
+
 def load(d):
     rows = []
     for p in glob.glob(os.path.join(d, "trace_*", "fetch_gpu*.csv")):
         arm = os.path.basename(os.path.dirname(p))[len("trace_"):]
         for r in csv.DictReader(open(p)):
             try:
-                rows.append({"arm": arm, "tier": r["tier"],
-                             "tokens": int(r["tokens"]), "bytes": int(r["bytes"]),
-                             "ms": float(r["ms"]), "sync": int(r["sync"])})
+                row = {"arm": arm, "tier": r["tier"],
+                       "tokens": int(r["tokens"]), "bytes": int(r["bytes"]),
+                       "ms": float(r["ms"]), "sync": int(r["sync"])}
             except (KeyError, ValueError):
                 continue
+            # Phase columns are absent in traces written before the breakdown existed.
+            for k in PHASES:
+                row[k] = float(r[k]) if r.get(k) not in (None, "") else None
+            rows.append(row)
     return rows
+
+
+def report_phases(rows):
+    """Where the scheduler-thread time in a fetch goes.
+
+    This is the whole point of the breakdown: `ms` in the columns above times only the
+    copy, and on the async path that read ~80 ms per fetch -- impossible for a pure
+    enqueue, and large enough to decide the longctx result. The phases say whether that
+    is the transfer, the caching allocator handing out 64 temporaries under pool
+    pressure, or evict-to-room on a full pool."""
+    have = [r for r in rows if r.get("find") is not None]
+    if not have:
+        print("\n(no phase columns in these traces -- written before the breakdown "
+              "existed; re-run to get them)")
+        return
+    print(f"\n=== where the scheduler thread spends a fetch ({len(have)} fetches) ===")
+    tot = {k: sum(r[k] for r in have) for k in PHASES}
+    grand = sum(tot.values())
+    print(f"{'phase':>14} {'total ms':>10} {'ms/fetch':>10} {'share':>7}")
+    for k in PHASES:
+        if tot[k] <= 0 and k == "copy_sync":
+            continue
+        print(f"{k:>14} {tot[k]:>10.0f} {tot[k] / len(have):>10.2f} "
+              f"{100 * tot[k] / grand if grand else 0:>6.1f}%")
+    print(f"{'TOTAL':>14} {grand:>10.0f} {grand / len(have):>10.2f}")
+    top = max(PHASES, key=lambda k: tot[k])
+    per = tot[top] / len(have)
+    print(f"\n  dominant phase: {top} at {per:.1f} ms/fetch "
+          f"({100 * tot[top] / grand:.0f}% of the cost)")
+    verdict = {
+        "copy_to": "peer->local slice copy. It allocates a temporary per layer, so this\n"
+                   "     being dominant points at the CACHING ALLOCATOR under KV-pool "
+                   "pressure,\n     not at the link -- a stall, and fixable by copying "
+                   "into a reused buffer.",
+        "copy_scatter": "the index_put into the KV pool. Real kernel work; reducing it "
+                        "means\n     fewer/larger writes, not a different medium.",
+        "evict": "evict-to-room on a full pool. The fetch is paying to throw away\n"
+                 "     naturally-cached prefixes to make space for parked ones -- it is "
+                 "competing\n     with the cache it is supposed to help.",
+        "find": "the parked-prefix index scan, which every MISS also pays in full.",
+        "alloc": "KV-pool allocation.",
+        "match": "radix match_prefix.",
+        "insert": "radix insert.",
+        "copy_sync": "the actual transfer wait (SYNC_FETCH=1), i.e. genuinely the link.",
+    }.get(top)
+    if verdict:
+        print(f"     -> {verdict}")
+    # A miss pays find and nothing else, so it is cheap per call but scales with misses.
+    f = tot["find"] / len(have)
+    if f > 1.0:
+        print(f"\n  note: find alone is {f:.1f} ms and a MISS pays it in full. At the "
+              f"measured\n  40-46% hit rate the majority of index scans return nothing.")
 
 
 def ols(xs, ys):
@@ -118,9 +178,15 @@ def main():
         for t, v in sorted(by.items()):
             print(f"  async {t:>5}: {len(v):>5} fetches, enqueue median {st.median(v):.3f} ms "
                   f"-- the transfer overlaps the forward pass and is off the critical path")
+    # The phase breakdown works on ASYNC rows too -- in fact those are the ones that
+    # matter, since the 80 ms figure that decided the longctx result was measured there.
+    report_phases(rows)
+
     if not s_rows:
-        raise SystemExit("nothing to fit: every row is async. Re-run the cost-model arm "
-                         "with SGLANG_KV_PARK_SYNC_FETCH=1.")
+        print("\nNo synchronous rows, so no bandwidth fit (that needs "
+              "SGLANG_KV_PARK_SYNC_FETCH=1).\nThe phase table above is still valid and "
+              "is the more useful half here.")
+        return
 
     fits = {}
     print(f"\n{'tier':>6} {'n':>6} {'MB median':>10} {'intercept ms':>13} "
