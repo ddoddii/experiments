@@ -183,19 +183,40 @@ def panel(ax, xs, mean, lo, hi, title, cs, args, headroom=False):
     return avg
 
 
-def both_roles(t, data, p_labels, d_labels):
-    """-> (xs, decode_mean, prefill_mean) on the samples where BOTH roles report,
-    so the two curves are directly comparable instant by instant."""
+def both_roles(t, data, p_labels, d_labels, scale=None):
+    """-> (xs, decode_sum, prefill_sum) on the samples where BOTH roles report.
+
+    scale=None gives the role MEAN as a percentage (the occupancy view). Passing a
+    per-label multiplier instead gives the role SUM in GB: occupancy fractions are
+    averaged because they are rates, but bytes are added because a cluster holds the
+    sum of what its GPUs hold.
+    """
     xs, dm, pm = [], [], []
     for i in range(len(t)):
-        dv = [data[l][i] for l in d_labels if data[l][i] is not None]
-        pv = [data[l][i] for l in p_labels if data[l][i] is not None]
+        dv = [(l, data[l][i]) for l in d_labels if data[l][i] is not None]
+        pv = [(l, data[l][i]) for l in p_labels if data[l][i] is not None]
         if not dv or not pv:
             continue
         xs.append(t[i])
-        dm.append(100.0 * sum(dv) / len(dv))
-        pm.append(100.0 * sum(pv) / len(pv))
+        if scale is None:
+            dm.append(100.0 * sum(v for _, v in dv) / len(dv))
+            pm.append(100.0 * sum(v for _, v in pv) / len(pv))
+        else:
+            dm.append(sum(v * scale.get(l, 0.0) for l, v in dv))
+            pm.append(sum(v * scale.get(l, 0.0) for l, v in pv))
     return xs, dm, pm
+
+
+def gb_scale(csv_path, labels, kib_per_token):
+    """label -> GB per unit of occupancy fraction, from that node's pool capacity."""
+    rows = [r for r in csv.DictReader(
+        (l for l in open(csv_path) if not l.startswith("#")))]
+    out = {}
+    for lab in labels:
+        caps = [float(r[f"{lab}_cap_tok"]) for r in rows if r.get(f"{lab}_cap_tok")]
+        if caps:
+            out[lab] = (sum(caps) / len(caps)) * kib_per_token * 1024 / 1024 ** 3
+    return out
 
 
 def render_decomposed(args, t, data, pdata, p_labels, d_labels):
@@ -235,10 +256,14 @@ def render_decomposed(args, t, data, pdata, p_labels, d_labels):
               f"({100 * a_w / a_t if a_t else 0:4.1f}% of it)  +  cache "
               f"{a_t - a_w:5.1f}% ({100 * (a_t - a_w) / a_t if a_t else 0:4.1f}%)")
 
-    ax.set_ylim(0, 100)
+    if args.absolute:
+        ax.set_ylim(0, max(max(dm), max(pm)) * 1.12)
+        ax.set_ylabel("KV actually held (GB)\nreserved-but-empty excluded")
+    else:
+        ax.set_ylim(0, 100)
+        ax.set_yticks([0, 25, 50, 75, 100])
+        ax.set_ylabel(use_axis_label(args.metric))
     ax.set_xlim(min(xs), max(xs))
-    ax.set_yticks([0, 25, 50, 75, 100])
-    ax.set_ylabel(use_axis_label(args.metric))
     ax.set_xlabel("time (s)")
     ax.legend(loc="upper left", frameon=False, fontsize=5.6, labelspacing=0.25,
               handlelength=1.3, borderaxespad=0.3, ncol=2, columnspacing=1.0)
@@ -260,7 +285,9 @@ def render_overlay(args, t, data, p_labels, d_labels):
     Which role is busier is decided by the data, not assumed. It flips with the gauge:
     on token_usage decode reads higher, on cache_occupancy prefill does. See
     read_metric()."""
-    xs, dm, pm = both_roles(t, data, p_labels, d_labels)
+    scale = (gb_scale(args.csv, p_labels + d_labels, args.kib_per_token)
+             if args.absolute else None)
+    xs, dm, pm = both_roles(t, data, p_labels, d_labels, scale)
     if not xs:
         raise SystemExit("no samples where both roles report")
 
@@ -310,8 +337,9 @@ def render_overlay(args, t, data, p_labels, d_labels):
     # At single-column width these crowd the plot, so --no-avg drops them and the
     # numbers go in the caption instead (they are printed to stdout either way).
     if not args.no_avg:
-        for avg, txt, va in ((d_avg, f"decode avg {d_avg:.0f}%", "bottom"),
-                             (p_avg, f"prefill avg {p_avg:.0f}%", "top")):
+        _u = " GB" if args.absolute else "%"
+        for avg, txt, va in ((d_avg, f"decode avg {d_avg:.1f}{_u}", "bottom"),
+                             (p_avg, f"prefill avg {p_avg:.1f}{_u}", "top")):
             ax.axhline(avg, color="#000000", lw=0.7, ls=(0, (4, 2.5)), zorder=6)
             ax.text(xs[-1], avg, f"{txt} ", ha="right", va=va, fontsize=6.4, zorder=7,
                     bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
@@ -327,14 +355,20 @@ def render_overlay(args, t, data, p_labels, d_labels):
         # prefill was the busy one -- wrong sign and wrong roles in the same sentence.
         idle, busy = ("prefill", "decode") if g_avg > 0 else ("decode", "prefill")
         ax.text(xs[0] + 0.195 * (xs[-1] - xs[0]), (d_avg + p_avg) / 2,
-                f"{abs(g_avg):.0f} pts idle on {idle}\nwhile {busy} is busy",
+                (f"{abs(g_avg):.1f} GB more KV on {busy}\nthan on {idle}"
+                 if args.absolute else
+                 f"{abs(g_avg):.0f} pts idle on {idle}\nwhile {busy} is busy"),
                 ha="left", va="center", fontsize=6.4, zorder=8,
                 bbox=dict(facecolor="white", edgecolor="none", pad=1.0))
 
-    ax.set_ylim(0, 100)
+    if args.absolute:
+        ax.set_ylim(0, max(max(dm), max(pm)) * 1.12)
+        ax.set_ylabel("KV actually held (GB)\nreserved-but-empty excluded")
+    else:
+        ax.set_ylim(0, 100)
+        ax.set_yticks([0, 25, 50, 75, 100])
+        ax.set_ylabel(use_axis_label(args.metric))
     ax.set_xlim(min(xs), max(xs))
-    ax.set_yticks([0, 25, 50, 75, 100])
-    ax.set_ylabel(use_axis_label(args.metric))
     ax.set_xlabel("time (s)")
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
@@ -353,11 +387,17 @@ def render_overlay(args, t, data, p_labels, d_labels):
                   borderpad=0.3, columnspacing=1.0).set_zorder(8)
 
     print(f"\n=== role occupancy, overlay ({os.path.basename(args.csv)}) ===")
-    print(f"  decode  {d_labels}  time-avg {d_avg:.1f}%")
-    print(f"  prefill {p_labels}  time-avg {p_avg:.1f}%")
-    print(f"  mean gap = {g_avg:.1f} points; decode above prefill "
+    _u = " GB (summed over the role's GPUs)" if args.absolute else "%"
+    print(f"  decode  {d_labels}  time-avg {d_avg:.1f}{_u}")
+    print(f"  prefill {p_labels}  time-avg {p_avg:.1f}{_u}")
+    print(f"  ratio prefill/decode = {p_avg / d_avg if d_avg else 0:.1f}x")
+    print(f"  mean gap = {g_avg:.1f} "
+          f"{'GB' if args.absolute else 'points'}; decode above prefill "
           f"{frac_d_above:.0f}% of samples")
-    print(f"  prefill leaves {100 - p_avg:.0f}% of its KV pool unused on average")
+    # Only meaningful on the percentage view: in absolute mode p_avg is GB, not a share
+    # of anything, so "leaves 59% unused" would be arithmetic on the wrong units.
+    if not args.absolute:
+        print(f"  prefill leaves {100 - p_avg:.0f}% of its KV pool unused on average")
 
     fig.tight_layout(pad=0.4)
     out = args.out or (os.path.splitext(args.csv)[0] + "_overlay")
@@ -379,6 +419,12 @@ def main():
     ap.add_argument("--max-points", type=int, default=4000,
                     help="decimate to at most this many samples per panel (0 = all)")
     ap.add_argument("--tmax", type=float, default=0.0, help="crop to the first N seconds")
+    ap.add_argument("--absolute", action="store_true",
+                    help="overlay in GB of KV actually holding data, instead of %% of the "
+                         "reserved pool. Removes the confound of the two roles having "
+                         "different pool sizes and mem-fractions.")
+    ap.add_argument("--kib-per-token", type=float, default=128,
+                    help="KV bytes per token; Llama-3.1-8B is 128 KiB")
     ap.add_argument("--decompose", action="store_true",
                     help="split each role's curve into working set (token_usage) and "
                          "cache (the rest of cache_occupancy)")
