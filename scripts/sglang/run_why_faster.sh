@@ -218,8 +218,15 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
 }
 _PREV_DIGEST=""
 
-for arm in $ARMS; do
-  run_one "$arm" "$arm"
+# REPEATS interleaves the arms (a1 b1 a2 b2 ...) rather than running all of one then all
+# of the other. Server17 drifts over a session -- the same config re-run gave TTFT p95
+# from 1.45 to 6.58 s -- so grouping by arm confounds the arm with whenever it happened
+# to run. Interleaving spreads that drift across both arms instead of loading it onto one.
+REPEATS=${REPEATS:-1}
+for rep in $(seq 1 "$REPEATS"); do
+  for arm in $ARMS; do
+    if [ "$REPEATS" = "1" ]; then run_one "$arm" "$arm"; else run_one "${arm}_r${rep}" "$arm"; fi
+  done
 done
 
 # Capacity axis: same arm, same code, same medium -- only the pool size moves.
