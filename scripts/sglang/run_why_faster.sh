@@ -292,6 +292,13 @@ fi
 echo
 echo "############################################################"
 python benchmark/decompose_speedup.py --dir "$OUTDIR" || true
+# The medium comparison, when both arms are present. Same code, same policy, same pool
+# allocation -- only SGLANG_KV_PARK_FORCE_HOST differs -- so a difference between them is
+# the medium and nothing else.
+if [ -n "$(ls "$OUTDIR"/parked_gpu*.park_host*.json 2>/dev/null)" ] \
+   && [ -n "$(ls "$OUTDIR"/parked_gpu*.park_gpu*.json 2>/dev/null)" ]; then
+  python benchmark/why_gpu_beats_dram.py --dir "$OUTDIR" || true
+fi
 if [ "$COSTMODEL" = "1" ]; then
   python benchmark/fit_fetch_cost.py --dir "$OUTDIR" \
       --out "$OUTDIR/fig_fetch_cost" || true
