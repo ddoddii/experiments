@@ -201,6 +201,14 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   sleep 2
   cp "results/why_$label.json" "$OUTDIR/bench_$label.json" 2>/dev/null \
     || echo "  [warn] results/why_$label.json missing"
+  # Stamp the sglang commit this arm ran against. Re-running one arm into an existing
+  # OUTDIR overwrites only that arm, leaving the others from an older build under the
+  # same names -- which already happened: an async-park r1 sat beside blocking-park r2
+  # and r3 with nothing on disk to say so. The stamp makes that detectable.
+  { echo "{\"arm\": \"$label\", \"ts\": $(date +%s),"
+    echo " \"sglang_sha\": \"$(git -C "$(python -c 'import sglang,os;print(os.path.dirname(os.path.dirname(os.path.dirname(sglang.__file__))))' 2>/dev/null)" rev-parse --short HEAD 2>/dev/null || echo unknown)\","
+    echo " \"workload\": \"$WORKLOAD\", \"concurrency\": $CONCURRENCY}"
+  } > "$OUTDIR/meta_$label.json" 2>/dev/null || true
   # The park telemetry files carry fetch_ms_tier / fetch_tok_tier, which is where the
   # per-tier cost comes from. They live in /dev/shm and are gone once the server exits,
   # so they are copied BEFORE the next stop.sh.
