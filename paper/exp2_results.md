@@ -494,3 +494,74 @@ park 풀은 serving 풀이 가져갔을 HBM에서 잘라낸 것이므로 **없�
    working set이 로컬 풀을 넘게 한다. 그 구간이 이 메커니즘의 **operating regime**이고,
    지금 결과는 그 밖에서 측정한 것이다
 4. `park_pd_blind`의 P0 파킹 부재 원인 규명 (§2 경고)
+
+---
+
+## Prefill-bound workload, hicache vs park_gpu (2026-08, `results/why/why_longctx_c16_p32000`)
+
+**Result: park_gpu loses by ~30% on TTFT. Reproducible, effect far larger than noise.**
+
+The sharegpt workload could never have answered this — TTFT was 0.5% of a request there
+(49 s of decode against 0.25 s of TTFT), so a prefix cache had nothing to give back. The
+longctx workload puts TTFT at 89% of a request, which is the regime the mechanism claims.
+It is the right testbed, and the mechanism loses on it.
+
+Interleaved arms (h1 p1 h2 p2 h3 p3), 512 turns each, 0 errors, matched output tokens.
+
+| metric | r1 | r2 | r3 | median | |
+|---|---|---|---|---|---|
+| TTFT mean | +40.0% | +29.9% | +28.2% | **+29.9%** | all same sign |
+| TTFT p50 | +45.5% | +65.4% | +49.3% | **+49.3%** | all same sign |
+| TTFT p90 | +66.1% | +50.4% | +50.2% | **+50.4%** | all same sign |
+| TTFT p95 | +47.6% | +38.7% | +38.9% | **+38.9%** | all same sign |
+| TPOT | +15.6% | +11.3% | +4.5% | **+11.3%** | all same sign |
+| throughput | −17.6% | −22.7% | −20.0% | **−20.0%** | all same sign |
+
+(positive = park_gpu worse). hicache baseline spread is 7.2% on the mean and 3.8% on p95,
+against a 29.9%/38.9% effect, so this is not run-to-run noise.
+
+### A SINGLE SEQUENTIAL RUN SAID THE OPPOSITE, AND WAS WRONG
+
+The first longctx run — one repeat, arms run back to back — reported park_gpu at 6.626 s
+against hicache 7.848 s, i.e. **15.6% BETTER**. Against the repeat distributions:
+
+    hicache   single 7.848    repeats 6.176 / 6.641 / 6.448
+    park_gpu  single 6.626    repeats 8.646 / 8.624 / 8.266
+
+Both arms landed outside their own repeat range, in opposite directions, in the same run.
+park_gpu's single-run value is 20% below the minimum of its three repeats. That is not a
+draw from the same distribution; the two arms ran under different machine conditions,
+which is exactly what running them back to back cannot control for and what interleaving
+does. **Do not quote the −15.6%.**
+
+### Why it loses
+
+| | r1 | r2 | r3 |
+|---|---|---|---|
+| fetch hit rate | 39.6% | 44.2% | 46.0% |
+| tokens fetched back | 1.06 M | 1.18 M | 1.11 M |
+| tokens parked | 4.38 M | 4.38 M | 4.38 M |
+| **park : fetch ratio** | **4.1 : 1** | **3.7 : 1** | **4.0 : 1** |
+| peer fetch cost | 80.1 ms | 81.4 ms | 79.2 ms |
+
+Three compounding costs, all fixable in principle, none fixed here:
+
+1. **It parks 4x what it ever reads back.** 4.38 M tokens at 128 KiB is ~574 GB copied per
+   run to serve ~139 GB of hits. Three quarters of the park traffic is pure loss.
+2. **A fetch costs ~80 ms on the scheduler main thread.** This is the ASYNC path, where the
+   copy is only enqueued — an enqueue should be microseconds. 200+ fetches per run is
+   ~16 s of scheduler stall, and the stall blocks every other request in the batch, not
+   just the one being served. `maybe_fetch` also calls `match_prefix`, `alloc` and, when
+   the pool is full (it is: 170 k working set against a 60 k pool), `tree_cache.evict` —
+   all synchronous, all on that thread.
+3. **Hit rate is only 40-46%,** so the majority of that parking never pays at all.
+
+Cost 2 is the most suspicious: 80 ms for what is supposed to be a non-blocking enqueue
+means the fetch path is not actually async. That is worth finding before any redesign,
+because it is a bug-shaped number rather than a design limit.
+
+### What this does not say
+
+It does not say GPU-first placement is wrong. It says THIS implementation, at this hit
+rate and this park:fetch ratio, costs more than it saves on a workload built to favour it.
+The park_host control was not run here, so the medium question is still open on longctx.
