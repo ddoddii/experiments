@@ -147,6 +147,24 @@ start_arm() {
         PARK_GPUS_P0=$PARK_GPUS_P0 PARK_GPUS_P1=$PARK_GPUS_P1 \
         SGLANG_KV_PARK_PRESSURE_AWARE=1 SGLANG_KV_PARK_BW_AWARE=1 \
         ./scripts/sglang/start_2P_2D.sh ;;
+    park_nvlink)
+      # ONLY the NVLink-bridged decode GPU, and nothing else.
+      #
+      # `nvidia-smi topo -m` on this box: NV4 on (0,1) and (2,3), everything else NODE or
+      # PHB -- i.e. across a PCIe host bridge. Under PD_LAYOUT=b that makes gpu1 the
+      # NVLink decode partner of P0 and gpu3 that of P1, and every other candidate a PCIe
+      # hop. The default park_gpu list (0,1,3 / 2,3,1) gives each prefill one NVLink
+      # target AND one PCIe target and reports both as "peer", so its 10.2 GB/s aggregate
+      # cannot be attributed to either.
+      #
+      # This arm is also exactly the paper's claim stated literally -- the victim cache
+      # lives in the idle HBM of the decode node next door -- with no PCIe target and no
+      # parking onto the prefill's own GPU (which would take HBM from the serving pool it
+      # is meant to relieve).
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 \
+        PARK_GPUS_P0=${PARK_NVLINK_P0:-1} PARK_GPUS_P1=${PARK_NVLINK_P1:-3} \
+        SGLANG_KV_PARK_PRESSURE_AWARE=1 SGLANG_KV_PARK_BW_AWARE=1 \
+        ./scripts/sglang/start_2P_2D.sh ;;
     *) echo "unknown arm: $1"; exit 1 ;;
   esac
 }
