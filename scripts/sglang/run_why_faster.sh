@@ -43,7 +43,9 @@ ROOT=$(pwd)
 
 export PD_LAYOUT=${PD_LAYOUT:-b}
 export CONCURRENCY=${CONCURRENCY:-32}
-export TOOL_DELAY=${TOOL_DELAY:-0}
+# TOOL_DELAY is set by the WORKLOAD block below, not here: a default assigned at this
+# point would make the block's ${TOOL_DELAY:-3} a no-op and silently drop the think-time
+# gap, which is the whole window parking is supposed to exploit.
 export HICACHE_RATIO=${HICACHE_RATIO:-1.2}
 export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}
 export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.88}
@@ -69,9 +71,40 @@ PARK_GPUS_P1=${PARK_GPUS_P1:-2,3,1}
 ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
 CAP=${CAP:-}
 COSTMODEL=${COSTMODEL:-0}
-BENCH=${BENCH:-benchmark/sglang_sharegpt_multi_turn_concurrent.py}
 
-TAG=${TAG:-why_c${CONCURRENCY}_p${PARK_POOL_TOKENS_PER_GPU}}
+# --- WORKLOAD: whether this run can show a prefill effect at all ----------------------
+# This is not a flavour choice, it decides whether the experiment is capable of a result.
+#
+# sharegpt (the old default) generates ~1,900 tokens per request. At TPOT 0.0258 that is
+# ~49 s of decode against a 0.25 s TTFT, so prefill is 0.5% of the request. Measured on
+# it: parking raised the prefix hit rate from 37% to 61% and TTFT still got WORSE, because
+# there was no prefill time to give back. Two runs were spent before that was noticed.
+#
+# longctx makes prefill the bottleneck on purpose: a long per-session document prefix
+# (expensive to re-prefill, O(n^2)) with a short answer (cheap decode), accumulating over
+# turns, with think-time gaps between them. Sized so the working set OVERSUBSCRIBES the
+# prefill pool -- 16 sessions x ~10.6k tokens is ~170k against a 60k pool -- because a
+# victim cache can only pay when the pool is actually evicting.
+WORKLOAD=${WORKLOAD:-longctx}
+case "$WORKLOAD" in
+  longctx)
+    BENCH=${BENCH:-benchmark/sglang_longctx_multi_turn_concurrent.py}
+    export PREFIX_WORDS=${PREFIX_WORDS:-8000}   # ~10.6k tok: re-prefill ~1.7 s
+    export MAX_TOKENS=${MAX_TOKENS:-16}         # ~0.4 s of decode -> prefill dominates 4:1
+    export NUM_TURNS=${NUM_TURNS:-4}
+    export MAX_ITEMS=${MAX_ITEMS:-128}
+    export TOOL_DELAY=${TOOL_DELAY:-3}          # think-time: the gap parking exists to use
+    ;;
+  sharegpt)
+    BENCH=${BENCH:-benchmark/sglang_sharegpt_multi_turn_concurrent.py}
+    export TOOL_DELAY=${TOOL_DELAY:-0}
+    ;;
+  *) echo "unknown WORKLOAD: $WORKLOAD (want longctx | sharegpt)"; exit 1 ;;
+esac
+
+# The workload is in the tag: a longctx run and a sharegpt run are not comparable, and
+# without it the second would overwrite the first in place.
+TAG=${TAG:-why_${WORKLOAD}_c${CONCURRENCY}_p${PARK_POOL_TOKENS_PER_GPU}}
 OUTDIR=${OUTDIR:-results/why/${TAG}}
 mkdir -p "$OUTDIR"
 

@@ -160,6 +160,39 @@ def main():
               f"{fmt(o.get('prefill_hit'), 7, 3)} {fmt(o.get('decode_running'), 8, 1)} "
               f"{s.get('error_items', '?'):>5}")
 
+    # --- can this workload show a prefill effect at all? -----------------------------
+    # FIRST, because everything below is uninterpretable if the answer is no. A prefix
+    # cache can only give back prefill time; if a request spends 49 s decoding and 0.25 s
+    # on TTFT, then even a perfect cache moves 0.5% of it, and a null result says nothing
+    # about the cache. Two runs were spent learning this on the sharegpt workload.
+    print(f"\n=== is this workload prefill-bound? ===")
+    print(f"{'arm':>10} {'out tok/req':>12} {'decode s/req':>13} {'TTFT s':>8} "
+          f"{'TTFT share':>11}")
+    shares = []
+    for a in arms:
+        s = bench[a]
+        n_req = s.get("success_items") or s["total_items"]
+        out_per = (s.get("total_output_tokens") or 0) / max(1, n_req)
+        dec = out_per * (s.get("avg_tpot_s") or 0)
+        ttft = s["avg_ttft_s"]
+        share = 100 * ttft / (ttft + dec) if (ttft + dec) > 0 else 0
+        shares.append(share)
+        print(f"{a:>10} {out_per:>12.0f} {dec:>13.2f} {ttft:>8.4f} {share:>10.1f}%")
+    if shares:
+        m = max(shares)
+        if m < 10:
+            print(f"  => NO. TTFT is at most {m:.1f}% of a request. This workload is "
+                  f"decode-bound and\n     CANNOT show a prefill-cache effect -- a null "
+                  f"result here is about the workload,\n     not about the cache. Use "
+                  f"WORKLOAD=longctx (long prefix, short output).")
+        elif m < 30:
+            print(f"  => WEAK. TTFT is {m:.1f}% of a request, so the most a perfect cache "
+                  f"can win is\n     bounded by that. Raise PREFIX_WORDS or lower "
+                  f"MAX_TOKENS to sharpen it.")
+        else:
+            print(f"  => YES. TTFT is {m:.1f}% of a request, so prefill work is worth "
+                  f"enough to measure.")
+
     print(f"\n=== fetch tiers (where the bytes came from, and what they cost) ===")
     any_park = False
     for a in arms:
