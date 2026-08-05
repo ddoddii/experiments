@@ -86,7 +86,8 @@ def load_park(d, arm):
            "ms": {"local": 0.0, "peer": 0.0, "host": 0.0},
            "tok": {"local": 0, "peer": 0, "host": 0},
            "n": {"local": 0, "peer": 0, "host": 0}, "sync": set(), "files": len(files),
-           "phase": {}, "miss_find_ms": 0.0, "src": {}}
+           "phase": {}, "miss_find_ms": 0.0, "src": {},
+           "park_phase": {}, "park_bytes": 0, "park_n": 0}
     for f in files:
         try:
             j = json.load(open(f))
@@ -103,6 +104,10 @@ def load_park(d, arm):
         for k, v in (j.get("fetch_phase_ms") or {}).items():
             agg["phase"][k] = agg["phase"].get(k, 0.0) + v
         agg["miss_find_ms"] += j.get("miss_find_ms_sum", 0.0) or 0.0
+        for k, v in (j.get("park_phase_ms") or {}).items():
+            agg["park_phase"][k] = agg["park_phase"].get(k, 0.0) + v
+        agg["park_bytes"] += j.get("park_bytes_moved", 0) or 0
+        agg["park_n"] += j.get("park_n", 0) or 0
         for g, v in (j.get("fetch_src_ms") or {}).items():
             e = agg["src"].setdefault(g, {"ms": 0.0, "tok": 0, "n": 0})
             e["ms"] += v
@@ -251,6 +256,22 @@ def main():
                 print(f"       {who:>7}: {e['n']:>4} fetches  {gb:>7.1f} GB  "
                       f"{e['ms'] / max(1, e['n']):>7.1f} ms/fetch  {bw:>6.1f} GB/s "
                       f"({100 * bw / 52.7:>3.0f}%)")
+        # The WRITE side. Reported next to the fetch because the two are wildly
+        # asymmetric -- parking moved 5.7x the bytes it ever read back -- and because
+        # this path is synchronous on the scheduler thread while the fetch is not.
+        if pk["park_phase"]:
+            g = sum(pk["park_phase"].values())
+            gb = pk["park_bytes"] / 2 ** 30
+            print(f"     PARK (write) cost {g / 1000:.1f} s total over {pk['park_n']} parks, "
+                  f"{gb:.0f} GB moved -> {gb / (g / 1000) if g else 0:.1f} GB/s:")
+            for k, v in sorted(pk["park_phase"].items(), key=lambda kv: -kv[1]):
+                if v <= 0:
+                    continue
+                print(f"       {k:>13} {v / 1000:>7.1f} s  {100 * v / g:>5.1f}%")
+            fg = sum(pk["phase"].values()) / 1000 if pk["phase"] else 0
+            if fg:
+                print(f"       park is {g / 1000 / fg:.1f}x the total FETCH cost "
+                      f"({fg:.1f} s)")
         hit = pk["fetch_hits"] / max(1, pk["fetch_hits"] + pk["fetch_miss"])
         print(f"     hit {100 * hit:.1f}%  fetched {pk['fetched_tokens']} tok  "
               f"parked {pk['parked_tokens']} tok  already-had {pk['fetch_already']}")
