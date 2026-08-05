@@ -57,7 +57,7 @@ BW_HOST_GBPS = 26.3      # one direction; a park+fetch round trip pays it twice
 KIB_PER_TOKEN = 128.0
 
 # recompute is the floor; radix is optional and reported when present (see FLOOR below).
-ORDER = ["recompute", "radix", "hicache", "park_host", "park_gpu"]
+ORDER = ["recompute", "radix", "hicache", "park_host", "park_gpu", "park_nvlink"]
 # Fall back to radix only when an arm named recompute was not run, so an older result
 # directory still analyses instead of printing "(missing arm)" on every row.
 FLOOR = ("recompute", "radix")
@@ -264,6 +264,8 @@ def main():
         (floor, "park_gpu", "value of ours    <- the two bars above are the headline"),
         ("hicache", "park_gpu", "OURS vs INCUMBENT"),
         ("park_host", "park_gpu", "MEDIUM ONLY  <- the 'is it the link?' control"),
+        ("park_gpu", "park_nvlink", "PCIe targets removed: NVLink decode GPU only"),
+        ("hicache", "park_nvlink", "OURS (NVLink only) vs INCUMBENT"),
         ("hicache", "park_host", "transfer software only (both arms are DRAM/PCIe)"),
     ]
     print(f"\n=== one variable at a time  (floor = {floor or 'NONE'}) ===")
