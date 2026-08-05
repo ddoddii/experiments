@@ -86,7 +86,7 @@ def load_park(d, arm):
            "ms": {"local": 0.0, "peer": 0.0, "host": 0.0},
            "tok": {"local": 0, "peer": 0, "host": 0},
            "n": {"local": 0, "peer": 0, "host": 0}, "sync": set(), "files": len(files),
-           "phase": {}, "miss_find_ms": 0.0}
+           "phase": {}, "miss_find_ms": 0.0, "src": {}}
     for f in files:
         try:
             j = json.load(open(f))
@@ -103,6 +103,11 @@ def load_park(d, arm):
         for k, v in (j.get("fetch_phase_ms") or {}).items():
             agg["phase"][k] = agg["phase"].get(k, 0.0) + v
         agg["miss_find_ms"] += j.get("miss_find_ms_sum", 0.0) or 0.0
+        for g, v in (j.get("fetch_src_ms") or {}).items():
+            e = agg["src"].setdefault(g, {"ms": 0.0, "tok": 0, "n": 0})
+            e["ms"] += v
+            e["tok"] += (j.get("fetch_src_tok") or {}).get(g, 0)
+            e["n"] += (j.get("fetch_src_n") or {}).get(g, 0)
     return agg
 
 
@@ -233,6 +238,19 @@ def main():
             if pk["miss_find_ms"]:
                 print(f"       {'(misses)':>13} {pk['miss_find_ms']:>7.0f} ms total spent "
                       f"on index scans that found nothing")
+        # Achieved bandwidth PER SOURCE GPU. "peer" hides whether a fetch crossed NVLink
+        # or PCIe, and a copy implementation that wastes the link looks identical to a
+        # slow link until these are separated.
+        if pk["src"]:
+            bpt = 128 * 1024
+            print(f"     per source GPU (achieved vs 52.7 GB/s peer ceiling):")
+            for g, e in sorted(pk["src"].items()):
+                gb = e["tok"] * bpt / 2 ** 30
+                bw = gb / (e["ms"] / 1000) if e["ms"] > 0 else 0
+                who = "local" if g == "-1" else f"gpu{g}"
+                print(f"       {who:>7}: {e['n']:>4} fetches  {gb:>7.1f} GB  "
+                      f"{e['ms'] / max(1, e['n']):>7.1f} ms/fetch  {bw:>6.1f} GB/s "
+                      f"({100 * bw / 52.7:>3.0f}%)")
         hit = pk["fetch_hits"] / max(1, pk["fetch_hits"] + pk["fetch_miss"])
         print(f"     hit {100 * hit:.1f}%  fetched {pk['fetched_tokens']} tok  "
               f"parked {pk['parked_tokens']} tok  already-had {pk['fetch_already']}")
