@@ -147,6 +147,14 @@ start_arm() {
         PARK_GPUS_P0=$PARK_GPUS_P0 PARK_GPUS_P1=$PARK_GPUS_P1 \
         SGLANG_KV_PARK_PRESSURE_AWARE=1 SGLANG_KV_PARK_BW_AWARE=1 \
         ./scripts/sglang/start_2P_2D.sh ;;
+    park_sync)
+      # park_gpu with the OLD blocking copy. Not a straw man -- it is what every result
+      # so far was measured with, so it is the only honest baseline for the async change.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 \
+        PARK_GPUS_P0=$PARK_GPUS_P0 PARK_GPUS_P1=$PARK_GPUS_P1 \
+        SGLANG_KV_PARK_ASYNC_PARK=0 \
+        SGLANG_KV_PARK_PRESSURE_AWARE=1 SGLANG_KV_PARK_BW_AWARE=1 \
+        ./scripts/sglang/start_2P_2D.sh ;;
     park_nvlink)
       # ONLY the NVLink-bridged decode GPU, and nothing else.
       #
