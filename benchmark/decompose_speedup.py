@@ -230,7 +230,12 @@ def main():
         ("park_host", "park_gpu", "MEDIUM ONLY  <- the 'is it the link?' control"),
         ("hicache", "park_host", "transfer software only (both arms are DRAM/PCIe)"),
     ]
-    print(f"\n=== one variable at a time  (floor = {floor}) ===")
+    print(f"\n=== one variable at a time  (floor = {floor or 'NONE'}) ===")
+    if floor is None:
+        # A two-arm run (hicache vs park_gpu) is a legitimate quick check, so say what it
+        # can and cannot answer rather than printing "(missing arm)" four times.
+        print("  No recompute/radix arm: the absolute value of caching is not measurable")
+        print("  here. The hicache -> park_gpu row below is, and it is the headline one.")
     if floor == "radix":
         print("  NOTE: no recompute arm here, so the floor is radix -- which already has "
               "the GPU\n  prefix cache. These deltas are what the offload tier adds ON TOP "
@@ -240,9 +245,8 @@ def main():
         print(f"  (radix, GPU cache only, is also present at TTFT "
               f"{bench['radix']['avg_ttft_s']:.4f})")
     for lo, hi, what in STEPS:
-        if lo not in bench or hi not in bench:
-            print(f"  {lo:>10} -> {hi:<10}  (missing arm)")
-            continue
+        if lo is None or lo not in bench or hi not in bench:
+            continue   # arm not in this run; the header above already said which
         t0, t1 = bench[lo]["avg_ttft_s"], bench[hi]["avg_ttft_s"]
         p0, p1 = bench[lo].get("avg_tpot_s"), bench[hi].get("avg_tpot_s")
         dp = f"  TPOT {100 * (p1 - p0) / p0:+6.1f}%" if p0 and p1 else ""
