@@ -15,6 +15,21 @@ WHAT COUNTS AS "CPU DRAM" -- the choice decides the headline, so it is written d
                       because it is a real cost the park arm does not pay, but it does not
                       belong in a DRAM bar.
 
+IS THE DRAM BAR REALLY CAPTURING HICACHE'S HOST POOL? Checked against what the config
+reserves (pool_tokens x kv_bytes x hicache_ratio x 2 prefill nodes):
+    llama8b   reserved 17.6 GiB   measured 16.4   93% resident
+    llama13b  reserved 14.6 GiB   measured 13.9   95%
+    qwen14b   reserved  7.3 GiB   measured  6.3   86%
+So yes -- PSS tracks the host tier to within a tenth. The bar looks small for three
+reasons, none of them measurement error:
+  1. PSS charges shared pages once. Summing anonymous RSS over the 148 server processes
+     gives 55-73 GB instead of 14-32, by counting the same pages repeatedly.
+  2. These runs set HICACHE_RATIO=1.2 to fit a 125 GB machine, where SGLang's own default
+     is 2.0. At the default the host pool would be 12-29 GiB rather than 7-18, so this
+     figure UNDERSTATES hicache's DRAM cost relative to how it ships.
+  3. The HBM side is four GPUs at ~42 GB each by mem-fraction-static, so anything
+     host-side is a small share of the total no matter how it is measured.
+
 WHAT THE HBM BARS DO AND DO NOT MEASURE: most of each GPU's HBM is reserved by
 --mem-fraction-static at startup, so the bar heights are dominated by a configuration
 knob rather than by demand. What the two arms genuinely differ by is the park pool
