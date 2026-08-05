@@ -24,11 +24,28 @@ WHICH LABELS ARE MEASURED AND WHICH ARE THE SCENARIO -- the distinction matters
 because the rest of the paper is measurements:
 
   MEASURED, from the runs and probes:
-    82% / 12% pool occupancy      C=32 repeats (cache_occupancy, 3 runs)
-    27-53 / 26.3 / 3.3 GB/s       vmm_probe.py --all-pairs-bw, pinned_host_probe.py
-    61 GB host reservation        results/mem/bd_*.csv, invariant across write policy
-    MemAvailable 44 -> 105 GB     same
-    1203 ms re-prefill @ 8k       fig_ttft_ctx_sweep.json
+    prefill 83% = 1% live + 81% cache   exp2/final_nocap_c32 per_gpu, C=32
+    decode  14% = 14% live +  0% cache  same. Decode holds no evictable cache AT ALL,
+                                        which is why it is the natural victim store --
+                                        do not restate its 14% as "serving pool full".
+    52.8 GB/s peer, 26.3 GB/s host      nvlink_xproc_microbench.json (537 MB, IPC
+                                        checksum MATCH) and nvlink_microbench.json.
+                                        Host costs 4.0x end to end, not 2x: the round
+                                        trip crosses PCIe twice (park + fetch), and
+                                        speedup_vs_host is 4.0 at every size measured.
+                                        Do NOT quote "27-53 GB/s" -- the 27.2 in the
+                                        design doc is the OTHER DIRECTION on the same
+                                        bridge in the VMM probe, unexplained and 2x off
+                                        the dedicated microbench on the real park path.
+    3.3 GB/s non-NVLink peer            vmm_probe.py --all-pairs-bw
+    61 GB host reservation              results/mem/bd_*.csv, invariant across policy
+    MemAvailable 44 -> 105 GB           same
+    1203 ms re-prefill @ 8k             fig_ttft_ctx_sweep.json
+
+  NOTE, before reusing these occupancy numbers elsewhere: paper/evaluation.md quotes
+  the OPPOSITE asymmetry (decode 74.6% vs prefill 44.6%) from results/kv_ts/2p2d_p20k,
+  where BOTH pools are capped at 20k tokens. Which role is the idle one is set by pool
+  sizing, not by the workload. This figure follows the uncapped C=32 runs.
   SCENARIO, i.e. one illustrative request and its blocks:
     KV_1..KV_11 and their states.
 
@@ -189,13 +206,12 @@ def build():
     s.append(txt(PB_X + 68, CB_Y + 20, "next turn of session S — local radix misses",
                  8.6, INK, "normal", "start"))
 
-    s.append(txt(PB_X + 10, CB_Y + 38, "KV object table (§3.1)", 8.6, GREEN, "bold", "start"))
-    s.append(rrect(PB_X + 118, CB_Y + 28, 232, 13, "white", HAIR, 0.8, 2))
-    s.append(txt(PB_X + 124, CB_Y + 38, "hash(S,prefix) | 1.2 GB | loc = GPU2 | reuse 1203 ms",
+    s.append(txt(PB_X + 10, CB_Y + 46, "KV Manager", 9.4, GREEN, "bold", "start"))
+    s.append(rrect(PB_X + 96, CB_Y + 28, 254, 14, "white", HAIR, 0.8, 2))
+    s.append(txt(PB_X + 102, CB_Y + 38, "Resource Monitor — per-GPU pressure and headroom",
                  8.0, INK, "normal", "start"))
-    s.append(txt(PB_X + 10, CB_Y + 54, "link BW table (§3.2)", 8.6, GREEN, "bold", "start"))
-    s.append(rrect(PB_X + 118, CB_Y + 44, 232, 13, "white", HAIR, 0.8, 2))
-    s.append(txt(PB_X + 124, CB_Y + 54, "NVLink 27–53 | host 26.3 | non-NVLink 3.3 GB/s",
+    s.append(rrect(PB_X + 96, CB_Y + 45, 254, 14, "white", HAIR, 0.8, 2))
+    s.append(txt(PB_X + 102, CB_Y + 55, "Destination Selection — ranked by measured link BW",
                  8.0, INK, "normal", "start"))
     s.append(txt(PB_X + PB_W / 2, CB_Y + 70,
                  "/dev/shm + flock — shared by all four serving processes, no daemon",
@@ -220,7 +236,7 @@ def build():
 
     # ---- (a) prefill / decode / host ----
     tier(PA_X, PA_W, T1_Y, TH, "Prefill instance (GPU)",
-         "serving pool 82% full — evicting", RED, "white")
+         "KV pool 83% full — but only 1% live; 81% is evictable cache", RED, "white")
     g, _ = kvrow(PA_X + 11, BY(T1_Y), [("8", "serving"), ("9", "serving")])
     s.append(g)
     g, xe = kvrow(PA_X + 11 + 2 * (CW + CG) + 10, BY(T1_Y),
@@ -230,7 +246,7 @@ def build():
                  8.0, RED, "normal", "start", True))
 
     tier(PA_X, PA_W, T2_Y, TH, "Decode instance (GPU)",
-         "serving pool 12% used — 88% idle", HAIR, "white")
+         "14% used, all of it live — holds no cache, 86% free", HAIR, "white")
     g, _ = kvrow(PA_X + 11, BY(T2_Y), [("11", "serving")])
     s.append(g)
     s.append(hatch(PA_X + 11 + (CW + CG) + 10, BY(T2_Y), 200, CH,
@@ -247,7 +263,7 @@ def build():
 
     # ---- (b) prefill / decode / host ----
     tier(PB_X, PB_W, T1_Y, TH, "Prefill instance (GPU)",
-         "serving pool 82% full — evicting", RED, "white")
+         "KV pool 83% full — but only 1% live; 81% is evictable cache", RED, "white")
     g, _ = kvrow(PB_X + 11, BY(T1_Y), [("8", "serving"), ("9", "serving")])
     s.append(g)
     g, _ = kvrow(PB_X + 11 + 2 * (CW + CG) + 10, BY(T1_Y),
@@ -258,13 +274,13 @@ def build():
                  8.0, GREEN, "normal", "start", True))
 
     tier(PB_X, PB_W, T2_Y, TH, "Decode instance (GPU)",
-         "serving pool 12% used — 88% idle", GREEN, "white", hero=True)
+         "14% used, all of it live — holds no cache, 86% free", GREEN, "white", hero=True)
     g, _ = kvrow(PB_X + 11, BY(T2_Y), [("11", "serving")])
     s.append(g)
     px0 = PB_X + 11 + (CW + CG) + 10
     s.append(rrect(px0, T2_Y + 30, PB_W - (px0 - PB_X) - 11, TH - 38, GREEN_F, GREEN, 1.1, 4,
                    "3.5 2.5"))
-    s.append(txt(px0 + 7, T2_Y + 41, "park pool — transiently-idle HBM", 8.2, GREEN,
+    s.append(txt(px0 + 7, T2_Y + 41, "Victim Cache Pool — transiently-idle HBM", 8.2, GREEN,
                  "bold", "start"))
     g, _ = kvrow(px0 + 7, T2_Y + 47,
                  [("1", "waiting"), ("2", "waiting"), ("3", "waiting"), ("4", "done")])
@@ -293,7 +309,7 @@ def build():
     arrow(bx + 22, T1_Y + TH + 5, bx + 22, T2_Y - 5, GREEN, "aGrn", 1.5, "3.5 2.5")
     s.append(circnum(bx - 12, MID_A, 3, GREEN, 7.4, 8.6))
     s.append(circnum(bx + 34, MID_A, 4, GREEN, 7.4, 8.6))
-    wtext(bx - 24, MID_A + 3, "fetch / re-park — peer copy, 27–53 GB/s", 8.2, GREEN, "bold")
+    wtext(bx - 24, MID_A + 3, "fetch / re-park — peer copy, 52.8 GB/s = 4.0× host", 8.2, GREEN, "bold")
     arrow(bx + 11, T2_Y + TH + 5, bx + 11, T3_Y - 5, RED, "aRed", 1.4, "3 2.5")
     wtext(bx - 3, MID_B + 3, "priority 3 — only when no GPU slab fits", 8.2, RED, "normal")
 
@@ -301,14 +317,14 @@ def build():
     s.append(txt(PC_X + PC_W / 2, 42, "ranked by bandwidth measured at boot — not by tier",
                  8.6, MUTED, "normal", "middle", True))
     rungs = [
-        ("1", "idlest NVLink peer GPU HBM", "headroom ≥ size; the common case",
-         "27–53 GB/s", GREEN, GREEN_F, GREEN, False),
+        ("1", "idlest NVLink peer GPU HBM", "headroom ≥ size; 4.0× the host round trip",
+         "52.8 GB/s", GREEN, GREEN_F, GREEN, False),
         ("2", "any GPU whose link beats host", "topology-ranked, re-measured per node",
          "", GREEN, "white", GREEN, False),
         ("✗", "non-NVLink peer GPU", "excluded — slower than host DRAM",
          "3.3 GB/s", RED, "#FAFAFA", HAIR, True),
-        ("3", "host DRAM overflow", "reached, but last — this is what (a) does first",
-         "26.3 GB/s", AMBER, RED_F, AMBER, False),
+        ("3", "host DRAM overflow", "last resort — and the host path pays PCIe twice",
+         "26.3 GB/s ×2", AMBER, RED_F, AMBER, False),
         ("4", "drop → recompute", "victim cache: correctness never depends on it",
          "1203 ms @ 8k", MUTED, "white", HAIR, False),
     ]
