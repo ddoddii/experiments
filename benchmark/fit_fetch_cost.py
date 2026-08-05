@@ -66,16 +66,30 @@ def load(d):
 
 
 def ols(xs, ys):
-    """Least squares y = a + b*x. Returns (a, b, r2) or None if x has no spread -- a
-    single transfer size cannot separate a fixed cost from a per-byte one."""
+    """Least squares y = a + b*x, with the guards the first real trace needed.
+
+    Returns (a, b, r2), or a bare string naming why the fit is refused. Two ways this
+    goes wrong on serving data, both seen on the first run:
+
+      no spread   real fetch sizes pile up on one value (29% of fetches were exactly 511
+                  tokens). Least squares still returns numbers, but a fixed cost and a
+                  per-byte cost are not separable when x barely moves -- the split is
+                  whatever the noise happened to do.
+      b <= 0      a negative slope means "bigger transfers are faster", which is noise
+                  winning. 1/b then prints as a nan or negative bandwidth and reads like
+                  a measurement rather than a refusal.
+
+    Both used to surface as `nan GB/s` next to a confident-looking intercept."""
     n = len(xs)
     if n < 3:
-        return None
+        return "too few fetches"
     mx, my = st.mean(xs), st.mean(ys)
     sxx = sum((x - mx) ** 2 for x in xs)
-    if sxx <= 0:
-        return None
+    if sxx <= 0 or (st.pstdev(xs) / mx if mx else 0) < 0.25:
+        return "sizes too uniform to separate fixed cost from bandwidth"
     b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    if b <= 0:
+        return "no size dependence (slope <= 0): cost is all fixed overhead"
     a = my - b * mx
     ss_res = sum((y - (a + b * x)) ** 2 for x, y in zip(xs, ys))
     ss_tot = sum((y - my) ** 2 for y in ys)
@@ -119,9 +133,14 @@ def main():
         ms = [r["ms"] for r in v]
         f = ols(gb, ms)
         med_mb = st.median([r["bytes"] / 2**20 for r in v])
-        if f is None:
+        if isinstance(f, str):
+            # Report the tier's observed cost anyway -- refusing the SPLIT is not a reason
+            # to withhold the total, which is what the economics actually turn on.
             print(f"{tier:>6} {len(v):>6} {med_mb:>10.1f} "
-                  f"{'(single size -- cannot separate a from B)':>44}")
+                  f"{'--':>13} {'--':>11} {'--':>6} {MICRO_GBPS.get(tier, 0):>11.1f}")
+            print(f"       ^ no fit: {f}")
+            print(f"         observed cost: median {st.median(ms):.2f} ms, "
+                  f"mean {st.mean(ms):.2f} ms, p90 {sorted(ms)[int(0.9 * len(ms))]:.2f} ms")
             continue
         a, b, r2 = f
         bw = 1e3 / b if b > 0 else float("nan")   # ms per GiB -> GiB/s

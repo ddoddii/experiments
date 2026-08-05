@@ -73,7 +73,8 @@ def load_bench(d, arm):
 def load_park(d, arm):
     """Sum the per-prefill park telemetry for one arm. Returns None if the arm has none
     (radix and hicache never load the park manager)."""
-    files = glob.glob(os.path.join(d, f"parked_bytes_*.{arm}.json"))
+    files = (glob.glob(os.path.join(d, f"parked_gpu*.{arm}.json"))
+             or glob.glob(os.path.join(d, f"parked_bytes_*.{arm}.json")))  # older layout
     if not files:
         return None
     agg = {"fetch_hits": 0, "fetch_miss": 0, "fetch_already": 0, "fetched_tokens": 0,
