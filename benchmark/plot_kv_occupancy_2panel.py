@@ -84,6 +84,26 @@ def use_axis_label(metric):
     return f"KV memory\nutilization (%)" if not metric else f"KV ({metric}, %)"
 
 
+def load_pressure(csv_path):
+    """-> (t, {label: [token_usage]}). The WORKING SET: KV of requests in the current
+    batch, which attention reads on every forward step and which is freed automatically
+    when the request finishes. cache_occupancy minus this is the CACHE: finished turns
+    nobody is reading, held on the bet that the session returns, freed only by LRU."""
+    rows = [ln for ln in open(csv_path) if not ln.startswith("#")]
+    reader = csv.DictReader(rows)
+    labels = [c[:-9] for c in reader.fieldnames if c.endswith("_pressure")]
+    t, data = [], {l: [] for l in labels}
+    for r in reader:
+        try:
+            t.append(float(r["t_s"]))
+        except (ValueError, KeyError):
+            continue
+        for l in labels:
+            v = r.get(f"{l}_pressure", "")
+            data[l].append(float(v) if v not in ("", None) else None)
+    return t, data, labels
+
+
 def load(csv_path):
     """-> (t, {label: [use]}) ; ignores the '# roles:' comment line."""
     rows = [ln for ln in open(csv_path) if not ln.startswith("#")]
@@ -176,6 +196,60 @@ def both_roles(t, data, p_labels, d_labels):
         dm.append(100.0 * sum(dv) / len(dv))
         pm.append(100.0 * sum(pv) / len(pv))
     return xs, dm, pm
+
+
+def render_decomposed(args, t, data, pdata, p_labels, d_labels):
+    """Each role's curve split into working set and cache.
+
+    The plain overlay draws prefill at 82% and decode at 11% as if they were the same
+    quantity. They are not: 98.9% of the prefill curve is cache and 98.8% of the decode
+    curve is working set, so the two lines are nearly disjoint measurements sharing an
+    axis. Splitting them makes the figure state that instead of leaving it to the caption
+    -- and it explains the shapes, since a cache ramps to an eviction equilibrium and
+    holds while a working set breathes with the number of live sequences and never
+    accumulates."""
+    xs, dm, pm = both_roles(t, data, p_labels, d_labels)
+    xw, dw, pw = both_roles(t, pdata, p_labels, d_labels)
+    n = min(len(xs), len(xw))
+    xs, dm, pm, dw, pw = xs[:n], dm[:n], pm[:n], dw[:n], pw[:n]
+    if not xs:
+        raise SystemExit("no samples where both roles report both gauges")
+
+    use_paper_style()
+    fig, ax = plt.subplots(1, 1, figsize=(args.width, args.height))
+    C = {"P": ("#0072B2", "#BBD9EC"), "D": ("#E69F00", "#F6DFB0")}
+
+    order = (("Prefill", pm, pw, C["P"]), ("Decode", dm, dw, C["D"]))
+    if sum(pm) / len(pm) < sum(dm) / len(dm):          # busier role behind
+        order = order[::-1]
+    for z, (name, tot, ws, (c_ws, c_cache)) in enumerate(order):
+        ax.fill_between(xs, ws, tot, color=c_cache, lw=0, zorder=2 + 2 * z,
+                        label=f"{name}: cache (finished turns, LRU-evictable)")
+        ax.fill_between(xs, 0, ws, color=c_ws, lw=0, zorder=3 + 2 * z,
+                        label=f"{name}: working set (in the current batch)")
+        ax.plot(xs, tot, color="#000000", lw=0.6, zorder=6)
+
+    for name, tot, ws in (("prefill", pm, pw), ("decode", dm, dw)):
+        a_t, a_w = sum(tot) / len(tot), sum(ws) / len(ws)
+        print(f"  {name:8s} curve {a_t:5.1f}%  =  working set {a_w:5.1f}% "
+              f"({100 * a_w / a_t if a_t else 0:4.1f}% of it)  +  cache "
+              f"{a_t - a_w:5.1f}% ({100 * (a_t - a_w) / a_t if a_t else 0:4.1f}%)")
+
+    ax.set_ylim(0, 100)
+    ax.set_xlim(min(xs), max(xs))
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.set_ylabel(use_axis_label(args.metric))
+    ax.set_xlabel("time (s)")
+    ax.legend(loc="upper left", frameon=False, fontsize=5.6, labelspacing=0.25,
+              handlelength=1.3, borderaxespad=0.3, ncol=2, columnspacing=1.0)
+    for s_ in ("top", "right"):
+        ax.spines[s_].set_visible(False)
+    for s_ in ("bottom", "left"):
+        ax.spines[s_].set_color(MUTED); ax.spines[s_].set_linewidth(0.6)
+    ax.tick_params(colors=MUTED, length=2.5, width=0.5)
+    ax.grid(False)
+    fig.tight_layout(pad=0.4)
+    savefig(fig, args.out or "fig_kv_decomposed")
 
 
 def render_overlay(args, t, data, p_labels, d_labels):
@@ -305,6 +379,9 @@ def main():
     ap.add_argument("--max-points", type=int, default=4000,
                     help="decimate to at most this many samples per panel (0 = all)")
     ap.add_argument("--tmax", type=float, default=0.0, help="crop to the first N seconds")
+    ap.add_argument("--decompose", action="store_true",
+                    help="split each role's curve into working set (token_usage) and "
+                         "cache (the rest of cache_occupancy)")
     ap.add_argument("--overlay", action="store_true",
                     help="single axes instead of two stacked panels: decode as the "
                          "light area behind, prefill as the dark area in front, so the "
@@ -353,6 +430,10 @@ def main():
     if not p_labels or not d_labels:
         raise SystemExit(f"need both P* and D* columns; found {labels}")
 
+    if args.decompose:
+        tp, pdata, _ = load_pressure(args.csv)
+        render_decomposed(args, t, data, pdata, p_labels, d_labels)
+        return
     if args.overlay:
         render_overlay(args, t, data, p_labels, d_labels)
         return
