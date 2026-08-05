@@ -616,3 +616,58 @@ per-turn TTFT gap (21 ms/turn against 2.17 s).
    parking only what is later fetched would cost 4.7 s instead of 26.9 s. This is the
    policy question (what deserves parking), and it is worth strictly less than fix 1 until
    fix 1 lands, because right now every avoided byte only saves blocking time.
+
+### Async park + pinned index upload: the fixes work, the TTFT does not follow
+
+Three interleaved repeats, all nine arms on one build (92185c97a), 512 turns each,
+0 errors. `results/why/async_r3`.
+
+**The engineering worked, unambiguously.** Park-path scheduler time, stable across repeats:
+
+| | r1 | r2 | r3 |
+|---|---|---|---|
+| park_sync (blocking) | 27.3 s | 28.8 s | 29.2 s |
+| park_gpu (async + pinned index) | **3.4 s** | **3.1 s** | **2.8 s** |
+
+`sync` (24-26 s) and `index` (4.4 s) are both gone; the top phases are now `select` and
+`xfer` at ~1 s each. Total scheduler occupancy roughly halved, 40-44 s to 17-21 s.
+
+**TTFT does not follow, and the two are not even correlated:**
+
+| rep | scheduler saved | wall saved |
+|---|---|---|
+| 1 | 19.4 s | 52 s |
+| 2 | 23.6 s | 26 s |
+| 3 | 27.2 s | **−4 s** |
+
+park_sync -> park_gpu on TTFT mean: −17.4%, −7.2%, +2.9% — **sign flips**, so the change
+cannot be claimed as a TTFT win despite a 90% cut in the cost it targeted. Only p90 and
+p95 hold their sign, at −3.2% and −4.1%. And park_gpu degrades monotonically across
+repeats (6.505 / 7.362 / 8.252) while its own scheduler cost FALLS (3.4 / 3.1 / 2.8 s), so
+whatever is degrading is not the park machinery.
+
+**Against hicache the shape is the finding:**
+
+| | median of 3 | sign |
+|---|---|---|
+| p50 | **−25.0%** (better) | flips |
+| p90 | **+45.1%** (worse) | all same |
+| p95 | **+24.3%** (worse) | all same |
+| throughput | −15.4% | all same |
+
+Parking helps the typical request and badly hurts the tail. That is the signature of
+CONTENTION rather than of a cache that does not work: the median request gets its hit,
+while some requests wait behind park traffic.
+
+### Why this points at volume, not at the copy path
+
+Parking moves 535 GB per run to serve 94 GB of hits, and both directions cross the DECODE
+GPUs -- the park writes into their HBM, the fetches read out of it -- while those same GPUs
+are running forward passes. Blocking parking rate-limited that traffic as a side effect of
+stalling the scheduler. Removing the stall let it run free, which is why halving scheduler
+occupancy did not halve anything the user sees, and plausibly why the tail got worse.
+
+So the remaining work is NOT more transfer-path optimisation. It is the 5.7:1 ratio: at
+the current rate, parking only what is later fetched would cut that traffic 5.7x. That is
+a policy question -- what deserves parking -- and it is now the only lever left that is
+large enough to matter.
