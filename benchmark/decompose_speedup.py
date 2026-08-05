@@ -169,6 +169,30 @@ def main():
     park = {a: load_park(d, a) for a in arms}
     occ = {a: occ_stats(d, a) for a in arms}
 
+    # Arms in one directory are only comparable if they ran against the same build.
+    # Re-running a single arm overwrites just that arm, and the stale ones keep their
+    # names -- an async-park r1 once sat beside blocking-park r2/r3 with nothing on disk
+    # saying so, and averaging them would have compared a change against itself.
+    metas = {}
+    for a in arms:
+        mp = os.path.join(d, f"meta_{a}.json")
+        if os.path.exists(mp):
+            try:
+                metas[a] = json.load(open(mp))
+            except Exception:  # noqa: BLE001
+                pass
+    shas = {m.get("sglang_sha") for m in metas.values() if m.get("sglang_sha")}
+    if len(shas) > 1:
+        print("\n!!! ARMS RAN AGAINST DIFFERENT BUILDS -- not comparable !!!")
+        for a in arms:
+            m = metas.get(a) or {}
+            print(f"    {a:>14}  sglang={m.get('sglang_sha', 'unstamped')}  "
+                  f"ts={m.get('ts', '?')}")
+        print("    Re-run the arms you intend to compare into a fresh OUTDIR.")
+    elif metas and len(metas) < len(arms):
+        print(f"\n  [note] {len(arms) - len(metas)} arm(s) predate build stamping; "
+              f"check their mtimes before comparing.")
+
     print(f"\n=== arms ({d}) ===")
     print(f"{'arm':>10} {'TTFT s':>8} {'TPOT s':>9} {'tok/s':>8} {'P hit':>7} "
           f"{'D batch':>8} {'errs':>5}")
