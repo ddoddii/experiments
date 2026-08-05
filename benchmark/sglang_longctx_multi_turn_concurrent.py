@@ -213,6 +213,31 @@ def main():
         "avg_tpot_s": round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
         "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / len(valid), 2) if valid else None,
     }
+    # Percentiles over EVERY turn, not over per-session means.
+    #
+    # Without these the only TTFT number this bench produced was a mean of means, and a
+    # single run of it was being read as a result. On the sharegpt workload the same
+    # config re-run gave p95 values spanning 1.45-6.58 s, so a mean with no spread cannot
+    # tell a 15% effect from run-to-run noise. Per-turn is the right population because
+    # the cache acts per turn: a session whose first turn misses and whose next three hit
+    # is averaged into invisibility by the per-session mean.
+    all_ttft = sorted(t["ttft_s"] for r in results for t in r.get("turns", [])
+                      if t.get("ttft_s"))
+    if all_ttft:
+        def pct(p):
+            if len(all_ttft) == 1:
+                return round(all_ttft[0], 4)
+            i = p / 100 * (len(all_ttft) - 1)
+            lo, hi = int(i), min(int(i) + 1, len(all_ttft) - 1)
+            return round(all_ttft[lo] + (all_ttft[hi] - all_ttft[lo]) * (i - lo), 4)
+        summary.update({
+            "n_ttft_samples": len(all_ttft),
+            "ttft_p50_s": pct(50), "ttft_p90_s": pct(90),
+            "ttft_p95_s": pct(95), "ttft_p99_s": pct(99),
+            # Mean over turns, next to the mean-of-session-means above. They answer
+            # different questions and the two arms can rank differently under them.
+            "ttft_mean_per_turn_s": round(sum(all_ttft) / len(all_ttft), 4),
+        })
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
