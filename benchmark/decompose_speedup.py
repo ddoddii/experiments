@@ -57,7 +57,8 @@ BW_HOST_GBPS = 26.3      # one direction; a park+fetch round trip pays it twice
 KIB_PER_TOKEN = 128.0
 
 # recompute is the floor; radix is optional and reported when present (see FLOOR below).
-ORDER = ["recompute", "radix", "hicache", "park_host", "park_gpu", "park_nvlink"]
+ORDER = ["recompute", "radix", "hicache", "park_host", "park_sync", "park_gpu",
+         "park_nvlink"]
 # Fall back to radix only when an arm named recompute was not run, so an older result
 # directory still analyses instead of printing "(missing arm)" on every row.
 FLOOR = ("recompute", "radix")
@@ -108,6 +109,10 @@ def load_park(d, arm):
             agg["park_phase"][k] = agg["park_phase"].get(k, 0.0) + v
         agg["park_bytes"] += j.get("park_bytes_moved", 0) or 0
         agg["park_n"] += j.get("park_n", 0) or 0
+        agg["park_async"] = j.get("park_async", agg.get("park_async"))
+        agg["park_pending_peak"] = max(agg.get("park_pending_peak") or 0,
+                                       j.get("park_pending_peak", 0) or 0)
+        agg["park_lag_ms"] = agg.get("park_lag_ms", 0.0) + (j.get("park_publish_lag_ms") or 0)
         for g, v in (j.get("fetch_src_ms") or {}).items():
             e = agg["src"].setdefault(g, {"ms": 0.0, "tok": 0, "n": 0})
             e["ms"] += v
@@ -272,6 +277,19 @@ def main():
             if fg:
                 print(f"       park is {g / 1000 / fg:.1f}x the total FETCH cost "
                       f"({fg:.1f} s)")
+            if pk.get("park_async") is not None:
+                mode = "ASYNC (event-deferred)" if pk["park_async"] else "BLOCKING"
+                print(f"       mode: {mode}")
+                if pk["park_async"]:
+                    # Lag is the price of not blocking: a prefix is unfindable until its
+                    # copy lands, so a next turn arriving inside that window still misses.
+                    lag = pk["park_lag_ms"] / max(1, pk["park_n"])
+                    print(f"       publish lag {lag:.1f} ms/park avg, "
+                          f"max {pk['park_pending_peak']} parks in flight at once")
+                    if pk["phase"].get("sync", 0) / max(1, g) > 0.5:
+                        print("       WARNING: sync still dominates despite async mode -- "
+                              "the event\n                is being waited on somewhere, "
+                              "not just recorded.")
         hit = pk["fetch_hits"] / max(1, pk["fetch_hits"] + pk["fetch_miss"])
         print(f"     hit {100 * hit:.1f}%  fetched {pk['fetched_tokens']} tok  "
               f"parked {pk['parked_tokens']} tok  already-had {pk['fetch_already']}")
@@ -285,6 +303,7 @@ def main():
         (floor, "park_gpu", "value of ours    <- the two bars above are the headline"),
         ("hicache", "park_gpu", "OURS vs INCUMBENT"),
         ("park_host", "park_gpu", "MEDIUM ONLY  <- the 'is it the link?' control"),
+        ("park_sync", "park_gpu", "ASYNC PARK  <- blocking copy -> event-deferred"),
         ("park_gpu", "park_nvlink", "PCIe targets removed: NVLink decode GPU only"),
         ("hicache", "park_nvlink", "OURS (NVLink only) vs INCUMBENT"),
         ("hicache", "park_host", "transfer software only (both arms are DRAM/PCIe)"),
