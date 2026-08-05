@@ -134,6 +134,22 @@ SGLANG_KV_PARK_HOST_MAX_GB=${SGLANG_KV_PARK_HOST_MAX_GB:-8}
 SGLANG_KV_PARK_DECISION_LOG=${SGLANG_KV_PARK_DECISION_LOG:-}
 SGLANG_KV_PARK_REUSE_AWARE=${SGLANG_KV_PARK_REUSE_AWARE:-1}
 SGLANG_KV_PARK_REUSE_HALFLIFE_S=${SGLANG_KV_PARK_REUSE_HALFLIFE_S:-30}
+# --- "why is it faster" ablation knobs (run_why_faster.sh) ---------------------------
+# These MUST be listed in _PENV below. The park env is passed to each server as an
+# explicit string, not inherited, so a knob that is exported but not listed there is
+# silently ignored -- the arm would run as the default and the ablation would report
+# "no difference" for a variable that was never actually moved.
+#
+# FORCE_HOST=1   every park goes to CPU DRAM instead of an idle GPU; everything else
+#                (index, policy, fetch code, allocated park pool) unchanged -> isolates
+#                the MEDIUM.
+# SYNC_FETCH=1   wait for the fetch copy instead of enqueueing it. Required for the
+#                cost-model run: the default is async, so the recorded ms is enqueue
+#                time and a bandwidth fitted from it is fiction.
+# FETCH_TRACE    directory for per-fetch rows (tier, tokens, bytes, ms).
+SGLANG_KV_PARK_FORCE_HOST=${SGLANG_KV_PARK_FORCE_HOST:-0}
+SGLANG_KV_PARK_SYNC_FETCH=${SGLANG_KV_PARK_SYNC_FETCH:-0}
+SGLANG_KV_PARK_FETCH_TRACE=${SGLANG_KV_PARK_FETCH_TRACE:-}
 # hicache args (prefill). PARK_NO_HICACHE=1 drops them so radix+park runs at host RAM 0
 # (the clean "park as a host-RAM-free alternative to hicache" arm).
 #
@@ -171,7 +187,7 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
   CVD_P1="0,1,2,3"; BASE_P1="--base-gpu-id ${GPU_P1}"
   CVD_D0="0,1,2,3"; BASE_D0="--base-gpu-id ${GPU_D0}"
   CVD_D1="0,1,2,3"; BASE_D1="--base-gpu-id ${GPU_D1}"
-  _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE} SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED} SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS} SGLANG_KV_PARK_BW_AWARE=${SGLANG_KV_PARK_BW_AWARE} SGLANG_KV_PARK_HOST_OVERFLOW=${SGLANG_KV_PARK_HOST_OVERFLOW} SGLANG_KV_PARK_HOST_BUCKET_TOKENS=${SGLANG_KV_PARK_HOST_BUCKET_TOKENS} SGLANG_KV_PARK_HOST_MAX_GB=${SGLANG_KV_PARK_HOST_MAX_GB} SGLANG_KV_PARK_REUSE_AWARE=${SGLANG_KV_PARK_REUSE_AWARE} SGLANG_KV_PARK_REUSE_HALFLIFE_S=${SGLANG_KV_PARK_REUSE_HALFLIFE_S} SGLANG_KV_PARK_DECISION_LOG=${SGLANG_KV_PARK_DECISION_LOG}"
+  _PENV="SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS} SGLANG_KV_PARK_GEN=${SGLANG_KV_PARK_GEN} SGLANG_KV_PARK_PRESSURE_AWARE=${SGLANG_KV_PARK_PRESSURE_AWARE} SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED} SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS} SGLANG_KV_PARK_BW_AWARE=${SGLANG_KV_PARK_BW_AWARE} SGLANG_KV_PARK_HOST_OVERFLOW=${SGLANG_KV_PARK_HOST_OVERFLOW} SGLANG_KV_PARK_HOST_BUCKET_TOKENS=${SGLANG_KV_PARK_HOST_BUCKET_TOKENS} SGLANG_KV_PARK_HOST_MAX_GB=${SGLANG_KV_PARK_HOST_MAX_GB} SGLANG_KV_PARK_REUSE_AWARE=${SGLANG_KV_PARK_REUSE_AWARE} SGLANG_KV_PARK_REUSE_HALFLIFE_S=${SGLANG_KV_PARK_REUSE_HALFLIFE_S} SGLANG_KV_PARK_DECISION_LOG=${SGLANG_KV_PARK_DECISION_LOG} SGLANG_KV_PARK_FORCE_HOST=${SGLANG_KV_PARK_FORCE_HOST} SGLANG_KV_PARK_SYNC_FETCH=${SGLANG_KV_PARK_SYNC_FETCH} SGLANG_KV_PARK_FETCH_TRACE=${SGLANG_KV_PARK_FETCH_TRACE}"
   # Which GPUs each prefill may park ONTO.
   #
   # Default (0 / 1) gives each prefill a pool on its own GPU only. Cross-P sharing then
