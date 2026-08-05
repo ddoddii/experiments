@@ -56,7 +56,11 @@ BW_GPU_GBPS = 52.7
 BW_HOST_GBPS = 26.3      # one direction; a park+fetch round trip pays it twice
 KIB_PER_TOKEN = 128.0
 
-ORDER = ["radix", "hicache", "park_host", "park_gpu"]
+# recompute is the floor; radix is optional and reported when present (see FLOOR below).
+ORDER = ["recompute", "radix", "hicache", "park_host", "park_gpu"]
+# Fall back to radix only when an arm named recompute was not run, so an older result
+# directory still analyses instead of printing "(missing arm)" on every row.
+FLOOR = ("recompute", "radix")
 
 
 def reprefill_ms(n):
@@ -185,13 +189,23 @@ def main():
         print("  (none -- no park arm in this directory)")
 
     # --- the chain: each step moves exactly one thing --------------------------------
+    floor = next((a for a in FLOOR if a in bench), None)
     STEPS = [
-        ("radix", "park_host", "policy + our transfer software (medium fixed: DRAM)"),
-        ("park_host", "park_gpu", "MEDIUM ONLY  <- the 'is it the link?' test"),
+        (floor, "hicache", "value of SGLang's host tier"),
+        (floor, "park_gpu", "value of ours    <- the two bars above are the headline"),
+        ("hicache", "park_gpu", "OURS vs INCUMBENT"),
+        ("park_host", "park_gpu", "MEDIUM ONLY  <- the 'is it the link?' control"),
         ("hicache", "park_host", "transfer software only (both arms are DRAM/PCIe)"),
-        ("radix", "park_gpu", "TOTAL"),
     ]
-    print(f"\n=== one variable at a time ===")
+    print(f"\n=== one variable at a time  (floor = {floor}) ===")
+    if floor == "radix":
+        print("  NOTE: no recompute arm here, so the floor is radix -- which already has "
+              "the GPU\n  prefix cache. These deltas are what the offload tier adds ON TOP "
+              "of it, not the\n  value of caching.")
+    if "radix" in bench and "recompute" in bench:
+        # Keep this visible rather than letting the arm selection bury it.
+        print(f"  (radix, GPU cache only, is also present at TTFT "
+              f"{bench['radix']['avg_ttft_s']:.4f})")
     for lo, hi, what in STEPS:
         if lo not in bench or hi not in bench:
             print(f"  {lo:>10} -> {hi:<10}  (missing arm)")
@@ -237,7 +251,7 @@ def main():
         else:
             print("     => within the bandwidth budget: the medium plausibly accounts for "
                   "this gap.")
-        if base := bench.get("radix"):
+        if base := bench.get(floor):
             tot = base["avg_ttft_s"] - bench["park_gpu"]["avg_ttft_s"]
             if abs(tot) > 1e-9:
                 print(f"     either way it is {100 * obs_s / tot:.1f}% of the total "
@@ -245,7 +259,7 @@ def main():
 
     # --- what the avoided recompute is worth -----------------------------------------
     print(f"\n=== does the hit rate account for the TTFT change? ===")
-    base = bench.get("radix")
+    base = bench.get(floor)
     for a in ("park_host", "park_gpu"):
         pk, s = park.get(a), bench.get(a)
         if not pk or not s or not base:
