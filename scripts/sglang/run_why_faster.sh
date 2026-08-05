@@ -55,7 +55,18 @@ export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-32000}
 PARK_GPUS_P0=${PARK_GPUS_P0:-0,1,3}
 PARK_GPUS_P1=${PARK_GPUS_P1:-2,3,1}
 
-ARMS=${ARMS:-"radix hicache park_host park_gpu"}
+# The paper's three bars are recompute / hicache / ours. park_host is not one of them --
+# it is the internal control that isolates the medium, and it stays in the default set
+# because without it "the GPU link is why" is an assertion.
+#
+# radix is deliberately NOT in the default arms but IS still selectable, and that choice
+# needs to be a conscious one rather than an omission: hicache and park BOTH run with the
+# radix prefix cache underneath, so recompute->X measures the value of caching at all,
+# while radix->X measures what the offload tier adds ON TOP of the GPU cache. In the
+# c16_p32000 run radix alone beat both hicache and park, so if the paper reports only
+# recompute as the floor, that result still exists and a reviewer can ask for it. Run
+# ARMS="recompute radix hicache park_gpu" to keep it in view.
+ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
 CAP=${CAP:-}
 COSTMODEL=${COSTMODEL:-0}
 BENCH=${BENCH:-benchmark/sglang_sharegpt_multi_turn_concurrent.py}
@@ -74,8 +85,14 @@ echo "================================================================"
 
 start_arm() {
   case "$1" in
+    recompute)
+      # No prefix reuse at all (--disable-radix-cache, which also forces hicache off since
+      # hicache layers on the radix tree). Every turn re-prefills its whole context. This
+      # is the floor the other two are measured against.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 DISABLE_RADIX_CACHE=1 \
+        ./scripts/sglang/start_2P_2D.sh ;;
     radix)
-      # No offload tier of any kind: the recompute floor everything else is measured from.
+      # GPU prefix cache only, no offload tier. Not a default arm; see ARMS above.
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 \
         ./scripts/sglang/start_2P_2D.sh ;;
     hicache)
