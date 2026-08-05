@@ -42,12 +42,18 @@ because the rest of the paper is measurements:
     MemAvailable 44 -> 105 GB           same
     1203 ms re-prefill @ 8k             fig_ttft_ctx_sweep.json
 
+  SCENARIO, i.e. one illustrative request and its blocks:
+    KV_1..KV_11, sessions S and T, and their states.
+
   NOTE, before reusing these occupancy numbers elsewhere: paper/evaluation.md quotes
   the OPPOSITE asymmetry (decode 74.6% vs prefill 44.6%) from results/kv_ts/2p2d_p20k,
   where BOTH pools are capped at 20k tokens. Which role is the idle one is set by pool
   sizing, not by the workload. This figure follows the uncapped C=32 runs.
-  SCENARIO, i.e. one illustrative request and its blocks:
-    KV_1..KV_11 and their states.
+
+  The prefill box is a radix TREE, not a flat row, and the difference is load-bearing:
+  see radix_tree() for why a scattered subset of one prefix cannot be evicted and why
+  the paused session is the only path LRU is allowed to take. Decode is drawn flat on
+  purpose -- it measures 0% cached, so it has no tree.
 
   serving   is a real, measured state: sglang:token_usage counts exactly the KV of
             requests in the current batch (max_total - available - evictable).
@@ -73,7 +79,7 @@ AMBER = "#E69F00"
 DONE_F = "#E8EAEC"                        # completed, resident, never reused
 INK, MUTED, HAIR = "#111111", "#555555", "#9A9A9A"
 
-W, H = 1180, 556
+W, H = 1180, 584
 
 # --- layout grid -------------------------------------------------------------
 GUT = 92                                  # band labels are right-aligned here
@@ -83,10 +89,10 @@ PC_X, PC_W = 816, 340                     # panel (c)
 
 CB_Y, CB_H = 40, 78                       # control band
 DIV_Y = 129                               # control / hardware divider
-T1_Y, T2_Y, T3_Y = 140, 252, 364          # tier rows; 34 px gaps carry the arrows
-TH, TH3 = 78, 64                          # tier heights (host row is shorter)
-STEP_Y = 452                              # numbered walk-through
-LEG_Y = 528
+T1_Y, T2_Y, T3_Y = 140, 278, 390          # tier rows; 34 px gaps carry the arrows
+TH1, TH2, TH3 = 104, 78, 64               # prefill holds a tree, so it is the tall one
+STEP_Y = 478                              # numbered walk-through
+LEG_Y = 554
 
 
 def esc(s):
@@ -143,6 +149,49 @@ def hatch(x, y, w, h, label=None, lcol=MUTED):
         out.append(f'<rect x="{x+3}" y="{y+h/2-6}" width="{w-6}" height="12" fill="white" '
                    f'opacity="0.86"/>')
         out.append(txt(x + w / 2, y + h / 2 + 3.2, label, 7.6, lcol, "normal", "middle", True))
+    return "".join(out)
+
+
+def radix_tree(px, pw, y):
+    """The prefill node's radix cache, drawn as two branches under a shared prefix.
+
+    RadixCache.evict() heapifies `evictable_leaves` and only ever calls _delete_leaf(),
+    pushing a parent back onto the heap once it is childless AND lock_ref == 0. Two
+    consequences the flat row in the first draft got wrong:
+      - an ancestor can never be freed while a descendant lives, so a path is freed
+        leaf-first and a hole in the middle of a prefix is not reachable;
+      - a running request locks its path, so the ONLY fully unlocked path here is the
+        session sitting in a tool call. LRU is not choosing badly, it is choosing the
+        only thing it may choose -- which is precisely the opening this work uses.
+    """
+    out = []
+    xr, wr = px + 11, 64
+    xb = px + 95
+    yT, yS = y + 38, y + 64
+    cT, cS = yT + CH / 2, yS + CH / 2
+    cm = (cT + cS) / 2
+
+    out.append(rrect(xr, cm - 12, wr, 24, BLUE_F, BLUE, 1.1, 3))
+    out.append(txt(xr + wr / 2, cm - 1, "shared prefix", 7.4, INK, "bold"))
+    out.append(txt(xr + wr / 2, cm + 9, "locked", 6.6, MUTED, "normal", "middle", True))
+
+    xj = xr + wr + 9
+    for x1, y1, x2, y2 in ((xr + wr, cm, xj, cm), (xj, cT, xj, cS),
+                           (xj, cT, xb - 3, cT), (xj, cS, xb - 3, cS)):
+        out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{MUTED}" '
+                   f'stroke-width="1"/>')
+
+    g, _ = kvrow(xb, yT, [("8", "serving"), ("9", "serving")])
+    out.append(g)
+    out.append(txt(xb + 2 * (CW + CG) + 2, cT + 2.5, "T · running (locked)", 7.2, MUTED,
+                   "normal", "start"))
+    g, _ = kvrow(xb, yS, [("1", "absent"), ("2", "absent"), ("3", "absent")])
+    out.append(g)
+    out.append(txt(xb + 3 * (CW + CG) + 2, cS + 2.5, "S · paused (unlocked)", 7.2, RED,
+                   "bold", "start"))
+
+    out.append(txt(px + 11, y + 94, "freed leaf-first: KV3 → KV2 → KV1 — an ancestor "
+                   "cannot go before its child", 7.4, MUTED, "normal", "start", True))
     return "".join(out)
 
 
@@ -235,17 +284,11 @@ def build():
     BY = lambda y: y + 38                 # first block row inside a tier
 
     # ---- (a) prefill / decode / host ----
-    tier(PA_X, PA_W, T1_Y, TH, "Prefill instance (GPU)",
+    tier(PA_X, PA_W, T1_Y, TH1, "Prefill instance (GPU) — radix cache",
          "KV pool 83% full — but only 1% live; 81% is evictable cache", RED, "white")
-    g, _ = kvrow(PA_X + 11, BY(T1_Y), [("8", "serving"), ("9", "serving")])
-    s.append(g)
-    g, xe = kvrow(PA_X + 11 + 2 * (CW + CG) + 10, BY(T1_Y),
-                  [("1", "absent"), ("2", "absent"), ("3", "absent")])
-    s.append(g)
-    s.append(txt(PA_X + 11, BY(T1_Y) + CH + 12, "session S prefix — evicted under pressure",
-                 8.0, RED, "normal", "start", True))
+    s.append(radix_tree(PA_X, PA_W, T1_Y))
 
-    tier(PA_X, PA_W, T2_Y, TH, "Decode instance (GPU)",
+    tier(PA_X, PA_W, T2_Y, TH2, "Decode instance (GPU)",
          "14% used, all of it live — holds no cache, 86% free", HAIR, "white")
     g, _ = kvrow(PA_X + 11, BY(T2_Y), [("11", "serving")])
     s.append(g)
@@ -262,23 +305,16 @@ def build():
     s.append(hatch(PA_X + 11 + 4 * (CW + CG) + 6, BY(T3_Y) - 4, 118, CH, "reserved, unused"))
 
     # ---- (b) prefill / decode / host ----
-    tier(PB_X, PB_W, T1_Y, TH, "Prefill instance (GPU)",
+    tier(PB_X, PB_W, T1_Y, TH1, "Prefill instance (GPU) — radix cache",
          "KV pool 83% full — but only 1% live; 81% is evictable cache", RED, "white")
-    g, _ = kvrow(PB_X + 11, BY(T1_Y), [("8", "serving"), ("9", "serving")])
-    s.append(g)
-    g, _ = kvrow(PB_X + 11 + 2 * (CW + CG) + 10, BY(T1_Y),
-                 [("1", "absent"), ("2", "absent"), ("3", "absent")])
-    s.append(g)
-    s.append(txt(PB_X + 11, BY(T1_Y) + CH + 12,
-                 "prefill only the new tokens, then re-park the extended prefix",
-                 8.0, GREEN, "normal", "start", True))
+    s.append(radix_tree(PB_X, PB_W, T1_Y))
 
-    tier(PB_X, PB_W, T2_Y, TH, "Decode instance (GPU)",
+    tier(PB_X, PB_W, T2_Y, TH2, "Decode instance (GPU)",
          "14% used, all of it live — holds no cache, 86% free", GREEN, "white", hero=True)
     g, _ = kvrow(PB_X + 11, BY(T2_Y), [("11", "serving")])
     s.append(g)
     px0 = PB_X + 11 + (CW + CG) + 10
-    s.append(rrect(px0, T2_Y + 30, PB_W - (px0 - PB_X) - 11, TH - 38, GREEN_F, GREEN, 1.1, 4,
+    s.append(rrect(px0, T2_Y + 30, PB_W - (px0 - PB_X) - 11, TH2 - 38, GREEN_F, GREEN, 1.1, 4,
                    "3.5 2.5"))
     s.append(txt(px0 + 7, T2_Y + 41, "Victim Cache Pool — transiently-idle HBM", 8.2, GREEN,
                  "bold", "start"))
@@ -290,27 +326,27 @@ def build():
          right="MemAvailable 105 GB", rcol=GREEN)
     s.append(hatch(PB_X + 11, BY(T3_Y) - 4, 178, CH, "left to the agent stack", GREEN))
 
-    MID_A = (T1_Y + TH + T2_Y) / 2         # upper gap centre
-    MID_B = (T2_Y + TH + T3_Y) / 2         # lower gap centre
+    MID_A = (T1_Y + TH1 + T2_Y) / 2         # upper gap centre
+    MID_B = (T2_Y + TH2 + T3_Y) / 2         # lower gap centre
 
     # ---- inter-tier arrows: (a) ----
     ax = PA_X + PA_W - 26
-    s.append(f'<line x1="{ax}" y1="{T1_Y+TH+5}" x2="{ax}" y2="{T2_Y-5}" stroke="{HAIR}" '
+    s.append(f'<line x1="{ax}" y1="{T1_Y+TH1+5}" x2="{ax}" y2="{T2_Y-5}" stroke="{HAIR}" '
              f'stroke-width="1.4" stroke-dasharray="3 2.5"/>')
     s.append(f'<path d="M {ax-7} {MID_A-7} L {ax+7} {MID_A+7} M {ax+7} {MID_A-7} '
              f'L {ax-7} {MID_A+7}" stroke="{RED}" stroke-width="2.4" stroke-linecap="round"/>')
     wtext(ax - 14, MID_A + 3, "no path to peer HBM", 8.2, RED, "normal")
-    arrow(ax, T2_Y + TH + 5, ax, T3_Y - 5, RED, "aRed", 1.9)
+    arrow(ax, T2_Y + TH2 + 5, ax, T3_Y - 5, RED, "aRed", 1.9)
     wtext(ax - 14, MID_B + 3, "evict → host, always", 8.2, RED, "bold")
 
     # ---- inter-tier arrows: (b) ----
     bx = PB_X + PB_W - 54                  # fetch lane; re-park lane sits 22 px right
-    arrow(bx, T2_Y - 5, bx, T1_Y + TH + 5, GREEN, "aGrn", 2.2)
-    arrow(bx + 22, T1_Y + TH + 5, bx + 22, T2_Y - 5, GREEN, "aGrn", 1.5, "3.5 2.5")
+    arrow(bx, T2_Y - 5, bx, T1_Y + TH1 + 5, GREEN, "aGrn", 2.2)
+    arrow(bx + 22, T1_Y + TH1 + 5, bx + 22, T2_Y - 5, GREEN, "aGrn", 1.5, "3.5 2.5")
     s.append(circnum(bx - 12, MID_A, 3, GREEN, 7.4, 8.6))
     s.append(circnum(bx + 34, MID_A, 4, GREEN, 7.4, 8.6))
     wtext(bx - 24, MID_A + 3, "fetch / re-park — peer copy, 52.8 GB/s = 4.0× host", 8.2, GREEN, "bold")
-    arrow(bx + 11, T2_Y + TH + 5, bx + 11, T3_Y - 5, RED, "aRed", 1.4, "3 2.5")
+    arrow(bx + 11, T2_Y + TH2 + 5, bx + 11, T3_Y - 5, RED, "aRed", 1.4, "3 2.5")
     wtext(bx - 3, MID_B + 3, "priority 3 — only when no GPU slab fits", 8.2, RED, "normal")
 
     # ============================ (c) the ladder ==============================
