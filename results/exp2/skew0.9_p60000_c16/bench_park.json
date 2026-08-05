@@ -1,0 +1,3711 @@
+{
+  "summary": {
+    "config": "exp2_skew0.9_p60000_c16_park",
+    "model": "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct",
+    "concurrency": 16,
+    "hicache_write_policy": "write_through",
+    "tool_delay_sec": 3.0,
+    "flood_during_delay": true,
+    "flood_n": 30,
+    "flood_tokens": 3000,
+    "total_items": 200,
+    "success_items": 16,
+    "error_items": 184,
+    "total_output_tokens": 488,
+    "total_wall_time_s": 74.49,
+    "overall_throughput_tok_per_s": 6.55,
+    "avg_ttft_s": 6.5781,
+    "avg_tpot_s": 0.0103,
+    "avg_throughput_tok_per_s": 114239.64,
+    "ttft_after_tool_delay_s": null,
+    "ttft_no_delay_s": 6.5781,
+    "ttft_degradation_s": null,
+    "turns_after_delay_count": 0,
+    "ttft_p50_s": 6.7629,
+    "ttft_p90_s": 10.2814,
+    "ttft_p95_s": 10.7532,
+    "ttft_p99_s": 10.7532,
+    "ttft_histogram": {
+      "lt_0.5s": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "0.5_1.5s": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "1.5_2.5s": {
+        "count": 0,
+        "pct": 0.0
+      },
+      "gt_2.5s": {
+        "count": 16,
+        "pct": 100.0
+      }
+    },
+    "ttft_histogram_after_delay": {},
+    "hicache_stats": {
+      "p1": {
+        "token_usage": {
+          "min": 0.1402,
+          "max": 0.957,
+          "mean": 0.6088,
+          "samples": 32
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 0,
+          "mean": 0.0,
+          "samples": 32
+        },
+        "num_used_tokens": {
+          "min": 8414.0,
+          "max": 57422.0,
+          "mean": 36525.75,
+          "samples": 32
+        },
+        "token_capacity": 60000,
+        "kvcache_gb": 7.32
+      },
+      "p2": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0,
+          "samples": 32
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 0,
+          "mean": 0.0,
+          "samples": 32
+        },
+        "num_used_tokens": {
+          "min": 0.0,
+          "max": 0.0,
+          "mean": 0.0,
+          "samples": 32
+        },
+        "token_capacity": 60000,
+        "kvcache_gb": 7.32
+      },
+      "d1": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.8056,
+          "mean": 0.7445,
+          "samples": 32
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 1,
+          "mean": 0.9688,
+          "samples": 32
+        },
+        "num_used_tokens": {
+          "min": 39058.0,
+          "max": 168407.0,
+          "mean": 160644.4839,
+          "samples": 31
+        },
+        "token_capacity": 209036,
+        "kvcache_gb": 25.52,
+        "_prom_metric_names": [
+          "sglang:cuda_graph_passes_total",
+          "sglang:e2e_request_latency_seconds_bucket",
+          "sglang:e2e_request_latency_seconds_count",
+          "sglang:e2e_request_latency_seconds_sum",
+          "sglang:generation_tokens_total",
+          "sglang:http_requests_active",
+          "sglang:http_requests_total",
+          "sglang:http_responses_total",
+          "sglang:num_requests_total",
+          "sglang:num_retractions_bucket",
+          "sglang:num_retractions_count",
+          "sglang:num_retractions_sum",
+          "sglang:per_stage_req_latency_seconds_bucket",
+          "sglang:per_stage_req_latency_seconds_count",
+          "sglang:per_stage_req_latency_seconds_sum",
+          "sglang:process_cpu_seconds_total",
+          "sglang:prompt_tokens_total",
+          "sglang:realtime_tokens_total",
+          "sglang:routing_keys_active",
+          "sglang:time_to_first_token_seconds_bucket",
+          "sglang:time_to_first_token_seconds_count",
+          "sglang:time_to_first_token_seconds_sum"
+        ]
+      },
+      "d2": {
+        "token_usage": {
+          "min": 0.0,
+          "max": 0.8158,
+          "mean": 0.7128,
+          "samples": 32
+        },
+        "num_running_reqs": {
+          "min": 0,
+          "max": 1,
+          "mean": 0.9688,
+          "samples": 32
+        },
+        "num_used_tokens": {
+          "min": 15117.0,
+          "max": 170540.0,
+          "mean": 153801.7419,
+          "samples": 31
+        },
+        "token_capacity": 209036,
+        "kvcache_gb": 25.52,
+        "_prom_metric_names": [
+          "sglang:cuda_graph_passes_total",
+          "sglang:e2e_request_latency_seconds_bucket",
+          "sglang:e2e_request_latency_seconds_count",
+          "sglang:e2e_request_latency_seconds_sum",
+          "sglang:generation_tokens_total",
+          "sglang:http_requests_active",
+          "sglang:http_requests_total",
+          "sglang:http_responses_total",
+          "sglang:inter_token_latency_seconds_bucket",
+          "sglang:inter_token_latency_seconds_count",
+          "sglang:inter_token_latency_seconds_sum",
+          "sglang:num_requests_total",
+          "sglang:num_retractions_bucket",
+          "sglang:num_retractions_count",
+          "sglang:num_retractions_sum",
+          "sglang:per_stage_req_latency_seconds_bucket",
+          "sglang:per_stage_req_latency_seconds_count",
+          "sglang:per_stage_req_latency_seconds_sum",
+          "sglang:process_cpu_seconds_total",
+          "sglang:prompt_tokens_total",
+          "sglang:realtime_tokens_total",
+          "sglang:routing_keys_active",
+          "sglang:time_to_first_token_seconds_bucket",
+          "sglang:time_to_first_token_seconds_count",
+          "sglang:time_to_first_token_seconds_sum"
+        ]
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "multi_turn_base_0",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_10",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "I am alex. Check if the current directory is under my name and list all the visible and hidden contents in the current d",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_7ee4d1e77c7d4a6e8542f48b",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"alex\"}"
+              }
+            },
+            {
+              "id": "call_9d63416813ec4377b8bcb9c1",
+              "type": "function",
+              "function": {
+                "name": "ls",
+                "arguments": "{\"a\": \"True\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 2.7517,
+          "tpot_s": 0.0092,
+          "output_tokens": 33,
+          "e2e_latency_s": 3.0456,
+          "throughput_tok_per_s": 108.88,
+          "context_chars": 973,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 2.7517,
+      "avg_tpot_s": 0.0092,
+      "avg_throughput": 108.88,
+      "total_output_tokens": 33,
+      "ttft_by_turn": {
+        "0": 2.7517
+      }
+    },
+    {
+      "id": "multi_turn_base_3",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "As part of my latest photography project, I need to gather files that have 'test' in their name from any folder in my cu",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_a5195d51b3284ab9a4ef8889",
+              "type": "function",
+              "function": {
+                "name": "find",
+                "arguments": "{\"path\": \"./\", \"name\": \"test\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 2.7475,
+          "tpot_s": 0.0137,
+          "output_tokens": 22,
+          "e2e_latency_s": 3.0347,
+          "throughput_tok_per_s": 73.13,
+          "context_chars": 1091,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 2.7475,
+      "avg_tpot_s": 0.0137,
+      "avg_throughput": 73.13,
+      "total_output_tokens": 22,
+      "ttft_by_turn": {
+        "0": 2.7475
+      }
+    },
+    {
+      "id": "multi_turn_base_2",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Go into document folder and Could you draft up a create a document titled 'TeamNotes.txt' for keeping track of all the f",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_0e542663abf1428e9d8c9c8c",
+              "type": "function",
+              "function": {
+                "name": "echo",
+                "arguments": "{\"content\": \"Keeping track of fresh ideas\", \"file_name\": \"TeamNotes.txt\"}"
+              }
+            },
+            {
+              "id": "call_d8921fd3159b47a98c7a1e4d",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"documents\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 3.0204,
+          "tpot_s": 0.0213,
+          "output_tokens": 46,
+          "e2e_latency_s": 3.9803,
+          "throughput_tok_per_s": 46.88,
+          "context_chars": 902,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 3.0204,
+      "avg_tpot_s": 0.0213,
+      "avg_throughput": 46.88,
+      "total_output_tokens": 46,
+      "ttft_by_turn": {
+        "0": 3.0204
+      }
+    },
+    {
+      "id": "multi_turn_base_20",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_4",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Could you kindly show me the list of files in tmp directory in my file system including the hidden one?",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_78d544e9f2b04042ac8e6a7e",
+              "type": "function",
+              "function": {
+                "name": "ls",
+                "arguments": "{\"a\": \"True\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 3.9103,
+          "tpot_s": 0.0,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.9104,
+          "throughput_tok_per_s": 580340.94,
+          "context_chars": 1196,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 3.9103,
+      "avg_tpot_s": 0.0,
+      "avg_throughput": 580340.94,
+      "total_output_tokens": 17,
+      "ttft_by_turn": {
+        "0": 3.9103
+      }
+    },
+    {
+      "id": "multi_turn_base_18",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_22",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_21",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_19",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_23",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_24",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_26",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_25",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_30",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_5",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Find analysis_report.csv and upon locating it, ensure you move it to the 'archive' directory in the same directory of an",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_5ee13a5b2ff44eb4b35cf9f2",
+              "type": "function",
+              "function": {
+                "name": "find",
+                "arguments": "{\"path\": \"data\", \"name\": \"analysis_report.csv\"}"
+              }
+            },
+            {
+              "id": "call_3ec4a4d80b0d4ac294c16e72",
+              "type": "function",
+              "function": {
+                "name": "mv",
+                "arguments": "{\"source\": \"analysis_report.csv\", \"destination\": \"archive/analysis_report.csv\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 3.9086,
+          "tpot_s": 0.015,
+          "output_tokens": 53,
+          "e2e_latency_s": 4.6879,
+          "throughput_tok_per_s": 66.73,
+          "context_chars": 1170,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 3.9086,
+      "avg_tpot_s": 0.015,
+      "avg_throughput": 66.73,
+      "total_output_tokens": 53,
+      "ttft_by_turn": {
+        "0": 3.9086
+      }
+    },
+    {
+      "id": "multi_turn_base_27",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_29",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_28",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_31",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_32",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_7",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Directly open the academic_venture folder and employ precise commands to generate a new directory for our upcoming acade",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_f92da8c897784f708651df9a",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"academic_venture\"}"
+              }
+            },
+            {
+              "id": "call_3dc5d637c60d434286d3c6a7",
+              "type": "function",
+              "function": {
+                "name": "mkdir",
+                "arguments": "{\"dir_name\": \"academic_hub\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 4.4758,
+          "tpot_s": 0.0154,
+          "output_tokens": 37,
+          "e2e_latency_s": 5.0289,
+          "throughput_tok_per_s": 65.09,
+          "context_chars": 2000,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 4.4758,
+      "avg_tpot_s": 0.0154,
+      "avg_throughput": 65.09,
+      "total_output_tokens": 37,
+      "ttft_by_turn": {
+        "0": 4.4758
+      }
+    },
+    {
+      "id": "multi_turn_base_33",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_34",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_40",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_36",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_35",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_37",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_38",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_39",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_43",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_41",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_42",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_44",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_50",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_45",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_46",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_48",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_49",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_52",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_55",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_60",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_54",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_56",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_57",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_59",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_58",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_63",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_66",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_70",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_64",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_65",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_69",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_72",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_71",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_73",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_75",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_80",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_74",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_76",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_11",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Display all the available files located within the '/temp' directory including hidden one using the terminal interface .",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_bb894424614e4db68612d768",
+              "type": "function",
+              "function": {
+                "name": "ls",
+                "arguments": "{\"a\": \"True\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 5.6155,
+          "tpot_s": 0.0,
+          "output_tokens": 17,
+          "e2e_latency_s": 5.6155,
+          "throughput_tok_per_s": 544773.32,
+          "context_chars": 872,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 5.6155,
+      "avg_tpot_s": 0.0,
+      "avg_throughput": 544773.32,
+      "total_output_tokens": 17,
+      "ttft_by_turn": {
+        "0": 5.6155
+      }
+    },
+    {
+      "id": "multi_turn_base_78",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_77",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_79",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_84",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_90",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_83",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_85",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_87",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_86",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_89",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_88",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_91",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_92",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_94",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_100",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_93",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_96",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_97",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_99",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_98",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_102",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_101",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_103",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_110",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_104",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_105",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_106",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_107",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_108",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_109",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_111",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_112",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_114",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_120",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_113",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_115",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_117",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_118",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_119",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_122",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_130",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_124",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_129",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_128",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_132",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_131",
+      "num_turns": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_135",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_140",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_134",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_133",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_136",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_139",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_138",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_142",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_141",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_6",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "It's getting late here, and I'm wrapping up my notes for the day. Please initiate a file creation in our communal folder",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_5ddc376a34214451abf561c2",
+              "type": "function",
+              "function": {
+                "name": "touch",
+                "arguments": "{\"file_name\": \"Annual_Report_2023.docx\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.264,
+          "tpot_s": 0.0,
+          "output_tokens": 24,
+          "e2e_latency_s": 6.264,
+          "throughput_tok_per_s": 323174.44,
+          "context_chars": 813,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 6.264,
+      "avg_tpot_s": 0.0,
+      "avg_throughput": 323174.44,
+      "total_output_tokens": 24,
+      "ttft_by_turn": {
+        "0": 6.264
+      }
+    },
+    {
+      "id": "multi_turn_base_150",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_143",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_145",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_146",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_147",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_148",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_149",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_151",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_152",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_160",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_154",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_153",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_155",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_158",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_159",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_161",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_163",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_170",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_168",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_169",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_172",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_171",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_180",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_173",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_174",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_177",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_176",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_175",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_178",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_181",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_179",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_182",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_190",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8001): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8001): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_183",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_184",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_186",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_185",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_187",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_189",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_188",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_191",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_193",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_192",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_194",
+      "num_turns": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_195",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_196",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_197",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_198",
+      "num_turns": 1,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_199",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput": null,
+      "total_output_tokens": 0,
+      "ttft_by_turn": {}
+    },
+    {
+      "id": "multi_turn_base_8",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "I've recently compiled an extensive log of outcomes from my latest scientific experiment into a file titled 'experiment_",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_3a992cf783ea401d88c73bbc",
+              "type": "function",
+              "function": {
+                "name": "grep",
+                "arguments": "{\"file_name\": \"experiment_log.txt\", \"pattern\": \"Anomaly\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 6.7629,
+          "tpot_s": 0.0097,
+          "output_tokens": 27,
+          "e2e_latency_s": 7.0142,
+          "throughput_tok_per_s": 103.5,
+          "context_chars": 1230,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 6.7629,
+      "avg_tpot_s": 0.0097,
+      "avg_throughput": 103.5,
+      "total_output_tokens": 27,
+      "ttft_by_turn": {
+        "0": 6.7629
+      }
+    },
+    {
+      "id": "multi_turn_base_9",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "I remember I should have a document called 'FinalReport.txt' in the 'Documentation' folder. ",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_7fcc0125d5a64aa68a1589e5",
+              "type": "function",
+              "function": {
+                "name": "find",
+                "arguments": "{\"path\": \"Documentation\", \"name\": \"FinalReport.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 7.3422,
+          "tpot_s": 0.0091,
+          "output_tokens": 25,
+          "e2e_latency_s": 7.5613,
+          "throughput_tok_per_s": 109.52,
+          "context_chars": 791,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 7.3422,
+      "avg_tpot_s": 0.0091,
+      "avg_throughput": 109.52,
+      "total_output_tokens": 25,
+      "ttft_by_turn": {
+        "0": 7.3422
+      }
+    },
+    {
+      "id": "multi_turn_base_12",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Pop on over to the 'Documents' directory and craft a new file dubbed 'summary.txt', would you? If it already exists, ret",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_d0ea881e456144ba9c64d29f",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"Documents\"}"
+              }
+            },
+            {
+              "id": "call_33b7a08cedd84e0bae4eeab5",
+              "type": "function",
+              "function": {
+                "name": "touch",
+                "arguments": "{\"file_name\": \"summary.txt\"}"
+              }
+            },
+            {
+              "id": "call_bd3e052561cb4fb9b9df542c",
+              "type": "function",
+              "function": {
+                "name": "rm",
+                "arguments": "{\"file_name\": \"summary.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 7.3395,
+          "tpot_s": 0.0204,
+          "output_tokens": 53,
+          "e2e_latency_s": 8.3981,
+          "throughput_tok_per_s": 49.12,
+          "context_chars": 492,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 7.3395,
+      "avg_tpot_s": 0.0204,
+      "avg_throughput": 49.12,
+      "total_output_tokens": 53,
+      "ttft_by_turn": {
+        "0": 7.3395
+      }
+    },
+    {
+      "id": "multi_turn_base_15",
+      "num_turns": 5,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "I'm embarking on a new data analysis project that's as thrilling as scripting the next great story. Let's start by produ",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_e135fb13bd3d4911b64a8e9a",
+              "type": "function",
+              "function": {
+                "name": "touch",
+                "arguments": "{\"file_name\": \"DataSet1.csv\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 9.6418,
+          "tpot_s": 0.0,
+          "output_tokens": 20,
+          "e2e_latency_s": 9.6419,
+          "throughput_tok_per_s": 378569.21,
+          "context_chars": 470,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 9.6418,
+      "avg_tpot_s": 0.0,
+      "avg_throughput": 378569.21,
+      "total_output_tokens": 20,
+      "ttft_by_turn": {
+        "0": 9.6418
+      }
+    },
+    {
+      "id": "multi_turn_base_13",
+      "num_turns": 2,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "In documents directory, there's a file that piques my curiosity regarding its contents. It's alphabetically first file i",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_c19513adff844aa5b80f0c87",
+              "type": "function",
+              "function": {
+                "name": "tail",
+                "arguments": "{\"file_name\": \"documents/report.txt\", \"lines\": \"1\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.2167,
+          "tpot_s": 0.0076,
+          "output_tokens": 26,
+          "e2e_latency_s": 10.4076,
+          "throughput_tok_per_s": 131.02,
+          "context_chars": 1655,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 10.2167,
+      "avg_tpot_s": 0.0076,
+      "avg_throughput": 131.02,
+      "total_output_tokens": 26,
+      "ttft_by_turn": {
+        "0": 10.2167
+      }
+    },
+    {
+      "id": "multi_turn_base_14",
+      "num_turns": 4,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "First cd within the 'ResearchDocs' directory and then locate any files titled 'report.csv'.",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_cf636cb69bc7432f9c0bdc8b",
+              "type": "function",
+              "function": {
+                "name": "cd",
+                "arguments": "{\"folder\": \"ResearchDocs\"}"
+              }
+            },
+            {
+              "id": "call_a596d20d5c8243dc96c9eadb",
+              "type": "function",
+              "function": {
+                "name": "find",
+                "arguments": "{\"path\": \".\", \"name\": \"report.csv\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.2181,
+          "tpot_s": 0.0118,
+          "output_tokens": 39,
+          "e2e_latency_s": 10.6656,
+          "throughput_tok_per_s": 84.91,
+          "context_chars": 870,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 10.2181,
+      "avg_tpot_s": 0.0118,
+      "avg_throughput": 84.91,
+      "total_output_tokens": 39,
+      "ttft_by_turn": {
+        "0": 10.2181
+      }
+    },
+    {
+      "id": "multi_turn_base_16",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "In research directory, there is a file called 'research_notes.txt'. Please make a prioritized backup by moving a copy of",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_fe04ad92149f411689749564",
+              "type": "function",
+              "function": {
+                "name": "mv",
+                "arguments": "{\"source\": \"research_notes.txt\", \"destination\": \"archives/2024_research_backup.txt\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.2814,
+          "tpot_s": 0.0202,
+          "output_tokens": 32,
+          "e2e_latency_s": 10.9074,
+          "throughput_tok_per_s": 49.52,
+          "context_chars": 892,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 10.2814,
+      "avg_tpot_s": 0.0202,
+      "avg_throughput": 49.52,
+      "total_output_tokens": 32,
+      "ttft_by_turn": {
+        "0": 10.2814
+      }
+    },
+    {
+      "id": "multi_turn_base_17",
+      "num_turns": 3,
+      "turns": [
+        {
+          "turn": 0,
+          "t_wall_s": 0.0,
+          "user": "Could you provide me with an inventory of files that are currently visible and hidden in the directory I'm working in at",
+          "assistant": null,
+          "tool_calls": [
+            {
+              "id": "call_1fc81651a0f94cfbaff83cc0",
+              "type": "function",
+              "function": {
+                "name": "ls",
+                "arguments": "{\"a\": \"True\"}"
+              }
+            }
+          ],
+          "had_tool_call": true,
+          "tool_delay_before_s": 0.0,
+          "kv_flush_applied": false,
+          "ttft_s": 10.7532,
+          "tpot_s": 0.0114,
+          "output_tokens": 17,
+          "e2e_latency_s": 10.935,
+          "throughput_tok_per_s": 88.0,
+          "context_chars": 1152,
+          "finish_reason": "tool_calls",
+          "empty_reason": null
+        },
+        {
+          "turn": 1,
+          "error": "HTTP 503 from http://127.0.0.1:8000/v1/chat/completions: {\"error\":{\"type\":\"Service Unavailable\",\"code\":\"server_selection_failed\",\"message\":\"No available servers: No available prefill workers (all circuits open or unhealthy)\"}}"
+        }
+      ],
+      "avg_ttft_s": 10.7532,
+      "avg_tpot_s": 0.0114,
+      "avg_throughput": 88.0,
+      "total_output_tokens": 17,
+      "ttft_by_turn": {
+        "0": 10.7532
+      }
+    }
+  ]
+}

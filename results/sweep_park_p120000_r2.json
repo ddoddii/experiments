@@ -1,0 +1,7346 @@
+{
+  "summary": {
+    "config": "sweep_park_p120000_r2",
+    "concurrency": 16,
+    "tool_delay_s": 3.0,
+    "total_items": 200,
+    "success_items": 200,
+    "error_items": 0,
+    "total_output_tokens": 13489,
+    "total_wall_time_s": 278.39,
+    "overall_throughput_tok_per_s": 48.45,
+    "avg_ttft_s": 3.5132,
+    "avg_tpot_s": 0.06,
+    "avg_throughput_tok_per_s": 3432.86
+  },
+  "results": [
+    {
+      "id": "multi_turn_base_13",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.8947,
+          "tpot_s": 0.0837,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.4803,
+          "throughput_tok_per_s": 11.95,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.0519,
+          "tpot_s": 0.0401,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.4129,
+          "throughput_tok_per_s": 24.93,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.9733,
+      "avg_tpot_s": 0.0619,
+      "avg_throughput_tok_per_s": 18.44,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_11",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.0229,
+          "tpot_s": 0.0305,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.0839,
+          "throughput_tok_per_s": 32.78,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.1394,
+          "tpot_s": 0.0477,
+          "output_tokens": 16,
+          "e2e_latency_s": 1.8542,
+          "throughput_tok_per_s": 20.98,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.0812,
+      "avg_tpot_s": 0.0391,
+      "avg_throughput_tok_per_s": 26.88,
+      "total_output_tokens": 19
+    },
+    {
+      "id": "multi_turn_base_17",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.0033,
+          "tpot_s": 0.1686,
+          "output_tokens": 2,
+          "e2e_latency_s": 2.1719,
+          "throughput_tok_per_s": 5.93,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.0033,
+      "avg_tpot_s": 0.1686,
+      "avg_throughput_tok_per_s": 5.93,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_4",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.4793,
+          "tpot_s": 0.0686,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.6166,
+          "throughput_tok_per_s": 14.57,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.6751,
+          "tpot_s": 0.1029,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.9838,
+          "throughput_tok_per_s": 9.72,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.0068,
+          "tpot_s": 0.0934,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.7813,
+          "throughput_tok_per_s": 10.71,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.3871,
+      "avg_tpot_s": 0.0883,
+      "avg_throughput_tok_per_s": 11.67,
+      "total_output_tokens": 27
+    },
+    {
+      "id": "multi_turn_base_9",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.451,
+          "tpot_s": 0.0507,
+          "output_tokens": 7,
+          "e2e_latency_s": 4.7551,
+          "throughput_tok_per_s": 19.73,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3114,
+          "tpot_s": 0.0384,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.0405,
+          "throughput_tok_per_s": 26.06,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.374,
+          "tpot_s": 0.0412,
+          "output_tokens": 14,
+          "e2e_latency_s": 1.9091,
+          "throughput_tok_per_s": 24.3,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.7121,
+      "avg_tpot_s": 0.0434,
+      "avg_throughput_tok_per_s": 23.36,
+      "total_output_tokens": 41
+    },
+    {
+      "id": "multi_turn_base_7",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.2791,
+          "tpot_s": 0.0742,
+          "output_tokens": 9,
+          "e2e_latency_s": 4.8727,
+          "throughput_tok_per_s": 13.48,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.7016,
+          "tpot_s": 0.1134,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.9284,
+          "throughput_tok_per_s": 8.82,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.2546,
+          "tpot_s": 0.0961,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.5428,
+          "throughput_tok_per_s": 10.41,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.0784,
+      "avg_tpot_s": 0.0946,
+      "avg_throughput_tok_per_s": 10.9,
+      "total_output_tokens": 16
+    },
+    {
+      "id": "multi_turn_base_1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.1989,
+          "tpot_s": 0.1181,
+          "output_tokens": 6,
+          "e2e_latency_s": 1.7894,
+          "throughput_tok_per_s": 8.47,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.9679,
+          "tpot_s": 0.0805,
+          "output_tokens": 11,
+          "e2e_latency_s": 1.7726,
+          "throughput_tok_per_s": 12.43,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.8928,
+          "tpot_s": 0.0867,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.326,
+          "throughput_tok_per_s": 11.54,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.8255,
+          "tpot_s": 0.0857,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.2538,
+          "throughput_tok_per_s": 11.67,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 1.4713,
+      "avg_tpot_s": 0.0927,
+      "avg_throughput_tok_per_s": 11.03,
+      "total_output_tokens": 29
+    },
+    {
+      "id": "multi_turn_base_3",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.7794,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.7794,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.861,
+          "tpot_s": 0.0402,
+          "output_tokens": 298,
+          "e2e_latency_s": 13.804,
+          "throughput_tok_per_s": 24.87,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 1.8202,
+      "avg_tpot_s": 0.0402,
+      "avg_throughput_tok_per_s": 24.87,
+      "total_output_tokens": 299
+    },
+    {
+      "id": "multi_turn_base_5",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.4535,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.4535,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7967,
+          "tpot_s": 0.0781,
+          "output_tokens": 21,
+          "e2e_latency_s": 3.3585,
+          "throughput_tok_per_s": 12.81,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.4308,
+          "tpot_s": 0.048,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.8146,
+          "throughput_tok_per_s": 20.84,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.9488,
+          "tpot_s": 0.0741,
+          "output_tokens": 5,
+          "e2e_latency_s": 3.2453,
+          "throughput_tok_per_s": 13.49,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.4074,
+      "avg_tpot_s": 0.0667,
+      "avg_throughput_tok_per_s": 15.71,
+      "total_output_tokens": 36
+    },
+    {
+      "id": "multi_turn_base_12",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.8187,
+          "tpot_s": 0.1205,
+          "output_tokens": 12,
+          "e2e_latency_s": 7.1438,
+          "throughput_tok_per_s": 8.3,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.2692,
+          "tpot_s": 0.052,
+          "output_tokens": 8,
+          "e2e_latency_s": 2.633,
+          "throughput_tok_per_s": 19.24,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.8044,
+          "tpot_s": 0.0883,
+          "output_tokens": 6,
+          "e2e_latency_s": 5.2458,
+          "throughput_tok_per_s": 11.33,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.2974,
+      "avg_tpot_s": 0.0869,
+      "avg_throughput_tok_per_s": 12.96,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_0",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.7353,
+          "tpot_s": 0.0526,
+          "output_tokens": 11,
+          "e2e_latency_s": 4.2613,
+          "throughput_tok_per_s": 19.01,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.588,
+          "tpot_s": 0.0839,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.2595,
+          "throughput_tok_per_s": 11.91,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.0472,
+          "tpot_s": 0.0975,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.5347,
+          "throughput_tok_per_s": 10.26,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.1772,
+          "tpot_s": 0.0525,
+          "output_tokens": 11,
+          "e2e_latency_s": 3.7019,
+          "throughput_tok_per_s": 19.06,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.6369,
+      "avg_tpot_s": 0.0716,
+      "avg_throughput_tok_per_s": 15.06,
+      "total_output_tokens": 37
+    },
+    {
+      "id": "multi_turn_base_8",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.7621,
+          "tpot_s": 0.0302,
+          "output_tokens": 8,
+          "e2e_latency_s": 5.9737,
+          "throughput_tok_per_s": 33.08,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.0872,
+          "tpot_s": 0.0501,
+          "output_tokens": 13,
+          "e2e_latency_s": 2.688,
+          "throughput_tok_per_s": 19.97,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.9416,
+          "tpot_s": 0.0579,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.4047,
+          "throughput_tok_per_s": 17.27,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.0261,
+          "tpot_s": 0.0493,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.4208,
+          "throughput_tok_per_s": 20.27,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.9543,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 22.65,
+      "total_output_tokens": 39
+    },
+    {
+      "id": "multi_turn_base_10",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.6701,
+          "tpot_s": 0.1244,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.9189,
+          "throughput_tok_per_s": 8.04,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.8938,
+          "tpot_s": 0.0552,
+          "output_tokens": 15,
+          "e2e_latency_s": 1.6665,
+          "throughput_tok_per_s": 18.12,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.5219,
+          "tpot_s": 0.0246,
+          "output_tokens": 21,
+          "e2e_latency_s": 3.0148,
+          "throughput_tok_per_s": 40.58,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.4556,
+          "tpot_s": 0.0806,
+          "output_tokens": 6,
+          "e2e_latency_s": 0.8584,
+          "throughput_tok_per_s": 12.41,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.9218,
+          "tpot_s": 0.0857,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.3504,
+          "throughput_tok_per_s": 11.66,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 1.6926,
+      "avg_tpot_s": 0.0741,
+      "avg_throughput_tok_per_s": 18.16,
+      "total_output_tokens": 51
+    },
+    {
+      "id": "multi_turn_base_16",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.916,
+          "tpot_s": 0.0427,
+          "output_tokens": 15,
+          "e2e_latency_s": 2.5134,
+          "throughput_tok_per_s": 23.44,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.9812,
+          "tpot_s": 0.0265,
+          "output_tokens": 8,
+          "e2e_latency_s": 3.1668,
+          "throughput_tok_per_s": 37.72,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.6036,
+          "tpot_s": 0.0588,
+          "output_tokens": 10,
+          "e2e_latency_s": 4.1329,
+          "throughput_tok_per_s": 17.0,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.8336,
+      "avg_tpot_s": 0.0427,
+      "avg_throughput_tok_per_s": 26.05,
+      "total_output_tokens": 33
+    },
+    {
+      "id": "multi_turn_base_20",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 4.8557,
+          "tpot_s": 0.0655,
+          "output_tokens": 10,
+          "e2e_latency_s": 5.4449,
+          "throughput_tok_per_s": 15.27,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.0718,
+          "tpot_s": 0.0811,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.8019,
+          "throughput_tok_per_s": 12.33,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.4638,
+      "avg_tpot_s": 0.0733,
+      "avg_throughput_tok_per_s": 13.8,
+      "total_output_tokens": 20
+    },
+    {
+      "id": "multi_turn_base_6",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.0443,
+          "tpot_s": 0.0578,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.5068,
+          "throughput_tok_per_s": 17.3,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.8572,
+          "tpot_s": 0.039,
+          "output_tokens": 29,
+          "e2e_latency_s": 1.9499,
+          "throughput_tok_per_s": 25.62,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.5229,
+          "tpot_s": 0.0394,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.8381,
+          "throughput_tok_per_s": 25.38,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.0383,
+          "tpot_s": 0.0541,
+          "output_tokens": 11,
+          "e2e_latency_s": 5.5796,
+          "throughput_tok_per_s": 18.47,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.7172,
+          "tpot_s": 0.0699,
+          "output_tokens": 8,
+          "e2e_latency_s": 2.2064,
+          "throughput_tok_per_s": 14.31,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 2.436,
+      "avg_tpot_s": 0.052,
+      "avg_throughput_tok_per_s": 20.22,
+      "total_output_tokens": 66
+    },
+    {
+      "id": "multi_turn_base_2",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.2836,
+          "tpot_s": 0.0757,
+          "output_tokens": 14,
+          "e2e_latency_s": 3.2671,
+          "throughput_tok_per_s": 13.22,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4442,
+          "tpot_s": 0.043,
+          "output_tokens": 20,
+          "e2e_latency_s": 2.2613,
+          "throughput_tok_per_s": 23.25,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.4492,
+          "tpot_s": 0.0247,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.5975,
+          "throughput_tok_per_s": 40.47,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.9156,
+          "tpot_s": 0.0471,
+          "output_tokens": 13,
+          "e2e_latency_s": 4.4806,
+          "throughput_tok_per_s": 21.24,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.3482,
+          "tpot_s": 0.0656,
+          "output_tokens": 6,
+          "e2e_latency_s": 1.6764,
+          "throughput_tok_per_s": 15.23,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 2.4882,
+      "avg_tpot_s": 0.0512,
+      "avg_throughput_tok_per_s": 22.68,
+      "total_output_tokens": 60
+    },
+    {
+      "id": "multi_turn_base_19",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.4198,
+          "tpot_s": 0.0134,
+          "output_tokens": 23,
+          "e2e_latency_s": 2.7146,
+          "throughput_tok_per_s": 74.63,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3299,
+          "tpot_s": 0.0219,
+          "output_tokens": 29,
+          "e2e_latency_s": 2.944,
+          "throughput_tok_per_s": 45.59,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.0194,
+          "tpot_s": 0.0253,
+          "output_tokens": 21,
+          "e2e_latency_s": 1.5259,
+          "throughput_tok_per_s": 39.49,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.923,
+      "avg_tpot_s": 0.0202,
+      "avg_throughput_tok_per_s": 53.24,
+      "total_output_tokens": 73
+    },
+    {
+      "id": "multi_turn_base_14",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 6.3753,
+          "tpot_s": 0.0374,
+          "output_tokens": 61,
+          "e2e_latency_s": 8.6213,
+          "throughput_tok_per_s": 26.71,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1752,
+          "tpot_s": 0.0711,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.7443,
+          "throughput_tok_per_s": 14.06,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.2742,
+          "tpot_s": 0.0682,
+          "output_tokens": 7,
+          "e2e_latency_s": 4.6837,
+          "throughput_tok_per_s": 14.65,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.7572,
+          "tpot_s": 0.0735,
+          "output_tokens": 24,
+          "e2e_latency_s": 3.4471,
+          "throughput_tok_per_s": 13.61,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.8955,
+      "avg_tpot_s": 0.0625,
+      "avg_throughput_tok_per_s": 17.26,
+      "total_output_tokens": 101
+    },
+    {
+      "id": "multi_turn_base_21",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.2803,
+          "tpot_s": 0.061,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.7683,
+          "throughput_tok_per_s": 16.39,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.7602,
+          "tpot_s": 0.0543,
+          "output_tokens": 11,
+          "e2e_latency_s": 3.3029,
+          "throughput_tok_per_s": 18.42,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.8513,
+          "tpot_s": 0.0378,
+          "output_tokens": 26,
+          "e2e_latency_s": 1.7966,
+          "throughput_tok_per_s": 26.45,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.9639,
+      "avg_tpot_s": 0.051,
+      "avg_throughput_tok_per_s": 20.42,
+      "total_output_tokens": 46
+    },
+    {
+      "id": "multi_turn_base_15",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.4269,
+          "tpot_s": 0.0937,
+          "output_tokens": 6,
+          "e2e_latency_s": 6.8952,
+          "throughput_tok_per_s": 10.68,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.5806,
+          "tpot_s": 0.0415,
+          "output_tokens": 26,
+          "e2e_latency_s": 2.6191,
+          "throughput_tok_per_s": 24.07,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.4792,
+          "tpot_s": 0.0193,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.6142,
+          "throughput_tok_per_s": 51.84,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.6025,
+          "tpot_s": 0.0848,
+          "output_tokens": 24,
+          "e2e_latency_s": 4.5532,
+          "throughput_tok_per_s": 11.79,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.1794,
+          "tpot_s": 0.0234,
+          "output_tokens": 8,
+          "e2e_latency_s": 2.3429,
+          "throughput_tok_per_s": 42.81,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.4537,
+      "avg_tpot_s": 0.0525,
+      "avg_throughput_tok_per_s": 28.24,
+      "total_output_tokens": 72
+    },
+    {
+      "id": "multi_turn_base_18",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.0907,
+          "tpot_s": 0.0421,
+          "output_tokens": 60,
+          "e2e_latency_s": 4.5718,
+          "throughput_tok_per_s": 23.78,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.3214,
+          "tpot_s": 0.0483,
+          "output_tokens": 12,
+          "e2e_latency_s": 3.8527,
+          "throughput_tok_per_s": 20.7,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.6779,
+          "tpot_s": 0.0741,
+          "output_tokens": 9,
+          "e2e_latency_s": 7.2711,
+          "throughput_tok_per_s": 13.49,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.03,
+      "avg_tpot_s": 0.0548,
+      "avg_throughput_tok_per_s": 19.32,
+      "total_output_tokens": 81
+    },
+    {
+      "id": "multi_turn_base_26",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.3693,
+          "tpot_s": 0.13,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.0192,
+          "throughput_tok_per_s": 7.69,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.9763,
+          "tpot_s": 0.1432,
+          "output_tokens": 5,
+          "e2e_latency_s": 4.5492,
+          "throughput_tok_per_s": 6.98,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.7131,
+          "tpot_s": 0.0427,
+          "output_tokens": 15,
+          "e2e_latency_s": 2.3108,
+          "throughput_tok_per_s": 23.42,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.6862,
+      "avg_tpot_s": 0.1053,
+      "avg_throughput_tok_per_s": 12.7,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_27",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.4868,
+          "tpot_s": 0.0536,
+          "output_tokens": 10,
+          "e2e_latency_s": 1.9694,
+          "throughput_tok_per_s": 18.65,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.15,
+          "tpot_s": 0.025,
+          "output_tokens": 33,
+          "e2e_latency_s": 1.9498,
+          "throughput_tok_per_s": 40.01,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.8599,
+          "tpot_s": 0.078,
+          "output_tokens": 8,
+          "e2e_latency_s": 5.4059,
+          "throughput_tok_per_s": 12.82,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.4989,
+      "avg_tpot_s": 0.0522,
+      "avg_throughput_tok_per_s": 23.83,
+      "total_output_tokens": 51
+    },
+    {
+      "id": "multi_turn_base_31",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.8366,
+          "tpot_s": 0.0791,
+          "output_tokens": 33,
+          "e2e_latency_s": 6.3686,
+          "throughput_tok_per_s": 12.64,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4372,
+          "tpot_s": 0.0984,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.8309,
+          "throughput_tok_per_s": 10.16,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.6369,
+      "avg_tpot_s": 0.0887,
+      "avg_throughput_tok_per_s": 11.4,
+      "total_output_tokens": 38
+    },
+    {
+      "id": "multi_turn_base_23",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.6307,
+          "tpot_s": 0.0133,
+          "output_tokens": 27,
+          "e2e_latency_s": 4.9762,
+          "throughput_tok_per_s": 75.25,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.0577,
+          "tpot_s": 0.2154,
+          "output_tokens": 2,
+          "e2e_latency_s": 3.273,
+          "throughput_tok_per_s": 4.64,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.1627,
+          "tpot_s": 0.1218,
+          "output_tokens": 4,
+          "e2e_latency_s": 5.528,
+          "throughput_tok_per_s": 8.21,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.2837,
+      "avg_tpot_s": 0.1168,
+      "avg_throughput_tok_per_s": 29.37,
+      "total_output_tokens": 33
+    },
+    {
+      "id": "multi_turn_base_32",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.9294,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.9294,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.8816,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8816,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.9055,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_34",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.751,
+          "tpot_s": 0.0725,
+          "output_tokens": 7,
+          "e2e_latency_s": 2.1861,
+          "throughput_tok_per_s": 13.79,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.2675,
+          "tpot_s": 0.0376,
+          "output_tokens": 43,
+          "e2e_latency_s": 6.8484,
+          "throughput_tok_per_s": 26.57,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.5092,
+      "avg_tpot_s": 0.0551,
+      "avg_throughput_tok_per_s": 20.18,
+      "total_output_tokens": 50
+    },
+    {
+      "id": "multi_turn_base_30",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.154,
+          "tpot_s": 0.0498,
+          "output_tokens": 8,
+          "e2e_latency_s": 3.5026,
+          "throughput_tok_per_s": 20.08,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.8086,
+          "tpot_s": 0.03,
+          "output_tokens": 82,
+          "e2e_latency_s": 8.2382,
+          "throughput_tok_per_s": 33.34,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.4813,
+      "avg_tpot_s": 0.0399,
+      "avg_throughput_tok_per_s": 26.71,
+      "total_output_tokens": 90
+    },
+    {
+      "id": "multi_turn_base_22",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8743,
+          "tpot_s": 0.0725,
+          "output_tokens": 5,
+          "e2e_latency_s": 3.1642,
+          "throughput_tok_per_s": 13.79,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.1989,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.1989,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.9222,
+          "tpot_s": 0.0,
+          "output_tokens": 17,
+          "e2e_latency_s": 4.9223,
+          "throughput_tok_per_s": 89995.25,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.0871,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 5.0872,
+          "throughput_tok_per_s": 87030.75,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.5206,
+      "avg_tpot_s": 0.0725,
+      "avg_throughput_tok_per_s": 59013.26,
+      "total_output_tokens": 25
+    },
+    {
+      "id": "multi_turn_base_28",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.6547,
+          "tpot_s": 0.0501,
+          "output_tokens": 18,
+          "e2e_latency_s": 3.5063,
+          "throughput_tok_per_s": 19.96,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.769,
+          "tpot_s": 0.0709,
+          "output_tokens": 10,
+          "e2e_latency_s": 6.4068,
+          "throughput_tok_per_s": 14.11,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.4181,
+          "tpot_s": 0.0257,
+          "output_tokens": 7,
+          "e2e_latency_s": 6.5724,
+          "throughput_tok_per_s": 38.89,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.9473,
+      "avg_tpot_s": 0.0489,
+      "avg_throughput_tok_per_s": 24.32,
+      "total_output_tokens": 35
+    },
+    {
+      "id": "multi_turn_base_35",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.6693,
+          "tpot_s": 0.0821,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.0797,
+          "throughput_tok_per_s": 12.18,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4947,
+          "tpot_s": 0.021,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.5788,
+          "throughput_tok_per_s": 47.54,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.4213,
+          "tpot_s": 0.0526,
+          "output_tokens": 9,
+          "e2e_latency_s": 5.8421,
+          "throughput_tok_per_s": 19.01,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.8618,
+      "avg_tpot_s": 0.0519,
+      "avg_throughput_tok_per_s": 26.24,
+      "total_output_tokens": 20
+    },
+    {
+      "id": "multi_turn_base_29",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.6542,
+          "tpot_s": 0.1185,
+          "output_tokens": 7,
+          "e2e_latency_s": 2.365,
+          "throughput_tok_per_s": 8.44,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.6669,
+          "tpot_s": 0.0762,
+          "output_tokens": 5,
+          "e2e_latency_s": 5.9717,
+          "throughput_tok_per_s": 13.12,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.586,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.586,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.6357,
+      "avg_tpot_s": 0.0973,
+      "avg_throughput_tok_per_s": 10.78,
+      "total_output_tokens": 13
+    },
+    {
+      "id": "multi_turn_base_36",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.684,
+          "tpot_s": 0.0303,
+          "output_tokens": 13,
+          "e2e_latency_s": 3.0476,
+          "throughput_tok_per_s": 33.01,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.9938,
+          "tpot_s": 0.0309,
+          "output_tokens": 17,
+          "e2e_latency_s": 1.488,
+          "throughput_tok_per_s": 32.37,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.219,
+          "tpot_s": 0.0186,
+          "output_tokens": 12,
+          "e2e_latency_s": 3.4231,
+          "throughput_tok_per_s": 53.91,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.2989,
+      "avg_tpot_s": 0.0266,
+      "avg_throughput_tok_per_s": 39.76,
+      "total_output_tokens": 42
+    },
+    {
+      "id": "multi_turn_base_25",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.5742,
+          "tpot_s": 0.0217,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.9209,
+          "throughput_tok_per_s": 46.15,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.3995,
+          "tpot_s": 0.0367,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.6563,
+          "throughput_tok_per_s": 27.26,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.416,
+          "tpot_s": 0.0,
+          "output_tokens": 4,
+          "e2e_latency_s": 5.416,
+          "throughput_tok_per_s": 66904.67,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.9336,
+          "tpot_s": 0.0846,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.3566,
+          "throughput_tok_per_s": 11.82,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.0808,
+      "avg_tpot_s": 0.0477,
+      "avg_throughput_tok_per_s": 16747.47,
+      "total_output_tokens": 35
+    },
+    {
+      "id": "multi_turn_base_46",
+      "num_turns": 1,
+      "turns": [
+        {
+          "ttft_s": 2.8226,
+          "tpot_s": 0.095,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.1076,
+          "throughput_tok_per_s": 10.52,
+          "turn": 0
+        }
+      ],
+      "avg_ttft_s": 2.8226,
+      "avg_tpot_s": 0.095,
+      "avg_throughput_tok_per_s": 10.52,
+      "total_output_tokens": 4
+    },
+    {
+      "id": "multi_turn_base_41",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.1209,
+          "tpot_s": 0.0874,
+          "output_tokens": 16,
+          "e2e_latency_s": 4.4318,
+          "throughput_tok_per_s": 11.44,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.5894,
+          "tpot_s": 0.0777,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.2111,
+          "throughput_tok_per_s": 12.87,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.8552,
+      "avg_tpot_s": 0.0826,
+      "avg_throughput_tok_per_s": 12.15,
+      "total_output_tokens": 25
+    },
+    {
+      "id": "multi_turn_base_24",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.6559,
+          "tpot_s": 0.0904,
+          "output_tokens": 21,
+          "e2e_latency_s": 4.4649,
+          "throughput_tok_per_s": 11.06,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.6163,
+          "tpot_s": 0.0397,
+          "output_tokens": 17,
+          "e2e_latency_s": 6.2514,
+          "throughput_tok_per_s": 25.19,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.9701,
+          "tpot_s": 0.055,
+          "output_tokens": 5,
+          "e2e_latency_s": 5.1902,
+          "throughput_tok_per_s": 18.17,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.7975,
+          "tpot_s": 0.0538,
+          "output_tokens": 11,
+          "e2e_latency_s": 4.3354,
+          "throughput_tok_per_s": 18.59,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.2599,
+      "avg_tpot_s": 0.0597,
+      "avg_throughput_tok_per_s": 18.25,
+      "total_output_tokens": 54
+    },
+    {
+      "id": "multi_turn_base_38",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.4123,
+          "tpot_s": 0.0759,
+          "output_tokens": 9,
+          "e2e_latency_s": 6.0194,
+          "throughput_tok_per_s": 13.18,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.6713,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.6713,
+          "throughput_tok_per_s": 71661.62,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.0418,
+      "avg_tpot_s": 0.0759,
+      "avg_throughput_tok_per_s": 35837.4,
+      "total_output_tokens": 12
+    },
+    {
+      "id": "multi_turn_base_37",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.6677,
+          "tpot_s": 0.0757,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.3494,
+          "throughput_tok_per_s": 13.2,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.26,
+          "tpot_s": 0.0565,
+          "output_tokens": 9,
+          "e2e_latency_s": 4.7121,
+          "throughput_tok_per_s": 17.7,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.2633,
+          "tpot_s": 0.0377,
+          "output_tokens": 10,
+          "e2e_latency_s": 1.6022,
+          "throughput_tok_per_s": 26.56,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.397,
+      "avg_tpot_s": 0.0566,
+      "avg_throughput_tok_per_s": 19.15,
+      "total_output_tokens": 29
+    },
+    {
+      "id": "multi_turn_base_50",
+      "num_turns": 1,
+      "turns": [
+        {
+          "ttft_s": 3.9489,
+          "tpot_s": 0.021,
+          "output_tokens": 62,
+          "e2e_latency_s": 5.229,
+          "throughput_tok_per_s": 47.66,
+          "turn": 0
+        }
+      ],
+      "avg_ttft_s": 3.9489,
+      "avg_tpot_s": 0.021,
+      "avg_throughput_tok_per_s": 47.66,
+      "total_output_tokens": 62
+    },
+    {
+      "id": "multi_turn_base_45",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 4.4231,
+          "tpot_s": 0.0255,
+          "output_tokens": 11,
+          "e2e_latency_s": 4.6783,
+          "throughput_tok_per_s": 39.18,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.8146,
+          "tpot_s": 0.0271,
+          "output_tokens": 19,
+          "e2e_latency_s": 4.3017,
+          "throughput_tok_per_s": 36.95,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.1189,
+      "avg_tpot_s": 0.0263,
+      "avg_throughput_tok_per_s": 38.06,
+      "total_output_tokens": 30
+    },
+    {
+      "id": "multi_turn_base_44",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.7463,
+          "tpot_s": 0.0273,
+          "output_tokens": 33,
+          "e2e_latency_s": 3.619,
+          "throughput_tok_per_s": 36.67,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.9683,
+          "tpot_s": 0.0099,
+          "output_tokens": 15,
+          "e2e_latency_s": 5.1073,
+          "throughput_tok_per_s": 100.77,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.921,
+          "tpot_s": 0.0251,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.6479,
+          "throughput_tok_per_s": 39.89,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.8785,
+      "avg_tpot_s": 0.0208,
+      "avg_throughput_tok_per_s": 59.11,
+      "total_output_tokens": 78
+    },
+    {
+      "id": "multi_turn_base_43",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.4436,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.4437,
+          "throughput_tok_per_s": 59206.63,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.7059,
+          "tpot_s": 0.0438,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.9251,
+          "throughput_tok_per_s": 22.82,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.2734,
+          "tpot_s": 0.0809,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.5968,
+          "throughput_tok_per_s": 12.37,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.6518,
+          "tpot_s": 0.094,
+          "output_tokens": 4,
+          "e2e_latency_s": 0.934,
+          "throughput_tok_per_s": 10.63,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.0187,
+      "avg_tpot_s": 0.0729,
+      "avg_throughput_tok_per_s": 14813.11,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_39",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.5798,
+          "tpot_s": 0.0365,
+          "output_tokens": 5,
+          "e2e_latency_s": 2.7259,
+          "throughput_tok_per_s": 27.39,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.8954,
+          "tpot_s": 0.0851,
+          "output_tokens": 37,
+          "e2e_latency_s": 4.9577,
+          "throughput_tok_per_s": 11.76,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.2057,
+          "tpot_s": 0.0149,
+          "output_tokens": 22,
+          "e2e_latency_s": 4.5176,
+          "throughput_tok_per_s": 67.33,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.206,
+          "tpot_s": 0.0872,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.4676,
+          "throughput_tok_per_s": 11.47,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.4717,
+      "avg_tpot_s": 0.0559,
+      "avg_throughput_tok_per_s": 29.49,
+      "total_output_tokens": 68
+    },
+    {
+      "id": "multi_turn_base_42",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.3504,
+          "tpot_s": 0.0776,
+          "output_tokens": 7,
+          "e2e_latency_s": 1.8162,
+          "throughput_tok_per_s": 12.88,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.3432,
+          "tpot_s": 0.043,
+          "output_tokens": 16,
+          "e2e_latency_s": 3.9879,
+          "throughput_tok_per_s": 23.26,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.6785,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.6786,
+          "throughput_tok_per_s": 99999.24,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.124,
+      "avg_tpot_s": 0.0603,
+      "avg_throughput_tok_per_s": 33345.13,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_52",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.2366,
+          "tpot_s": 0.0108,
+          "output_tokens": 29,
+          "e2e_latency_s": 3.5377,
+          "throughput_tok_per_s": 92.98,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3671,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.3671,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.8018,
+      "avg_tpot_s": 0.0108,
+      "avg_throughput_tok_per_s": 92.98,
+      "total_output_tokens": 30
+    },
+    {
+      "id": "multi_turn_base_47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.0225,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.0225,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.6385,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.6385,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.7739,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.7739,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.4783,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 3
+    },
+    {
+      "id": "multi_turn_base_33",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.9914,
+          "tpot_s": 0.0229,
+          "output_tokens": 2,
+          "e2e_latency_s": 5.0144,
+          "throughput_tok_per_s": 43.58,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.7068,
+          "tpot_s": 0.0802,
+          "output_tokens": 6,
+          "e2e_latency_s": 5.1076,
+          "throughput_tok_per_s": 12.47,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.7076,
+          "tpot_s": 0.0647,
+          "output_tokens": 7,
+          "e2e_latency_s": 4.0959,
+          "throughput_tok_per_s": 15.45,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.9085,
+          "tpot_s": 0.0673,
+          "output_tokens": 13,
+          "e2e_latency_s": 5.7166,
+          "throughput_tok_per_s": 14.85,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.4088,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.4088,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.1446,
+      "avg_tpot_s": 0.0588,
+      "avg_throughput_tok_per_s": 21.59,
+      "total_output_tokens": 29
+    },
+    {
+      "id": "multi_turn_base_48",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.4713,
+          "tpot_s": 0.1067,
+          "output_tokens": 10,
+          "e2e_latency_s": 4.4312,
+          "throughput_tok_per_s": 9.38,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.0905,
+          "tpot_s": 0.0822,
+          "output_tokens": 21,
+          "e2e_latency_s": 7.7343,
+          "throughput_tok_per_s": 12.17,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.4945,
+          "tpot_s": 0.0251,
+          "output_tokens": 50,
+          "e2e_latency_s": 1.7236,
+          "throughput_tok_per_s": 39.87,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.3521,
+      "avg_tpot_s": 0.0713,
+      "avg_throughput_tok_per_s": 20.47,
+      "total_output_tokens": 81
+    },
+    {
+      "id": "multi_turn_base_40",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.4511,
+          "tpot_s": 0.1168,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.6847,
+          "throughput_tok_per_s": 8.56,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1099,
+          "tpot_s": 0.0488,
+          "output_tokens": 12,
+          "e2e_latency_s": 3.647,
+          "throughput_tok_per_s": 20.48,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.7096,
+          "tpot_s": 0.0559,
+          "output_tokens": 8,
+          "e2e_latency_s": 3.101,
+          "throughput_tok_per_s": 17.89,
+          "turn": 2
+        },
+        {
+          "ttft_s": 7.0229,
+          "tpot_s": 0.0487,
+          "output_tokens": 11,
+          "e2e_latency_s": 7.5104,
+          "throughput_tok_per_s": 20.51,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.5734,
+      "avg_tpot_s": 0.0675,
+      "avg_throughput_tok_per_s": 16.86,
+      "total_output_tokens": 34
+    },
+    {
+      "id": "multi_turn_base_55",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.3339,
+          "tpot_s": 0.0757,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.7883,
+          "throughput_tok_per_s": 13.2,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.8195,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.8195,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 5.0767,
+      "avg_tpot_s": 0.0757,
+      "avg_throughput_tok_per_s": 13.2,
+      "total_output_tokens": 8
+    },
+    {
+      "id": "multi_turn_base_57",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.4558,
+          "tpot_s": 0.0523,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.9268,
+          "throughput_tok_per_s": 19.11,
+          "turn": 0
+        },
+        {
+          "ttft_s": 8.0838,
+          "tpot_s": 0.0869,
+          "output_tokens": 7,
+          "e2e_latency_s": 8.6055,
+          "throughput_tok_per_s": 11.5,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.2698,
+      "avg_tpot_s": 0.0696,
+      "avg_throughput_tok_per_s": 15.3,
+      "total_output_tokens": 17
+    },
+    {
+      "id": "multi_turn_base_54",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.3024,
+          "tpot_s": 0.1383,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.9937,
+          "throughput_tok_per_s": 7.23,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.4909,
+          "tpot_s": 0.048,
+          "output_tokens": 21,
+          "e2e_latency_s": 7.4514,
+          "throughput_tok_per_s": 20.82,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.0482,
+          "tpot_s": 0.1324,
+          "output_tokens": 3,
+          "e2e_latency_s": 8.3129,
+          "throughput_tok_per_s": 7.55,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 5.9472,
+      "avg_tpot_s": 0.1062,
+      "avg_throughput_tok_per_s": 11.87,
+      "total_output_tokens": 30
+    },
+    {
+      "id": "multi_turn_base_51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.4606,
+          "tpot_s": 0.0128,
+          "output_tokens": 38,
+          "e2e_latency_s": 5.9358,
+          "throughput_tok_per_s": 77.87,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.744,
+          "tpot_s": 0.0153,
+          "output_tokens": 23,
+          "e2e_latency_s": 6.0813,
+          "throughput_tok_per_s": 65.22,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.252,
+          "tpot_s": 0.0256,
+          "output_tokens": 10,
+          "e2e_latency_s": 6.4823,
+          "throughput_tok_per_s": 39.09,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.6617,
+          "tpot_s": 0.0242,
+          "output_tokens": 33,
+          "e2e_latency_s": 1.4366,
+          "throughput_tok_per_s": 41.3,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.5296,
+      "avg_tpot_s": 0.0195,
+      "avg_throughput_tok_per_s": 55.87,
+      "total_output_tokens": 104
+    },
+    {
+      "id": "multi_turn_base_64",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 7.4935,
+          "tpot_s": 0.0522,
+          "output_tokens": 22,
+          "e2e_latency_s": 8.5901,
+          "throughput_tok_per_s": 19.15,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.2639,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.2639,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.8787,
+      "avg_tpot_s": 0.0522,
+      "avg_throughput_tok_per_s": 19.15,
+      "total_output_tokens": 23
+    },
+    {
+      "id": "multi_turn_base_56",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.3003,
+          "tpot_s": 0.0259,
+          "output_tokens": 512,
+          "e2e_latency_s": 17.5529,
+          "throughput_tok_per_s": 38.56,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.6886,
+          "tpot_s": 0.1424,
+          "output_tokens": 3,
+          "e2e_latency_s": 0.9735,
+          "throughput_tok_per_s": 7.02,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.6394,
+          "tpot_s": 0.1414,
+          "output_tokens": 3,
+          "e2e_latency_s": 0.9222,
+          "throughput_tok_per_s": 7.07,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.8761,
+      "avg_tpot_s": 0.1032,
+      "avg_throughput_tok_per_s": 17.55,
+      "total_output_tokens": 518
+    },
+    {
+      "id": "multi_turn_base_60",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 7.2737,
+          "tpot_s": 0.1592,
+          "output_tokens": 6,
+          "e2e_latency_s": 8.0696,
+          "throughput_tok_per_s": 6.28,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.3487,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.3487,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 5.3112,
+      "avg_tpot_s": 0.1592,
+      "avg_throughput_tok_per_s": 6.28,
+      "total_output_tokens": 7
+    },
+    {
+      "id": "multi_turn_base_53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8343,
+          "tpot_s": 0.1267,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.0878,
+          "throughput_tok_per_s": 7.89,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.9822,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.9823,
+          "throughput_tok_per_s": 39262.53,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.6919,
+          "tpot_s": 0.0242,
+          "output_tokens": 16,
+          "e2e_latency_s": 9.0549,
+          "throughput_tok_per_s": 41.32,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.9636,
+          "tpot_s": 0.0386,
+          "output_tokens": 37,
+          "e2e_latency_s": 2.3529,
+          "throughput_tok_per_s": 25.91,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.368,
+      "avg_tpot_s": 0.0632,
+      "avg_throughput_tok_per_s": 9834.41,
+      "total_output_tokens": 59
+    },
+    {
+      "id": "multi_turn_base_49",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.729,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.729,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.5034,
+          "tpot_s": 0.0888,
+          "output_tokens": 12,
+          "e2e_latency_s": 5.4806,
+          "throughput_tok_per_s": 11.26,
+          "turn": 1
+        },
+        {
+          "ttft_s": 7.0801,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 7.0801,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        },
+        {
+          "ttft_s": 7.7973,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 7.7973,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 5.7774,
+      "avg_tpot_s": 0.0888,
+      "avg_throughput_tok_per_s": 11.26,
+      "total_output_tokens": 15
+    },
+    {
+      "id": "multi_turn_base_63",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.9975,
+          "tpot_s": 0.2151,
+          "output_tokens": 2,
+          "e2e_latency_s": 2.2126,
+          "throughput_tok_per_s": 4.65,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.7059,
+          "tpot_s": 0.0365,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.7788,
+          "throughput_tok_per_s": 27.43,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.0707,
+          "tpot_s": 0.0195,
+          "output_tokens": 55,
+          "e2e_latency_s": 9.1222,
+          "throughput_tok_per_s": 51.36,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.258,
+      "avg_tpot_s": 0.0904,
+      "avg_throughput_tok_per_s": 27.81,
+      "total_output_tokens": 60
+    },
+    {
+      "id": "multi_turn_base_58",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 6.1806,
+          "tpot_s": 0.114,
+          "output_tokens": 15,
+          "e2e_latency_s": 7.7769,
+          "throughput_tok_per_s": 8.77,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.6672,
+          "tpot_s": 0.0252,
+          "output_tokens": 21,
+          "e2e_latency_s": 1.1714,
+          "throughput_tok_per_s": 39.67,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.0982,
+          "tpot_s": 0.1328,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.3638,
+          "throughput_tok_per_s": 7.53,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.5392,
+          "tpot_s": 0.0161,
+          "output_tokens": 33,
+          "e2e_latency_s": 4.0535,
+          "throughput_tok_per_s": 62.22,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.3713,
+      "avg_tpot_s": 0.072,
+      "avg_throughput_tok_per_s": 29.55,
+      "total_output_tokens": 72
+    },
+    {
+      "id": "multi_turn_base_65",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 8.0139,
+          "tpot_s": 0.1066,
+          "output_tokens": 6,
+          "e2e_latency_s": 8.5469,
+          "throughput_tok_per_s": 9.38,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3271,
+          "tpot_s": 0.1389,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.6049,
+          "throughput_tok_per_s": 7.2,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.1705,
+      "avg_tpot_s": 0.1227,
+      "avg_throughput_tok_per_s": 8.29,
+      "total_output_tokens": 9
+    },
+    {
+      "id": "multi_turn_base_70",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.2135,
+          "tpot_s": 0.0916,
+          "output_tokens": 31,
+          "e2e_latency_s": 4.9619,
+          "throughput_tok_per_s": 10.92,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.6847,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.6847,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.4491,
+      "avg_tpot_s": 0.0916,
+      "avg_throughput_tok_per_s": 10.92,
+      "total_output_tokens": 32
+    },
+    {
+      "id": "multi_turn_base_61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.3436,
+          "tpot_s": 0.104,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.3197,
+          "throughput_tok_per_s": 9.61,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.4516,
+          "tpot_s": 0.024,
+          "output_tokens": 21,
+          "e2e_latency_s": 6.9313,
+          "throughput_tok_per_s": 41.69,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.4977,
+          "tpot_s": 0.0991,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.6959,
+          "throughput_tok_per_s": 10.09,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.2974,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.2974,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.6476,
+      "avg_tpot_s": 0.0757,
+      "avg_throughput_tok_per_s": 20.46,
+      "total_output_tokens": 45
+    },
+    {
+      "id": "multi_turn_base_78",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.8984,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8984,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.8984,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_69",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 4.5554,
+          "tpot_s": 0.0204,
+          "output_tokens": 48,
+          "e2e_latency_s": 5.5147,
+          "throughput_tok_per_s": 48.99,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.3182,
+          "tpot_s": 0.026,
+          "output_tokens": 40,
+          "e2e_latency_s": 7.3335,
+          "throughput_tok_per_s": 38.41,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.4368,
+      "avg_tpot_s": 0.0232,
+      "avg_throughput_tok_per_s": 43.7,
+      "total_output_tokens": 88
+    },
+    {
+      "id": "multi_turn_base_74",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.3839,
+          "tpot_s": 0.085,
+          "output_tokens": 14,
+          "e2e_latency_s": 6.4885,
+          "throughput_tok_per_s": 11.77,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.7742,
+          "tpot_s": 0.1532,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.0805,
+          "throughput_tok_per_s": 6.53,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.0791,
+      "avg_tpot_s": 0.1191,
+      "avg_throughput_tok_per_s": 9.15,
+      "total_output_tokens": 17
+    },
+    {
+      "id": "multi_turn_base_59",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.8871,
+          "tpot_s": 0.0198,
+          "output_tokens": 7,
+          "e2e_latency_s": 2.0056,
+          "throughput_tok_per_s": 50.63,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4152,
+          "tpot_s": 0.1275,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.6701,
+          "throughput_tok_per_s": 7.84,
+          "turn": 1
+        },
+        {
+          "ttft_s": 9.6079,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 9.6079,
+          "throughput_tok_per_s": 66799.91,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.2441,
+          "tpot_s": 0.0883,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.4207,
+          "throughput_tok_per_s": 11.32,
+          "turn": 3
+        },
+        {
+          "ttft_s": 6.2304,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.2304,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.4769,
+      "avg_tpot_s": 0.0785,
+      "avg_throughput_tok_per_s": 16717.42,
+      "total_output_tokens": 17
+    },
+    {
+      "id": "multi_turn_base_73",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 6.0601,
+          "tpot_s": 0.0,
+          "output_tokens": 4,
+          "e2e_latency_s": 6.0601,
+          "throughput_tok_per_s": 62958.83,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.0254,
+          "tpot_s": 0.1319,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.2891,
+          "throughput_tok_per_s": 7.58,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.523,
+          "tpot_s": 0.0439,
+          "output_tokens": 12,
+          "e2e_latency_s": 3.0061,
+          "throughput_tok_per_s": 22.77,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.2028,
+      "avg_tpot_s": 0.0879,
+      "avg_throughput_tok_per_s": 20996.39,
+      "total_output_tokens": 19
+    },
+    {
+      "id": "multi_turn_base_62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 6.5179,
+          "tpot_s": 0.0717,
+          "output_tokens": 28,
+          "e2e_latency_s": 8.4536,
+          "throughput_tok_per_s": 13.95,
+          "turn": 0
+        },
+        {
+          "ttft_s": 8.0696,
+          "tpot_s": 0.0272,
+          "output_tokens": 32,
+          "e2e_latency_s": 8.9121,
+          "throughput_tok_per_s": 36.79,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.073,
+          "tpot_s": 0.0265,
+          "output_tokens": 12,
+          "e2e_latency_s": 4.3641,
+          "throughput_tok_per_s": 37.8,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.7743,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.7743,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 5.8587,
+      "avg_tpot_s": 0.0418,
+      "avg_throughput_tok_per_s": 29.51,
+      "total_output_tokens": 73
+    },
+    {
+      "id": "multi_turn_base_76",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.8549,
+          "tpot_s": 0.0598,
+          "output_tokens": 22,
+          "e2e_latency_s": 5.1109,
+          "throughput_tok_per_s": 16.72,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.4672,
+          "tpot_s": 0.0331,
+          "output_tokens": 26,
+          "e2e_latency_s": 7.2952,
+          "throughput_tok_per_s": 30.19,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.1611,
+      "avg_tpot_s": 0.0464,
+      "avg_throughput_tok_per_s": 23.45,
+      "total_output_tokens": 48
+    },
+    {
+      "id": "multi_turn_base_67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 7.3716,
+          "tpot_s": 0.0835,
+          "output_tokens": 7,
+          "e2e_latency_s": 7.8727,
+          "throughput_tok_per_s": 11.97,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.632,
+          "tpot_s": 0.0725,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.2847,
+          "throughput_tok_per_s": 13.79,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.8426,
+          "tpot_s": 0.0751,
+          "output_tokens": 8,
+          "e2e_latency_s": 5.3683,
+          "throughput_tok_per_s": 13.32,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.4576,
+          "tpot_s": 0.0252,
+          "output_tokens": 2,
+          "e2e_latency_s": 6.4828,
+          "throughput_tok_per_s": 39.64,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 5.0759,
+      "avg_tpot_s": 0.0641,
+      "avg_throughput_tok_per_s": 19.68,
+      "total_output_tokens": 27
+    },
+    {
+      "id": "multi_turn_base_79",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.5257,
+          "tpot_s": 0.0286,
+          "output_tokens": 19,
+          "e2e_latency_s": 3.0404,
+          "throughput_tok_per_s": 34.97,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.9838,
+          "tpot_s": 0.1306,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.2451,
+          "throughput_tok_per_s": 7.65,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.9873,
+          "tpot_s": 0.1563,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.6127,
+          "throughput_tok_per_s": 6.4,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.8323,
+      "avg_tpot_s": 0.1052,
+      "avg_throughput_tok_per_s": 16.34,
+      "total_output_tokens": 27
+    },
+    {
+      "id": "multi_turn_base_66",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 8.3525,
+          "tpot_s": 0.0557,
+          "output_tokens": 45,
+          "e2e_latency_s": 10.8029,
+          "throughput_tok_per_s": 17.96,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.564,
+          "tpot_s": 0.1324,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.8288,
+          "throughput_tok_per_s": 7.55,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.9711,
+          "tpot_s": 0.1309,
+          "output_tokens": 3,
+          "e2e_latency_s": 2.2329,
+          "throughput_tok_per_s": 7.64,
+          "turn": 2
+        },
+        {
+          "ttft_s": 7.579,
+          "tpot_s": 0.0261,
+          "output_tokens": 25,
+          "e2e_latency_s": 8.2058,
+          "throughput_tok_per_s": 38.29,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 5.3666,
+      "avg_tpot_s": 0.0863,
+      "avg_throughput_tok_per_s": 17.86,
+      "total_output_tokens": 76
+    },
+    {
+      "id": "multi_turn_base_77",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.2436,
+          "tpot_s": 0.0765,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.7025,
+          "throughput_tok_per_s": 13.08,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.6659,
+          "tpot_s": 0.0277,
+          "output_tokens": 33,
+          "e2e_latency_s": 4.5527,
+          "throughput_tok_per_s": 36.08,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.4738,
+          "tpot_s": 0.1164,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.7066,
+          "throughput_tok_per_s": 8.59,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.1278,
+      "avg_tpot_s": 0.0735,
+      "avg_throughput_tok_per_s": 19.25,
+      "total_output_tokens": 43
+    },
+    {
+      "id": "multi_turn_base_82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 6.3,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.3,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 6.3,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_83",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.8869,
+          "tpot_s": 0.0593,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.3614,
+          "throughput_tok_per_s": 16.86,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.597,
+          "tpot_s": 0.0449,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.6868,
+          "throughput_tok_per_s": 22.29,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.6235,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.6235,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.7025,
+      "avg_tpot_s": 0.0521,
+      "avg_throughput_tok_per_s": 19.57,
+      "total_output_tokens": 13
+    },
+    {
+      "id": "multi_turn_base_84",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 7.3797,
+          "tpot_s": 0.0774,
+          "output_tokens": 27,
+          "e2e_latency_s": 9.3931,
+          "throughput_tok_per_s": 12.91,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.1362,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.1362,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.258,
+      "avg_tpot_s": 0.0774,
+      "avg_throughput_tok_per_s": 12.91,
+      "total_output_tokens": 28
+    },
+    {
+      "id": "multi_turn_base_85",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 8.0635,
+          "tpot_s": 0.0676,
+          "output_tokens": 7,
+          "e2e_latency_s": 8.4694,
+          "throughput_tok_per_s": 14.78,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.9469,
+          "tpot_s": 0.0847,
+          "output_tokens": 7,
+          "e2e_latency_s": 2.4552,
+          "throughput_tok_per_s": 11.8,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.0052,
+      "avg_tpot_s": 0.0761,
+      "avg_throughput_tok_per_s": 13.29,
+      "total_output_tokens": 14
+    },
+    {
+      "id": "multi_turn_base_72",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.9998,
+          "tpot_s": 0.2364,
+          "output_tokens": 2,
+          "e2e_latency_s": 2.2362,
+          "throughput_tok_per_s": 4.23,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.6473,
+          "tpot_s": 0.1469,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.9411,
+          "throughput_tok_per_s": 6.81,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.2017,
+          "tpot_s": 0.0256,
+          "output_tokens": 14,
+          "e2e_latency_s": 5.5346,
+          "throughput_tok_per_s": 39.06,
+          "turn": 2
+        },
+        {
+          "ttft_s": 7.4087,
+          "tpot_s": 0.0607,
+          "output_tokens": 10,
+          "e2e_latency_s": 7.9551,
+          "throughput_tok_per_s": 16.47,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.2583,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.2583,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.9032,
+      "avg_tpot_s": 0.1174,
+      "avg_throughput_tok_per_s": 16.64,
+      "total_output_tokens": 30
+    },
+    {
+      "id": "multi_turn_base_71",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.6154,
+          "tpot_s": 0.0499,
+          "output_tokens": 7,
+          "e2e_latency_s": 1.9149,
+          "throughput_tok_per_s": 20.04,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.7637,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.7637,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.5657,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.5657,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.8453,
+          "tpot_s": 0.1488,
+          "output_tokens": 3,
+          "e2e_latency_s": 6.143,
+          "throughput_tok_per_s": 6.72,
+          "turn": 3
+        },
+        {
+          "ttft_s": 5.3184,
+          "tpot_s": 0.0207,
+          "output_tokens": 10,
+          "e2e_latency_s": 5.5046,
+          "throughput_tok_per_s": 48.32,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.4217,
+      "avg_tpot_s": 0.0731,
+      "avg_throughput_tok_per_s": 25.03,
+      "total_output_tokens": 22
+    },
+    {
+      "id": "multi_turn_base_81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 7.2547,
+          "tpot_s": 0.0139,
+          "output_tokens": 3,
+          "e2e_latency_s": 7.2826,
+          "throughput_tok_per_s": 71.76,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.2026,
+          "tpot_s": 0.0,
+          "output_tokens": 3,
+          "e2e_latency_s": 3.2026,
+          "throughput_tok_per_s": 69396.79,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.7024,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.7024,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 4.0532,
+      "avg_tpot_s": 0.0139,
+      "avg_throughput_tok_per_s": 34734.27,
+      "total_output_tokens": 7
+    },
+    {
+      "id": "multi_turn_base_68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 8.3335,
+          "tpot_s": 0.0258,
+          "output_tokens": 3,
+          "e2e_latency_s": 8.3851,
+          "throughput_tok_per_s": 38.76,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7504,
+          "tpot_s": 0.0389,
+          "output_tokens": 32,
+          "e2e_latency_s": 2.9578,
+          "throughput_tok_per_s": 25.68,
+          "turn": 1
+        },
+        {
+          "ttft_s": 7.678,
+          "tpot_s": 0.015,
+          "output_tokens": 14,
+          "e2e_latency_s": 7.8732,
+          "throughput_tok_per_s": 66.6,
+          "turn": 2
+        },
+        {
+          "ttft_s": 7.5816,
+          "tpot_s": 0.0558,
+          "output_tokens": 8,
+          "e2e_latency_s": 7.972,
+          "throughput_tok_per_s": 17.93,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.6779,
+          "tpot_s": 0.0357,
+          "output_tokens": 31,
+          "e2e_latency_s": 3.7497,
+          "throughput_tok_per_s": 27.99,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 5.6043,
+      "avg_tpot_s": 0.0342,
+      "avg_throughput_tok_per_s": 35.39,
+      "total_output_tokens": 88
+    },
+    {
+      "id": "multi_turn_base_86",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.0034,
+          "tpot_s": 0.0747,
+          "output_tokens": 26,
+          "e2e_latency_s": 3.8701,
+          "throughput_tok_per_s": 13.39,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.7262,
+          "tpot_s": 0.0192,
+          "output_tokens": 2,
+          "e2e_latency_s": 6.7454,
+          "throughput_tok_per_s": 52.09,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 4.3648,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 32.74,
+      "total_output_tokens": 28
+    },
+    {
+      "id": "multi_turn_base_91",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.102,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.102,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1218,
+          "tpot_s": 0.023,
+          "output_tokens": 14,
+          "e2e_latency_s": 3.4213,
+          "throughput_tok_per_s": 43.4,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.1119,
+      "avg_tpot_s": 0.023,
+      "avg_throughput_tok_per_s": 43.4,
+      "total_output_tokens": 15
+    },
+    {
+      "id": "multi_turn_base_93",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.2338,
+          "tpot_s": 0.1398,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.3524,
+          "throughput_tok_per_s": 7.15,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.7369,
+          "tpot_s": 0.1327,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.0024,
+          "throughput_tok_per_s": 7.53,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.9355,
+          "tpot_s": 0.2993,
+          "output_tokens": 2,
+          "e2e_latency_s": 2.2348,
+          "throughput_tok_per_s": 3.34,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.3021,
+      "avg_tpot_s": 0.1906,
+      "avg_throughput_tok_per_s": 6.01,
+      "total_output_tokens": 14
+    },
+    {
+      "id": "multi_turn_base_89",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.1384,
+          "tpot_s": 0.0589,
+          "output_tokens": 8,
+          "e2e_latency_s": 1.5505,
+          "throughput_tok_per_s": 16.99,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.8365,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.8365,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.4044,
+          "tpot_s": 0.125,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.6543,
+          "throughput_tok_per_s": 8.0,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.7371,
+          "tpot_s": 0.0851,
+          "output_tokens": 3,
+          "e2e_latency_s": 1.9073,
+          "throughput_tok_per_s": 11.76,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.2791,
+      "avg_tpot_s": 0.0897,
+      "avg_throughput_tok_per_s": 12.25,
+      "total_output_tokens": 15
+    },
+    {
+      "id": "multi_turn_base_75",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.5558,
+          "tpot_s": 0.025,
+          "output_tokens": 512,
+          "e2e_latency_s": 15.3188,
+          "throughput_tok_per_s": 40.04,
+          "turn": 0
+        },
+        {
+          "ttft_s": 7.7137,
+          "tpot_s": 0.0301,
+          "output_tokens": 33,
+          "e2e_latency_s": 8.6753,
+          "throughput_tok_per_s": 33.28,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.0331,
+          "tpot_s": 0.1219,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.2769,
+          "throughput_tok_per_s": 8.2,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.7752,
+          "tpot_s": 0.0481,
+          "output_tokens": 16,
+          "e2e_latency_s": 2.4968,
+          "throughput_tok_per_s": 20.79,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.2694,
+      "avg_tpot_s": 0.0563,
+      "avg_throughput_tok_per_s": 25.58,
+      "total_output_tokens": 564
+    },
+    {
+      "id": "multi_turn_base_96",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.3813,
+          "tpot_s": 0.0586,
+          "output_tokens": 28,
+          "e2e_latency_s": 3.9633,
+          "throughput_tok_per_s": 17.07,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1704,
+          "tpot_s": 0.0838,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.6732,
+          "throughput_tok_per_s": 11.93,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.7759,
+      "avg_tpot_s": 0.0712,
+      "avg_throughput_tok_per_s": 14.5,
+      "total_output_tokens": 35
+    },
+    {
+      "id": "multi_turn_base_94",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.5636,
+          "tpot_s": 0.1344,
+          "output_tokens": 6,
+          "e2e_latency_s": 5.2355,
+          "throughput_tok_per_s": 7.44,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.4276,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.4276,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.4956,
+      "avg_tpot_s": 0.1344,
+      "avg_throughput_tok_per_s": 7.44,
+      "total_output_tokens": 7
+    },
+    {
+      "id": "multi_turn_base_88",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 7.5607,
+          "tpot_s": 0.0261,
+          "output_tokens": 76,
+          "e2e_latency_s": 9.5165,
+          "throughput_tok_per_s": 38.35,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.2434,
+          "tpot_s": 0.0366,
+          "output_tokens": 137,
+          "e2e_latency_s": 6.2276,
+          "throughput_tok_per_s": 27.29,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.2681,
+          "tpot_s": 0.1626,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.7559,
+          "throughput_tok_per_s": 6.15,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.3574,
+      "avg_tpot_s": 0.0751,
+      "avg_throughput_tok_per_s": 23.93,
+      "total_output_tokens": 217
+    },
+    {
+      "id": "multi_turn_base_100",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 4.0045,
+          "tpot_s": 0.086,
+          "output_tokens": 4,
+          "e2e_latency_s": 4.2625,
+          "throughput_tok_per_s": 11.63,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.735,
+          "tpot_s": 0.0256,
+          "output_tokens": 54,
+          "e2e_latency_s": 2.092,
+          "throughput_tok_per_s": 39.06,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.3698,
+      "avg_tpot_s": 0.0558,
+      "avg_throughput_tok_per_s": 25.35,
+      "total_output_tokens": 58
+    },
+    {
+      "id": "multi_turn_base_80",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.3125,
+          "tpot_s": 0.0765,
+          "output_tokens": 7,
+          "e2e_latency_s": 1.7714,
+          "throughput_tok_per_s": 13.08,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.0777,
+          "tpot_s": 0.0259,
+          "output_tokens": 11,
+          "e2e_latency_s": 5.3369,
+          "throughput_tok_per_s": 38.58,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.2414,
+          "tpot_s": 0.1307,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.5028,
+          "throughput_tok_per_s": 7.65,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.1707,
+          "tpot_s": 0.0445,
+          "output_tokens": 27,
+          "e2e_latency_s": 5.3268,
+          "throughput_tok_per_s": 22.49,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.2143,
+          "tpot_s": 0.0384,
+          "output_tokens": 18,
+          "e2e_latency_s": 3.8672,
+          "throughput_tok_per_s": 26.04,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.8033,
+      "avg_tpot_s": 0.0632,
+      "avg_throughput_tok_per_s": 21.57,
+      "total_output_tokens": 66
+    },
+    {
+      "id": "multi_turn_base_102",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 3.0293,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 3.0293,
+          "throughput_tok_per_s": 69446.16,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.0293,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 69446.16,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_104",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.0178,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.0178,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.5548,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5548,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.2863,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_87",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 4.495,
+          "tpot_s": 0.128,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.751,
+          "throughput_tok_per_s": 7.81,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.3635,
+          "tpot_s": 0.0678,
+          "output_tokens": 4,
+          "e2e_latency_s": 6.5668,
+          "throughput_tok_per_s": 14.75,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.3286,
+          "tpot_s": 0.0722,
+          "output_tokens": 25,
+          "e2e_latency_s": 7.0603,
+          "throughput_tok_per_s": 13.86,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.5373,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5373,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.9311,
+      "avg_tpot_s": 0.0893,
+      "avg_throughput_tok_per_s": 12.14,
+      "total_output_tokens": 33
+    },
+    {
+      "id": "multi_turn_base_110",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 1.3554,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.3554,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.3554,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_103",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.5591,
+          "tpot_s": 0.0725,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.7764,
+          "throughput_tok_per_s": 13.8,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.1209,
+          "tpot_s": 0.1924,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.3133,
+          "throughput_tok_per_s": 5.2,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.34,
+      "avg_tpot_s": 0.1324,
+      "avg_throughput_tok_per_s": 9.5,
+      "total_output_tokens": 6
+    },
+    {
+      "id": "multi_turn_base_108",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.3211,
+          "tpot_s": 0.0543,
+          "output_tokens": 6,
+          "e2e_latency_s": 6.5924,
+          "throughput_tok_per_s": 18.43,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 6.3211,
+      "avg_tpot_s": 0.0543,
+      "avg_throughput_tok_per_s": 18.43,
+      "total_output_tokens": 6
+    },
+    {
+      "id": "multi_turn_base_98",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.998,
+          "tpot_s": 0.0582,
+          "output_tokens": 22,
+          "e2e_latency_s": 6.2209,
+          "throughput_tok_per_s": 17.17,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1411,
+          "tpot_s": 0.0241,
+          "output_tokens": 27,
+          "e2e_latency_s": 3.7676,
+          "throughput_tok_per_s": 41.5,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.9228,
+          "tpot_s": 0.0265,
+          "output_tokens": 30,
+          "e2e_latency_s": 5.6903,
+          "throughput_tok_per_s": 37.78,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.354,
+      "avg_tpot_s": 0.0363,
+      "avg_throughput_tok_per_s": 32.15,
+      "total_output_tokens": 79
+    },
+    {
+      "id": "multi_turn_base_106",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8848,
+          "tpot_s": 0.0694,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.9949,
+          "throughput_tok_per_s": 14.41,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.2089,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.2089,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.0469,
+      "avg_tpot_s": 0.0694,
+      "avg_throughput_tok_per_s": 14.41,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_92",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.7752,
+          "tpot_s": 0.0178,
+          "output_tokens": 34,
+          "e2e_latency_s": 5.3617,
+          "throughput_tok_per_s": 56.27,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.1928,
+          "tpot_s": 0.0263,
+          "output_tokens": 29,
+          "e2e_latency_s": 2.9297,
+          "throughput_tok_per_s": 38.0,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.7396,
+          "tpot_s": 0.1653,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.0702,
+          "throughput_tok_per_s": 6.05,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.6609,
+          "tpot_s": 0.0254,
+          "output_tokens": 25,
+          "e2e_latency_s": 6.2702,
+          "throughput_tok_per_s": 39.39,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.1501,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.1501,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.7037,
+      "avg_tpot_s": 0.0587,
+      "avg_throughput_tok_per_s": 34.93,
+      "total_output_tokens": 92
+    },
+    {
+      "id": "multi_turn_base_105",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.7187,
+          "tpot_s": 0.0751,
+          "output_tokens": 4,
+          "e2e_latency_s": 5.944,
+          "throughput_tok_per_s": 13.32,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.5588,
+          "tpot_s": 0.1285,
+          "output_tokens": 21,
+          "e2e_latency_s": 6.1286,
+          "throughput_tok_per_s": 7.78,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.6387,
+      "avg_tpot_s": 0.1018,
+      "avg_throughput_tok_per_s": 10.55,
+      "total_output_tokens": 25
+    },
+    {
+      "id": "multi_turn_base_90",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.2388,
+          "tpot_s": 0.1638,
+          "output_tokens": 7,
+          "e2e_latency_s": 4.2219,
+          "throughput_tok_per_s": 6.1,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.5199,
+          "tpot_s": 0.0443,
+          "output_tokens": 7,
+          "e2e_latency_s": 5.7856,
+          "throughput_tok_per_s": 22.57,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.218,
+          "tpot_s": 0.0321,
+          "output_tokens": 28,
+          "e2e_latency_s": 5.0847,
+          "throughput_tok_per_s": 31.15,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.911,
+          "tpot_s": 0.0258,
+          "output_tokens": 192,
+          "e2e_latency_s": 11.8393,
+          "throughput_tok_per_s": 38.76,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.9719,
+      "avg_tpot_s": 0.0665,
+      "avg_throughput_tok_per_s": 24.64,
+      "total_output_tokens": 234
+    },
+    {
+      "id": "multi_turn_base_99",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.3299,
+          "tpot_s": 0.1458,
+          "output_tokens": 9,
+          "e2e_latency_s": 4.4964,
+          "throughput_tok_per_s": 6.86,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.4346,
+          "tpot_s": 0.0832,
+          "output_tokens": 3,
+          "e2e_latency_s": 5.6011,
+          "throughput_tok_per_s": 12.01,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.9092,
+          "tpot_s": 0.0249,
+          "output_tokens": 97,
+          "e2e_latency_s": 3.2985,
+          "throughput_tok_per_s": 40.18,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.5311,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.5311,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.0512,
+      "avg_tpot_s": 0.0846,
+      "avg_throughput_tok_per_s": 19.68,
+      "total_output_tokens": 110
+    },
+    {
+      "id": "multi_turn_base_113",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.6102,
+          "tpot_s": 0.1198,
+          "output_tokens": 5,
+          "e2e_latency_s": 3.0895,
+          "throughput_tok_per_s": 8.34,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.4199,
+          "tpot_s": 0.096,
+          "output_tokens": 8,
+          "e2e_latency_s": 6.092,
+          "throughput_tok_per_s": 10.42,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.0151,
+      "avg_tpot_s": 0.1079,
+      "avg_throughput_tok_per_s": 9.38,
+      "total_output_tokens": 13
+    },
+    {
+      "id": "multi_turn_base_101",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8238,
+          "tpot_s": 0.0782,
+          "output_tokens": 5,
+          "e2e_latency_s": 3.1365,
+          "throughput_tok_per_s": 12.79,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.722,
+          "tpot_s": 0.0803,
+          "output_tokens": 4,
+          "e2e_latency_s": 6.9629,
+          "throughput_tok_per_s": 12.46,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.8097,
+          "tpot_s": 0.0338,
+          "output_tokens": 19,
+          "e2e_latency_s": 3.418,
+          "throughput_tok_per_s": 29.59,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.6711,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.6711,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.0067,
+      "avg_tpot_s": 0.0641,
+      "avg_throughput_tok_per_s": 18.28,
+      "total_output_tokens": 29
+    },
+    {
+      "id": "multi_turn_base_118",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.5743,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5743,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.5743,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 4.2056,
+          "tpot_s": 0.0291,
+          "output_tokens": 52,
+          "e2e_latency_s": 5.6885,
+          "throughput_tok_per_s": 34.39,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 4.2056,
+      "avg_tpot_s": 0.0291,
+      "avg_throughput_tok_per_s": 34.39,
+      "total_output_tokens": 52
+    },
+    {
+      "id": "multi_turn_base_95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.0,
+          "tpot_s": 0.026,
+          "output_tokens": 10,
+          "e2e_latency_s": 3.2341,
+          "throughput_tok_per_s": 38.44,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.7909,
+          "tpot_s": 0.0275,
+          "output_tokens": 22,
+          "e2e_latency_s": 3.3694,
+          "throughput_tok_per_s": 36.3,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.3032,
+          "tpot_s": 0.0221,
+          "output_tokens": 61,
+          "e2e_latency_s": 6.6313,
+          "throughput_tok_per_s": 45.18,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.5944,
+          "tpot_s": 0.0265,
+          "output_tokens": 95,
+          "e2e_latency_s": 6.0899,
+          "throughput_tok_per_s": 37.67,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.653,
+          "tpot_s": 0.0215,
+          "output_tokens": 68,
+          "e2e_latency_s": 5.092,
+          "throughput_tok_per_s": 46.56,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.6683,
+      "avg_tpot_s": 0.0247,
+      "avg_throughput_tok_per_s": 40.83,
+      "total_output_tokens": 256
+    },
+    {
+      "id": "multi_turn_base_117",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 2.2214,
+          "tpot_s": 0.0625,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.4087,
+          "throughput_tok_per_s": 16.01,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.5184,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.5184,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.3699,
+      "avg_tpot_s": 0.0625,
+      "avg_throughput_tok_per_s": 16.01,
+      "total_output_tokens": 5
+    },
+    {
+      "id": "multi_turn_base_97",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 3.0003,
+          "tpot_s": 0.0757,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.4543,
+          "throughput_tok_per_s": 13.22,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.8283,
+          "tpot_s": 0.0381,
+          "output_tokens": 15,
+          "e2e_latency_s": 2.3621,
+          "throughput_tok_per_s": 26.23,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.0253,
+          "tpot_s": 0.0322,
+          "output_tokens": 3,
+          "e2e_latency_s": 6.0896,
+          "throughput_tok_per_s": 31.1,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.8365,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.8365,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "ttft_s": 0.6422,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 0.6422,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        },
+        {
+          "ttft_s": 3.4871,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.4871,
+          "throughput_tok_per_s": null,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 3.3033,
+      "avg_tpot_s": 0.0487,
+      "avg_throughput_tok_per_s": 23.52,
+      "total_output_tokens": 28
+    },
+    {
+      "id": "multi_turn_base_111",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.7016,
+          "tpot_s": 0.0214,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.0437,
+          "throughput_tok_per_s": 46.77,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.7413,
+          "tpot_s": 0.1635,
+          "output_tokens": 5,
+          "e2e_latency_s": 4.3952,
+          "throughput_tok_per_s": 6.12,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.9768,
+          "tpot_s": 0.0399,
+          "output_tokens": 19,
+          "e2e_latency_s": 1.6959,
+          "throughput_tok_per_s": 25.03,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.8674,
+          "tpot_s": 0.0157,
+          "output_tokens": 14,
+          "e2e_latency_s": 2.0716,
+          "throughput_tok_per_s": 63.68,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.3218,
+      "avg_tpot_s": 0.0601,
+      "avg_throughput_tok_per_s": 35.4,
+      "total_output_tokens": 55
+    },
+    {
+      "id": "multi_turn_base_125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.9752,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.9752,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.9752,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.8471,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8471,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.8471,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_114",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.5271,
+          "tpot_s": 0.0881,
+          "output_tokens": 4,
+          "e2e_latency_s": 4.7915,
+          "throughput_tok_per_s": 11.35,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.6158,
+          "tpot_s": 0.0879,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.8795,
+          "throughput_tok_per_s": 11.38,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.0666,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.0666,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.7365,
+      "avg_tpot_s": 0.088,
+      "avg_throughput_tok_per_s": 11.37,
+      "total_output_tokens": 9
+    },
+    {
+      "id": "multi_turn_base_126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 4.5727,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.5727,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 4.5727,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.7357,
+          "tpot_s": 0.2189,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.9545,
+          "throughput_tok_per_s": 4.57,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.7357,
+      "avg_tpot_s": 0.2189,
+      "avg_throughput_tok_per_s": 4.57,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_128",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.3195,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.3195,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.3195,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_115",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.7513,
+          "tpot_s": 0.0714,
+          "output_tokens": 7,
+          "e2e_latency_s": 2.1798,
+          "throughput_tok_per_s": 14.0,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.5911,
+          "tpot_s": 0.0807,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.8332,
+          "throughput_tok_per_s": 12.39,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.611,
+          "tpot_s": 0.0792,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.8485,
+          "throughput_tok_per_s": 12.63,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.5147,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.5147,
+          "throughput_tok_per_s": 48334.09,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.617,
+      "avg_tpot_s": 0.0771,
+      "avg_throughput_tok_per_s": 12093.28,
+      "total_output_tokens": 17
+    },
+    {
+      "id": "multi_turn_base_107",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.7269,
+          "tpot_s": 0.0575,
+          "output_tokens": 4,
+          "e2e_latency_s": 6.8993,
+          "throughput_tok_per_s": 17.4,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.9786,
+          "tpot_s": 0.0553,
+          "output_tokens": 28,
+          "e2e_latency_s": 4.4718,
+          "throughput_tok_per_s": 18.08,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.9464,
+          "tpot_s": 0.129,
+          "output_tokens": 5,
+          "e2e_latency_s": 4.4625,
+          "throughput_tok_per_s": 7.75,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.7458,
+          "tpot_s": 0.0926,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.0236,
+          "throughput_tok_per_s": 10.8,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.8959,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.8959,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.6587,
+      "avg_tpot_s": 0.0836,
+      "avg_throughput_tok_per_s": 13.51,
+      "total_output_tokens": 42
+    },
+    {
+      "id": "multi_turn_base_130",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 3.0458,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 3.0458,
+          "throughput_tok_per_s": 89687.76,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.0458,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 89687.76,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_112",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.2583,
+          "tpot_s": 0.0554,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.5353,
+          "throughput_tok_per_s": 18.05,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.9108,
+          "tpot_s": 0.1522,
+          "output_tokens": 4,
+          "e2e_latency_s": 4.3674,
+          "throughput_tok_per_s": 6.57,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.3664,
+          "tpot_s": 0.046,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.734,
+          "throughput_tok_per_s": 21.76,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.9596,
+          "tpot_s": 0.0449,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.184,
+          "throughput_tok_per_s": 22.28,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.7476,
+          "tpot_s": 0.0257,
+          "output_tokens": 14,
+          "e2e_latency_s": 3.0816,
+          "throughput_tok_per_s": 38.92,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.0485,
+      "avg_tpot_s": 0.0648,
+      "avg_throughput_tok_per_s": 21.52,
+      "total_output_tokens": 39
+    },
+    {
+      "id": "multi_turn_base_120",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.5397,
+          "tpot_s": 0.0605,
+          "output_tokens": 13,
+          "e2e_latency_s": 4.2661,
+          "throughput_tok_per_s": 16.52,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4324,
+          "tpot_s": 0.0745,
+          "output_tokens": 21,
+          "e2e_latency_s": 2.9216,
+          "throughput_tok_per_s": 13.43,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.5095,
+          "tpot_s": 0.0922,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.7861,
+          "throughput_tok_per_s": 10.84,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.4442,
+          "tpot_s": 0.0866,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.7039,
+          "throughput_tok_per_s": 11.55,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.7314,
+      "avg_tpot_s": 0.0784,
+      "avg_throughput_tok_per_s": 13.09,
+      "total_output_tokens": 42
+    },
+    {
+      "id": "multi_turn_base_121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.3141,
+          "tpot_s": 0.0159,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.4415,
+          "throughput_tok_per_s": 62.81,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.5107,
+          "tpot_s": 0.105,
+          "output_tokens": 10,
+          "e2e_latency_s": 2.4556,
+          "throughput_tok_per_s": 9.52,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.2319,
+          "tpot_s": 0.1029,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.5406,
+          "throughput_tok_per_s": 9.72,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.4021,
+          "tpot_s": 0.0954,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.0696,
+          "throughput_tok_per_s": 10.49,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.8647,
+      "avg_tpot_s": 0.0798,
+      "avg_throughput_tok_per_s": 23.14,
+      "total_output_tokens": 31
+    },
+    {
+      "id": "multi_turn_base_133",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.9598,
+          "tpot_s": 0.0273,
+          "output_tokens": 21,
+          "e2e_latency_s": 3.5056,
+          "throughput_tok_per_s": 36.64,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.0539,
+          "tpot_s": 0.1219,
+          "output_tokens": 5,
+          "e2e_latency_s": 2.5414,
+          "throughput_tok_per_s": 8.21,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.5069,
+      "avg_tpot_s": 0.0746,
+      "avg_throughput_tok_per_s": 22.43,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_119",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.6675,
+          "tpot_s": 0.1081,
+          "output_tokens": 5,
+          "e2e_latency_s": 3.0997,
+          "throughput_tok_per_s": 9.25,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.0578,
+          "tpot_s": 0.07,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.1977,
+          "throughput_tok_per_s": 14.29,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.7378,
+          "tpot_s": 0.0496,
+          "output_tokens": 3,
+          "e2e_latency_s": 4.837,
+          "throughput_tok_per_s": 20.16,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.662,
+          "tpot_s": 0.0254,
+          "output_tokens": 59,
+          "e2e_latency_s": 4.1331,
+          "throughput_tok_per_s": 39.43,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.5313,
+      "avg_tpot_s": 0.0633,
+      "avg_throughput_tok_per_s": 20.78,
+      "total_output_tokens": 70
+    },
+    {
+      "id": "multi_turn_base_109",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 3.0851,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.0851,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.8426,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8426,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.8352,
+          "tpot_s": 0.0,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.8353,
+          "throughput_tok_per_s": 118187.61,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.8975,
+          "tpot_s": 0.0422,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.9397,
+          "throughput_tok_per_s": 23.7,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.8762,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8762,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        },
+        {
+          "ttft_s": 3.5815,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5815,
+          "throughput_tok_per_s": null,
+          "turn": 5
+        },
+        {
+          "turn": 6,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.1863,
+      "avg_tpot_s": 0.0422,
+      "avg_throughput_tok_per_s": 59105.65,
+      "total_output_tokens": 15
+    },
+    {
+      "id": "multi_turn_base_124",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.4253,
+          "tpot_s": 0.0241,
+          "output_tokens": 15,
+          "e2e_latency_s": 1.7624,
+          "throughput_tok_per_s": 41.53,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.2763,
+          "tpot_s": 0.026,
+          "output_tokens": 40,
+          "e2e_latency_s": 3.2899,
+          "throughput_tok_per_s": 38.48,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.1123,
+          "tpot_s": 0.0258,
+          "output_tokens": 21,
+          "e2e_latency_s": 2.6283,
+          "throughput_tok_per_s": 38.76,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.4536,
+          "tpot_s": 0.0239,
+          "output_tokens": 20,
+          "e2e_latency_s": 2.9078,
+          "throughput_tok_per_s": 41.83,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.0669,
+      "avg_tpot_s": 0.0249,
+      "avg_throughput_tok_per_s": 40.15,
+      "total_output_tokens": 96
+    },
+    {
+      "id": "multi_turn_base_122",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 0.7714,
+          "tpot_s": 0.078,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.3957,
+          "throughput_tok_per_s": 12.82,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.5642,
+          "tpot_s": 0.0641,
+          "output_tokens": 10,
+          "e2e_latency_s": 3.1411,
+          "throughput_tok_per_s": 15.6,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.732,
+          "tpot_s": 0.1221,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.2205,
+          "throughput_tok_per_s": 8.19,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.9069,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.9069,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.2881,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.2881,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 1.6525,
+      "avg_tpot_s": 0.0881,
+      "avg_throughput_tok_per_s": 12.2,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_132",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 1.4233,
+          "tpot_s": 0.0948,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.7078,
+          "throughput_tok_per_s": 10.55,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.6718,
+          "tpot_s": 0.0842,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.9244,
+          "throughput_tok_per_s": 11.88,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.6966,
+          "tpot_s": 0.0733,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.9165,
+          "throughput_tok_per_s": 13.64,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 1.9306,
+      "avg_tpot_s": 0.0841,
+      "avg_throughput_tok_per_s": 12.02,
+      "total_output_tokens": 12
+    },
+    {
+      "id": "multi_turn_base_139",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.679,
+          "tpot_s": 0.0857,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.9362,
+          "throughput_tok_per_s": 11.67,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3818,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 2.3818,
+          "throughput_tok_per_s": 76923.87,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.5304,
+      "avg_tpot_s": 0.0857,
+      "avg_throughput_tok_per_s": 38467.77,
+      "total_output_tokens": 6
+    },
+    {
+      "id": "multi_turn_base_137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.1325,
+          "tpot_s": 0.0172,
+          "output_tokens": 23,
+          "e2e_latency_s": 2.5108,
+          "throughput_tok_per_s": 58.17,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7459,
+          "tpot_s": 0.187,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.9329,
+          "throughput_tok_per_s": 5.35,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.9392,
+      "avg_tpot_s": 0.1021,
+      "avg_throughput_tok_per_s": 31.76,
+      "total_output_tokens": 25
+    },
+    {
+      "id": "multi_turn_base_134",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.2585,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.2585,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.4414,
+          "tpot_s": 0.1169,
+          "output_tokens": 8,
+          "e2e_latency_s": 3.2599,
+          "throughput_tok_per_s": 8.55,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.0868,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.0868,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.5956,
+      "avg_tpot_s": 0.1169,
+      "avg_throughput_tok_per_s": 8.55,
+      "total_output_tokens": 10
+    },
+    {
+      "id": "multi_turn_base_146",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.6072,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.6072,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.6072,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_141",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.4134,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.4134,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.0985,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.0985,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.7559,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_142",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.1735,
+          "tpot_s": 0.1022,
+          "output_tokens": 5,
+          "e2e_latency_s": 2.5824,
+          "throughput_tok_per_s": 9.78,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.8115,
+          "tpot_s": 0.2032,
+          "output_tokens": 2,
+          "e2e_latency_s": 1.0147,
+          "throughput_tok_per_s": 4.92,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 1.4925,
+      "avg_tpot_s": 0.1527,
+      "avg_throughput_tok_per_s": 7.35,
+      "total_output_tokens": 7
+    },
+    {
+      "id": "multi_turn_base_140",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.5828,
+          "tpot_s": 0.0258,
+          "output_tokens": 65,
+          "e2e_latency_s": 3.2329,
+          "throughput_tok_per_s": 38.79,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.8219,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8219,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.7024,
+      "avg_tpot_s": 0.0258,
+      "avg_throughput_tok_per_s": 38.79,
+      "total_output_tokens": 66
+    },
+    {
+      "id": "multi_turn_base_135",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 1.845,
+          "tpot_s": 0.1154,
+          "output_tokens": 5,
+          "e2e_latency_s": 2.3067,
+          "throughput_tok_per_s": 8.66,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7566,
+          "tpot_s": 0.0978,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.0501,
+          "throughput_tok_per_s": 10.22,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.7663,
+          "tpot_s": 0.0257,
+          "output_tokens": 37,
+          "e2e_latency_s": 2.6914,
+          "throughput_tok_per_s": 38.91,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.8287,
+          "tpot_s": 0.0184,
+          "output_tokens": 19,
+          "e2e_latency_s": 5.16,
+          "throughput_tok_per_s": 54.33,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.5492,
+      "avg_tpot_s": 0.0643,
+      "avg_throughput_tok_per_s": 28.03,
+      "total_output_tokens": 65
+    },
+    {
+      "id": "multi_turn_base_136",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.3213,
+          "tpot_s": 0.0803,
+          "output_tokens": 16,
+          "e2e_latency_s": 3.5254,
+          "throughput_tok_per_s": 12.46,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.1939,
+          "tpot_s": 0.0708,
+          "output_tokens": 5,
+          "e2e_latency_s": 1.477,
+          "throughput_tok_per_s": 14.13,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.2778,
+          "tpot_s": 0.102,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.5837,
+          "throughput_tok_per_s": 9.81,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.1387,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.1387,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.9829,
+      "avg_tpot_s": 0.0844,
+      "avg_throughput_tok_per_s": 12.13,
+      "total_output_tokens": 26
+    },
+    {
+      "id": "multi_turn_base_147",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.363,
+          "tpot_s": 0.0408,
+          "output_tokens": 46,
+          "e2e_latency_s": 4.1994,
+          "throughput_tok_per_s": 24.51,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.0282,
+          "tpot_s": 0.0331,
+          "output_tokens": 48,
+          "e2e_latency_s": 5.5826,
+          "throughput_tok_per_s": 30.24,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.1956,
+      "avg_tpot_s": 0.0369,
+      "avg_throughput_tok_per_s": 27.38,
+      "total_output_tokens": 94
+    },
+    {
+      "id": "multi_turn_base_143",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.2889,
+          "tpot_s": 0.0384,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.4041,
+          "throughput_tok_per_s": 26.04,
+          "turn": 0
+        },
+        {
+          "ttft_s": 0.8564,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 0.8564,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.0913,
+          "tpot_s": 0.0376,
+          "output_tokens": 11,
+          "e2e_latency_s": 1.4673,
+          "throughput_tok_per_s": 26.59,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.1287,
+          "tpot_s": 0.0346,
+          "output_tokens": 32,
+          "e2e_latency_s": 2.201,
+          "throughput_tok_per_s": 28.91,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 1.5913,
+      "avg_tpot_s": 0.0369,
+      "avg_throughput_tok_per_s": 27.18,
+      "total_output_tokens": 48
+    },
+    {
+      "id": "multi_turn_base_149",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.0624,
+          "tpot_s": 0.0921,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.7073,
+          "throughput_tok_per_s": 10.85,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.2074,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.2074,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 3.1349,
+      "avg_tpot_s": 0.0921,
+      "avg_throughput_tok_per_s": 10.85,
+      "total_output_tokens": 9
+    },
+    {
+      "id": "multi_turn_base_144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.2688,
+          "tpot_s": 0.068,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.6087,
+          "throughput_tok_per_s": 14.71,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1486,
+          "tpot_s": 0.0575,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.321,
+          "throughput_tok_per_s": 17.41,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.0322,
+          "tpot_s": 0.0246,
+          "output_tokens": 18,
+          "e2e_latency_s": 4.4501,
+          "throughput_tok_per_s": 40.68,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.4832,
+      "avg_tpot_s": 0.05,
+      "avg_throughput_tok_per_s": 24.27,
+      "total_output_tokens": 28
+    },
+    {
+      "id": "multi_turn_base_150",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 3.9636,
+          "tpot_s": 0.0436,
+          "output_tokens": 17,
+          "e2e_latency_s": 4.6618,
+          "throughput_tok_per_s": 22.92,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.3932,
+          "tpot_s": 0.075,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.9185,
+          "throughput_tok_per_s": 13.33,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 4.1784,
+      "avg_tpot_s": 0.0593,
+      "avg_throughput_tok_per_s": 18.12,
+      "total_output_tokens": 25
+    },
+    {
+      "id": "multi_turn_base_129",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.2221,
+          "tpot_s": 0.0528,
+          "output_tokens": 6,
+          "e2e_latency_s": 3.486,
+          "throughput_tok_per_s": 18.95,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.1052,
+          "tpot_s": 0.0242,
+          "output_tokens": 78,
+          "e2e_latency_s": 3.9713,
+          "throughput_tok_per_s": 41.26,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.6659,
+          "tpot_s": 0.088,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.93,
+          "throughput_tok_per_s": 11.36,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.0324,
+          "tpot_s": 0.0,
+          "output_tokens": 17,
+          "e2e_latency_s": 6.0325,
+          "throughput_tok_per_s": 126363.45,
+          "turn": 3
+        },
+        {
+          "ttft_s": 4.6554,
+          "tpot_s": 0.0248,
+          "output_tokens": 40,
+          "e2e_latency_s": 5.6226,
+          "throughput_tok_per_s": 40.32,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.7362,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 25295.07,
+      "total_output_tokens": 145
+    },
+    {
+      "id": "multi_turn_base_157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.5223,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.5223,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 5.5223,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 0.0,
+      "total_output_tokens": 1
+    },
+    {
+      "id": "multi_turn_base_138",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 1.802,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.802,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.949,
+          "tpot_s": 0.0918,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.4178,
+          "throughput_tok_per_s": 10.89,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.9756,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.9756,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.6394,
+          "tpot_s": 0.0493,
+          "output_tokens": 13,
+          "e2e_latency_s": 2.2315,
+          "throughput_tok_per_s": 20.27,
+          "turn": 3
+        },
+        {
+          "ttft_s": 5.338,
+          "tpot_s": 0.0957,
+          "output_tokens": 6,
+          "e2e_latency_s": 5.8165,
+          "throughput_tok_per_s": 10.45,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.1408,
+      "avg_tpot_s": 0.0789,
+      "avg_throughput_tok_per_s": 13.87,
+      "total_output_tokens": 38
+    },
+    {
+      "id": "multi_turn_base_131",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 2.2294,
+          "tpot_s": 0.0117,
+          "output_tokens": 18,
+          "e2e_latency_s": 2.4291,
+          "throughput_tok_per_s": 85.15,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.9654,
+          "tpot_s": 0.1609,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.448,
+          "throughput_tok_per_s": 6.22,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.4128,
+          "tpot_s": 0.0253,
+          "output_tokens": 24,
+          "e2e_latency_s": 2.9955,
+          "throughput_tok_per_s": 39.47,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.746,
+          "tpot_s": 0.0474,
+          "output_tokens": 12,
+          "e2e_latency_s": 4.2671,
+          "throughput_tok_per_s": 21.11,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.2105,
+          "tpot_s": 0.0273,
+          "output_tokens": 25,
+          "e2e_latency_s": 2.8665,
+          "throughput_tok_per_s": 36.59,
+          "turn": 4
+        },
+        {
+          "ttft_s": 0.8334,
+          "tpot_s": 0.0451,
+          "output_tokens": 18,
+          "e2e_latency_s": 1.6004,
+          "throughput_tok_per_s": 22.16,
+          "turn": 5
+        },
+        {
+          "ttft_s": 2.0627,
+          "tpot_s": 0.0951,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.5384,
+          "throughput_tok_per_s": 10.51,
+          "turn": 6
+        }
+      ],
+      "avg_ttft_s": 2.2086,
+      "avg_tpot_s": 0.059,
+      "avg_throughput_tok_per_s": 31.6,
+      "total_output_tokens": 107
+    },
+    {
+      "id": "multi_turn_base_148",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.3903,
+          "tpot_s": 0.0932,
+          "output_tokens": 9,
+          "e2e_latency_s": 4.1357,
+          "throughput_tok_per_s": 10.73,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7161,
+          "tpot_s": 0.0925,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.9937,
+          "throughput_tok_per_s": 10.81,
+          "turn": 1
+        },
+        {
+          "ttft_s": 0.7962,
+          "tpot_s": 0.0968,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.0865,
+          "throughput_tok_per_s": 10.33,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.0389,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.0389,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.9854,
+      "avg_tpot_s": 0.0942,
+      "avg_throughput_tok_per_s": 10.62,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_155",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.7964,
+          "tpot_s": 0.0646,
+          "output_tokens": 27,
+          "e2e_latency_s": 4.4748,
+          "throughput_tok_per_s": 15.49,
+          "turn": 0
+        },
+        {
+          "ttft_s": 7.2447,
+          "tpot_s": 0.0175,
+          "output_tokens": 62,
+          "e2e_latency_s": 8.3128,
+          "throughput_tok_per_s": 57.11,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.0206,
+      "avg_tpot_s": 0.0411,
+      "avg_throughput_tok_per_s": 36.3,
+      "total_output_tokens": 89
+    },
+    {
+      "id": "multi_turn_base_151",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.5311,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5311,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.7148,
+          "tpot_s": 0.0281,
+          "output_tokens": 10,
+          "e2e_latency_s": 4.9677,
+          "throughput_tok_per_s": 35.58,
+          "turn": 1
+        },
+        {
+          "ttft_s": 7.7285,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 7.7285,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 5.3248,
+      "avg_tpot_s": 0.0281,
+      "avg_throughput_tok_per_s": 35.58,
+      "total_output_tokens": 12
+    },
+    {
+      "id": "multi_turn_base_162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 6.3243,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 6.3243,
+          "throughput_tok_per_s": 83058.74,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 6.3243,
+      "avg_tpot_s": 0.0,
+      "avg_throughput_tok_per_s": 83058.74,
+      "total_output_tokens": 2
+    },
+    {
+      "id": "multi_turn_base_152",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.8761,
+          "tpot_s": 0.0678,
+          "output_tokens": 34,
+          "e2e_latency_s": 5.1149,
+          "throughput_tok_per_s": 14.74,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.0261,
+          "tpot_s": 0.0713,
+          "output_tokens": 8,
+          "e2e_latency_s": 5.5254,
+          "throughput_tok_per_s": 14.02,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.9473,
+          "tpot_s": 0.0638,
+          "output_tokens": 12,
+          "e2e_latency_s": 5.6489,
+          "throughput_tok_per_s": 15.68,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.2832,
+      "avg_tpot_s": 0.0676,
+      "avg_throughput_tok_per_s": 14.81,
+      "total_output_tokens": 54
+    },
+    {
+      "id": "multi_turn_base_158",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.8966,
+          "tpot_s": 0.027,
+          "output_tokens": 52,
+          "e2e_latency_s": 4.2726,
+          "throughput_tok_per_s": 37.06,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.3487,
+          "tpot_s": 0.0221,
+          "output_tokens": 107,
+          "e2e_latency_s": 5.6863,
+          "throughput_tok_per_s": 45.34,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.5938,
+          "tpot_s": 0.01,
+          "output_tokens": 30,
+          "e2e_latency_s": 1.8849,
+          "throughput_tok_per_s": 99.6,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.613,
+      "avg_tpot_s": 0.0197,
+      "avg_throughput_tok_per_s": 60.67,
+      "total_output_tokens": 189
+    },
+    {
+      "id": "multi_turn_base_163",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.399,
+          "tpot_s": 0.0569,
+          "output_tokens": 26,
+          "e2e_latency_s": 2.8209,
+          "throughput_tok_per_s": 17.58,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.5457,
+          "tpot_s": 0.0259,
+          "output_tokens": 53,
+          "e2e_latency_s": 6.8942,
+          "throughput_tok_per_s": 38.56,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 3.4724,
+      "avg_tpot_s": 0.0414,
+      "avg_throughput_tok_per_s": 28.07,
+      "total_output_tokens": 79
+    },
+    {
+      "id": "multi_turn_base_145",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.3817,
+          "tpot_s": 0.0807,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.624,
+          "throughput_tok_per_s": 12.38,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.7533,
+          "tpot_s": 0.0,
+          "output_tokens": 4,
+          "e2e_latency_s": 5.7533,
+          "throughput_tok_per_s": 74756.62,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.8694,
+          "tpot_s": 0.0203,
+          "output_tokens": 62,
+          "e2e_latency_s": 4.1094,
+          "throughput_tok_per_s": 49.19,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.9528,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.9528,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "ttft_s": 5.5162,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 5.5162,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.4947,
+      "avg_tpot_s": 0.0505,
+      "avg_throughput_tok_per_s": 24939.4,
+      "total_output_tokens": 72
+    },
+    {
+      "id": "multi_turn_base_160",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.9202,
+          "tpot_s": 0.0244,
+          "output_tokens": 47,
+          "e2e_latency_s": 6.0443,
+          "throughput_tok_per_s": 40.92,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.1653,
+          "tpot_s": 0.0261,
+          "output_tokens": 85,
+          "e2e_latency_s": 6.3555,
+          "throughput_tok_per_s": 38.35,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.5221,
+          "tpot_s": 0.0257,
+          "output_tokens": 23,
+          "e2e_latency_s": 2.0877,
+          "throughput_tok_per_s": 38.89,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.5359,
+      "avg_tpot_s": 0.0254,
+      "avg_throughput_tok_per_s": 39.39,
+      "total_output_tokens": 155
+    },
+    {
+      "id": "multi_turn_base_154",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.9683,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.9683,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.0164,
+          "tpot_s": 0.0788,
+          "output_tokens": 19,
+          "e2e_latency_s": 2.4347,
+          "throughput_tok_per_s": 12.69,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.3673,
+          "tpot_s": 0.0651,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.8879,
+          "throughput_tok_per_s": 15.37,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.125,
+          "tpot_s": 0.052,
+          "output_tokens": 27,
+          "e2e_latency_s": 5.4767,
+          "throughput_tok_per_s": 19.23,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.3951,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.3951,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 2.5744,
+      "avg_tpot_s": 0.0653,
+      "avg_throughput_tok_per_s": 15.76,
+      "total_output_tokens": 57
+    },
+    {
+      "id": "multi_turn_base_159",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.4024,
+          "tpot_s": 0.0673,
+          "output_tokens": 20,
+          "e2e_latency_s": 6.6816,
+          "throughput_tok_per_s": 14.85,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.8872,
+          "tpot_s": 0.0601,
+          "output_tokens": 28,
+          "e2e_latency_s": 3.5094,
+          "throughput_tok_per_s": 16.64,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.3855,
+          "tpot_s": 0.0251,
+          "output_tokens": 59,
+          "e2e_latency_s": 5.8424,
+          "throughput_tok_per_s": 39.81,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 3.8917,
+      "avg_tpot_s": 0.0508,
+      "avg_throughput_tok_per_s": 23.77,
+      "total_output_tokens": 107
+    },
+    {
+      "id": "multi_turn_base_161",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.4656,
+          "tpot_s": 0.0702,
+          "output_tokens": 22,
+          "e2e_latency_s": 6.9407,
+          "throughput_tok_per_s": 14.24,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.595,
+          "tpot_s": 0.0229,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.7779,
+          "throughput_tok_per_s": 43.75,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.1406,
+          "tpot_s": 0.0406,
+          "output_tokens": 22,
+          "e2e_latency_s": 5.9941,
+          "throughput_tok_per_s": 24.6,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.4004,
+      "avg_tpot_s": 0.0446,
+      "avg_throughput_tok_per_s": 27.53,
+      "total_output_tokens": 53
+    },
+    {
+      "id": "multi_turn_base_169",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.4297,
+          "tpot_s": 0.005,
+          "output_tokens": 21,
+          "e2e_latency_s": 1.5303,
+          "throughput_tok_per_s": 198.91,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.9817,
+          "tpot_s": 0.026,
+          "output_tokens": 66,
+          "e2e_latency_s": 5.6722,
+          "throughput_tok_per_s": 38.45,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.7057,
+      "avg_tpot_s": 0.0155,
+      "avg_throughput_tok_per_s": 118.68,
+      "total_output_tokens": 87
+    },
+    {
+      "id": "multi_turn_base_153",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.8285,
+          "tpot_s": 0.0592,
+          "output_tokens": 19,
+          "e2e_latency_s": 3.8942,
+          "throughput_tok_per_s": 16.89,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.4202,
+          "tpot_s": 0.086,
+          "output_tokens": 4,
+          "e2e_latency_s": 2.6781,
+          "throughput_tok_per_s": 11.63,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.9154,
+          "tpot_s": 0.03,
+          "output_tokens": 8,
+          "e2e_latency_s": 6.1251,
+          "throughput_tok_per_s": 33.38,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.1312,
+          "tpot_s": 0.0652,
+          "output_tokens": 27,
+          "e2e_latency_s": 6.8264,
+          "throughput_tok_per_s": 15.34,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.37,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.37,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.7331,
+      "avg_tpot_s": 0.0601,
+      "avg_throughput_tok_per_s": 19.31,
+      "total_output_tokens": 59
+    },
+    {
+      "id": "multi_turn_base_175",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.4682,
+          "tpot_s": 0.0717,
+          "output_tokens": 36,
+          "e2e_latency_s": 4.9792,
+          "throughput_tok_per_s": 13.94,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.1739,
+          "tpot_s": 0.0725,
+          "output_tokens": 25,
+          "e2e_latency_s": 3.9128,
+          "throughput_tok_per_s": 13.8,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 2.3211,
+      "avg_tpot_s": 0.0721,
+      "avg_throughput_tok_per_s": 13.87,
+      "total_output_tokens": 61
+    },
+    {
+      "id": "multi_turn_base_156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.9851,
+          "tpot_s": 0.0606,
+          "output_tokens": 30,
+          "e2e_latency_s": 6.7437,
+          "throughput_tok_per_s": 16.49,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.9786,
+          "tpot_s": 0.0631,
+          "output_tokens": 9,
+          "e2e_latency_s": 7.4837,
+          "throughput_tok_per_s": 15.84,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.1932,
+          "tpot_s": 0.0412,
+          "output_tokens": 32,
+          "e2e_latency_s": 2.4696,
+          "throughput_tok_per_s": 24.29,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.0803,
+          "tpot_s": 0.0768,
+          "output_tokens": 17,
+          "e2e_latency_s": 5.309,
+          "throughput_tok_per_s": 13.02,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.5487,
+          "tpot_s": 0.08,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.1889,
+          "throughput_tok_per_s": 12.5,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.7572,
+      "avg_tpot_s": 0.0643,
+      "avg_throughput_tok_per_s": 16.43,
+      "total_output_tokens": 97
+    },
+    {
+      "id": "multi_turn_base_176",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 2.7486,
+          "tpot_s": 0.0633,
+          "output_tokens": 59,
+          "e2e_latency_s": 6.4212,
+          "throughput_tok_per_s": 15.79,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.2206,
+          "tpot_s": 0.0392,
+          "output_tokens": 38,
+          "e2e_latency_s": 2.6708,
+          "throughput_tok_per_s": 25.51,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 1.9846,
+      "avg_tpot_s": 0.0512,
+      "avg_throughput_tok_per_s": 20.65,
+      "total_output_tokens": 97
+    },
+    {
+      "id": "multi_turn_base_177",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 5.6616,
+          "tpot_s": 0.0582,
+          "output_tokens": 28,
+          "e2e_latency_s": 7.2343,
+          "throughput_tok_per_s": 17.17,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.0884,
+          "tpot_s": 0.0269,
+          "output_tokens": 27,
+          "e2e_latency_s": 5.7868,
+          "throughput_tok_per_s": 37.23,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 5.375,
+      "avg_tpot_s": 0.0426,
+      "avg_throughput_tok_per_s": 27.2,
+      "total_output_tokens": 55
+    },
+    {
+      "id": "multi_turn_base_164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.3049,
+          "tpot_s": 0.0582,
+          "output_tokens": 16,
+          "e2e_latency_s": 6.1772,
+          "throughput_tok_per_s": 17.2,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3773,
+          "tpot_s": 0.074,
+          "output_tokens": 16,
+          "e2e_latency_s": 3.488,
+          "throughput_tok_per_s": 13.51,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.9999,
+          "tpot_s": 0.0627,
+          "output_tokens": 43,
+          "e2e_latency_s": 8.6335,
+          "throughput_tok_per_s": 15.95,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.6874,
+          "tpot_s": 0.0835,
+          "output_tokens": 7,
+          "e2e_latency_s": 6.1886,
+          "throughput_tok_per_s": 11.97,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.8424,
+      "avg_tpot_s": 0.0696,
+      "avg_throughput_tok_per_s": 14.66,
+      "total_output_tokens": 82
+    },
+    {
+      "id": "multi_turn_base_182",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 1.2519,
+          "tpot_s": 0.0626,
+          "output_tokens": 15,
+          "e2e_latency_s": 2.1283,
+          "throughput_tok_per_s": 15.97,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.6133,
+          "tpot_s": 0.0733,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.1997,
+          "throughput_tok_per_s": 13.64,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 1.9326,
+      "avg_tpot_s": 0.068,
+      "avg_throughput_tok_per_s": 14.8,
+      "total_output_tokens": 24
+    },
+    {
+      "id": "multi_turn_base_171",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 2.9077,
+          "tpot_s": 0.0673,
+          "output_tokens": 37,
+          "e2e_latency_s": 5.3295,
+          "throughput_tok_per_s": 14.86,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.4397,
+          "tpot_s": 0.0881,
+          "output_tokens": 7,
+          "e2e_latency_s": 5.9681,
+          "throughput_tok_per_s": 11.35,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.8325,
+          "tpot_s": 0.0341,
+          "output_tokens": 33,
+          "e2e_latency_s": 7.9242,
+          "throughput_tok_per_s": 29.31,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 5.06,
+      "avg_tpot_s": 0.0632,
+      "avg_throughput_tok_per_s": 18.51,
+      "total_output_tokens": 77
+    },
+    {
+      "id": "multi_turn_base_173",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.9692,
+          "tpot_s": 0.0649,
+          "output_tokens": 16,
+          "e2e_latency_s": 4.9433,
+          "throughput_tok_per_s": 15.4,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.4126,
+          "tpot_s": 0.0569,
+          "output_tokens": 10,
+          "e2e_latency_s": 1.9242,
+          "throughput_tok_per_s": 17.59,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.8129,
+          "tpot_s": 0.0436,
+          "output_tokens": 47,
+          "e2e_latency_s": 5.8207,
+          "throughput_tok_per_s": 22.91,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.4162,
+          "tpot_s": 0.0653,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.9386,
+          "throughput_tok_per_s": 15.31,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 2.6527,
+      "avg_tpot_s": 0.0577,
+      "avg_throughput_tok_per_s": 17.8,
+      "total_output_tokens": 82
+    },
+    {
+      "id": "multi_turn_base_165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.932,
+          "tpot_s": 0.0238,
+          "output_tokens": 15,
+          "e2e_latency_s": 4.2649,
+          "throughput_tok_per_s": 42.05,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.9672,
+          "tpot_s": 0.0635,
+          "output_tokens": 6,
+          "e2e_latency_s": 2.2849,
+          "throughput_tok_per_s": 15.74,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.5179,
+          "tpot_s": 0.0248,
+          "output_tokens": 83,
+          "e2e_latency_s": 5.55,
+          "throughput_tok_per_s": 40.35,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.2676,
+          "tpot_s": 0.0701,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.8287,
+          "throughput_tok_per_s": 14.26,
+          "turn": 3
+        },
+        {
+          "ttft_s": 7.7557,
+          "tpot_s": 0.0336,
+          "output_tokens": 18,
+          "e2e_latency_s": 8.3267,
+          "throughput_tok_per_s": 29.77,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.0881,
+      "avg_tpot_s": 0.0432,
+      "avg_throughput_tok_per_s": 28.43,
+      "total_output_tokens": 131
+    },
+    {
+      "id": "multi_turn_base_167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.6018,
+          "tpot_s": 0.067,
+          "output_tokens": 16,
+          "e2e_latency_s": 4.6061,
+          "throughput_tok_per_s": 14.94,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.428,
+          "tpot_s": 0.0602,
+          "output_tokens": 18,
+          "e2e_latency_s": 5.4521,
+          "throughput_tok_per_s": 16.6,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.4033,
+          "tpot_s": 0.0637,
+          "output_tokens": 26,
+          "e2e_latency_s": 4.9968,
+          "throughput_tok_per_s": 15.69,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.8254,
+          "tpot_s": 0.0353,
+          "output_tokens": 10,
+          "e2e_latency_s": 7.1429,
+          "throughput_tok_per_s": 28.35,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.4578,
+          "tpot_s": 0.0587,
+          "output_tokens": 10,
+          "e2e_latency_s": 3.986,
+          "throughput_tok_per_s": 17.04,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.3433,
+      "avg_tpot_s": 0.057,
+      "avg_throughput_tok_per_s": 18.52,
+      "total_output_tokens": 80
+    },
+    {
+      "id": "multi_turn_base_172",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.6923,
+          "tpot_s": 0.0509,
+          "output_tokens": 34,
+          "e2e_latency_s": 5.3718,
+          "throughput_tok_per_s": 19.65,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.5837,
+          "tpot_s": 0.0616,
+          "output_tokens": 67,
+          "e2e_latency_s": 5.6476,
+          "throughput_tok_per_s": 16.24,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.1815,
+          "tpot_s": 0.0247,
+          "output_tokens": 46,
+          "e2e_latency_s": 9.2944,
+          "throughput_tok_per_s": 40.44,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.5688,
+          "tpot_s": 0.0136,
+          "output_tokens": 23,
+          "e2e_latency_s": 1.8686,
+          "throughput_tok_per_s": 73.37,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.7566,
+      "avg_tpot_s": 0.0377,
+      "avg_throughput_tok_per_s": 37.42,
+      "total_output_tokens": 170
+    },
+    {
+      "id": "multi_turn_base_166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.7962,
+          "tpot_s": 0.0451,
+          "output_tokens": 16,
+          "e2e_latency_s": 4.4734,
+          "throughput_tok_per_s": 22.15,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.1239,
+          "tpot_s": 0.0665,
+          "output_tokens": 10,
+          "e2e_latency_s": 3.7229,
+          "throughput_tok_per_s": 15.03,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.5562,
+          "tpot_s": 0.0449,
+          "output_tokens": 72,
+          "e2e_latency_s": 7.7432,
+          "throughput_tok_per_s": 22.28,
+          "turn": 2
+        },
+        {
+          "ttft_s": 8.7698,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 8.7698,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "ttft_s": 4.1162,
+          "tpot_s": 0.0233,
+          "output_tokens": 10,
+          "e2e_latency_s": 4.3263,
+          "throughput_tok_per_s": 42.84,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.8725,
+      "avg_tpot_s": 0.045,
+      "avg_throughput_tok_per_s": 25.57,
+      "total_output_tokens": 109
+    },
+    {
+      "id": "multi_turn_base_168",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.1003,
+          "tpot_s": 0.0159,
+          "output_tokens": 57,
+          "e2e_latency_s": 6.9917,
+          "throughput_tok_per_s": 62.82,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.3459,
+          "tpot_s": 0.0268,
+          "output_tokens": 113,
+          "e2e_latency_s": 7.3457,
+          "throughput_tok_per_s": 37.34,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.077,
+          "tpot_s": 0.0262,
+          "output_tokens": 134,
+          "e2e_latency_s": 8.5606,
+          "throughput_tok_per_s": 38.18,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.5442,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.5442,
+          "throughput_tok_per_s": null,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.3304,
+          "tpot_s": 0.0474,
+          "output_tokens": 16,
+          "e2e_latency_s": 2.0413,
+          "throughput_tok_per_s": 21.1,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.2796,
+      "avg_tpot_s": 0.0291,
+      "avg_throughput_tok_per_s": 39.86,
+      "total_output_tokens": 321
+    },
+    {
+      "id": "multi_turn_base_170",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 2.5677,
+          "tpot_s": 0.064,
+          "output_tokens": 28,
+          "e2e_latency_s": 4.2969,
+          "throughput_tok_per_s": 15.61,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.9762,
+          "tpot_s": 0.0591,
+          "output_tokens": 10,
+          "e2e_latency_s": 6.5078,
+          "throughput_tok_per_s": 16.93,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.0265,
+          "tpot_s": 0.0643,
+          "output_tokens": 13,
+          "e2e_latency_s": 3.798,
+          "throughput_tok_per_s": 15.55,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.246,
+          "tpot_s": 0.0444,
+          "output_tokens": 16,
+          "e2e_latency_s": 2.9114,
+          "throughput_tok_per_s": 22.54,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.6554,
+          "tpot_s": 0.0338,
+          "output_tokens": 11,
+          "e2e_latency_s": 3.9936,
+          "throughput_tok_per_s": 29.56,
+          "turn": 4
+        },
+        {
+          "ttft_s": 3.7204,
+          "tpot_s": 0.0,
+          "output_tokens": 4,
+          "e2e_latency_s": 3.7204,
+          "throughput_tok_per_s": 72921.3,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 3.532,
+      "avg_tpot_s": 0.0531,
+      "avg_throughput_tok_per_s": 12170.25,
+      "total_output_tokens": 82
+    },
+    {
+      "id": "multi_turn_base_179",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.1563,
+          "tpot_s": 0.051,
+          "output_tokens": 31,
+          "e2e_latency_s": 6.6872,
+          "throughput_tok_per_s": 19.6,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.4633,
+          "tpot_s": 0.0686,
+          "output_tokens": 17,
+          "e2e_latency_s": 3.5608,
+          "throughput_tok_per_s": 14.58,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.1992,
+          "tpot_s": 0.0719,
+          "output_tokens": 11,
+          "e2e_latency_s": 5.9177,
+          "throughput_tok_per_s": 13.92,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.6463,
+          "tpot_s": 0.0351,
+          "output_tokens": 26,
+          "e2e_latency_s": 5.5232,
+          "throughput_tok_per_s": 28.51,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 4.3663,
+      "avg_tpot_s": 0.0566,
+      "avg_throughput_tok_per_s": 19.15,
+      "total_output_tokens": 85
+    },
+    {
+      "id": "multi_turn_base_174",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.6304,
+          "tpot_s": 0.063,
+          "output_tokens": 44,
+          "e2e_latency_s": 7.3398,
+          "throughput_tok_per_s": 15.87,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.2635,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.2635,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.0342,
+          "tpot_s": 0.056,
+          "output_tokens": 13,
+          "e2e_latency_s": 2.7062,
+          "throughput_tok_per_s": 17.86,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.5474,
+          "tpot_s": 0.062,
+          "output_tokens": 11,
+          "e2e_latency_s": 6.1672,
+          "throughput_tok_per_s": 16.14,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.9147,
+          "tpot_s": 0.0276,
+          "output_tokens": 32,
+          "e2e_latency_s": 3.7715,
+          "throughput_tok_per_s": 36.18,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.878,
+      "avg_tpot_s": 0.0522,
+      "avg_throughput_tok_per_s": 21.51,
+      "total_output_tokens": 101
+    },
+    {
+      "id": "multi_turn_base_178",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 3.2731,
+          "tpot_s": 0.0772,
+          "output_tokens": 37,
+          "e2e_latency_s": 6.0523,
+          "throughput_tok_per_s": 12.95,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.7711,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.7711,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.9099,
+          "tpot_s": 0.029,
+          "output_tokens": 7,
+          "e2e_latency_s": 3.0842,
+          "throughput_tok_per_s": 34.43,
+          "turn": 2
+        },
+        {
+          "ttft_s": 6.3237,
+          "tpot_s": 0.0178,
+          "output_tokens": 10,
+          "e2e_latency_s": 6.4837,
+          "throughput_tok_per_s": 56.28,
+          "turn": 3
+        },
+        {
+          "ttft_s": 5.7352,
+          "tpot_s": 0.0266,
+          "output_tokens": 20,
+          "e2e_latency_s": 6.2404,
+          "throughput_tok_per_s": 37.61,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.4026,
+      "avg_tpot_s": 0.0377,
+      "avg_throughput_tok_per_s": 35.32,
+      "total_output_tokens": 75
+    },
+    {
+      "id": "multi_turn_base_185",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 3.0239,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.0239,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.7921,
+          "tpot_s": 0.0341,
+          "output_tokens": 40,
+          "e2e_latency_s": 6.1219,
+          "throughput_tok_per_s": 29.33,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.7599,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 6.7599,
+          "throughput_tok_per_s": null,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.8586,
+      "avg_tpot_s": 0.0341,
+      "avg_throughput_tok_per_s": 29.33,
+      "total_output_tokens": 42
+    },
+    {
+      "id": "multi_turn_base_187",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8605,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.8605,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.1307,
+          "tpot_s": 0.0267,
+          "output_tokens": 5,
+          "e2e_latency_s": 2.2377,
+          "throughput_tok_per_s": 37.4,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.9019,
+          "tpot_s": 0.0313,
+          "output_tokens": 21,
+          "e2e_latency_s": 4.5279,
+          "throughput_tok_per_s": 31.95,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.448,
+          "tpot_s": 0.0432,
+          "output_tokens": 24,
+          "e2e_latency_s": 6.4426,
+          "throughput_tok_per_s": 23.12,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.5853,
+      "avg_tpot_s": 0.0337,
+      "avg_throughput_tok_per_s": 30.82,
+      "total_output_tokens": 51
+    },
+    {
+      "id": "multi_turn_base_181",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 5.6503,
+          "tpot_s": 0.0802,
+          "output_tokens": 17,
+          "e2e_latency_s": 6.933,
+          "throughput_tok_per_s": 12.47,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.8873,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.8873,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.6325,
+          "tpot_s": 0.0686,
+          "output_tokens": 28,
+          "e2e_latency_s": 5.4855,
+          "throughput_tok_per_s": 14.57,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.4733,
+          "tpot_s": 0.0733,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.9863,
+          "throughput_tok_per_s": 13.65,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.8272,
+          "tpot_s": 0.0562,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.2764,
+          "throughput_tok_per_s": 17.81,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 4.2941,
+      "avg_tpot_s": 0.0696,
+      "avg_throughput_tok_per_s": 14.62,
+      "total_output_tokens": 63
+    },
+    {
+      "id": "multi_turn_base_189",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.0694,
+          "tpot_s": 0.0628,
+          "output_tokens": 44,
+          "e2e_latency_s": 6.7686,
+          "throughput_tok_per_s": 15.93,
+          "turn": 0
+        },
+        {
+          "ttft_s": 6.2949,
+          "tpot_s": 0.0317,
+          "output_tokens": 29,
+          "e2e_latency_s": 7.1821,
+          "throughput_tok_per_s": 31.56,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.8367,
+          "tpot_s": 0.0366,
+          "output_tokens": 39,
+          "e2e_latency_s": 4.2279,
+          "throughput_tok_per_s": 27.31,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 4.4003,
+      "avg_tpot_s": 0.0437,
+      "avg_throughput_tok_per_s": 24.93,
+      "total_output_tokens": 112
+    },
+    {
+      "id": "multi_turn_base_198",
+      "num_turns": 1,
+      "turns": [
+        {
+          "ttft_s": 2.2816,
+          "tpot_s": 0.0631,
+          "output_tokens": 70,
+          "e2e_latency_s": 6.6389,
+          "throughput_tok_per_s": 15.84,
+          "turn": 0
+        }
+      ],
+      "avg_ttft_s": 2.2816,
+      "avg_tpot_s": 0.0631,
+      "avg_throughput_tok_per_s": 15.84,
+      "total_output_tokens": 70
+    },
+    {
+      "id": "multi_turn_base_197",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 4.3978,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 4.3978,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.8935,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.8935,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.0192,
+          "tpot_s": 0.0285,
+          "output_tokens": 16,
+          "e2e_latency_s": 1.4463,
+          "throughput_tok_per_s": 35.12,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 2.4368,
+      "avg_tpot_s": 0.0285,
+      "avg_throughput_tok_per_s": 35.12,
+      "total_output_tokens": 18
+    },
+    {
+      "id": "multi_turn_base_180",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 5.5761,
+          "tpot_s": 0.0853,
+          "output_tokens": 9,
+          "e2e_latency_s": 6.2582,
+          "throughput_tok_per_s": 11.73,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.2119,
+          "tpot_s": 0.0251,
+          "output_tokens": 97,
+          "e2e_latency_s": 5.6249,
+          "throughput_tok_per_s": 39.78,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.682,
+          "tpot_s": 0.0712,
+          "output_tokens": 9,
+          "e2e_latency_s": 2.2516,
+          "throughput_tok_per_s": 14.05,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.3186,
+          "tpot_s": 0.0259,
+          "output_tokens": 80,
+          "e2e_latency_s": 6.3648,
+          "throughput_tok_per_s": 38.61,
+          "turn": 3
+        },
+        {
+          "ttft_s": 4.897,
+          "tpot_s": 0.0391,
+          "output_tokens": 24,
+          "e2e_latency_s": 5.7952,
+          "throughput_tok_per_s": 25.61,
+          "turn": 4
+        },
+        {
+          "ttft_s": 3.5301,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.5301,
+          "throughput_tok_per_s": null,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 3.8693,
+      "avg_tpot_s": 0.0493,
+      "avg_throughput_tok_per_s": 25.96,
+      "total_output_tokens": 220
+    },
+    {
+      "id": "multi_turn_base_183",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 2.1065,
+          "tpot_s": 0.0714,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.4638,
+          "throughput_tok_per_s": 14.0,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.1829,
+          "tpot_s": 0.0272,
+          "output_tokens": 55,
+          "e2e_latency_s": 6.6497,
+          "throughput_tok_per_s": 36.82,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.797,
+          "tpot_s": 0.0397,
+          "output_tokens": 10,
+          "e2e_latency_s": 7.1544,
+          "throughput_tok_per_s": 25.18,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.8306,
+          "tpot_s": 0.0249,
+          "output_tokens": 31,
+          "e2e_latency_s": 3.5785,
+          "throughput_tok_per_s": 40.11,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.6194,
+          "tpot_s": 0.067,
+          "output_tokens": 10,
+          "e2e_latency_s": 3.2222,
+          "throughput_tok_per_s": 14.93,
+          "turn": 4
+        },
+        {
+          "ttft_s": 1.53,
+          "tpot_s": 0.0451,
+          "output_tokens": 28,
+          "e2e_latency_s": 2.748,
+          "throughput_tok_per_s": 22.17,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 3.5111,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 25.54,
+      "total_output_tokens": 154
+    },
+    {
+      "id": "multi_turn_base_193",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.8822,
+          "tpot_s": 0.0735,
+          "output_tokens": 21,
+          "e2e_latency_s": 7.3517,
+          "throughput_tok_per_s": 13.61,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.7089,
+          "tpot_s": 0.0681,
+          "output_tokens": 29,
+          "e2e_latency_s": 5.6169,
+          "throughput_tok_per_s": 14.67,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.6781,
+          "tpot_s": 0.0678,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.2203,
+          "throughput_tok_per_s": 14.75,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.6067,
+          "tpot_s": 0.0409,
+          "output_tokens": 32,
+          "e2e_latency_s": 3.876,
+          "throughput_tok_per_s": 24.42,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.719,
+      "avg_tpot_s": 0.0626,
+      "avg_throughput_tok_per_s": 16.86,
+      "total_output_tokens": 91
+    },
+    {
+      "id": "multi_turn_base_192",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.391,
+          "tpot_s": 0.1247,
+          "output_tokens": 8,
+          "e2e_latency_s": 7.2637,
+          "throughput_tok_per_s": 8.02,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.3226,
+          "tpot_s": 0.0644,
+          "output_tokens": 16,
+          "e2e_latency_s": 3.2883,
+          "throughput_tok_per_s": 15.53,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.442,
+          "tpot_s": 0.0748,
+          "output_tokens": 8,
+          "e2e_latency_s": 1.9657,
+          "throughput_tok_per_s": 13.37,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.5649,
+          "tpot_s": 0.0605,
+          "output_tokens": 26,
+          "e2e_latency_s": 2.077,
+          "throughput_tok_per_s": 16.53,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.5339,
+          "tpot_s": 0.0726,
+          "output_tokens": 9,
+          "e2e_latency_s": 3.1145,
+          "throughput_tok_per_s": 13.78,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 2.6509,
+      "avg_tpot_s": 0.0794,
+      "avg_throughput_tok_per_s": 13.45,
+      "total_output_tokens": 67
+    },
+    {
+      "id": "multi_turn_base_194",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 3.8136,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.8136,
+          "throughput_tok_per_s": null,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.7722,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 1.7722,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.1746,
+          "tpot_s": 0.0763,
+          "output_tokens": 17,
+          "e2e_latency_s": 2.3962,
+          "throughput_tok_per_s": 13.1,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.3053,
+          "tpot_s": 0.0678,
+          "output_tokens": 8,
+          "e2e_latency_s": 1.7795,
+          "throughput_tok_per_s": 14.76,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.6524,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 2.6524,
+          "throughput_tok_per_s": null,
+          "turn": 4
+        },
+        {
+          "ttft_s": 0.5272,
+          "tpot_s": 0.0679,
+          "output_tokens": 8,
+          "e2e_latency_s": 1.0025,
+          "throughput_tok_per_s": 14.73,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 1.8742,
+      "avg_tpot_s": 0.0707,
+      "avg_throughput_tok_per_s": 14.2,
+      "total_output_tokens": 36
+    },
+    {
+      "id": "multi_turn_base_190",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 4.2916,
+          "tpot_s": 0.0642,
+          "output_tokens": 27,
+          "e2e_latency_s": 5.9601,
+          "throughput_tok_per_s": 15.58,
+          "turn": 0
+        },
+        {
+          "ttft_s": 2.6804,
+          "tpot_s": 0.0645,
+          "output_tokens": 20,
+          "e2e_latency_s": 3.9056,
+          "throughput_tok_per_s": 15.51,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.6042,
+          "tpot_s": 0.0647,
+          "output_tokens": 9,
+          "e2e_latency_s": 6.1216,
+          "throughput_tok_per_s": 15.46,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.5391,
+          "tpot_s": 0.0519,
+          "output_tokens": 13,
+          "e2e_latency_s": 2.1614,
+          "throughput_tok_per_s": 19.28,
+          "turn": 3
+        },
+        {
+          "ttft_s": 4.1644,
+          "tpot_s": 0.0508,
+          "output_tokens": 16,
+          "e2e_latency_s": 4.9257,
+          "throughput_tok_per_s": 19.7,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.6559,
+      "avg_tpot_s": 0.0592,
+      "avg_throughput_tok_per_s": 17.11,
+      "total_output_tokens": 85
+    },
+    {
+      "id": "multi_turn_base_186",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 5.2629,
+          "tpot_s": 0.0662,
+          "output_tokens": 16,
+          "e2e_latency_s": 6.2554,
+          "throughput_tok_per_s": 15.11,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.9781,
+          "tpot_s": 0.0294,
+          "output_tokens": 317,
+          "e2e_latency_s": 13.2674,
+          "throughput_tok_per_s": 34.02,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.5264,
+          "tpot_s": 0.0536,
+          "output_tokens": 9,
+          "e2e_latency_s": 1.9554,
+          "throughput_tok_per_s": 18.65,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.3035,
+          "tpot_s": 0.0406,
+          "output_tokens": 20,
+          "e2e_latency_s": 4.0758,
+          "throughput_tok_per_s": 24.6,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.6289,
+          "tpot_s": 0.0527,
+          "output_tokens": 12,
+          "e2e_latency_s": 2.2086,
+          "throughput_tok_per_s": 18.97,
+          "turn": 4
+        },
+        {
+          "ttft_s": 0.8565,
+          "tpot_s": 0.0315,
+          "output_tokens": 33,
+          "e2e_latency_s": 1.8657,
+          "throughput_tok_per_s": 31.71,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 2.7594,
+      "avg_tpot_s": 0.0457,
+      "avg_throughput_tok_per_s": 23.84,
+      "total_output_tokens": 407
+    },
+    {
+      "id": "multi_turn_base_195",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 6.0655,
+          "tpot_s": 0.0293,
+          "output_tokens": 293,
+          "e2e_latency_s": 14.6124,
+          "throughput_tok_per_s": 34.16,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.6468,
+          "tpot_s": 0.0601,
+          "output_tokens": 17,
+          "e2e_latency_s": 4.6087,
+          "throughput_tok_per_s": 16.63,
+          "turn": 1
+        },
+        {
+          "ttft_s": 5.0473,
+          "tpot_s": 0.048,
+          "output_tokens": 20,
+          "e2e_latency_s": 5.9586,
+          "throughput_tok_per_s": 20.85,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.7213,
+          "tpot_s": 0.0933,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.001,
+          "throughput_tok_per_s": 10.72,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 3.8702,
+      "avg_tpot_s": 0.0577,
+      "avg_throughput_tok_per_s": 20.59,
+      "total_output_tokens": 334
+    },
+    {
+      "id": "multi_turn_base_196",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 6.0362,
+          "tpot_s": 0.0734,
+          "output_tokens": 8,
+          "e2e_latency_s": 6.5503,
+          "throughput_tok_per_s": 13.62,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.3039,
+          "tpot_s": null,
+          "output_tokens": 1,
+          "e2e_latency_s": 3.3039,
+          "throughput_tok_per_s": null,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.5299,
+          "tpot_s": 0.0,
+          "output_tokens": 2,
+          "e2e_latency_s": 3.5299,
+          "throughput_tok_per_s": 105594.91,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.1064,
+          "tpot_s": 0.057,
+          "output_tokens": 14,
+          "e2e_latency_s": 5.8473,
+          "throughput_tok_per_s": 17.55,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.0627,
+          "tpot_s": 0.1282,
+          "output_tokens": 4,
+          "e2e_latency_s": 1.4474,
+          "throughput_tok_per_s": 7.8,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.8078,
+      "avg_tpot_s": 0.0862,
+      "avg_throughput_tok_per_s": 26408.47,
+      "total_output_tokens": 29
+    },
+    {
+      "id": "multi_turn_base_188",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 4.5848,
+          "tpot_s": 0.0259,
+          "output_tokens": 512,
+          "e2e_latency_s": 17.8289,
+          "throughput_tok_per_s": 38.58,
+          "turn": 0
+        },
+        {
+          "ttft_s": 4.5532,
+          "tpot_s": 0.0228,
+          "output_tokens": 31,
+          "e2e_latency_s": 5.2372,
+          "throughput_tok_per_s": 43.86,
+          "turn": 1
+        },
+        {
+          "ttft_s": 4.13,
+          "tpot_s": 0.0255,
+          "output_tokens": 54,
+          "e2e_latency_s": 5.48,
+          "throughput_tok_per_s": 39.26,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.3741,
+          "tpot_s": 0.027,
+          "output_tokens": 28,
+          "e2e_latency_s": 4.1035,
+          "throughput_tok_per_s": 37.01,
+          "turn": 3
+        },
+        {
+          "ttft_s": 0.6702,
+          "tpot_s": 0.026,
+          "output_tokens": 40,
+          "e2e_latency_s": 1.686,
+          "throughput_tok_per_s": 38.39,
+          "turn": 4
+        },
+        {
+          "ttft_s": 0.6093,
+          "tpot_s": 0.0243,
+          "output_tokens": 18,
+          "e2e_latency_s": 1.0216,
+          "throughput_tok_per_s": 41.23,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 2.9869,
+      "avg_tpot_s": 0.0252,
+      "avg_throughput_tok_per_s": 39.72,
+      "total_output_tokens": 683
+    },
+    {
+      "id": "multi_turn_base_191",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 5.3371,
+          "tpot_s": 0.0625,
+          "output_tokens": 17,
+          "e2e_latency_s": 6.3371,
+          "throughput_tok_per_s": 16.0,
+          "turn": 0
+        },
+        {
+          "ttft_s": 5.9058,
+          "tpot_s": 0.0884,
+          "output_tokens": 4,
+          "e2e_latency_s": 6.1709,
+          "throughput_tok_per_s": 11.32,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.1936,
+          "tpot_s": 0.0428,
+          "output_tokens": 16,
+          "e2e_latency_s": 2.8361,
+          "throughput_tok_per_s": 23.35,
+          "turn": 2
+        },
+        {
+          "ttft_s": 3.0474,
+          "tpot_s": 0.0478,
+          "output_tokens": 62,
+          "e2e_latency_s": 5.9631,
+          "throughput_tok_per_s": 20.92,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.2034,
+          "tpot_s": 0.035,
+          "output_tokens": 208,
+          "e2e_latency_s": 9.4566,
+          "throughput_tok_per_s": 28.54,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 3.7375,
+      "avg_tpot_s": 0.0553,
+      "avg_throughput_tok_per_s": 20.03,
+      "total_output_tokens": 307
+    },
+    {
+      "id": "multi_turn_base_199",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 2.9446,
+          "tpot_s": 0.0608,
+          "output_tokens": 29,
+          "e2e_latency_s": 4.6472,
+          "throughput_tok_per_s": 16.45,
+          "turn": 0
+        },
+        {
+          "ttft_s": 1.9956,
+          "tpot_s": 0.075,
+          "output_tokens": 12,
+          "e2e_latency_s": 2.8203,
+          "throughput_tok_per_s": 13.34,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.0214,
+          "tpot_s": 0.0609,
+          "output_tokens": 16,
+          "e2e_latency_s": 2.9345,
+          "throughput_tok_per_s": 16.43,
+          "turn": 2
+        },
+        {
+          "ttft_s": 0.7723,
+          "tpot_s": 0.0493,
+          "output_tokens": 14,
+          "e2e_latency_s": 1.4139,
+          "throughput_tok_per_s": 20.26,
+          "turn": 3
+        },
+        {
+          "ttft_s": 0.5947,
+          "tpot_s": 0.08,
+          "output_tokens": 4,
+          "e2e_latency_s": 0.8346,
+          "throughput_tok_per_s": 12.5,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 1.6657,
+      "avg_tpot_s": 0.0652,
+      "avg_throughput_tok_per_s": 15.8,
+      "total_output_tokens": 75
+    },
+    {
+      "id": "multi_turn_base_184",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 4.3559,
+          "tpot_s": 0.0252,
+          "output_tokens": 173,
+          "e2e_latency_s": 8.6955,
+          "throughput_tok_per_s": 39.63,
+          "turn": 0
+        },
+        {
+          "ttft_s": 3.9129,
+          "tpot_s": 0.0799,
+          "output_tokens": 8,
+          "e2e_latency_s": 4.4721,
+          "throughput_tok_per_s": 12.52,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.0852,
+          "tpot_s": 0.0265,
+          "output_tokens": 28,
+          "e2e_latency_s": 3.8004,
+          "throughput_tok_per_s": 37.75,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.8701,
+          "tpot_s": 0.0237,
+          "output_tokens": 60,
+          "e2e_latency_s": 7.2699,
+          "throughput_tok_per_s": 42.15,
+          "turn": 3
+        },
+        {
+          "ttft_s": 3.462,
+          "tpot_s": 0.0259,
+          "output_tokens": 512,
+          "e2e_latency_s": 16.7139,
+          "throughput_tok_per_s": 38.56,
+          "turn": 4
+        },
+        {
+          "ttft_s": 0.5251,
+          "tpot_s": 0.0239,
+          "output_tokens": 27,
+          "e2e_latency_s": 1.1478,
+          "throughput_tok_per_s": 41.75,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 3.5352,
+      "avg_tpot_s": 0.0342,
+      "avg_throughput_tok_per_s": 35.39,
+      "total_output_tokens": 808
+    }
+  ]
+}

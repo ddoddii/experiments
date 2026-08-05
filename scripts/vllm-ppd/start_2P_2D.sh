@@ -44,7 +44,14 @@ source "$SCRIPT_DIR/config.sh"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-8192}"
 GPU_MEMORY_UTIL="${GPU_MEMORY_UTILIZATION:-0.85}"
 
-LOG_DIR="/home/uhmturks/experiments/logs/vllm-ppd/2P_2D"
+# KV buffer config (P node send buffer)
+# kv_buffer_size: max in-flight KV bytes per P node
+# mem_pool_size_gb: total DRAM staging pool (= buffer × 2)
+KV_BUFFER_GB="${KV_BUFFER_GB:-1}"
+KV_BUFFER_BYTES=$(python3 -c "print(int(${KV_BUFFER_GB} * 1_000_000_000))")
+MEM_POOL_GB=$(python3 -c "print(max(2, ${KV_BUFFER_GB} * 2))")
+
+LOG_DIR="${LOG_DIR:-/home/uhmturks/experiments/logs/vllm-ppd/2P_2D}"
 SRC_DIR="$PROJECT_DIR/ppd"
 mkdir -p "$LOG_DIR"
 rm -f "$LOG_DIR"/*.log 2>/dev/null || true
@@ -52,6 +59,8 @@ rm -f "$LOG_DIR"/*.log 2>/dev/null || true
 echo "=============================================="
 echo "Starting vLLM Configuration: 2P_2D"
 echo "Architecture: 2P + 2D"
+echo "Model: $(basename $MODEL_PATH)  quantization: ${QUANTIZATION:-none}  parser: $TOOL_CALL_PARSER"
+echo "P node kv_buffer: ${KV_BUFFER_GB}GB  mem_pool: ${MEM_POOL_GB}GB"
 echo "=============================================="
 
 # NCCL settings for multi-GPU P2P
@@ -101,28 +110,30 @@ sleep 2
 
 # Start Prefill (GPU 0)
 echo "[2/5] Starting Prefill (GPU 0, port 8100)..."
-KV_CONFIG='{"kv_connector":"P2pNcclConnector","kv_role":"kv_producer","kv_buffer_size":1000000000,"kv_port":14579,"kv_connector_extra_config":{"proxy_ip":"0.0.0.0","proxy_port":"30001","http_port":"8100","send_type":"PUT_ASYNC","mem_pool_size_gb":2}}'
+KV_CONFIG=$(printf '{"kv_connector":"P2pNcclConnector","kv_role":"kv_producer","kv_buffer_size":%d,"kv_port":14579,"kv_connector_extra_config":{"proxy_ip":"0.0.0.0","proxy_port":"30001","http_port":"8100","send_type":"PUT_ASYNC","mem_pool_size_gb":%d}}' $KV_BUFFER_BYTES $MEM_POOL_GB)
 CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --host 0.0.0.0 --port 8100 \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/prefill0.log" 2>&1 &
 sleep 3
 
 # Start Prefill (GPU 1)
 echo "[3/5] Starting Prefill (GPU 1, port 8101)..."
-KV_CONFIG='{"kv_connector":"P2pNcclConnector","kv_role":"kv_producer","kv_buffer_size":1000000000,"kv_port":14581,"kv_connector_extra_config":{"proxy_ip":"0.0.0.0","proxy_port":"30001","http_port":"8101","send_type":"PUT_ASYNC","mem_pool_size_gb":2}}'
+KV_CONFIG=$(printf '{"kv_connector":"P2pNcclConnector","kv_role":"kv_producer","kv_buffer_size":%d,"kv_port":14581,"kv_connector_extra_config":{"proxy_ip":"0.0.0.0","proxy_port":"30001","http_port":"8101","send_type":"PUT_ASYNC","mem_pool_size_gb":%d}}' $KV_BUFFER_BYTES $MEM_POOL_GB)
 CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --host 0.0.0.0 --port 8101 \
     --max-model-len $MAX_MODEL_LEN \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/prefill1.log" 2>&1 &
 sleep 3
@@ -136,7 +147,8 @@ CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/decode2.log" 2>&1 &
 sleep 3
@@ -150,7 +162,8 @@ CUDA_VISIBLE_DEVICES=3 python -m vllm.entrypoints.cli.main serve "$MODEL_PATH" \
     --gpu-memory-utilization $GPU_MEMORY_UTIL \
     --trust-remote-code --disable-log-requests \
     --enable-prefix-caching \
-    --enable-auto-tool-choice --tool-call-parser llama3_json \
+    --enable-auto-tool-choice --tool-call-parser $TOOL_CALL_PARSER \
+    ${QUANTIZATION:+--quantization $QUANTIZATION} \
     --kv-transfer-config "$KV_CONFIG" \
     > "$LOG_DIR/decode3.log" 2>&1 &
 

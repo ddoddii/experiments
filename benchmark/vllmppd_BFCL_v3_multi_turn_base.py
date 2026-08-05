@@ -39,10 +39,14 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
 ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:10001/v1/chat/completions")
 # vllm-ppd start_2P_2D.sh does NOT set --served-model-name, so vLLM registers
 # the model under its full path. Override with MODEL env var if different.
-MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Llama-3.1-8B-Instruct")
+MODEL      = os.environ.get("MODEL", "/home/uhmturks/hf_models/Qwen3.6-27B")
 CONFIG     = os.environ.get("CONFIG", "vllm_ppd_2p2d")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
+# Simulated tool execution delay between turns (seconds).
+# Injects idle time to study KV tier placement under realistic agent workloads.
+# TOOL_DELAY=2.0 simulates a 2s tool call (DB lookup, API call, etc.)
+TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "0"))
 
 # Optional: push per-turn metrics to Prometheus Pushgateway
 # PUSHGATEWAY_URL=localhost:9091 로 활성화
@@ -129,11 +133,12 @@ func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
 items = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
 results = []
 
-print(f"Config  : {CONFIG}")
-print(f"URL     : {ROUTER_URL}")
-print(f"Model   : {MODEL}")
-print(f"Items   : {len(items)}")
-print(f"PushGW  : {PUSHGATEWAY_URL or 'disabled'}")
+print(f"Config     : {CONFIG}")
+print(f"URL        : {ROUTER_URL}")
+print(f"Model      : {MODEL}")
+print(f"Items      : {len(items)}")
+print(f"Tool delay : {TOOL_DELAY}s per tool-call turn")
+print(f"PushGW     : {PUSHGATEWAY_URL or 'disabled'}")
 print("=" * 60)
 
 t_experiment_start = time.perf_counter()
@@ -175,7 +180,9 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             "tools":       tools,
             "tool_choice": "auto",
             "max_tokens":  MAX_TOKENS,
+            "temperature": 0,
             "stream":      True,
+            "stream_options": {"include_usage": True},
         }
 
         try:
@@ -188,6 +195,7 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             token_count   = 0
             assistant_content = ""
             tool_calls_map    = {}
+            server_completion_tokens = None
 
             for line in resp.iter_lines():
                 if not line:
@@ -200,6 +208,10 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                     break
 
                 chunk = json.loads(data)
+                if chunk.get("usage"):
+                    server_completion_tokens = chunk["usage"].get("completion_tokens")
+                if not chunk.get("choices"):
+                    continue
                 delta = chunk["choices"][0]["delta"]
                 has_content = bool(delta.get("content") or delta.get("tool_calls"))
 
@@ -231,20 +243,22 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             tool_calls_result = [tool_calls_map[i] for i in sorted(tool_calls_map)] \
                                 if tool_calls_map else []
 
-            # ─── Compute metrics ─────────────────────────────────────
-            ttft        = (t_first_token - t_request)         if t_first_token else None
-            e2e         = (t_last_token  - t_request)         if t_last_token  else None
-            decode_time = (t_last_token  - t_first_token)     if (t_last_token and token_count > 1) else None
-            tpot        = (decode_time   / (token_count - 1)) if (decode_time and token_count > 1) else None
-            turn_tput   = ((token_count  - 1) / decode_time)  if (decode_time and token_count > 1) else None
+            actual_tokens = server_completion_tokens if server_completion_tokens is not None else token_count
 
-            total_output_tokens += token_count
+            # ─── Compute metrics ─────────────────────────────────────
+            ttft        = (t_first_token - t_request)           if t_first_token else None
+            e2e         = (t_last_token  - t_request)           if t_last_token  else None
+            decode_time = (t_last_token  - t_first_token)       if (t_last_token and token_count > 1) else None
+            tpot        = (decode_time   / (actual_tokens - 1)) if (decode_time and actual_tokens > 1) else None
+            turn_tput   = ((actual_tokens - 1) / decode_time)   if (decode_time and actual_tokens > 1) else None
+
+            total_output_tokens += actual_tokens
 
             tqdm.write(
                 f"    → ttft={ttft:.3f}s  tpot={tpot:.4f}s  "
-                f"tokens={token_count}  tput={turn_tput:.1f} tok/s"
+                f"tokens={actual_tokens}  tput={turn_tput:.1f} tok/s"
                 if (ttft and tpot and turn_tput)
-                else f"    → ttft={ttft}  tokens={token_count}"
+                else f"    → ttft={ttft}  tokens={actual_tokens}"
             )
 
             turn_metrics.append({
@@ -254,7 +268,7 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
                 "tool_calls":           tool_calls_result if tool_calls_result else None,
                 "ttft_s":               round(ttft,      4) if ttft      else None,
                 "tpot_s":               round(tpot,      4) if tpot      else None,
-                "output_tokens":        token_count,
+                "output_tokens":        actual_tokens,
                 "e2e_latency_s":        round(e2e,       4) if e2e       else None,
                 "throughput_tok_per_s": round(turn_tput, 2) if turn_tput else None,
                 "context_chars":        ctx_chars,
@@ -264,12 +278,15 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, item_idx + 1)
 
             # ─── Advance conversation ─────────────────────────────────
-            # Llama3 chat template: tool_call 1개만 허용
             conversation.append({
                 "role":       "assistant",
                 "content":    assistant_content or None,
                 "tool_calls": tool_calls_result[:1] if tool_calls_result else None,
             })
+
+            # Simulate tool execution time (studies KV idle across tiers)
+            if TOOL_DELAY > 0 and tool_calls_result:
+                time.sleep(TOOL_DELAY)
 
         except Exception as e:
             tqdm.write(f"    → ERROR: {e}")
@@ -320,7 +337,8 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
-    "kv_cache_per_gpu": kv_stats,   # min/max/mean per GPU over entire benchmark run
+    "tool_delay_s":             TOOL_DELAY,
+    "kv_cache_per_gpu":         kv_stats,
 }
 
 output = {"summary": summary, "results": results}
@@ -341,4 +359,5 @@ print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT     : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
+print(f"Tool delay    : {TOOL_DELAY}s per tool-call turn")
 print(f"결과 저장     : {out_path}")

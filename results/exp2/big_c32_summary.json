@@ -1,0 +1,123 @@
+{
+  "runs": {
+    "big_c32_r1": {
+      "park_local": {
+        "ttft_p50_s": 0.3015,
+        "ttft_p95_s": 3.6089,
+        "ttft_p99_s": 11.3719,
+        "overall_throughput_tok_per_s": 834.3,
+        "park_hit_rate_pct": 64.0,
+        "fetch_already": 36.0,
+        "fetch_miss": 522.0,
+        "parked_gb": 4.0224,
+        "items": 288,
+        "errors": 0
+      },
+      "park_pd": {
+        "ttft_p50_s": 0.2767,
+        "ttft_p95_s": 4.8062,
+        "ttft_p99_s": 11.7797,
+        "overall_throughput_tok_per_s": 842.83,
+        "park_hit_rate_pct": 77.92297111416781,
+        "fetch_already": 32.0,
+        "fetch_miss": 321.0,
+        "parked_gb": 20.7941,
+        "items": 288,
+        "errors": 0
+      }
+    }
+  },
+  "summary": {
+    "park_hit_rate_pct": {
+      "deltas": [
+        13.923
+      ],
+      "wins": 1,
+      "losses": 0,
+      "n": 1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 21.8,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    },
+    "fetch_miss": {
+      "deltas": [
+        201.0
+      ],
+      "wins": 1,
+      "losses": 0,
+      "n": 1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 38.5,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    },
+    "parked_gb": {
+      "deltas": [
+        16.7717
+      ],
+      "wins": 1,
+      "losses": 0,
+      "n": 1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 417.0,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": true
+    },
+    "ttft_p50_s": {
+      "deltas": [
+        0.0248
+      ],
+      "wins": 1,
+      "losses": 0,
+      "n": 1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 8.2,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    },
+    "ttft_p95_s": {
+      "deltas": [
+        -1.1973
+      ],
+      "wins": 0,
+      "losses": 1,
+      "n": 1,
+      "verdict": "Ours worse in ALL",
+      "rel_pct_median": 33.2,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    },
+    "ttft_p99_s": {
+      "deltas": [
+        -0.4078
+      ],
+      "wins": 0,
+      "losses": 1,
+      "n": 1,
+      "verdict": "Ours worse in ALL",
+      "rel_pct_median": 3.6,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    },
+    "overall_throughput_tok_per_s": {
+      "deltas": [
+        8.53
+      ],
+      "wins": 1,
+      "losses": 0,
+      "n": 1,
+      "verdict": "Ours better in ALL",
+      "rel_pct_median": 1.0,
+      "baseline_spread_pct": null,
+      "below_baseline_spread": false,
+      "configured": false
+    }
+  }
+}

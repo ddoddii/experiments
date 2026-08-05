@@ -1,0 +1,15 @@
+median TTFT by turn index (baseline = radix)
+
+ turn  ctx tok                radix             hicache                park
+---------------------------------------------------------------------------
+    0        0          0.10s                0.10s (+0.00)         0.21s (+0.11)
+    1        0          0.18s                0.19s (+0.01)         0.14s (-0.04)
+    2        0          0.27s                0.27s (+0.00)         0.19s (-0.07)
+  >=3        0          0.40s                0.40s (+0.00)         0.32s (-0.08)
+
+median context 0 tokens -> a FULL re-prefill costs ~0 ms,
+which is the most any amount of KV reuse can save on one turn.
+  hicache    turn-0 overhead      +0 ms  -- swamps the prize
+  park       turn-0 overhead    +109 ms  -- swamps the prize
+
+Turn-0 differences are NOT the mechanism: no arm can reuse or fetch there.

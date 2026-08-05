@@ -32,10 +32,13 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)                  # experiments/
 
 # ─── Config ────────────────────────────────────────────────────────────────
 ROUTER_URL = os.environ.get("VLLM_URL", "http://127.0.0.1:8000/v1/chat/completions")
-MODEL      = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct-FC")
+MODEL      = os.environ.get("MODEL", "Qwen")
 CONFIG     = os.environ.get("CONFIG", "vllm_4gpu")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT    = int(os.environ.get("TIMEOUT", "600"))
+# Simulated tool execution delay between turns (seconds).
+# Injects idle time to study KV tier placement under realistic agent workloads.
+TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "0"))
 
 # Optional: push per-turn metrics to Prometheus Pushgateway
 # Set PUSHGATEWAY_URL=localhost:9091 to enable
@@ -122,11 +125,12 @@ func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
 items = [json.loads(l) for l in open(_p("data/BFCL_v3_multi_turn_base.json"))]
 results = []
 
-print(f"Config  : {CONFIG}")
-print(f"URL     : {ROUTER_URL}")
-print(f"Model   : {MODEL}")
-print(f"Items   : {len(items)}")
-print(f"PushGW  : {PUSHGATEWAY_URL or 'disabled'}")
+print(f"Config     : {CONFIG}")
+print(f"URL        : {ROUTER_URL}")
+print(f"Model      : {MODEL}")
+print(f"Items      : {len(items)}")
+print(f"Tool delay : {TOOL_DELAY}s per tool-call turn")
+print(f"PushGW     : {PUSHGATEWAY_URL or 'disabled'}")
 print("=" * 60)
 
 t_experiment_start = time.perf_counter()
@@ -253,12 +257,15 @@ for item_idx, item in enumerate(tqdm(items, desc="items")):
             push_to_pg(item["id"], turn_idx, ttft, tpot, ctx_chars, item_idx + 1)
 
             # ─── Advance conversation ─────────────────────────────────
-            # Note: Llama3 chat template allows only 1 tool_call per turn
             conversation.append({
                 "role":       "assistant",
                 "content":    assistant_content or None,
                 "tool_calls": tool_calls_result[:1] if tool_calls_result else None,
             })
+
+            # Simulate tool execution time (studies KV idle across tiers)
+            if TOOL_DELAY > 0 and tool_calls_result:
+                time.sleep(TOOL_DELAY)
 
         except Exception as e:
             tqdm.write(f"    → ERROR: {e}")
@@ -305,6 +312,7 @@ summary = {
     "avg_throughput_tok_per_s": round(
                         sum(r["avg_throughput"] for r in valid if r["avg_throughput"]) / len(valid), 2)
                      if valid else None,
+    "tool_delay_s": TOOL_DELAY,
 }
 
 output = {"summary": summary, "results": results}
@@ -326,4 +334,5 @@ print(f"전체 throughput: {summary['overall_throughput_tok_per_s']} tok/s")
 print(f"평균 TTFT     : {summary['avg_ttft_s']}s")
 print(f"평균 TPOT     : {summary['avg_tpot_s']}s")
 print(f"평균 per-req throughput: {summary['avg_throughput_tok_per_s']} tok/s")
+print(f"Tool delay    : {TOOL_DELAY}s per tool-call turn")
 print(f"결과 저장     : {out_path}")

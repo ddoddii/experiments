@@ -1,0 +1,199 @@
+{
+  "config": {
+    "run_tag": "offload_on",
+    "concurrency": 1,
+    "num_turns": 10,
+    "tool_delay_sec": 2.0
+  },
+  "summary": {
+    "request_fails": 0,
+    "hang": false,
+    "retractions": 0,
+    "cuda_errors": 0,
+    "recompute_frac_median": 0.165
+  },
+  "per_turn": [
+    {
+      "turn": 0,
+      "prompt_tokens": 1470,
+      "cached_tokens": null,
+      "recompute_frac": null,
+      "recompute_tokens": null,
+      "ttft_ms": 586.9
+    },
+    {
+      "turn": 1,
+      "prompt_tokens": 2839,
+      "cached_tokens": 1470,
+      "recompute_frac": 0.482,
+      "recompute_tokens": 1369,
+      "ttft_ms": 672.7
+    },
+    {
+      "turn": 2,
+      "prompt_tokens": 4208,
+      "cached_tokens": 2839,
+      "recompute_frac": 0.325,
+      "recompute_tokens": 1369,
+      "ttft_ms": 787.2
+    },
+    {
+      "turn": 3,
+      "prompt_tokens": 5577,
+      "cached_tokens": 4208,
+      "recompute_frac": 0.245,
+      "recompute_tokens": 1369,
+      "ttft_ms": 915.1
+    },
+    {
+      "turn": 4,
+      "prompt_tokens": 6946,
+      "cached_tokens": 5577,
+      "recompute_frac": 0.197,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1055.8
+    },
+    {
+      "turn": 5,
+      "prompt_tokens": 8315,
+      "cached_tokens": 6946,
+      "recompute_frac": 0.165,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1186.1
+    },
+    {
+      "turn": 6,
+      "prompt_tokens": 9684,
+      "cached_tokens": 8315,
+      "recompute_frac": 0.141,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1304.5
+    },
+    {
+      "turn": 7,
+      "prompt_tokens": 11053,
+      "cached_tokens": 9684,
+      "recompute_frac": 0.124,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1451.1
+    },
+    {
+      "turn": 8,
+      "prompt_tokens": 12422,
+      "cached_tokens": 11053,
+      "recompute_frac": 0.11,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1602.7
+    },
+    {
+      "turn": 9,
+      "prompt_tokens": 13791,
+      "cached_tokens": 12422,
+      "recompute_frac": 0.099,
+      "recompute_tokens": 1369,
+      "ttft_ms": 1725.9
+    }
+  ],
+  "samples": [
+    {
+      "sid": 0,
+      "turn": 0,
+      "prompt_tokens": 1470,
+      "cached_tokens": null,
+      "recompute_tokens": null,
+      "recompute_frac": null,
+      "ttft_ms": 586.9,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 1,
+      "prompt_tokens": 2839,
+      "cached_tokens": 1470,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.482,
+      "ttft_ms": 672.7,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 2,
+      "prompt_tokens": 4208,
+      "cached_tokens": 2839,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.325,
+      "ttft_ms": 787.2,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 3,
+      "prompt_tokens": 5577,
+      "cached_tokens": 4208,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.245,
+      "ttft_ms": 915.1,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 4,
+      "prompt_tokens": 6946,
+      "cached_tokens": 5577,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.197,
+      "ttft_ms": 1055.8,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 5,
+      "prompt_tokens": 8315,
+      "cached_tokens": 6946,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.165,
+      "ttft_ms": 1186.1,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 6,
+      "prompt_tokens": 9684,
+      "cached_tokens": 8315,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.141,
+      "ttft_ms": 1304.5,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 7,
+      "prompt_tokens": 11053,
+      "cached_tokens": 9684,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.124,
+      "ttft_ms": 1451.1,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 8,
+      "prompt_tokens": 12422,
+      "cached_tokens": 11053,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.11,
+      "ttft_ms": 1602.7,
+      "fail": null
+    },
+    {
+      "sid": 0,
+      "turn": 9,
+      "prompt_tokens": 13791,
+      "cached_tokens": 12422,
+      "recompute_tokens": 1369,
+      "recompute_frac": 0.099,
+      "ttft_ms": 1725.9,
+      "fail": null
+    }
+  ]
+}

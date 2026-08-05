@@ -1,0 +1,56 @@
+{
+  "tag": "h2h_p80000_c8_d3",
+  "arms": {
+    "radix": {
+      "arm": "radix",
+      "avg_ttft_s": 1.2176,
+      "avg_tpot_s": 0.0237,
+      "overall_tput": 69.48,
+      "wall_s": 412.25,
+      "errors": 0,
+      "reuse_ratio": 0.7439,
+      "cached_tokens": 2638099.0,
+      "uncached_tokens": 908001.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 1.128384475259973
+    },
+    "hicache": {
+      "arm": "hicache",
+      "avg_ttft_s": 1.3154,
+      "avg_tpot_s": 0.0235,
+      "overall_tput": 68.72,
+      "wall_s": 426.0,
+      "errors": 0,
+      "reuse_ratio": 0.7454,
+      "cached_tokens": 2643492.0,
+      "uncached_tokens": 903049.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 1.2228300958671825
+    },
+    "park": {
+      "arm": "park",
+      "avg_ttft_s": 1.3534,
+      "avg_tpot_s": 0.0243,
+      "overall_tput": 67.24,
+      "wall_s": 429.04,
+      "errors": 0,
+      "reuse_ratio": 0.7439,
+      "cached_tokens": 2638216.0,
+      "uncached_tokens": 908245.0,
+      "L2_host_used": null,
+      "ttft_metric_s": 1.2564880777525422
+    }
+  },
+  "comparison": {
+    "hicache": {
+      "ttft_pct_vs_radix": 8.0,
+      "tput_pct_vs_radix": -1.1
+    },
+    "park": {
+      "ttft_pct_vs_radix": 11.2,
+      "tput_pct_vs_radix": -3.2
+    }
+  },
+  "park_vs_radix_ttft_pct": 11.2,
+  "park_vs_hicache_ttft_pct": 2.9
+}

@@ -1,0 +1,55 @@
+{
+  "config": {
+    "src_gpu": 1,
+    "dst_gpu": 0,
+    "p2p": true,
+    "bytes_per_token": 131072,
+    "iters": 50
+  },
+  "rows": [
+    {
+      "tokens": 512,
+      "size_mb": 67.1,
+      "nvlink_park_ms": 1.284,
+      "nvlink_park_GBps": 52.3,
+      "host_park_ms": 2.561,
+      "host_fetch_ms": 2.557,
+      "host_roundtrip_ms": 5.118,
+      "host_park_GBps": 26.2,
+      "speedup_vs_host": 3.99
+    },
+    {
+      "tokens": 1024,
+      "size_mb": 134.2,
+      "nvlink_park_ms": 2.551,
+      "nvlink_park_GBps": 52.6,
+      "host_park_ms": 5.097,
+      "host_fetch_ms": 5.106,
+      "host_roundtrip_ms": 10.203,
+      "host_park_GBps": 26.3,
+      "speedup_vs_host": 4.0
+    },
+    {
+      "tokens": 2048,
+      "size_mb": 268.4,
+      "nvlink_park_ms": 5.094,
+      "nvlink_park_GBps": 52.7,
+      "host_park_ms": 10.181,
+      "host_fetch_ms": 10.205,
+      "host_roundtrip_ms": 20.386,
+      "host_park_GBps": 26.4,
+      "speedup_vs_host": 4.0
+    },
+    {
+      "tokens": 4096,
+      "size_mb": 536.9,
+      "nvlink_park_ms": 10.171,
+      "nvlink_park_GBps": 52.8,
+      "host_park_ms": 20.359,
+      "host_fetch_ms": 20.401,
+      "host_roundtrip_ms": 40.76,
+      "host_park_GBps": 26.4,
+      "speedup_vs_host": 4.01
+    }
+  ]
+}
