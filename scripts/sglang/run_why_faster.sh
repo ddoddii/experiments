@@ -128,22 +128,45 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # The park telemetry files carry fetch_ms_tier / fetch_tok_tier, which is where the
   # per-tier cost comes from. They live in /dev/shm and are gone once the server exits,
   # so they are copied BEFORE the next stop.sh.
-  cp /dev/shm/sglang_kv_parking/parked_bytes_*.json "$OUTDIR/" 2>/dev/null || true
-  for f in "$OUTDIR"/parked_bytes_*.json; do
+  # The file is parked_gpu<N>.json (_parked_bytes_file in idle_kv_parking.py). The first
+  # version of this line globbed parked_bytes_*.json, matched nothing, and -- because the
+  # copy is best-effort -- said nothing, so the whole run came back with no per-tier fetch
+  # telemetry and decompose_speedup.py reported "no park arm in this directory".
+  _n=0
+  for f in /dev/shm/sglang_kv_parking/parked_gpu*.json; do
     [ -e "$f" ] || continue
-    mv "$f" "${f%.json}.$label.json" 2>/dev/null || true
+    cp "$f" "$OUTDIR/$(basename "${f%.json}").$label.json" 2>/dev/null && _n=$((_n + 1))
   done
+  case "$label" in
+    park*) [ "$_n" -gt 0 ] || echo "  [warn] no parked_gpu*.json captured for $label -- "\
+           "per-tier fetch cost will be missing from the analysis" ;;
+  esac
   # Digest, not the raw log: .gitignore has a blanket '*.log' and every raw log copied
   # here in earlier runners was silently dropped before it could be pushed.
+  #
+  # TAIL, NOT HEAD. logs/*.log is not truncated between arms, so `head` returned the
+  # FIRST server's startup lines for every arm -- the first run of this script produced
+  # seven byte-identical digests reporting a pool size that belonged to a stale log from
+  # a previous session. Config was unverifiable for the whole run. Taking the LAST
+  # startup block gets the server this arm actually started.
   for f in p1 p2 d1 d2; do
     [ -f "logs/$f.log" ] || continue
-    { grep -iE "park pool|clamp|ready to roll|max_total_num_tokens" "logs/$f.log" | head -20
-      echo "---- errors ----"
-      grep -iE "error|traceback|out of memory|SIGQUIT received" "logs/$f.log" | head -20
+    { echo "---- startup (LAST occurrence: the log is not truncated between arms) ----"
+      grep -iE "park pool|clamp|ready to roll|max_total_num_tokens" "logs/$f.log" | tail -8
+      echo "---- errors (last) ----"
+      grep -iE "error|traceback|out of memory|SIGQUIT received" "logs/$f.log" | tail -15
       echo "---- tail ----"; tail -15 "logs/$f.log"
     } > "$OUTDIR/$f.$label.digest.txt" 2>/dev/null || true
   done
+  # Fail loudly rather than silently reporting a stale config next run.
+  if [ -f "$OUTDIR/p1.$label.digest.txt" ] && [ -n "$_PREV_DIGEST" ] \
+     && cmp -s "$OUTDIR/p1.$label.digest.txt" "$_PREV_DIGEST"; then
+    echo "  [warn] p1 digest identical to the previous arm's -- logs/p1.log is probably"
+    echo "         not being rotated, so per-arm config in these digests is unreliable."
+  fi
+  _PREV_DIGEST="$OUTDIR/p1.$label.digest.txt"
 }
+_PREV_DIGEST=""
 
 for arm in $ARMS; do
   run_one "$arm" "$arm"
