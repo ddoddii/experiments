@@ -565,3 +565,54 @@ because it is a bug-shaped number rather than a design limit.
 It does not say GPU-first placement is wrong. It says THIS implementation, at this hit
 rate and this park:fetch ratio, costs more than it saves on a workload built to favour it.
 The park_host control was not run here, so the medium question is still open on longctx.
+
+### Where the cost actually is (phase instrumentation, 2026-08)
+
+Chasing the fetch was chasing the wrong path. Full accounting of scheduler-main-thread
+time on the longctx workload, 513 parks and 206 fetches:
+
+| path | total | share of the 42.9 s |
+|---|---|---|
+| **park (write)** | **30.1 s** | **70%** |
+| fetch (read) | 12.8 s | 30% |
+
+and inside the park path:
+
+| phase | total | share |
+|---|---|---|
+| **sync** | **26.9 s** | **89.5%** |
+| select | 1.1 s | 3.6% |
+| xfer | 0.9 s | 3.1% |
+| write | 0.5 s | 1.6% |
+| gather | 0.5 s | 1.5% |
+| index | 0.2 s | 0.8% |
+
+gather/xfer/write are asynchronous enqueues and return in 1.9 s combined; `sync` is where
+the 535 GB is actually executed and waited for. So the achieved rate is 535 GB / 26.9 s =
+**19.9 GB/s** — 76% of the PCIe link and 38% of NVLink, i.e. the copy is not especially
+inefficient. The problems are that it is BLOCKING and that it is 5.7x larger than it needs
+to be.
+
+Scheduler-thread occupancy accounts for 42.9 s of the 70 s wall-clock gap (61%); the
+remainder is plausibly GPU bandwidth contention with the forward pass, which parking also
+consumes and which is not on this thread.
+
+**The link was never the problem.** `p2p_matrix.py` confirms peer access on every pair,
+NVLink pairs at 52.6-52.7 GB/s and PCIe pairs at 26.3 GB/s with no host staging anywhere.
+The fetch path's 80 ms/fetch, which prompted this instrumentation, accounts for 1% of the
+per-turn TTFT gap (21 ms/turn against 2.17 s).
+
+### Two fixes, in order
+
+1. **Stop blocking on the park copy.** `_gather_copy_peer_to_park` ends in
+   `torch.cuda.synchronize(pool.gpu)` on the scheduler main thread, so all 26.9 s of
+   transfer is serialised against request handling, while the FETCH path on the same
+   module is already asynchronous. The synchronize is not gratuitous — the source is the
+   decode node's IPC-mapped KV pool and the slots must not be recycled before the copy
+   lands — so it cannot simply be deleted. It needs a CUDA event recorded at park time and
+   checked on a later scheduler pass, which overlaps the copy with the forward pass
+   instead of stalling on it.
+2. **Park less.** 535 GB written to serve 94 GB of hits. Even at the current rate,
+   parking only what is later fetched would cost 4.7 s instead of 26.9 s. This is the
+   policy question (what deserves parking), and it is worth strictly less than fix 1 until
+   fix 1 lands, because right now every avoided byte only saves blocking time.
