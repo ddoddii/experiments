@@ -67,6 +67,10 @@ fi
 _mc=$(python -c 'import inspect,mooncake.http_metadata_server as m;print(inspect.getsourcefile(m))' 2>/dev/null)
 if [ -z "$_mc" ]; then
   bad "mooncake.http_metadata_server import 실패 (disaggregation transfer backend)"
+  say "      PD disaggregation 의 KV 전송 백엔드다. 없으면 서버가 아예 안 뜬다."
+  say "      conda activate ${SGLANG_CONDA_ENV} && pip install mooncake-transfer-engine==0.3.8.post1"
+  say "      (버전은 sglang 자신의 CI 가 쓰는 핀: scripts/ci/ci_install_dependency.sh)"
+  say "      A6000 결과가 전부 mooncake 로 측정됐으므로, 백엔드를 바꾸면 비교가 깨진다."
 elif grep -qE '\-\-port|"port"' "$_mc" 2>/dev/null; then
   say "mooncake metadata server: --port 지원 O  (이 job 은 :${MOONCAKE_PORT})"
 else
@@ -145,6 +149,16 @@ _rc=$?
 # 분석 스크립트가 A6000 값을 물려받지 않도록 여기서 새로 측정한다. 서버가 뜨기 전에
 # 돌려야 한다 (모든 GPU 에 할당한다).
 echo "[5/7] machine constants (hwprofile)"
+# 파일이 "있다"는 것만으로 재사용하면 안 된다. 이 파일이 막으려는 실패가 정확히 그것 --
+# A6000 에서 잰 hwprofile.json 이 리포에 남아 있으면 A100 에서 한 번도 재측정하지 않고
+# peer/host 대역폭과 카드 크기를 그대로 물려받는다. 기록된 gpu_name 이 지금 카드와
+# 다르면 무조건 다시 잰다.
+_prof_gpu=$(python -c "import json;print(json.load(open('results/hwprofile.json'))['gpu_name'])" 2>/dev/null || echo "")
+_here_gpu=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
+if [ -n "$_prof_gpu" ] && [ "$_prof_gpu" != "$_here_gpu" ]; then
+  say "기존 hwprofile 은 '${_prof_gpu}' 것이고 지금 카드는 '${_here_gpu}' -> 재측정한다."
+  FORCE_HWPROFILE=1
+fi
 if [ ! -f "results/hwprofile.json" ] || [ "${FORCE_HWPROFILE:-0}" = "1" ]; then
   python benchmark/hwprofile.py --out "$OUTDIR/hwprofile.json" 2>&1 | sed 's/^/  /' || warn "hwprofile 실패"
   cp "$OUTDIR/hwprofile.json" results/hwprofile.json 2>/dev/null || true
@@ -152,13 +166,27 @@ else
   say "results/hwprofile.json 이 이미 있다 (FORCE_HWPROFILE=1 로 재측정)."
   cp results/hwprofile.json "$OUTDIR/hwprofile.json" 2>/dev/null || true
 fi
-python benchmark/p2p_matrix.py > "$OUTDIR/p2p_matrix.txt" 2>&1 || warn "p2p_matrix 실패"
-say "p2p matrix -> $OUTDIR/p2p_matrix.txt"
+# p2p_matrix.py 의 NVLINK_REF 기본값은 A6000 에서 잰 52.7 GB/s 다. A100 NV12 는 그
+# 5배쯤 나오므로, 기본값을 두면 PCIe 경유 쌍까지 "full speed" 로 분류된다. 방금 잰
+# 이 머신의 최고 peer 대역폭을 기준으로 넘긴다.
+_ref=$(python -c "import json;print(json.load(open('$OUTDIR/hwprofile.json'))['peer_gpu_gbps'])" 2>/dev/null || echo "")
+NVLINK_REF=${_ref:-52.7} python benchmark/p2p_matrix.py > "$OUTDIR/p2p_matrix.txt" 2>&1 \
+  || warn "p2p_matrix 실패"
+say "p2p matrix -> $OUTDIR/p2p_matrix.txt  (NVLINK_REF=${_ref:-52.7} GB/s 기준)"
 
 # ─── 6. host RAM: hicache arm 이 여기서 죽는다 ────────────────────────────────
 echo "[6/7] host memory"
-_avail_gb=$(awk '/MemAvailable/ {printf "%.0f", $2/1048576}' /proc/meminfo)
-say "MemAvailable: ${_avail_gb} GB   (SLURM 할당: ${SLURM_MEM_PER_NODE:-?} MB)"
+# 노드의 MemAvailable 이 아니라 이 JOB 이 쓸 수 있는 양을 봐야 한다. cgroup 이 붙은
+# 클러스터에서 두 값은 완전히 다르다 -- 실측 예: 노드 942 GB, job 상한 128 GB.
+# MemAvailable 로 판단하면 "여유 충분"이라고 말한 다음 hicache arm 이 OOM 으로 죽는다.
+_node_gb=$(awk '/MemAvailable/ {printf "%.0f", $2/1048576}' /proc/meminfo)
+_avail_gb=$_node_gb
+if [ -n "${SLURM_MEM_PER_NODE:-}" ] && [ "${SLURM_MEM_PER_NODE}" -gt 0 ] 2>/dev/null; then
+  _slurm_gb=$((SLURM_MEM_PER_NODE / 1024))
+  [ "$_slurm_gb" -lt "$_avail_gb" ] && _avail_gb=$_slurm_gb
+fi
+say "node MemAvailable: ${_node_gb} GB, SLURM 할당: ${SLURM_MEM_PER_NODE:-?} MB" \
+    "-> 이 job 의 상한 ${_avail_gb} GB"
 # hicache host pool ≈ device KV pool x HICACHE_RATIO. device pool 은 카드 크기에서
 # 가중치를 뺀 값이므로 A100 80GB 에서는 A6000 보다 훨씬 크다 — 같은 ratio 가 훨씬 큰
 # host 할당을 뜻한다는 게 A6000 에서 옮겨올 때의 함정이다.
@@ -166,9 +194,15 @@ _card_gb=$(python -c 'import json;print(json.load(open("'"$OUTDIR"'/hwprofile.js
 if [ "${_card_gb%.*}" -gt 0 ] 2>/dev/null; then
   _need=$(python -c "print(int(($_card_gb - 17) * ${HICACHE_RATIO:-1.2}))" 2>/dev/null || echo 0)
   say "hicache host pool 추정: ~${_need} GB (카드 ${_card_gb}GB, ratio ${HICACHE_RATIO:-1.2})"
+  # A100 80GB 는 A6000 48GB 보다 device KV pool 이 훨씬 크고, hicache host pool 은
+  # 그 pool 의 ratio 배다. 즉 "A6000 에서 쓰던 ratio 1.2" 가 여기서는 훨씬 큰 host
+  # 할당을 뜻한다 -- 카드만 바꿔도 hicache arm 만 OOM 나는 이유가 이것이다.
   if [ "$_need" -gt "${_avail_gb:-0}" ] 2>/dev/null; then
-    warn "추정 host pool(${_need}GB) > MemAvailable(${_avail_gb}GB). hicache arm 이 OOM 난다."
+    warn "추정 host pool(${_need}GB) > job 상한(${_avail_gb}GB). hicache arm 이 OOM 난다."
     say "      HICACHE_RATIO 를 낮추거나 sbatch --mem 을 올려라."
+  elif [ "$((_need * 10))" -gt "$((${_avail_gb:-0} * 7))" ] 2>/dev/null; then
+    warn "추정 host pool(${_need}GB) 이 job 상한(${_avail_gb}GB) 의 70% 를 넘는다."
+    say "      모델 로딩/활성화/page cache 가 나머지를 쓰므로 빠듯하다. --mem 을 올려두는 편이 낫다."
   fi
 fi
 _disk=$(df -BG --output=avail "$SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR" 2>/dev/null | tail -1 | tr -dc '0-9')
@@ -186,10 +220,14 @@ done
 say "block ${PORT_BASE}..$((PORT_BASE + 30)) 사용 가능"
 
 # ─── 기록 ─────────────────────────────────────────────────────────────────────
+# 중첩 따옴표를 피해 먼저 변수로 뽑는다 (echo 안에서 $(python -c "...") 를 쓰면 바깥
+# 문자열이 닫히는 지점이 모호해진다).
+_peer_gbps=$(python -c "import json;print(json.load(open('$OUTDIR/peer_check.json'))['pairs']['0->1']['gbps'])" 2>/dev/null)
 {
   echo "{"
   echo "  \"job\": \"${JOB_TAG}\", \"host\": \"$(hostname)\", \"ts\": $(date +%s),"
-  echo "  \"partition\": \"${SLURM_JOB_PARTITION:-}\", \"gpus\": \"$(IFS=,; echo "${A100_GPU_LIST[*]}")\","
+  echo "  \"partition\": \"${SLURM_JOB_PARTITION:-}\", \"gpus\": \"${A100_GPU_CSV}\","
+  echo "  \"gpu_name\": \"${_here_gpu:-}\", \"peer_gbps\": ${_peer_gbps:-null},"
   echo "  \"topology\": \"${A100_TOPOLOGY}\", \"pd_link\": \"${_link:-unknown}\","
   echo "  \"port_base\": ${PORT_BASE}, \"model\": \"${MODEL_PATH}\","
   echo "  \"mem_available_gb\": ${_avail_gb:-0}, \"fails\": ${FAIL}, \"warns\": ${WARN}"

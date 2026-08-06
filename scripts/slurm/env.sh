@@ -125,6 +125,10 @@ if [ -z "$_gpu_src" ] && command -v nvidia-smi >/dev/null 2>&1; then
 fi
 IFS=',' read -r -a A100_GPU_LIST <<< "$_gpu_src"
 export A100_NGPU=${#A100_GPU_LIST[@]}
+# 배열은 자식 프로세스로 export 되지 않는다. preflight.sh 는 source 가 아니라 실행되므로
+# 거기서 A100_GPU_LIST 를 읽으면 빈 값이고, 기록되는 preflight.json 의 gpus 필드가
+# 조용히 "" 가 된다 -- 어느 GPU 에서 잰 건지 알 수 없는 결과가 남는다. CSV 로도 넘긴다.
+export A100_GPU_CSV="$(IFS=,; echo "${A100_GPU_LIST[*]}")"
 
 # MIG 인스턴스는 UUID 로 노출되고 CUDA_VISIBLE_DEVICES=MIG-xxxx 형태가 된다. 이 실험은
 # peer HBM 으로의 CUDA IPC 에 의존하는데 MIG 는 그걸 막는다 — 조용히 park 가 꺼진 채로
@@ -166,8 +170,8 @@ case "$A100_TOPOLOGY" in
     # 따라서 2P2D 는 --exclusive 로 노드를 독점해서 돌려라. 1P1D 는 이 제약이 없다.
     echo "[env] WARNING: 2p2d 는 포트/GPU 를 하드코딩하는 start_2P_2D.sh 를 쓴다."
     echo "[env]          노드를 공유하면 다른 job 과 충돌한다. sbatch --exclusive 를 붙여라."
-    if [ "$(IFS=,; echo "${A100_GPU_LIST[*]}")" != "0,1,2,3" ]; then
-      echo "[env] ERROR: 할당 GPU 가 [$(IFS=,; echo "${A100_GPU_LIST[*]}")] 인데 start_2P_2D.sh 는" >&2
+    if [ "$A100_GPU_CSV" != "0,1,2,3" ]; then
+      echo "[env] ERROR: 할당 GPU 가 [${A100_GPU_CSV}] 인데 start_2P_2D.sh 는" >&2
       echo "[env]        0..3 을 가정한다. 이대로면 할당받지 않은 GPU 를 잡는다." >&2
       echo "[env]        --exclusive 로 노드 전체를 받거나, 1p1d 를 쓰라." >&2
       return 1 2>/dev/null || exit 1
@@ -251,7 +255,7 @@ mkdir -p "$LOG_DIR" "$SGLANG_KV_PARK_DIR" "$SGLANG_HICACHE_FILE_BACKEND_STORAGE_
 # ─── 요약 ─────────────────────────────────────────────────────────────────────
 env_summary() {
   echo "  node        : $(hostname)   job=${SLURM_JOB_ID:-<none>}  tag=${JOB_TAG}"
-  echo "  topology    : ${A100_TOPOLOGY}   GPUs=[$(IFS=,; echo "${A100_GPU_LIST[*]}")]"
+  echo "  topology    : ${A100_TOPOLOGY}   GPUs=[${A100_GPU_CSV}]"
   if [ "$A100_TOPOLOGY" = "1p1d" ]; then
     echo "  placement   : P=gpu${PREFILL_GPU}  D=gpu${DECODE_GPU}"
   else
@@ -265,3 +269,6 @@ env_summary() {
   echo "  park dir    : ${SGLANG_KV_PARK_DIR}"
   echo "  hicache dir : ${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR}"
 }
+# 함수도 export 한다. preflight.sh 는 source 되는 게 아니라 별도 프로세스로 실행되므로,
+# 이게 없으면 거기서 `env_summary: command not found` 가 난다 (실제로 났다).
+export -f env_summary
