@@ -131,6 +131,21 @@ if [ -n "$_mc_err" ]; then
   esac
 else
   say "mooncake.engine (TransferEngine): 로드 OK"
+  # 로드된다고 전송이 되는 것도 아니다. RDMA 가 있는 노드에서는 mooncake 가 rdma
+  # transport 를 설치하는데(sglang 이 protocol="rdma" 를 하드코딩한다), GPUDirect RDMA
+  # 가 없으면 KV pool 등록이 EFAULT 로 죽는다. 서버는 뜨는 것처럼 보이다 SIGQUIT 난다.
+  # probe 가 host/device 등록을 따로 시도해서 원인을 확정한다.
+  python scripts/slurm/probe_mooncake.py > "$OUTDIR/mooncake_probe.txt" 2>&1
+  _pr=$?
+  case "$_pr" in
+    0) say "mooncake 메모리 등록: host/device 모두 OK" ;;
+    3) bad "mooncake 가 GPU 메모리를 등록하지 못한다 (GPUDirect RDMA 부재)."
+       sed -n '/판정/,$p' "$OUTDIR/mooncake_probe.txt" | sed 's/^/         /' ;;
+    4) bad "mooncake 가 host 메모리조차 등록하지 못한다 (locked memory 한도 등)."
+       sed -n '/판정/,$p' "$OUTDIR/mooncake_probe.txt" | sed 's/^/         /' ;;
+    *) warn "mooncake probe 가 rc=$_pr 로 끝났다 -> $OUTDIR/mooncake_probe.txt" ;;
+  esac
+  say "probe 전문 -> $OUTDIR/mooncake_probe.txt"
 fi
 
 # ─── 3. GPU 와 배선 ───────────────────────────────────────────────────────────
