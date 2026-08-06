@@ -12,6 +12,9 @@ server17 (A6000 x4 전용 머신) 에서 A100 클러스터로 옮기면서 달�
 ## 빠른 사용법
 
 ```bash
+# 0. 클러스터 체크아웃을 먼저 최신으로. 이걸 빼먹으면 "고쳤는데 똑같은 에러" 가 난다
+git pull origin claude/a100-experiment-setup-dtubqr
+
 # 1. probe: 이 카드에서 arm 별 decode KV pool 이 얼마나 잡히는지 먼저 잰다
 ./scripts/slurm/submit.sh
 
@@ -146,9 +149,14 @@ ImportError: Please install mooncake by following the instructions at ...
 
 | `MOONCAKE_LD_FIX` | 하는 일 |
 |---|---|
-| `conda` | `LD_LIBRARY_PATH` 에 conda 의 `lib` 을 먼저 놓는다 (libcurl/libldap 까지 conda 것으로) |
 | `system` | 시스템 `libcrypto.so.3` 을 `LD_PRELOAD` 해서 `EVP_md2` 를 제공한다 |
+| `conda` | `LD_LIBRARY_PATH` 에 conda 의 `lib` 을 먼저 놓는다 (libcurl/libldap 까지 conda 것으로) |
 | `none` (기본) | 아무것도 안 한다 |
+
+`system` 을 먼저 시도한다. `conda` 쪽은 부작용이 크다 — 이 클러스터에서 실측하면
+mooncake 는 넘어가도 CUDA 런타임 해석이 깨진다 (`ImportError: libcudart.so.12`).
+torch 가 번들 CUDA 라이브러리를 RPATH 로 찾는데 `conda/lib` 이 앞에서 가로채기
+때문이다. `LD_PRELOAD` 는 심볼 하나를 채울 뿐이라 훨씬 국소적이다.
 
 **어느 쪽인지는 preflight 가 실제로 돌려보고 알려준다.** 둘 다 시도해서 되는 쪽의
 이름을 출력하므로, 그대로 넘기면 된다:

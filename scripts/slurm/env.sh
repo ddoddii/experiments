@@ -282,6 +282,12 @@ mkdir -p "$LOG_DIR" "$SGLANG_KV_PARK_DIR" "$SGLANG_HICACHE_FILE_BACKEND_STORAGE_
 # ─── 요약 ─────────────────────────────────────────────────────────────────────
 env_summary() {
   echo "  node        : $(hostname)   job=${SLURM_JOB_ID:-<none>}  tag=${JOB_TAG}"
+  # 어느 버전의 스크립트가 돌았는지. 클러스터 체크아웃이 오래된 채로 제출하면 새로
+  # 추가한 검사가 없는 상태로 도는데, 증상은 "고쳤는데 똑같은 에러" 뿐이라 진단이
+  # 어렵다. 실제로 한 번 그렇게 한 라운드를 썼다.
+  echo "  experiments : $(git -C "$EXP_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)" \
+       "@ $(git -C "$EXP_ROOT" rev-parse --short HEAD 2>/dev/null)$(
+         [ -n "$(git -C "$EXP_ROOT" status --porcelain 2>/dev/null)" ] && echo ' (dirty)')"
   echo "  topology    : ${A100_TOPOLOGY}   GPUs=[${A100_GPU_CSV}]"
   if [ "$A100_TOPOLOGY" = "1p1d" ]; then
     echo "  placement   : P=gpu${PREFILL_GPU}  D=gpu${DECODE_GPU}"

@@ -101,9 +101,15 @@ if [ -n "$_mc_err" ]; then
       _found=""
       # 두 방향 모두 "체인을 한쪽으로 통일"하는 것이다. 어느 쪽이 되는지는 이 노드가
       # 어떤 libcurl/libldap 을 물고 있느냐에 달렸으니, 설명하지 말고 실제로 돌려본다.
+      #
+      # system 을 먼저 시도한다. conda 쪽(LD_LIBRARY_PATH 앞에 conda/lib)은 부작용이
+      # 크다 -- 이 클러스터에서 실측하면 mooncake 는 넘어가도 CUDA 런타임 해석이 깨진다:
+      #   ImportError: libcudart.so.12: cannot open shared object file
+      # torch 가 번들 CUDA 라이브러리를 RPATH 로 찾는데 conda/lib 이 앞에서 가로채기
+      # 때문이다. LD_PRELOAD 는 심볼 하나를 채울 뿐이라 훨씬 국소적이다.
       _syscrypto=$(ls /lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3 2>/dev/null | head -1)
-      for _pair in "conda|LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}" \
-                   "system|LD_PRELOAD=${_syscrypto:-/lib64/libcrypto.so.3}"; do
+      for _pair in "system|LD_PRELOAD=${_syscrypto:-/lib64/libcrypto.so.3}" \
+                   "conda|LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"; do
         _name=${_pair%%|*}; _fix=${_pair#*|}
         if env "$_fix" python -c 'from mooncake.engine import TransferEngine' >/dev/null 2>&1; then
           say "      >>> MOONCAKE_LD_FIX=${_name} 으로 하면 로드된다 (${_fix})."
