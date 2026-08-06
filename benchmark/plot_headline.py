@@ -68,17 +68,32 @@ def _host_dram_gb(path):
     return best / 1024 if best else None
 
 
+# 이 비율을 넘게 실패한 arm 은 그리지 않는다. 실패한 요청은 평균에서 그냥 빠지는데,
+# 느린 요청부터 타임아웃되므로 그 평균은 살아남은 빠른 요청들만의 평균이다 -- 즉 실패한
+# arm 에 유리하게 편향된다. 실제로 C=64 hicache 는 200턴 전부 120초 타임아웃에 걸려
+# 156/200 item 이 실패했는데, 보고된 TTFT 71s 는 완주한 44개만의 값이었고 TPOT 은
+# 오히려 제일 좋아 보였다. 그 막대를 그리면 측정값처럼 읽힌다.
+MAX_ERROR_RATE = 0.05
+
+
 def collect(d):
     """한 디렉터리에서 arm 별 지표를 뽑는다. 없는 arm 은 None 으로 남긴다."""
     out = {}
     for arm, _, _ in ARMS:
         b = _read_summary(os.path.join(d, f"bench_{arm}.json"))
         m = _read_summary(os.path.join(d, f"metrics_{arm}_delta.json"))
+        total = (b or {}).get("total_items") or 0
+        errs = (b or {}).get("error_items") or 0
+        rate = (errs / total) if total else 0.0
+        ok = rate <= MAX_ERROR_RATE
         out[arm] = {
-            "ttft": b.get("avg_ttft_s") if b else None,
-            "tpot": b.get("avg_tpot_s") if b else None,
+            "ttft": b.get("avg_ttft_s") if (b and ok) else None,
+            "tpot": b.get("avg_tpot_s") if (b and ok) else None,
             "hit": (m.get("reuse_ratio") * 100) if m and m.get("reuse_ratio") is not None else None,
             "dram": _host_dram_gb(os.path.join(d, f"mem_{arm}.csv")),
+            "err_rate": rate,
+            "n": total,
+            "suppressed": bool(b) and not ok,
         }
     return out
 
@@ -143,6 +158,17 @@ def main():
     fig.tight_layout()
     savefig(fig, args.out)
 
+    # 에러율 때문에 뺀 arm 을 먼저, 크게 알린다. 이건 "데이터가 없다" 가 아니라
+    # "이 설정에서 그 arm 은 완주하지 못했다" 는 결과이고, 그대로 보고해야 한다.
+    for glabel, data in groups:
+        for arm, legend, _ in ARMS:
+            d = data[arm]
+            if d.get("suppressed"):
+                print(f"[제외] {glabel}/{legend}: {d['err_rate']*100:.0f}% 실패"
+                      f" ({int(d['err_rate']*d['n'])}/{d['n']} items) -> TTFT/TPOT 막대 없음")
+                print("       실패한 요청은 평균에서 빠지는데 느린 것부터 빠지므로,")
+                print("       남은 평균은 그 arm 에 유리하게 편향된다. TIMEOUT 을 올려")
+                print("       모든 arm 이 완주하게 한 뒤 다시 비교하라 (TIMEOUT=600).")
     if missing:
         # 조용히 빈 막대를 그리면 "그 arm 이 0" 처럼 보인다. 무엇이 없는지 말한다.
         print("[warn] 다음 값이 없어 막대를 그리지 않았다 (arm 이 실패했거나 파일이 없음):")
@@ -154,11 +180,12 @@ def main():
     # 그림만 보고 수치를 되읽는 실수를 막는다.
     tsv = args.out + "_values.tsv"
     with open(tsv, "w") as f:
-        f.write("group\tarm\thit_pct\tttft_s\ttpot_s\thost_dram_gb\n")
+        f.write("group\tarm\thit_pct\tttft_s\ttpot_s\thost_dram_gb\terr_rate\tn_items\n")
         for glabel, data in groups:
             for arm, _, _ in ARMS:
                 d = data[arm]
-                f.write(f"{glabel}\t{arm}\t{d['hit']}\t{d['ttft']}\t{d['tpot']}\t{d['dram']}\n")
+                f.write(f"{glabel}\t{arm}\t{d['hit']}\t{d['ttft']}\t{d['tpot']}"
+                        f"\t{d['dram']}\t{d.get('err_rate')}\t{d.get('n')}\n")
     print(f"수치: {tsv}")
 
 
