@@ -260,8 +260,32 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
     cp "$f" "$OUTDIR/$(basename "${f%.json}").$label.json" 2>/dev/null && _n=$((_n + 1))
   done
   case "$label" in
-    park*) [ "$_n" -gt 0 ] || echo "  [warn] no parked_gpu*.json captured for $label -- "\
-           "per-tier fetch cost will be missing from the analysis" ;;
+    park*)
+      if [ "$_n" -eq 0 ]; then
+        # Capture WHY, not just THAT. Three runs have now come back with no park
+        # telemetry and no way to tell whether the files were never written, written
+        # somewhere else, or removed before the copy -- each round cost a full rerun to
+        # not answer. Everything needed to tell them apart goes into a .txt (never .log,
+        # which .gitignore drops) so it survives the push.
+        {
+          echo "no parked_gpu*.json found at copy time for $label"
+          echo "--- SGLANG_KV_PARK_DIR=${SGLANG_KV_PARK_DIR:-/dev/shm/sglang_kv_parking}"
+          ls -la "${SGLANG_KV_PARK_DIR:-/dev/shm/sglang_kv_parking}" 2>&1 | head -30
+          echo "--- any park file anywhere under /dev/shm ---"
+          find /dev/shm -name 'parked_gpu*' -o -name 'gpu*_usage' 2>/dev/null | head -10
+          echo "--- server processes still alive? ---"
+          pgrep -af "sglang.launch_server" 2>/dev/null | head -6
+          echo "--- park lines from each prefill log (tail) ---"
+          for f in p1 p2; do
+            [ -f "logs/$f.log" ] || continue
+            echo "[$f]"
+            grep -iE "idle kv parking|park pool|telemetry publish failed|DISABLED" \
+              "logs/$f.log" 2>/dev/null | tail -12
+          done
+        } > "$OUTDIR/telemetry_missing_$label.txt" 2>&1
+        echo "  [warn] no parked_gpu*.json for $label -- diagnosis written to"
+        echo "         $OUTDIR/telemetry_missing_$label.txt"
+      fi ;;
   esac
   # Digest, not the raw log: .gitignore has a blanket '*.log' and every raw log copied
   # here in earlier runners was silently dropped before it could be pushed.
