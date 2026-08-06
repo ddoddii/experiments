@@ -1,0 +1,30 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0806 20:13:51.570923 1213261 transfer_engine_impl.cpp:571] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0806 20:13:51.571635 1213261 transfer_engine_impl.cpp:105] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 12001
+I0806 20:13:51.571669 1213261 transfer_engine_impl.cpp:172] Transfer Engine RPC using P2P handshake, listening on 127.0.0.1:16944
+I0806 20:13:51.571755 1213261 transfer_engine_impl.cpp:217] Auto-discovering topology...
+I0806 20:13:52.271461 1213261 transfer_engine_impl.cpp:232] Topology discovery complete. Found 2 HCAs.
+I0806 20:13:52.271574 1213261 tcp_transport.cpp:343] TcpTransport: listen on port 16217
+
+=== 환경 ===
+  hostname       : node43
+  ulimit -l      : unlimited  (RDMA 는 memory locking 을 쓴다)
+  nvidia_peermem : <로드되지 않음>
+  ib devices     : mlx5_0
+mlx5_1
+  MC_FORCE_TCP   : 1
+
+=== mooncake import ===
+  OK
+
+=== TransferEngine.initialize(protocol='rdma') ===
+  protocol='rdma' device_name=''  ->  rc=0
+
+=== 메모리 등록: HOST vs DEVICE ===
+  HOST   ptr=0x7f94f7ffe010  rc=0   OK
+  DEVICE ptr=0x7f939e000000  rc=0   OK
+
+=== 판정 ===
+  둘 다 등록된다. 그렇다면 sglang 이 넘기는 특정 버퍼가 문제이고,
+  p1.log 의 실패 주소를 sglang 의 KV pool 주소와 대조해 봐야 한다.
+I0806 20:13:54.054474 1213261 transfer_metadata.cpp:299] removeSegmentDesc 127.0.0.1:16944 finish

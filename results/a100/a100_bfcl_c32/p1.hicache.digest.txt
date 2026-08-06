@@ -1,0 +1,21 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 20:23:29] max_total_num_tokens=105000, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=49.39 GB
+[2026-08-06 20:23:35] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 20:23:20] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-08-06 20:46:40] INFO:     127.0.0.1:49900 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:40] INFO:     127.0.0.1:49906 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:41] INFO:     127.0.0.1:49914 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:41] INFO:     127.0.0.1:49922 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:41] INFO:     127.0.0.1:38196 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 20:46:41] Prefill batch, #new-seq: 1, #new-token: 78, #cached-token: 4118, token usage: 0.20, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 3, input throughput (token/s): 10.77, 
+[2026-08-06 20:46:42] INFO:     127.0.0.1:49928 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:42] INFO:     127.0.0.1:49938 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:43] INFO:     127.0.0.1:49950 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:43] INFO:     127.0.0.1:49956 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:44] INFO:     127.0.0.1:49962 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:44] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 31.70, 
+[2026-08-06 20:46:44] INFO:     127.0.0.1:49968 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:45] INFO:     127.0.0.1:49972 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 20:46:45] INFO:     127.0.0.1:49964 - "GET /health HTTP/1.1" 200 OK
