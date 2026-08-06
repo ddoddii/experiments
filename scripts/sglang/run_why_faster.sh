@@ -179,6 +179,17 @@ export SGLANG_KV_PARK_TRIGGER=${SGLANG_KV_PARK_TRIGGER:-complete}
 export SGLANG_KV_PARK_ADMIT=${SGLANG_KV_PARK_ADMIT:-0}
 export SGLANG_KV_PARK_ASYNC_PARK=${SGLANG_KV_PARK_ASYNC_PARK:-1}
 
+# 토폴로지에 맞는 stop 을 고른다. 1p1d 에서 stop.sh(2P2D용)를 부르면 광역 pkill 에
+# 30000-30003/8000/8080 고정 포트를 정리하는데, SLURM 공유 노드에서는 그게 곧 옆 job 을
+# 죽이는 동작이다. stop_1P_1D.sh 는 job 소속 프로세스와 env 의 포트만 건드린다.
+stop_all() {
+  if [ "$NODES" = "1p1d" ] && [ -x ./scripts/sglang/stop_1P_1D.sh ]; then
+    ./scripts/sglang/stop_1P_1D.sh
+  else
+    ./scripts/sglang/stop.sh
+  fi
+}
+
 start_arm_1p1d() {
   # Two GPUs: prefill on 0, decode on 1, and the park target is GPU 1 -- decode's own
   # HBM, across NV12. PARK_POOL_TOKENS is the per-prefill budget; with one candidate GPU
@@ -274,15 +285,18 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   local label=$1 kind=$2
   echo
   echo "──────────────── $label ────────────────"
-  if [ "$NODES" = "1p1d" ] && [ -x ./scripts/sglang/stop_1P_1D.sh ]; then
-    ./scripts/sglang/stop_1P_1D.sh > "$OUTDIR/stop_$label.log" 2>&1 || true
-  else
-    ./scripts/sglang/stop.sh > "$OUTDIR/stop_$label.log" 2>&1 || true
-  fi
+  stop_all > "$OUTDIR/stop_$label.log" 2>&1 || true
   sleep 3
   start_arm "$kind"
 
+  # OCC_TARGETS 는 "port:label:role" 목록. 기본값을 쓰면 sampler 는 30000-30003 을 긁는데,
+  # 1P1D 에는 30002/30003 이 없고 SLURM 에서는 포트가 job 마다 다르다 -- 둘 다 조용히
+  # 빈 CSV(또는 남의 서버의 CSV)를 만든다. scripts/slurm/env.sh 가 이 값을 넣어준다.
+  # 배열로 넘긴다: 값에 공백이 있으므로 ${VAR:+--targets "$VAR"} 는 단어 분리로 깨진다.
+  local occ_args=()
+  if [ -n "${OCC_TARGETS:-}" ]; then occ_args=(--targets "$OCC_TARGETS"); fi
   python benchmark/kv_occupancy_timeseries.py --out "$OUTDIR/occ_$label.csv" \
+    "${occ_args[@]}" \
     --interval 0.5 > "$OUTDIR/sampler_occ_$label.log" 2>&1 &
   local OCC_PID=$!
   python benchmark/sys_mem_breakdown.py --out "$OUTDIR/mem_$label.csv" --interval 1 \
@@ -296,8 +310,10 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # claim. sglang:hicache_host_used_tokens says whether the tier holds anything, and
   # prefetched_tokens_total whether the L3 storage path is being used at all. Snapshot
   # before and after so the DELTA over the run is visible, not just a level.
+  # 포트는 하드코딩하지 않는다. SLURM 공유 노드에서는 job 마다 다르고, 30000 을 그대로
+  # 긁으면 최악의 경우 같은 노드에 뜬 다른 job 의 /metrics 를 이 arm 의 것으로 기록한다.
   python benchmark/phase0_metrics_scraper.py \
-    --prefill-url "http://127.0.0.1:30000/metrics" \
+    --prefill-url "http://127.0.0.1:${PREFILL_METRICS_PORT:-30000}/metrics" \
     --decode-url "http://127.0.0.1:${DECODE_METRICS_PORT:-30002}/metrics" \
     --tag before --out "$OUTDIR/metrics_${label}_before.json" > /dev/null 2>&1 || true
 
@@ -305,7 +321,7 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
     | tee "$OUTDIR/bench_$label.log" | tail -15
 
   python benchmark/phase0_metrics_scraper.py \
-    --prefill-url "http://127.0.0.1:30000/metrics" \
+    --prefill-url "http://127.0.0.1:${PREFILL_METRICS_PORT:-30000}/metrics" \
     --decode-url "http://127.0.0.1:${DECODE_METRICS_PORT:-30002}/metrics" \
     --tag after --out "$OUTDIR/metrics_${label}_after.json" > /dev/null 2>&1 || true
   python benchmark/phase0_metrics_scraper.py \
@@ -332,8 +348,12 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # version of this line globbed parked_bytes_*.json, matched nothing, and -- because the
   # copy is best-effort -- said nothing, so the whole run came back with no per-tier fetch
   # telemetry and decompose_speedup.py reported "no park arm in this directory".
+  # SGLANG_KV_PARK_DIR 을 존중한다. 이 glob 이 경로를 하드코딩하고 있었고, SLURM 에서는
+  # job 마다 park 디렉터리가 다르므로 (env.sh) 그대로 두면 매칭이 0개가 된다 -- 복사는
+  # best-effort 라 아무 말도 없이, 전 run 이 per-tier fetch telemetry 없이 끝난다.
+  # 정확히 그 실패가 이미 세 번 있었다.
   _n=0
-  for f in /dev/shm/sglang_kv_parking/parked_gpu*.json; do
+  for f in "${SGLANG_KV_PARK_DIR:-/dev/shm/sglang_kv_parking}"/parked_gpu*.json; do
     [ -e "$f" ] || continue
     cp "$f" "$OUTDIR/$(basename "${f%.json}").$label.json" 2>/dev/null && _n=$((_n + 1))
   done
@@ -377,7 +397,13 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # logs/sglang/, not logs/ -- the 2P2D starter writes there. Reading the wrong path is
   # why every digest in every run so far carried a stale July startup block and the
   # "identical to the previous arm" warning fired on runs whose logs were fine.
-  LOGD=${LOG_DIR:-logs/sglang}
+  # 1P1D 스타터는 logs/ 에, 2P2D 스타터는 logs/sglang/ 에 쓴다. 무조건 logs/sglang 을
+  # 먼저 보면 1p1d run 의 digest 가 지난 2p2d run 의 오래된 로그에서 뽑힌다 -- 이미
+  # 한 번 전 run 의 digest 가 통째로 7월 startup 블록을 달고 나온 적이 있다.
+  # SLURM 에서는 env.sh 가 LOG_DIR 을 job 디렉터리로 고정하므로 이 분기를 타지 않는다.
+  if [ -n "${LOG_DIR:-}" ]; then LOGD="$LOG_DIR"
+  elif [ "$NODES" = "1p1d" ]; then LOGD=logs
+  else LOGD=logs/sglang; fi
   [ -d "$LOGD" ] || LOGD=logs
   for f in $( [ "$NODES" = "1p1d" ] && echo "p1 d1" || echo "p1 p2 d1 d2" ); do
     [ -f "$LOGD/$f.log" ] || continue
@@ -442,7 +468,7 @@ if [ "$COSTMODEL" = "1" ]; then
   for kind in park_gpu park_host; do
     echo
     echo "──────────────── costmodel: $kind (SYNC_FETCH=1) ────────────────"
-    ./scripts/sglang/stop.sh > /dev/null 2>&1 || true
+    stop_all > /dev/null 2>&1 || true
     sleep 3
     rm -rf "$OUTDIR/trace_$kind"
     SGLANG_KV_PARK_SYNC_FETCH=1 \
@@ -453,7 +479,7 @@ if [ "$COSTMODEL" = "1" ]; then
   done
 fi
 
-./scripts/sglang/stop.sh > /dev/null 2>&1 || true
+stop_all > /dev/null 2>&1 || true
 
 echo
 echo "############################################################"

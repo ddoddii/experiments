@@ -7,12 +7,34 @@ SGLang의 Prefill-Decode (PD) disaggregation 성능을 BFCL v3 multi-turn 벤치
 
 ## Environment
 
-- **Server**: server17
+두 개의 실행 환경이 있고, **실행 방식이 다르다**.
+
+### server17 (전용 머신, bash 직접 실행)
+
 - **GPUs**: NVIDIA RTX A6000 x4 (49GB VRAM each)
 - **RAM**: 125GB (주의: hicache가 CPU RAM 사용)
 - **Conda env**: `sglang`
 - **Model**: `Llama-3.1-8B-Instruct`
 - **Model path**: `/home/uhmturks/hf_models/Llama-3.1-8B-Instruct`
+
+### A100 클러스터 (SLURM, sbatch 필수)
+
+bash 에서 직접 서버를 띄우지 않는다. `.sh` 로 만들어 `sbatch` 로 올린다.
+
+- **Partition / QOS**: `-p suma_a100 -q a100_qos`
+- **실행**: `./scripts/slurm/submit.sh` (또는 `sbatch ~/experiments/scripts/slurm/submit_bench.sh`)
+- **대화형**: `srun -p suma_a100 -q a100_qos --gres=gpu:1 --pty bash -i`
+- **도는 job 에 붙기**: `srun --jobid=<jobid> --pty bash`
+- **문서**: `scripts/slurm/README.md`
+
+노드를 남과 공유하므로 포트/pkill/GPU번호/공유디렉터리가 전부 job 단위로 격리된다
+(`scripts/slurm/env.sh`). 이 격리를 우회해서 서버를 손으로 띄우면 같은 노드의 다른
+job 을 죽이거나, 벤치가 남의 라우터에 요청을 쏜다.
+
+**A6000 에서 잰 상수를 그대로 들고 오면 안 된다.** peer/host 대역폭, 카드 크기,
+prefill ms/token, `DECODE_MAX_TOTAL_TOKENS` 가 분석에 박혀 있다. `preflight.sh` 가
+앞의 둘을 자동 갱신하고, `DECODE_MAX_TOTAL_TOKENS` 는 `MODE=probe` 가 계산해 준다.
+prefill ms/token 은 아직 수동 (`benchmark/ttft_ctx_sweep.py`). 자세한 건 위 README.
 
 ## Directory Structure
 
@@ -38,9 +60,19 @@ SGLang의 Prefill-Decode (PD) disaggregation 성능을 BFCL v3 multi-turn 벤치
 ├── results/
 │   └── bfcl_multiturn_results_1P_1D.json    # 1P1D 실험 결과
 └── scripts/
-    ├── start_2P_2D.sh    # 2P2D 서버 시작
-    ├── stop.sh           # 전체 서버 종료
-    └── cleanup_all.sh    # 로그/캐시 정리
+    ├── sglang/
+    │   ├── start_1P_1D.sh    # 1P1D 서버 시작 (SLURM job 격리 지원)
+    │   ├── start_2P_2D.sh    # 2P2D 서버 시작 (포트 하드코딩 → 노드 독점 필요)
+    │   ├── stop_1P_1D.sh     # 1P1D 종료 (job 소속 프로세스만)
+    │   ├── stop.sh           # 2P2D 종료 (광역 pkill)
+    │   ├── _job_scope.sh     # job 단위 pkill 헬퍼
+    │   └── run_why_faster.sh # 메인 실험 러너 (arm 별 비교)
+    └── slurm/                # A100 클러스터 전용
+        ├── env.sh            # 공통 환경 + job 단위 포트/GPU/디렉터리
+        ├── preflight.sh      # 무효한 결과를 만들 조건 사전 차단
+        ├── submit_bench.sh   # sbatch 엔트리 (probe / full)
+        ├── submit.sh         # sbatch 래퍼
+        └── interactive.sh    # srun --pty 헬퍼
 ```
 
 ## Configurations
@@ -60,10 +92,27 @@ SGLang의 Prefill-Decode (PD) disaggregation 성능을 BFCL v3 multi-turn 벤치
 
 ## How to Run
 
-### 서버 시작
+### A100 (SLURM) — sbatch
+
 ```bash
 cd ~/experiments
-./scripts/start_2P_2D.sh
+./scripts/slurm/submit.sh                                        # 1) probe
+./scripts/slurm/submit.sh MODE=full DECODE_MAX_TOTAL_TOKENS=<값>  # 2) 본 실험
+
+squeue -u $USER
+tail -f logs/slurm/sglang-why-<jobid>.out
+srun --jobid=<jobid> --pty bash     # 도는 job 안으로
+```
+
+probe 를 먼저 돌리는 이유: arm 마다 decode KV pool 크기가 달라지는데
+(park pool 이 decode GPU 의 메모리를 먼저 먹는다), 그걸 고정하지 않으면
+캐시 계층 차이와 용량 삭감이 한 숫자에 섞인다. 자세한 건 `scripts/slurm/README.md`.
+
+### server17 (전용 머신) — bash 직접
+
+```bash
+cd ~/experiments
+./scripts/sglang/start_2P_2D.sh
 ```
 
 스크립트가 자동으로:

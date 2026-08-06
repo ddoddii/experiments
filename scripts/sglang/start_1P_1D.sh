@@ -22,8 +22,15 @@
 
 set -e
 
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate sglang
+# SLURM 하위에서는 scripts/slurm/env.sh 가 이미 conda 를 activate 하고, 포트/GPU/로그
+# 디렉터리를 job 단위로 잡아 둔 상태로 이 스크립트를 부른다. 그 위에 다시 activate 하면
+# 클러스터에 따라 PATH 가 꼬이므로 건너뛴다.
+if [ -z "${SLURM_JOB_ID:-}" ] || [ -z "${CONDA_PREFIX:-}" ]; then
+  source "$(conda info --base)/etc/profile.d/conda.sh"
+  conda activate sglang
+fi
+# 내 job 소속 프로세스만 죽이는 job_pkill (공유 노드 대비). 자세한 이유는 파일 주석 참고.
+source "$(dirname "${BASH_SOURCE[0]}")/_job_scope.sh"
 
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Llama-3.1-8B-Instruct"}
 CACHE_MODE=${CACHE_MODE:-"hicache_file"}
@@ -35,16 +42,25 @@ DECODE_PORT=${DECODE_PORT:-30001}
 BOOTSTRAP_PORT=${BOOTSTRAP_PORT:-8998}
 ROUTER_PORT=${ROUTER_PORT:-8000}
 ROUTER_PROM_PORT=${ROUTER_PROM_PORT:-29000}   # sgl-router Prometheus exporter (기본 29000)
+# Mooncake 메타데이터 서버 포트. 공유 노드에서 8080 고정은 곧 충돌이므로 job 마다 다른
+# 값을 받을 수 있어야 한다 (scripts/slurm/env.sh 가 넣어준다). 기본값은 종전과 동일.
+MOONCAKE_PORT=${MOONCAKE_PORT:-8080}
+# 라우터 bind 주소. 전용 머신에서는 종전대로 0.0.0.0, 공유 클러스터에서는 루프백만.
+ROUTER_HOST=${ROUTER_HOST:-0.0.0.0}
+# 로그 위치. run_why_faster.sh 의 digest 수집이 LOG_DIR 을 먼저 보므로 여기와 같아야 한다.
+LOG_DIR=${LOG_DIR:-logs}
 XFER=${XFER:-mooncake}                # disaggregation transfer backend
 # 압박(pressure) knob: prefill KV pool을 작게 잡아 radix eviction을 유발한다.
 # (빈 값이면 미적용 = 기본 대용량 pool). 값 예: 30000, 20000
 PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
 DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 
-mkdir -p logs
+mkdir -p "$LOG_DIR"
 
 echo "================================================================"
 echo " Phase 0 baseline 1P1D  |  CACHE_MODE=${CACHE_MODE}  HICACHE_RATIO=${HICACHE_RATIO}"
+echo " P=gpu${PREFILL_GPU}:${PREFILL_PORT}  D=gpu${DECODE_GPU}:${DECODE_PORT}" \
+     " router=${ROUTER_PORT}  logs=${LOG_DIR}"
 echo "================================================================"
 
 # --- 캐시 모드별 서버 인자 구성 ---------------------------------------------
@@ -116,22 +132,37 @@ if [ -n "$DECODE_MAX_TOTAL_TOKENS" ]; then
 fi
 
 echo "[0/5] Stopping existing processes..."
-pkill -9 -f "sglang.launch_server" 2>/dev/null || true
-pkill -9 -f "mooncake.http_metadata_server" 2>/dev/null || true
-pkill -9 -f "sglang_router.launch_router" 2>/dev/null || true
-for port in $BOOTSTRAP_PORT $PREFILL_PORT $DECODE_PORT $ROUTER_PORT $ROUTER_PROM_PORT 8080; do
+job_pkill 9 "sglang.launch_server"
+job_pkill 9 "mooncake.http_metadata_server"
+job_pkill 9 "sglang_router.launch_router"
+for port in $BOOTSTRAP_PORT $PREFILL_PORT $DECODE_PORT $ROUTER_PORT $ROUTER_PROM_PORT $MOONCAKE_PORT; do
   fuser -k ${port}/tcp 2>/dev/null || true
 done
 # Idle KV parking rendezvous is shared via /dev/shm. Stale IPC handles from a prior
 # run point at dead GPU memory (CUDA "invalid resource handle" -> parking setup fails),
 # so wipe the rendezvous dir on every restart.
-rm -rf /dev/shm/sglang_kv_parking 2>/dev/null || true
+# SGLANG_KV_PARK_DIR 을 존중한다: SLURM 에서는 job 마다 다른 디렉터리라, 고정 경로를
+# 지우면 같은 노드의 다른 job 의 telemetry 를 날린다.
+PARK_DIR=${SGLANG_KV_PARK_DIR:-/dev/shm/sglang_kv_parking}
+rm -rf "$PARK_DIR" 2>/dev/null || true
 sleep 5
 
-echo "[1/5] Starting Mooncake metadata server..."
-python -m mooncake.http_metadata_server > logs/mooncake.log 2>&1 &
+echo "[1/5] Starting Mooncake metadata server (port ${MOONCAKE_PORT})..."
+if [ "$MOONCAKE_PORT" = "8080" ]; then
+  python -m mooncake.http_metadata_server > "$LOG_DIR/mooncake.log" 2>&1 &
+else
+  python -m mooncake.http_metadata_server --port "$MOONCAKE_PORT" > "$LOG_DIR/mooncake.log" 2>&1 &
+fi
+MC_PID=$!
 sleep 2
-export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
+# 조용히 실패하면 KV 전송이 통째로 죽고, 증상은 벤치 쪽의 KVTransferError 로만 나타난다.
+if ! kill -0 "$MC_PID" 2>/dev/null; then
+  echo "  Mooncake metadata server FAILED — see $LOG_DIR/mooncake.log"
+  tail -20 "$LOG_DIR/mooncake.log"
+  echo "  (--port 를 지원하지 않는 버전이면 MOONCAKE_PORT=8080 으로 두고 노드를 독점하라.)"
+  exit 1
+fi
+export MOONCAKE_MASTER_SERVER=127.0.0.1:${MOONCAKE_PORT}
 
 echo "[2/5] Prefill (GPU ${PREFILL_GPU}, port ${PREFILL_PORT})  args: ${PREFILL_CACHE_ARGS}"
 env CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_server \
@@ -140,7 +171,7 @@ env CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_
   ${PREFILL_CACHE_ARGS} \
   --disaggregation-mode prefill --disaggregation-transfer-backend ${XFER} \
   --disaggregation-bootstrap-port ${BOOTSTRAP_PORT} \
-  > logs/p1.log 2>&1 &
+  > "$LOG_DIR/p1.log" 2>&1 &
 P1_PID=$!
 sleep 3
 
@@ -150,7 +181,7 @@ CUDA_VISIBLE_DEVICES=${DECODE_CVD} python3 -m sglang.launch_server \
   --enable-metrics \
   ${DECODE_CACHE_ARGS} \
   --disaggregation-mode decode --disaggregation-transfer-backend ${XFER} \
-  > logs/d1.log 2>&1 &
+  > "$LOG_DIR/d1.log" 2>&1 &
 D1_PID=$!
 sleep 3
 
@@ -162,12 +193,12 @@ READY_TIMEOUT=${READY_TIMEOUT:-900}
 wait_ready() {
   local name=$1 pid=$2 elapsed=0
   echo -n "  ${name}..."
-  while ! grep -q "ready to roll" logs/${name}.log 2>/dev/null; do
+  while ! grep -q "ready to roll" "$LOG_DIR/${name}.log" 2>/dev/null; do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo " FAILED (process exited) — see logs/${name}.log"; tail -30 logs/${name}.log; return 1
+      echo " FAILED (process exited) — see $LOG_DIR/${name}.log"; tail -30 "$LOG_DIR/${name}.log"; return 1
     fi
     if [ "$elapsed" -ge "$READY_TIMEOUT" ]; then
-      echo " TIMEOUT after ${READY_TIMEOUT}s — see logs/${name}.log"; tail -30 logs/${name}.log; return 1
+      echo " TIMEOUT after ${READY_TIMEOUT}s — see $LOG_DIR/${name}.log"; tail -30 "$LOG_DIR/${name}.log"; return 1
     fi
     sleep 3; elapsed=$((elapsed + 3)); echo -n "."
   done
@@ -181,13 +212,13 @@ python -m sglang_router.launch_router \
   --pd-disaggregation \
   --prefill http://127.0.0.1:${PREFILL_PORT} ${BOOTSTRAP_PORT} \
   --decode http://127.0.0.1:${DECODE_PORT} \
-  --host 0.0.0.0 --port ${ROUTER_PORT} \
+  --host ${ROUTER_HOST} --port ${ROUTER_PORT} \
   --prometheus-port ${ROUTER_PROM_PORT} \
-  > logs/router.log 2>&1 &
+  > "$LOG_DIR/router.log" 2>&1 &
 ROUTER_PID=$!
 sleep 5
 if ! kill -0 "$ROUTER_PID" 2>/dev/null; then
-  echo "  Router FAILED to start — see logs/router.log"; tail -20 logs/router.log; exit 1
+  echo "  Router FAILED to start — see $LOG_DIR/router.log"; tail -20 "$LOG_DIR/router.log"; exit 1
 fi
 
 echo ""
