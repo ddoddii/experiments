@@ -50,86 +50,96 @@ def col(rows, key):
 BYTES_PER_TOKEN = 131072  # 측정값 (park telemetry 의 bytes_per_token). 8B, 32 layers.
 
 
-def plan(per_session, conc, oversub, card_gb, weights_gb=16.0):
-    """압박이 '캐시가 이기는 구간' 에 오도록 knob 을 함께 계산한다.
+def plan(per_session, conc, oversub, card_gb, d_peak_tok, weights_gb=16.0, margin_gb=8.0):
+    """압박(P)과 victim tier 크기를 함께 정한다.
 
-    구간이 셋이고, 가운데만 쓸모가 있다:
+    구간이 셋이고 가운데만 쓸모가 있다:
 
       P >> W   밀려나는 게 없다. victim cache 는 잡을 게 없고 비용만 낸다.
-               (A100 80GB 기본값이 여기였다: 점유 38%, hicache 가 recompute 보다 1.84배 나쁨)
-      P ~< W   밀려난 것이 곧 '곧 다시 쓸 것' 이다. victim cache 가 그걸 받아서 돌려준다.
-               <- 여기를 노려야 한다
-      P << W   thrashing. victim tier 에서도 재사용 전에 쫓겨나고, 재계산이 지배한다.
-               (C=64 + P=79k 는 4배 oversubscribe 라 여기로 간다)
+               (80GB 기본값이 여기였다: 점유 38%, hicache 가 recompute 보다 1.84배 나쁨)
+      P ~< W   밀려난 것이 곧 '곧 다시 쓸 것' 이다. <- 여기를 노린다
+      P << W   thrashing. victim tier 에서도 재사용 전에 쫓겨난다. (C=64+P=79k 가 여기)
 
-    그리고 두 번째 조건이 하나 더 있다. 밀려난 양(overflow = W - P)을 victim tier 가
-    담을 수 있어야 한다. hicache 의 host tier 는 P x HICACHE_RATIO 로 정해지므로,
-    P 를 줄이면 host tier 도 같이 줄어든다 -- 압박을 만들려고 P 를 줄였는데 받아줄
-    곳도 같이 줄어드는 함정이 있다. park pool 은 반대로 P 와 무관하게 지정된다.
-    그래서 두 tier 를 같은 크기로 맞춰야 '용량' 이 아니라 '매체/소프트웨어' 를 비교하게 된다.
+    TIER 크기는 어떻게 정하는가 -- 여기서 방향을 틀리기 쉽다.
+
+    park pool 은 "decode GPU 에 남는 HBM" 에서 나온다. 그게 이 설계의 주장 자체이므로,
+    hicache 의 tier 크기에 맞춰 park 을 줄이면 주장하는 시스템이 아닌 다른 것을 재게
+    된다. 반대로 맞춰야 한다: park 은 D 의 여유만큼 잡고, hicache 에 같은 바이트를
+    host DRAM 으로 준다. HICACHE_RATIO 는 자유 파라미터라 (>1 이기만 하면 된다)
+    얼마든지 키울 수 있으므로, 이 방향에는 제약이 없다.
+
+    그러면 질문이 둘로 갈린다. 둘 다 필요하고, 설정이 다르다:
+
+      Q1 헤드라인   "D 의 유휴 HBM 에 두는 것이 host DRAM 으로 내리는 것보다 나은가"
+                    -> 각자 자연스러운 예산으로. park 은 D 의 여유만큼, hicache 는
+                       host 로 같은 바이트. 배포된 시스템끼리의 비교다.
+      Q2 분해       "왜 빠른가 -- 매체인가, 소프트웨어인가, 용량인가"
+                    -> tier 바이트를 같게 고정. 그래야 '더 크다' 가 아니라 '어디에
+                       두느냐' 를 재는 게 된다. run_why_faster.sh 가 존재하는 이유.
+
+    아래는 두 조건을 동시에 만족시키는 설정이다: park 은 D 의 실측 여유에서 잡고,
+    hicache 에 같은 바이트를 준다. 용량이 같으므로 Q2 로도 읽을 수 있고, park 이
+    자기 자연 크기를 쓰므로 Q1 에도 가깝다. 용량 자체가 기여분인지 보려면
+    run_why_faster.sh 의 CAP= 축으로 park pool 크기를 쓸어라 -- TTFT 가 용량을
+    따라가면 이득의 정체는 용량이고, 평평하면 용량이 아니다.
     """
     W = per_session * conc
     P = int(W / oversub / 1000) * 1000
     overflow = W - P
-    # tier 는 두 조건을 동시에 만족해야 한다.
-    #
-    #   (1) 밀려난 양(overflow)을 여유 있게 담아야 한다  -> overflow x 1.3
-    #   (2) sglang 은 host tier 가 device pool 보다 크기를 요구한다:
-    #         memory_pool_host.py: assert self.size > device_pool.size
-    #       즉 HICACHE_RATIO 는 1 미만이 될 수 없다. 이 제약을 무시하면 서버가
-    #       assertion 으로 죽는다 (계산상 0.67 이 나올 수 있어서 실제로 걸린다).
-    #       park pool 에는 이 제약이 없지만, 두 tier 를 같은 크기로 맞춰야
-    #       '어디에 두느냐' 를 비교하게 되므로 park 쪽도 같은 값을 쓴다.
-    tier = int(max(overflow * 1.3, P * 1.1) / 1000) * 1000
+
+    # 1) decode 가 실제로 쓴 만큼 + 여유를 decode pool 로 남긴다.
+    d_pool_tok = int(d_peak_tok * 1.25 / 1000) * 1000
+    d_pool_gb = d_pool_tok * BYTES_PER_TOKEN / 2**30
+    # 2) 남는 HBM 이 park pool 이 된다. 이게 이 설계가 주장하는 "D 의 유휴 공간" 이다.
+    park_gb = card_gb - weights_gb - d_pool_gb - margin_gb
+    tier = int(park_gb * 2**30 / BYTES_PER_TOKEN / 1000) * 1000
+    # 3) hicache 에 같은 바이트를 host DRAM 으로 준다. ratio>1 제약은 자동 충족된다
+    #    (tier 가 P 보다 크므로). sglang: assert host_size > device_pool.size
     ratio = round(tier / P, 2) if P else 0
-    tier_gb = tier * BYTES_PER_TOKEN / 2**30
-    # decode GPU 에 park pool 이 들어갈 자리가 있는가.
-    free_gb = card_gb - weights_gb - tier_gb
 
     print()
-    print("  ─── 캐시가 이기는 구간으로 맞추기 ─────────────────────────────")
-    print(f"  가정: 세션당 {per_session:.0f} tokens (이 run 실측), C={conc},"
-          f" 목표 oversubscribe {oversub}배")
+    print("  ─── 압박과 tier 를 함께 정하기 ─────────────────────────────────")
+    print(f"  실측: 세션당 {per_session:.0f} tok, decode peak {d_peak_tok:.0f} tok, 카드 {card_gb:.0f}GB")
     print()
-    print(f"    워킹셋 W          = {per_session:.0f} x {conc} = {W:.0f} tokens")
-    print(f"    prefill pool P    = W / {oversub} = {P} tokens   <- PREFILL_MAX_TOTAL_TOKENS")
-    print(f"    밀려나는 양       = W - P = {overflow:.0f} tokens")
-    _why = "밀려난 양 x1.3" if overflow * 1.3 >= P * 1.1 else "P x1.1 (sglang 이 host>device 를 요구)"
-    print(f"    victim tier 크기  = {tier} tokens ({tier_gb:.1f} GB)   [{_why}]")
+    print(f"    워킹셋 W        = {per_session:.0f} x {conc} = {W:.0f} tok")
+    print(f"    prefill pool P  = W / {oversub} = {P} tok        <- PREFILL_MAX_TOTAL_TOKENS")
+    print(f"    밀려나는 양     = {overflow:.0f} tok")
     print()
-    print("  두 arm 의 victim tier 를 같은 크기로 맞춘다. 안 맞추면 '어디에 두느냐'가")
-    print("  아니라 '얼마나 담느냐'를 비교하게 된다:")
-    print(f"    park_gpu : PARK_POOL_TOKENS_PER_GPU={tier}")
-    print(f"    hicache  : HICACHE_RATIO={ratio}   (host tier = P x ratio = {int(P * ratio)})")
+    print("  decode GPU 예산 (park pool 은 여기 남는 자리에서 나온다):")
+    print(f"    가중치                {weights_gb:>6.1f} GB")
+    print(f"    decode KV pool        {d_pool_gb:>6.1f} GB  ({d_pool_tok} tok = 실측 peak x1.25)"
+          f"   <- DECODE_MAX_TOTAL_TOKENS")
+    print(f"    여유분(activation 등) {margin_gb:>6.1f} GB")
+    print(f"    -> park pool          {park_gb:>6.1f} GB  ({tier} tok)"
+          f"   <- PARK_POOL_TOKENS_PER_GPU")
+    if tier < overflow:
+        print(f"    [주의] park pool({tier}) < 밀려나는 양({overflow:.0f}). 다 담지 못한다.")
+        print("           C 를 낮추거나 oversubscribe 를 줄이면 밀려나는 양이 준다.")
     print()
-    print(f"  decode GPU 여유: {card_gb:.0f}GB - 가중치 {weights_gb:.0f}GB"
-          f" - park pool {tier_gb:.1f}GB = {free_gb:.1f}GB 가 decode KV 몫")
-    if free_gb < 8:
-        print("    [경고] 남는 게 너무 적다. C 를 낮추거나 oversubscribe 를 줄여라.")
-    print()
-    print("  park pool 이 커지면 decode pool 이 그만큼 줄어든다. 그 값은 다시 재야 하므로")
-    print("  probe 를 먼저 돌린다:")
-    print()
-    print(f"    ./scripts/slurm/submit.sh CONCURRENCY={conc} \\")
-    print(f"        PREFILL_MAX_TOTAL_TOKENS={P} PARK_POOL_TOKENS_PER_GPU={tier} \\")
-    print(f"        HICACHE_RATIO={ratio} MOONCAKE_LD_FIX=system MC_FORCE_TCP=1")
-    print()
-    print("  probe 가 알려준 DECODE_MAX_TOTAL_TOKENS 를 넣어 본 실험:")
+    print(f"  hicache 에 같은 바이트를 host DRAM 으로: HICACHE_RATIO={ratio}")
+    print(f"    host tier = P x {ratio} = {int(P * ratio)} tok = {park_gb:.1f} GB")
+    print("    (park 을 hicache 크기에 맞춰 줄이는 게 아니라 그 반대다. park pool 이")
+    print("     D 의 여유만큼이라는 게 이 설계의 주장이므로, 그걸 깎으면 주장하는")
+    print("     시스템이 아닌 다른 것을 재게 된다. ratio 는 >1 이기만 하면 자유롭다.)")
     print()
     print(f"    ./scripts/slurm/submit.sh MODE=full CONCURRENCY={conc} \\")
     print(f"        PREFILL_MAX_TOTAL_TOKENS={P} PARK_POOL_TOKENS_PER_GPU={tier} \\")
-    print(f"        HICACHE_RATIO={ratio} DECODE_MAX_TOTAL_TOKENS=<probe 값> \\")
+    print(f"        HICACHE_RATIO={ratio} DECODE_MAX_TOTAL_TOKENS={d_pool_tok} \\")
     print('        ARMS="recompute radix hicache park_gpu" \\')
     print("        MOONCAKE_LD_FIX=system MC_FORCE_TCP=1")
     print()
-    print("  radix arm 을 꼭 넣어라. 압박이 생기면 hicache 의 L2/L3 가 처음으로 실제로")
-    print("  동작하는데, 그때 '캐싱 자체의 이득' 과 'hicache 계층의 비용' 을 분리하는")
-    print("  유일한 대조군이다.")
+    print("  DECODE_MAX_TOTAL_TOKENS 를 위 값으로 직접 넣으므로 probe 를 다시 돌릴")
+    print("  필요는 없다. 모든 arm 이 같은 decode 용량을 쓰게 되고, park arm 만")
+    print("  용량이 깎이는 문제도 사라진다 (park pool 을 뺀 자리에서 계산했으므로).")
     print()
-    print("  다음 run 에서 확인할 것 (이 순서로):")
+    print("  용량이 이득의 정체인지 보려면 park pool 크기를 축으로 쓸어라:")
+    print(f"    CAP=\"{tier // 4} {tier // 2} {tier}\" ./scripts/sglang/run_why_faster.sh")
+    print("    TTFT 가 용량을 따라가면 이득은 용량이고, 평평하면 용량이 아니다.")
+    print()
+    print("  다음 run 에서 확인할 순서:")
     print("    1. peak util 이 100% 에 닿는가          -> 안 닿으면 P 를 더 줄인다")
-    print("    2. park telemetry 의 fetch_hits > 0 인가 -> 0 이면 tier 가 작거나 재사용 전에 쫓겨난다")
-    print("    3. 그 다음에 TTFT 를 본다")
+    print("    2. park telemetry 의 fetch_hits > 0 인가 -> 0 이면 재사용 전에 쫓겨난다")
+    print("    3. 그 다음에 TTFT")
 
 
 def main():
@@ -208,7 +218,8 @@ def main():
     # 일정하게 나오므로 (아래) 그 선형 가정을 데이터로 확인할 수 있다.
     conc = _concurrency(args.dir)
     if args.plan_concurrency and conc and peak_used:
-        plan(peak_used / conc, args.plan_concurrency, args.oversubscribe, args.card_gb)
+        plan(peak_used / conc, args.plan_concurrency, args.oversubscribe,
+             args.card_gb, _decode_peak(args.dir))
         return 2
     if conc and peak_used:
         per = peak_used / conc
@@ -252,6 +263,21 @@ def _concurrency(d):
         except Exception:  # noqa: BLE001
             continue
     return None
+
+
+def _decode_peak(d):
+    """decode(D0) KV 풀의 실측 최대 사용량. park pool 예산의 출발점이다.
+
+    /metrics 의 순간 스냅샷을 쓰면 안 된다 -- 한 번은 4,166 으로 읽혀서 "decode 는
+    거의 비어 있다" 고 오판할 뻔했는데, 시계열의 최대는 162,209 였다.
+    """
+    best = 0.0
+    for f in glob.glob(os.path.join(d, "occ_*.csv")):
+        rows = list(csv.DictReader(open(f)))
+        v = col(rows, "D0_used_tok")
+        if v:
+            best = max(best, max(v))
+    return best or 1.0
 
 
 if __name__ == "__main__":
