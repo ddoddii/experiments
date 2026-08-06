@@ -193,6 +193,27 @@ def main():
         print(f"\n  [note] {len(arms) - len(metas)} arm(s) predate build stamping; "
               f"check their mtimes before comparing.")
 
+    # Decode KV capacity, per arm. A park pool on a decode GPU shrinks that decode's own
+    # pool, because sglang sizes pools from AVAILABLE memory -- measured 216,374 -> 154,304
+    # tokens, a 29% cut, with total card HBM unchanged so nothing else reveals it. If the
+    # arms differ here they are not comparable on latency, whatever else is equal.
+    dcaps = {}
+    for a in arms:
+        p_ = os.path.join(d, f"occ_{a}.csv")
+        if not os.path.exists(p_):
+            continue
+        rows = [r for r in csv.DictReader(l for l in open(p_) if not l.startswith("#"))]
+        v = [float(r["D0_cap_tok"]) for r in rows if r.get("D0_cap_tok")]
+        if v:
+            dcaps[a] = st.median(v)
+    if len(set(round(v) for v in dcaps.values())) > 1:
+        print("\n!!! DECODE KV CAPACITY DIFFERS BETWEEN ARMS -- not comparable !!!")
+        for a, v in dcaps.items():
+            print(f"    {a:>14}: {v:>10,.0f} tokens")
+        print("    A park pool on a decode GPU shrinks that decode's own pool, so the")
+        print("    park arm is running with less cache AND a different tier. Pin")
+        print("    DECODE_MAX_TOTAL_TOKENS to the smallest value and re-run.")
+
     print(f"\n=== arms ({d}) ===")
     print(f"{'arm':>10} {'TTFT s':>8} {'TPOT s':>9} {'tok/s':>8} {'P hit':>7} "
           f"{'D batch':>8} {'errs':>5}")
