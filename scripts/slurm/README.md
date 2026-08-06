@@ -121,6 +121,21 @@ python -c "import sglang; print(sglang.__file__)"     # ~/sglang-source/... 여�
 주의: 클론과 conda env 가 **계산 노드에서 보이는 파일시스템**에 있어야 한다. 홈이 NFS 로
 공유되는 보통의 클러스터면 문제없고, 아니면 preflight 의 import 검사에서 걸린다.
 
+## 필요한 패키지
+
+conda env `sglang` 에 이 셋이 있어야 한다. `preflight.sh` 가 전부 확인한다.
+
+```bash
+conda activate sglang
+pip install mooncake-transfer-engine==0.3.8.post1   # KV 전송 백엔드 (sglang CI 핀)
+pip install sglang-router                          # PD 라우터 (모듈명 sglang_router)
+cd ~/sglang-source/python && pip install -e . --no-deps   # 수정한 sglang 소스
+```
+
+`sglang-router` 는 sglang 리포에서 `sgl-model-gateway/` 로 옮겨갔지만 pip 패키지
+이름과 모듈 이름은 그대로다. 이게 없으면 prefill/decode 서버가 **둘 다 뜬 다음**
+`[5/5]` 단계에서 죽는다 — 모델 로딩에 쓴 시간이 통째로 날아간다.
+
 ## mooncake 가 안 뜰 때
 
 PD disaggregation 의 KV 전송 백엔드다. 없으면 서버가 아예 안 뜬다.

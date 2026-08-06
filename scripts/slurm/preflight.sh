@@ -148,6 +148,17 @@ else
   say "probe 전문 -> $OUTDIR/mooncake_probe.txt"
 fi
 
+# 라우터. 서버 두 대가 다 뜬 다음 [5/5] 에서야 없는 게 드러나면, 그때까지의 모델 로딩
+# 시간이 통째로 날아간다. 여기서 확인한다. sglang 리포에서는 sgl-model-gateway 로
+# 옮겨갔지만 pip 패키지 이름과 모듈 이름은 여전히 sglang-router / sglang_router 다.
+if python -c 'import sglang_router' 2>/dev/null; then
+  say "sglang_router: OK"
+else
+  bad "sglang_router 없음 — 벤치가 붙을 라우터를 띄울 수 없다."
+  say "      conda activate ${SGLANG_CONDA_ENV} && pip install sglang-router"
+  say "      (sglang CI 도 같은 이름으로 설치한다: scripts/ci/ci_install_dependency.sh)"
+fi
+
 # ─── 3. GPU 와 배선 ───────────────────────────────────────────────────────────
 echo "[3/7] GPU topology"
 nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader | sed 's/^/  /'
