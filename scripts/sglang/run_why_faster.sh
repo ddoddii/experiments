@@ -102,13 +102,18 @@ case "$WORKLOAD" in
     # TOOL DEFINITIONS are ~5,335 tokens and are re-sent on every turn, while a tool call
     # replies in a median of 9 tokens. Long prompt, tiny output, naturally.
     #
-    # TOOL_DELAY is the tool-execution gap, and it is not cosmetic here: it is idle time
-    # the server can do background work in. hicache's writeback is a background thread and
-    # uses it; parking at EVICTION does not, because eviction fires under pressure, which
-    # is exactly when there is no gap. So a non-zero delay is both more realistic and the
-    # condition under which our trigger choice is visible.
+    # TOOL_DELAY DEFAULTS TO 0: the dataset as it is, with nothing injected. The delay is
+    # a time.sleep in the harness -- the benchmark replays recorded turns and never
+    # executes the tools -- so any non-zero value is a number someone picked, and a result
+    # that depends on it is partly a result about the picking. The 66% TTFT share that
+    # makes this a valid testbed was measured at 0, so nothing is lost by leaving it there.
+    #
+    # It also makes the test HARDER, which is the point. With no gap there is no idle time
+    # for anyone to hide background work in, so a win here needs no caveat about tool
+    # latency. GAPS= still sweeps it if the question ever becomes "how much idle time would
+    # this need", but that is a separate question from whether it works at all.
     BENCH=${BENCH:-benchmark/sglang_BFCL_multi_turn_concurrent.py}
-    export TOOL_DELAY=${TOOL_DELAY:-3}
+    export TOOL_DELAY=${TOOL_DELAY:-0}
     export MAX_TOKENS=${MAX_TOKENS:-512}
     ;;
   sharegpt)
