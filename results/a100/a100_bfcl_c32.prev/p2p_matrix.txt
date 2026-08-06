@@ -7,8 +7,8 @@ gpu1       True        -
 
 measured device-to-device copy (GB/s):
            gpu0     gpu1
-gpu0          -    269.9
-gpu1      270.2        -
+gpu0          -    270.2
+gpu1      269.9        -
 
 === reading it ===
   Every pair reports peer access, so no fetch is being staged through host.
@@ -17,7 +17,7 @@ gpu1      270.2        -
 
 === park targets this implies ===
   Under PD_LAYOUT=b: P0=gpu0 D0=gpu1 P1=gpu2 D1=gpu3.
-  P0 on gpu0 -> its decode gpu1: 269.9 GB/s, peer=True
+  P0 on gpu0 -> its decode gpu1: 270.2 GB/s, peer=True
   P1 on gpu2 -> its decode gpu3: not measured
   Those are the NV4-bridged pairs. Any OTHER park target on this box crosses
   PCIe, so a candidate list spanning both mixes two very different tiers under

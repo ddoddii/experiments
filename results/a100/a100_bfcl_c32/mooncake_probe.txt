@@ -1,10 +1,10 @@
 WARNING: Logging before InitGoogleLogging() is written to STDERR
-I0806 18:44:47.432029 1187861 transfer_engine_impl.cpp:571] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
-I0806 18:44:47.433239 1187861 transfer_engine_impl.cpp:105] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 12001
-I0806 18:44:47.433287 1187861 transfer_engine_impl.cpp:172] Transfer Engine RPC using P2P handshake, listening on 127.0.0.1:15855
-I0806 18:44:47.433372 1187861 transfer_engine_impl.cpp:217] Auto-discovering topology...
-I0806 18:44:47.913589 1187861 transfer_engine_impl.cpp:232] Topology discovery complete. Found 2 HCAs.
-I0806 18:44:47.913687 1187861 tcp_transport.cpp:343] TcpTransport: listen on port 16553
+I0806 18:55:47.961208 1191221 transfer_engine_impl.cpp:571] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0806 18:55:47.962404 1191221 transfer_engine_impl.cpp:105] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 12001
+I0806 18:55:47.962450 1191221 transfer_engine_impl.cpp:172] Transfer Engine RPC using P2P handshake, listening on 127.0.0.1:15359
+I0806 18:55:47.962524 1191221 transfer_engine_impl.cpp:217] Auto-discovering topology...
+I0806 18:55:48.459954 1191221 transfer_engine_impl.cpp:232] Topology discovery complete. Found 2 HCAs.
+I0806 18:55:48.460052 1191221 tcp_transport.cpp:343] TcpTransport: listen on port 15119
 
 === 환경 ===
   hostname       : node43
@@ -21,10 +21,10 @@ mlx5_1
   protocol='rdma' device_name=''  ->  rc=0
 
 === 메모리 등록: HOST vs DEVICE ===
-  HOST   ptr=0x7faa39191010  rc=0   OK
-  DEVICE ptr=0x7fa8da000000  rc=0   OK
+  HOST   ptr=0x7fa675fff010  rc=0   OK
+  DEVICE ptr=0x7fa51e000000  rc=0   OK
 
 === 판정 ===
   둘 다 등록된다. 그렇다면 sglang 이 넘기는 특정 버퍼가 문제이고,
   p1.log 의 실패 주소를 sglang 의 KV pool 주소와 대조해 봐야 한다.
-I0806 18:44:49.471728 1187861 transfer_metadata.cpp:299] removeSegmentDesc 127.0.0.1:15855 finish
+I0806 18:55:50.087209 1191221 transfer_metadata.cpp:299] removeSegmentDesc 127.0.0.1:15359 finish
