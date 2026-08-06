@@ -62,8 +62,22 @@ def _prefill_pool(d):
     return None
 
 
-def _point(d, arm):
-    """(throughput tok/s, normalized latency ms/tok, 에러율)."""
+def _point(d, arm, xmode="throughput"):
+    """(x, normalized latency ms/tok, 에러율).
+
+    x 는 두 가지 중 하나다.
+      throughput  tokens/s  (summary.overall_throughput_tok_per_s)
+      rps         requests/s = 완료 턴 수 / 벽시계
+
+    둘은 이 워크로드에서 사실상 같은 축이다: BFCL 은 턴당 출력이 ~35 토큰으로 일정해서
+    RPS = throughput / 35 로 비례한다. 단위만 바뀌고 모양은 같으므로, 서빙 논문에서
+    익숙한 쪽을 고르면 된다.
+
+    둘 다 closed-loop 의 **결과값**이라는 점은 같다. 동시성을 고정해 놓고 측정한 값이지
+    걸어준 부하가 아니므로, 시스템이 포화하면 축이 더 이상 오르지 않는다 (여기서는
+    C=4 부터). 걸어준 부하를 축으로 쓰려면 open-loop 하네스가 필요하다
+    (benchmark/qps_sweep.py 가 Poisson 도착으로 그걸 한다).
+    """
     j = _load(os.path.join(d, f"bench_{arm}.json"))
     if not j:
         return None
@@ -87,13 +101,19 @@ def _point(d, arm):
                 tok += ot
     if not tok:
         return None, None, rate
-    return s.get("overall_throughput_tok_per_s"), lat / tok * 1000.0, rate
+    if xmode == "rps":
+        turns, wall = s.get("n_ttft_samples") or 0, s.get("total_wall_time_s") or 0
+        x = (turns / wall) if wall else None
+    else:
+        x = s.get("overall_throughput_tok_per_s")
+    return x, lat / tok * 1000.0, rate
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dirs", required=True)
     ap.add_argument("--out", default="results/a100/fig_latency_throughput")
+    ap.add_argument("--x", choices=["throughput", "rps"], default="throughput")
     args = ap.parse_args()
 
     points = {}
@@ -125,7 +145,7 @@ def main():
     for arm, label, color, style in ARMS:
         xs, ys, ann = [], [], []
         for c in cs:
-            r = _point(points[c], arm)
+            r = _point(points[c], arm, args.x)
             if not r or r[0] is None:
                 if r and r[2] and r[2] > MAX_ERROR_RATE:
                     dropped.append((c, label, r[2]))
@@ -147,7 +167,8 @@ def main():
         ax.annotate(f"C={c}", (x, y), textcoords="offset points", xytext=(3, -9),
                     fontsize=5.5, color="#666666")
 
-    ax.set_xlabel("Throughput (tokens / s)")
+    ax.set_xlabel("Throughput (tokens / s)" if args.x == "throughput"
+                  else "Request rate (requests / s)")
     ax.set_ylabel("Normalized latency\n(ms / token)")
     ax.grid(color=PALETTE["grid"], lw=0.5)
     ax.set_axisbelow(True)
@@ -160,9 +181,9 @@ def main():
         print(f"[제외] C={c} {label}: {rate*100:.0f}% 실패 -> 점 없음")
     tsv = args.out + "_values.tsv"
     with open(tsv, "w") as f:
-        f.write("concurrency\tarm\tthroughput_tok_s\tnorm_latency_ms_per_tok\terr_rate\n")
+        f.write(f"concurrency\tarm\t{args.x}\tnorm_latency_ms_per_tok\terr_rate\n")
         for c, arm, x, y, rate in sorted(table):
-            f.write(f"{c}\t{arm}\t{x:.2f}\t{y:.2f}\t{rate:.4f}\n")
+            f.write(f"{c}\t{arm}\t{x:.4f}\t{y:.2f}\t{rate:.4f}\n")
     print(f"저장: {args.out}.pdf / .png\n수치: {tsv}")
     return 0
 
