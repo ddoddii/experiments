@@ -41,6 +41,14 @@ set -e
 cd "$(dirname "$0")/../.."
 ROOT=$(pwd)
 
+# 1p1d for a two-GPU box (A100 pair), 2p2d for four. The whole arm table below is
+# written against the 2P2D starter, so the topology has to be chosen here rather than
+# discovered later: on two GPUs there is exactly one park target -- the NVLink-bridged
+# decode GPU -- which is the design's claim stated in its simplest form, and it removes
+# the confound that dogged the 4x A6000 runs, where each prefill's candidate list mixed
+# an NVLink target with a PCIe one and both were reported as "peer".
+NODES=${NODES:-2p2d}
+[ "$NODES" = "1p1d" ] && export DECODE_METRICS_PORT=${DECODE_METRICS_PORT:-30001}
 export PD_LAYOUT=${PD_LAYOUT:-b}
 export CONCURRENCY=${CONCURRENCY:-32}
 # TOOL_DELAY is set by the WORKLOAD block below, not here: a default assigned at this
@@ -163,7 +171,45 @@ echo " arms      : $ARMS"
 echo " -> $OUTDIR"
 echo "================================================================"
 
+# The park knobs reach the 1P1D starter by INHERITANCE -- it launches with `env`, which
+# keeps the caller's environment -- so they are exported rather than listed. The 2P2D
+# starter builds an explicit string instead, which is why every new knob had to be added
+# there by hand and why one of them was silently dropped once already.
+export SGLANG_KV_PARK_TRIGGER=${SGLANG_KV_PARK_TRIGGER:-complete}
+export SGLANG_KV_PARK_ADMIT=${SGLANG_KV_PARK_ADMIT:-0}
+export SGLANG_KV_PARK_ASYNC_PARK=${SGLANG_KV_PARK_ASYNC_PARK:-1}
+
+start_arm_1p1d() {
+  # Two GPUs: prefill on 0, decode on 1, and the park target is GPU 1 -- decode's own
+  # HBM, across NV12. PARK_POOL_TOKENS is the per-prefill budget; with one candidate GPU
+  # it is also the pool size.
+  export PREFILL_GPU=${PREFILL_GPU:-0} DECODE_GPU=${DECODE_GPU:-1}
+  case "$1" in
+    recompute)
+      CACHE_MODE=none IDLE_KV_PARKING=0 ./scripts/sglang/start_1P_1D.sh ;;
+    radix)
+      CACHE_MODE=radix IDLE_KV_PARKING=0 ./scripts/sglang/start_1P_1D.sh ;;
+    hicache)
+      CACHE_MODE=hicache_file IDLE_KV_PARKING=0 ./scripts/sglang/start_1P_1D.sh ;;
+    park_host)
+      SGLANG_KV_PARK_FORCE_HOST=1 SGLANG_KV_PARK_HOST_OVERFLOW=1 \
+      SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-32} \
+        CACHE_MODE=radix IDLE_KV_PARKING=1 \
+        PARK_GPUS=${PARK_GPUS:-$DECODE_GPU} \
+        PARK_POOL_TOKENS=$PARK_POOL_TOKENS_PER_GPU \
+        ./scripts/sglang/start_1P_1D.sh ;;
+    park_gpu)
+      SGLANG_KV_PARK_FORCE_HOST=0 \
+        CACHE_MODE=radix IDLE_KV_PARKING=1 \
+        PARK_GPUS=${PARK_GPUS:-$DECODE_GPU} \
+        PARK_POOL_TOKENS=$PARK_POOL_TOKENS_PER_GPU \
+        ./scripts/sglang/start_1P_1D.sh ;;
+    *) echo "unknown arm for 1p1d: $1"; exit 1 ;;
+  esac
+}
+
 start_arm() {
+  if [ "$NODES" = "1p1d" ]; then start_arm_1p1d "$1"; return; fi
   case "$1" in
     recompute)
       # No prefix reuse at all (--disable-radix-cache, which also forces hicache off since
@@ -228,7 +274,11 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   local label=$1 kind=$2
   echo
   echo "──────────────── $label ────────────────"
-  ./scripts/sglang/stop.sh > "$OUTDIR/stop_$label.log" 2>&1 || true
+  if [ "$NODES" = "1p1d" ] && [ -x ./scripts/sglang/stop_1P_1D.sh ]; then
+    ./scripts/sglang/stop_1P_1D.sh > "$OUTDIR/stop_$label.log" 2>&1 || true
+  else
+    ./scripts/sglang/stop.sh > "$OUTDIR/stop_$label.log" 2>&1 || true
+  fi
   sleep 3
   start_arm "$kind"
 
@@ -248,7 +298,7 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # before and after so the DELTA over the run is visible, not just a level.
   python benchmark/phase0_metrics_scraper.py \
     --prefill-url "http://127.0.0.1:30000/metrics" \
-    --decode-url "http://127.0.0.1:30002/metrics" \
+    --decode-url "http://127.0.0.1:${DECODE_METRICS_PORT:-30002}/metrics" \
     --tag before --out "$OUTDIR/metrics_${label}_before.json" > /dev/null 2>&1 || true
 
   CONFIG="why_$label" python "$BENCH" 2>&1 \
@@ -256,7 +306,7 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
 
   python benchmark/phase0_metrics_scraper.py \
     --prefill-url "http://127.0.0.1:30000/metrics" \
-    --decode-url "http://127.0.0.1:30002/metrics" \
+    --decode-url "http://127.0.0.1:${DECODE_METRICS_PORT:-30002}/metrics" \
     --tag after --out "$OUTDIR/metrics_${label}_after.json" > /dev/null 2>&1 || true
   python benchmark/phase0_metrics_scraper.py \
     --delta "$OUTDIR/metrics_${label}_before.json" "$OUTDIR/metrics_${label}_after.json" \
@@ -329,7 +379,7 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # "identical to the previous arm" warning fired on runs whose logs were fine.
   LOGD=${LOG_DIR:-logs/sglang}
   [ -d "$LOGD" ] || LOGD=logs
-  for f in p1 p2 d1 d2; do
+  for f in $( [ "$NODES" = "1p1d" ] && echo "p1 d1" || echo "p1 p2 d1 d2" ); do
     [ -f "$LOGD/$f.log" ] || continue
     { echo "---- startup (LAST occurrence: the log is not truncated between arms) ----"
       grep -iE "park pool|clamp|ready to roll|max_total_num_tokens" "$LOGD/$f.log" | tail -8
