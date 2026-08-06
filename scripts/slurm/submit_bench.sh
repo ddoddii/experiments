@@ -156,6 +156,18 @@ export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 export ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
 export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-32000}
 
+# 압박 knob. hicache 도 park 도 victim cache 라서, prefill 풀이 밀어내지 않으면 잡을
+# 것이 없고 비용만 남는다. A100 80GB 에서 BFCL C=32 는 풀의 38% 밖에 채우지 못했고,
+# 그 run 에서 hicache 는 recompute 보다 TTFT 가 1.84배 나빴다 -- 캐시가 진 게 아니라
+# 캐시가 이길 수 있는 상황이 아니었다. 모든 arm 에 똑같이 적용된다 (start_1P_1D.sh 가
+# 읽는다). 값 선정은 scripts/slurm/check_pressure.py 가 도와준다.
+export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
+if [ -z "$PREFILL_MAX_TOTAL_TOKENS" ]; then
+  echo "  [note] PREFILL_MAX_TOTAL_TOKENS 미설정: 80GB 카드에서는 풀이 안 차서"
+  echo "         victim cache 가 잡을 것이 없을 수 있다. run 이 끝나면 아래 압박"
+  echo "         점검 결과를 반드시 확인하라."
+fi
+
 echo
 echo "################################################################"
 echo " FULL RUN  arms=[$ARMS]  workload=$WORKLOAD  C=$CONCURRENCY  repeats=$REPEATS"
@@ -166,5 +178,13 @@ echo "################################################################"
 
 # 서버가 남아 있으면 다음 job 이 같은 노드에 배치됐을 때 GPU 를 물고 있다.
 ./scripts/sglang/stop_1P_1D.sh || true
+
+# TTFT 를 읽기 전에 이 run 이 결과를 낼 수 있는 조건이었는지부터 본다. 풀이 차지
+# 않았다면 TTFT 비교는 "victim cache 가 효과 없다" 가 아니라 "측정할 조건이
+# 아니었다" 를 뜻하고, 그 구분이 없으면 잘못된 결론이 그대로 남는다.
+echo
+python scripts/slurm/check_pressure.py --dir "$OUTDIR" \
+  | tee "$OUTDIR/pressure_check.txt" || true
+
 echo
 echo "결과: $OUTDIR/"
