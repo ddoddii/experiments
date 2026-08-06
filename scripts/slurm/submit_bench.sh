@@ -237,6 +237,49 @@ if [ "$MODE" = "ratesweep" ]; then
   exit 0
 fi
 
+# ─── 2d. ctxsweep: 컨텍스트 길이 축 ───────────────────────────────────────────
+# KV 캐시 연구에서 가장 자연스러운 축이다. 컨텍스트가 길수록 KV 가 커지고, 그걸 어디에
+# 두느냐의 차이가 단조롭게 벌어진다 -- 처리량 축처럼 포화해서 멈추지 않는다.
+#
+# longctx 워크로드의 PREFIX_WORDS 가 그 노브다 (단어 -> 대략 1.33배가 토큰).
+# 두 지표를 본다:
+#   Host->GPU 트래픽   sglang:load_back_tokens_total (L2->L1 로 되읽은 토큰)
+#                      host DRAM 에 KV 를 두는 설계가 PCIe 로 실제 옮기는 양.
+#                      park 은 peer GPU 에서 가져오므로 여기 거의 안 잡힌다.
+#   p95 TTFT           꼬리 지연. 평균은 스톨을 감춘다.
+if [ "$MODE" = "ctxsweep" ]; then
+  export WORKLOAD=longctx
+  CTXSWEEP=${CTXSWEEP:-"3000 6000 12000 24000"}   # PREFIX_WORDS
+  echo
+  echo "################################################################"
+  echo " CONTEXT SWEEP  PREFIX_WORDS=[$CTXSWEEP]  arms=[${ARMS:-recompute hicache park_gpu}]"
+  echo "################################################################"
+  for _w in $CTXSWEEP; do
+    echo
+    echo "════════════════ PREFIX_WORDS=$_w ════════════════"
+    _tag="a100_longctx_w${_w}"
+    _out="results/a100/${_tag}"
+    if [ -d "$_out" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+      rm -rf "${_out}.prev"; mv "$_out" "${_out}.prev"
+    fi
+    mkdir -p "$_out"
+    cp "$OUTDIR/RUN_INFO.txt" "$_out/RUN_INFO.txt" 2>/dev/null || true
+    echo "prefix_words: $_w (ctxsweep)" >> "$_out/RUN_INFO.txt"
+    PREFIX_WORDS=$_w MAX_ITEMS=${SWEEP_ITEMS:-64} \
+      ARMS="${ARMS:-recompute hicache park_gpu}" \
+      TAG="$_tag" OUTDIR="$_out" \
+      ./scripts/sglang/run_why_faster.sh || true
+    python scripts/slurm/check_pressure.py --dir "$_out" \
+      > "$_out/pressure_check.txt" 2>&1 || true
+  done
+  ./scripts/sglang/stop_1P_1D.sh || true
+  echo
+  echo "그림:"
+  echo "  python benchmark/plot_context.py --dirs 'results/a100/a100_longctx_w*' \\"
+  echo "      --out results/a100/fig_context"
+  exit 0
+fi
+
 # ─── 3. full run ──────────────────────────────────────────────────────────────
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 export ARMS=${ARMS:-"recompute hicache park_host park_gpu"}

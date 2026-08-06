@@ -42,6 +42,10 @@ GAUGES = [
     "sglang:cache_hit_rate",
     "sglang:hicache_host_used_tokens",
     "sglang:hicache_host_total_tokens",
+    # L2(host DRAM) -> L1(GPU) 로 되읽은 토큰. 이게 곧 Host->GPU 트래픽이고,
+    # host 계층에 KV 를 두는 설계가 실제로 PCIe 로 얼마나 옮기는지를 유일하게
+    # 직접 말해 준다. park 은 peer GPU 에서 가져오므로 여기 거의 안 잡힌다.
+    "sglang:load_back_tokens_total",
     "sglang:num_used_tokens",
     "sglang:token_usage",
 ]
@@ -159,6 +163,7 @@ def compute_delta(before, after):
             "L3_share_of_reuse": round(prefetched / cached, 4) if cached else 0.0,
             "cache_hit_rate_gauge": pick("sglang:cache_hit_rate"),
             "hicache_host_used_tokens (L2)": pick("sglang:hicache_host_used_tokens"),
+            "load_back_tokens (host->GPU)": pick("sglang:load_back_tokens_total_delta", 0.0),
             "ttft_avg_s": pick("sglang:time_to_first_token_seconds_avg"),
         }
     return delta
