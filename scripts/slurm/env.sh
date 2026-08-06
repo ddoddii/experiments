@@ -121,6 +121,23 @@ case "${MOONCAKE_LD_FIX:-none}" in
   *) echo "[env] WARNING: MOONCAKE_LD_FIX 는 conda|system|none (받은 값: ${MOONCAKE_LD_FIX})" ;;
 esac
 
+# ─── mooncake 전송 프로토콜 ───────────────────────────────────────────────────
+# mooncake 는 HCA 를 하나도 못 찾을 때만 TCP 로 폴백한다. server17 은 InfiniBand 가
+# 없어서 그게 자동으로 일어났고, 이 리포의 A6000 결과는 전부 TCP 로 측정됐다.
+#
+# A100 클러스터는 mlx5 카드가 있는데 nvidia_peermem 이 없다. 그래서 mooncake 는 rdma
+# transport 를 설치한 다음 KV pool 등록에 전부 실패한다 (EFAULT). 더 나쁜 건 그게
+# 기동을 막지 않는다는 것이다 -- 서버는 "ready to roll" 까지 가고, 피해는 첫 요청에서
+# KVTransferError 로 나타난다. 원인 로그와 한참 떨어진 곳에서.
+#
+# 단일 노드 PD 에서 RDMA 가 할 일은 없다 (P/D 가 한 호스트의 GPU 두 장). 그래서
+# sglang fork 에 SGLANG_MOONCAKE_PROTOCOL 을 열어 뒀다. 기본값은 upstream 과 같은
+# rdma 이고, 이 클러스터에서는 tcp 로 넘긴다.
+#
+# 비교 가능성 측면에서도 tcp 가 맞다: A6000 결과가 전부 TCP 였으므로, 여기서 RDMA 를
+# 쓰면 머신뿐 아니라 전송 경로까지 달라진다.
+export SGLANG_MOONCAKE_PROTOCOL=${SGLANG_MOONCAKE_PROTOCOL:-rdma}
+
 # ─── 모델 ─────────────────────────────────────────────────────────────────────
 # 클러스터 홈이 server17 과 다른 파일시스템일 수 있으므로 후보를 훑는다.
 # preflight.sh 가 최종적으로 존재 여부를 검증한다.
@@ -280,6 +297,13 @@ export LOG_DIR=${LOG_DIR:-"$EXP_ROOT/logs/slurm/${JOB_TAG}"}
 mkdir -p "$LOG_DIR" "$SGLANG_KV_PARK_DIR" "$SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR"
 
 # ─── 요약 ─────────────────────────────────────────────────────────────────────
+# 여기까지 왔으면 초기화가 끝났다는 표시. 이게 필요한 이유: env.sh 는 source 되므로
+# 중간의 `return 1` 은 sourcing 만 중단시키고, 부르는 쪽이 `set -e` 가 아니면 그냥
+# 다음 줄로 넘어간다. 그러면 포트도 디렉터리도 안 잡힌 반쯤 초기화된 환경에서 실험이
+# 시작된다 -- 실제로 "GPU 2장 필요한데 1장" 에러가 난 뒤에도 뒤 명령이 그대로 돌았다.
+# 스크립트들은 이 값을 확인한다.
+export A100_ENV_OK=1
+
 env_summary() {
   echo "  node        : $(hostname)   job=${SLURM_JOB_ID:-<none>}  tag=${JOB_TAG}"
   # 어느 버전의 스크립트가 돌았는지. 클러스터 체크아웃이 오래된 채로 제출하면 새로
@@ -299,8 +323,7 @@ env_summary() {
   echo "  model       : ${MODEL_PATH}"
   echo "  sglang src  : ${SGLANG_SRC_DIR}"
   echo "  logs        : ${LOG_DIR}"
-  [ "${MOONCAKE_LD_FIX:-none}" != "none" ] && \
-    echo "  ld fix      : MOONCAKE_LD_FIX=${MOONCAKE_LD_FIX}"
+  echo "  mooncake    : protocol=${SGLANG_MOONCAKE_PROTOCOL}  ld_fix=${MOONCAKE_LD_FIX:-none}"
   echo "  park dir    : ${SGLANG_KV_PARK_DIR}"
   echo "  hicache dir : ${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR}"
 }

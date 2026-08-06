@@ -20,7 +20,12 @@
 #   OUTDIR=results/a100/j12345 ./scripts/slurm/preflight.sh
 set -u
 
-[ -n "${EXP_ROOT:-}" ] || { echo "먼저 scripts/slurm/env.sh 를 source 하라." >&2; exit 1; }
+# EXP_ROOT 가 아니라 A100_ENV_OK 를 본다. env.sh 가 중간에 return 해도 EXP_ROOT 는
+# 이미 설정돼 있어서, 반쯤 초기화된 환경을 정상으로 오인한다.
+[ -n "${A100_ENV_OK:-}" ] || {
+  echo "scripts/slurm/env.sh 가 끝까지 실행되지 않았다 (또는 source 하지 않았다)." >&2
+  echo "위쪽의 [env] ERROR 를 먼저 보라 -- GPU 장수/토폴로지 불일치가 흔한 원인이다." >&2
+  exit 1; }
 cd "$EXP_ROOT"
 
 OUTDIR=${OUTDIR:-"results/a100/${JOB_TAG}"}
@@ -135,12 +140,24 @@ else
   # transport 를 설치하는데(sglang 이 protocol="rdma" 를 하드코딩한다), GPUDirect RDMA
   # 가 없으면 KV pool 등록이 EFAULT 로 죽는다. 서버는 뜨는 것처럼 보이다 SIGQUIT 난다.
   # probe 가 host/device 등록을 따로 시도해서 원인을 확정한다.
-  python scripts/slurm/probe_mooncake.py > "$OUTDIR/mooncake_probe.txt" 2>&1
+  PROBE_PROTOCOL="${SGLANG_MOONCAKE_PROTOCOL:-rdma}" \
+    python scripts/slurm/probe_mooncake.py > "$OUTDIR/mooncake_probe.txt" 2>&1
   _pr=$?
   case "$_pr" in
-    0) say "mooncake 메모리 등록: host/device 모두 OK" ;;
-    3) bad "mooncake 가 GPU 메모리를 등록하지 못한다 (GPUDirect RDMA 부재)."
-       sed -n '/판정/,$p' "$OUTDIR/mooncake_probe.txt" | sed 's/^/         /' ;;
+    0) say "mooncake 메모리 등록 (protocol=${SGLANG_MOONCAKE_PROTOCOL:-rdma}): host/device 모두 OK" ;;
+    3) # rdma 로 GPU 등록이 안 된다. 이 실험은 단일 노드라 RDMA 가 필요 없으므로,
+       # tcp 로는 되는지 바로 확인해서 답까지 준다 (추측하게 두지 않는다).
+       if [ "${SGLANG_MOONCAKE_PROTOCOL:-rdma}" = "rdma" ] \
+          && PROBE_PROTOCOL=tcp python scripts/slurm/probe_mooncake.py \
+               > "$OUTDIR/mooncake_probe_tcp.txt" 2>&1; then
+         bad "rdma 로는 GPU 메모리 등록 실패, tcp 로는 성공."
+         say "      이 노드에는 nvidia_peermem 이 없어 GPUDirect RDMA 가 안 된다."
+         say "      단일 노드 1P1D 이므로 RDMA 는 필요 없고, A6000 결과도 전부 TCP 였다."
+         say "      >>> ./scripts/slurm/submit.sh SGLANG_MOONCAKE_PROTOCOL=tcp"
+       else
+         bad "mooncake 가 GPU 메모리를 등록하지 못한다 (GPUDirect RDMA 부재)."
+         sed -n '/판정/,$p' "$OUTDIR/mooncake_probe.txt" | sed 's/^/         /'
+       fi ;;
     4) bad "mooncake 가 host 메모리조차 등록하지 못한다 (locked memory 한도 등)."
        sed -n '/판정/,$p' "$OUTDIR/mooncake_probe.txt" | sed 's/^/         /' ;;
     *) warn "mooncake probe 가 rc=$_pr 로 끝났다 -> $OUTDIR/mooncake_probe.txt" ;;

@@ -70,12 +70,18 @@ except ImportError as e:
     sys.exit(1)
 print("  OK")
 
-section("TransferEngine.initialize(protocol='rdma')")
+section(f"TransferEngine.initialize(protocol={os.environ.get('PROBE_PROTOCOL', 'rdma')!r})")
 # sglang 이 넘기는 것과 같은 인자. device_name 은 --disaggregation-ib-device 에서 온다.
+#
+# PROBE_PROTOCOL 로 'tcp' 를 넣어볼 수 있다. sglang 은 이 자리를 "rdma" 로 하드코딩하지만
+# (transfer_engine.py:181) 우리는 sglang 을 fork 해서 쓰므로, mooncake 쪽이 tcp 를
+# 받아주기만 하면 한 줄로 바꿀 수 있다. 이 실험은 단일 노드라 RDMA 가 주는 게 없고,
+# A6000 결과도 전부 TCP 폴백으로 측정됐다.
+protocol = os.environ.get("PROBE_PROTOCOL", "rdma")
 device_name = os.environ.get("PROBE_IB_DEVICE", "")
 engine = TransferEngine()
-rc = engine.initialize("127.0.0.1", "P2PHANDSHAKE", "rdma", device_name)
-print(f"  device_name={device_name!r}  ->  rc={rc}")
+rc = engine.initialize("127.0.0.1", "P2PHANDSHAKE", protocol, device_name)
+print(f"  protocol={protocol!r} device_name={device_name!r}  ->  rc={rc}")
 if rc != 0:
     print("  initialize 자체가 실패했다. 아래 등록 테스트는 의미가 없다.")
     sys.exit(2)
@@ -120,10 +126,13 @@ if host_rc == 0 and dev_rc not in (0, None):
     print("     nvidia_peermem 커널 모듈이 없으면 정확히 이 모양이 된다 (로드는 root 권한).")
     print()
     print("  이 실험에는 RDMA 가 필요 없다 -- 단일 노드 1P1D 이고 P->D 가 같은 호스트다.")
-    print("  A6000 결과도 전부 mooncake TCP 폴백으로 측정됐다. 그러니 방향은")
-    print("  'RDMA 를 고친다' 가 아니라 'mooncake 가 HCA 를 못 보게 한다' 이다:")
-    print("    - 관리자에게 nvidia_peermem 로드를 요청하거나,")
-    print("    - mooncake 의 장치 필터로 HCA 를 숨겨 TCP 폴백을 유도한다.")
+    print("  A6000 결과도 전부 mooncake TCP 폴백으로 측정됐다.")
+    if protocol != "tcp":
+        print()
+        print("  다음: protocol='tcp' 가 되는지 본다. 되면 sglang fork 한 줄로 끝난다.")
+        print("    PROBE_PROTOCOL=tcp python scripts/slurm/probe_mooncake.py")
+        print("  (sglang 은 이 자리를 'rdma' 로 하드코딩하지만 우리는 fork 를 쓴다.")
+        print("   SGLANG_MOONCAKE_PROTOCOL=tcp 로 바꿀 수 있게 패치해 두었다.)")
 elif host_rc != 0:
     print("  B/C. host 등록부터 실패한다. GPUDirect 문제가 아니다.")
     print(f"     ulimit -l 이 {_ulimit} 이다. unlimited 가 아니면 그것부터.")
