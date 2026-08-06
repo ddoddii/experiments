@@ -109,7 +109,56 @@ def main():
     print(f"  ({peak_arm} 의 peak used 가 {peak_used:.0f} 로 가장 크므로, 그 절반이면 약 2배")
     print("   oversubscribe 된다. 카드가 A6000 48GB 에서 A100 80GB 로 커지는 동안")
     print("   워크로드가 그대로여서 압박이 사라진 것이 원인이다.)")
+
+    # ─── 동시성으로 압박을 만들려면 얼마나 필요한가 ───────────────────────────
+    # "캐시 히트가 늘면 점유가 줄지 않나" 는 자주 나오는 오해다. 반대다: 히트는 그
+    # prefix 노드를 살려두는 것이므로 KV 가 계속 상주한다. 점유를 줄이는 것은 히트가
+    # 아니라 EVICTION 이다. 그래서 동시 세션이 늘면 서로 다른 prefix 가 그만큼 더
+    # 상주하고, 점유는 대체로 선형으로 오른다. 실제로 이 run 에서 세션당 몫이
+    # 일정하게 나오므로 (아래) 그 선형 가정을 데이터로 확인할 수 있다.
+    conc = _concurrency(args.dir)
+    if conc and peak_used:
+        per = peak_used / conc
+        cap = max(c for _, _, c, _ in low) if low else 0
+        print()
+        print("  ─── 동시성을 올려서 압박을 만들려면 ───────────────────────────")
+        print(f"  이 run 의 동시 세션당 몫: {peak_used:.0f} / C={conc} = 약 {per:.0f} tokens")
+        print("  (BFCL 은 tool 정의가 매 턴 재전송되는데 item 마다 tool 조합이 달라서")
+        print("   세션 간 공유가 약하다. 그래서 C 에 거의 비례해 점유가 오른다.)")
+        print()
+        print(f"  {'C':>6} {'예상 점유':>12} {'capacity 대비':>14}")
+        for c2 in (conc, conc * 2, conc * 3, conc * 4):
+            est = per * c2
+            print(f"  {c2:>6} {est:>12.0f} {est / cap * 100 if cap else 0:>13.0f}%")
+        need = int(cap / per) if per else 0
+        print()
+        print(f"  풀을 100% 채우려면 C≈{need}, 2배 oversubscribe 하려면 C≈{need * 2} 이 필요하다.")
+        print("  BFCL 은 item 이 200개뿐이라 C 가 그쯤 되면 데이터셋 대부분이 동시에 떠서")
+        print("  TTFT 가 사실상 큐 대기 시간이 된다 -- prefill 효과를 재려는 지표가")
+        print("  다른 것을 재게 된다. 그래서 풀을 줄이는 쪽이 변수를 하나만 움직인다.")
     return 2
+
+
+def _concurrency(d):
+    """RUN_INFO.txt 또는 bench_*.json 에서 이 run 의 동시성을 읽는다."""
+    import json
+    ri = os.path.join(d, "RUN_INFO.txt")
+    if os.path.exists(ri):
+        for line in open(ri):
+            if "concurrency=" in line:
+                try:
+                    return int(line.split("concurrency=")[1].split()[0])
+                except (ValueError, IndexError):
+                    pass
+    for f in glob.glob(os.path.join(d, "bench_*.json")):
+        try:
+            j = json.load(open(f))
+            s = j.get("summary", j)
+            if isinstance(s, dict) and s.get("concurrency"):
+                return int(s["concurrency"])
+        except Exception:  # noqa: BLE001
+            continue
+    return None
 
 
 if __name__ == "__main__":
