@@ -212,6 +212,26 @@ def main():
         "avg_tpot_s": round(sum(r["avg_tpot_s"] for r in valid if r["avg_tpot_s"]) / len(valid), 4) if valid else None,
         "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / len(valid), 2) if valid else None,
     }
+    # Percentiles over EVERY turn, not over per-session means -- the same gap the
+    # long-context bench had. Without them a single run reports one mean with no spread,
+    # and on this host the same config re-run has moved TTFT p95 by more than the effects
+    # being measured. Per-turn is the right population because the cache acts per turn.
+    all_ttft = sorted(t["ttft_s"] for r in results for t in r.get("turns", [])
+                      if t.get("ttft_s"))
+    if all_ttft:
+        def _pct(q):
+            if len(all_ttft) == 1:
+                return round(all_ttft[0], 4)
+            i = q / 100 * (len(all_ttft) - 1)
+            lo, hi = int(i), min(int(i) + 1, len(all_ttft) - 1)
+            return round(all_ttft[lo] + (all_ttft[hi] - all_ttft[lo]) * (i - lo), 4)
+        summary.update({
+            "n_ttft_samples": len(all_ttft),
+            "ttft_p50_s": _pct(50), "ttft_p90_s": _pct(90),
+            "ttft_p95_s": _pct(95), "ttft_p99_s": _pct(99),
+            "ttft_mean_per_turn_s": round(sum(all_ttft) / len(all_ttft), 4),
+        })
+
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)

@@ -95,11 +95,27 @@ case "$WORKLOAD" in
     export MAX_ITEMS=${MAX_ITEMS:-128}
     export TOOL_DELAY=${TOOL_DELAY:-3}          # think-time: the gap parking exists to use
     ;;
+  bfcl)
+    # The workload the design is actually motivated by, and a valid testbed unlike the
+    # other two: measured TTFT is 66% of a request (sharegpt 1%, longctx 80%).
+    # It gets there differently from longctx -- not from a long document, but because the
+    # TOOL DEFINITIONS are ~5,335 tokens and are re-sent on every turn, while a tool call
+    # replies in a median of 9 tokens. Long prompt, tiny output, naturally.
+    #
+    # TOOL_DELAY is the tool-execution gap, and it is not cosmetic here: it is idle time
+    # the server can do background work in. hicache's writeback is a background thread and
+    # uses it; parking at EVICTION does not, because eviction fires under pressure, which
+    # is exactly when there is no gap. So a non-zero delay is both more realistic and the
+    # condition under which our trigger choice is visible.
+    BENCH=${BENCH:-benchmark/sglang_BFCL_multi_turn_concurrent.py}
+    export TOOL_DELAY=${TOOL_DELAY:-3}
+    export MAX_TOKENS=${MAX_TOKENS:-512}
+    ;;
   sharegpt)
     BENCH=${BENCH:-benchmark/sglang_sharegpt_multi_turn_concurrent.py}
     export TOOL_DELAY=${TOOL_DELAY:-0}
     ;;
-  *) echo "unknown WORKLOAD: $WORKLOAD (want longctx | sharegpt)"; exit 1 ;;
+  *) echo "unknown WORKLOAD: $WORKLOAD (want bfcl | longctx | sharegpt)"; exit 1 ;;
 esac
 
 # The workload is in the tag: a longctx run and a sharegpt run are not comparable, and
