@@ -69,9 +69,30 @@ conda activate "$SGLANG_CONDA_ENV" || {
   return 1 2>/dev/null || exit 1
 }
 
-# 수정된 sglang 소스 트리를 쓰게 만든다 (설치본이 아니라). 실패 시 loud 하게 죽는다 —
-# 이 가드가 없으면 idle-KV-parking 패치가 안 먹은 채로 "upstream 과 같다"는 결과가 나온다.
+# ─── 수정한 sglang 소스가 실제로 실행되게 만든다 ──────────────────────────────
+# 이게 안 되면 `import sglang` 은 conda env 에 pip 로 설치된 복사본을 집는다. 서버는
+# 정상적으로 뜨고, 로그도 정상이고, 다만 park 패치가 없는 upstream 이 돈다. 증상은
+# "park arm 이 baseline 과 비슷하다" 하나뿐이라 며칠을 잡아먹을 수 있다.
+#
+# 권장은 소스 트리를 editable 로 한 번 설치하는 것이다. 그러면 .py 를 고칠 때마다
+# 아무것도 다시 할 필요가 없다 (서버 재시작만 하면 된다):
+#
+#     conda activate sglang
+#     cd $SGLANG_SRC_DIR/python && pip install -e . --no-deps --no-build-isolation
+#
+#   --no-deps 가 중요하다. 빼면 pip 가 torch/flashinfer 를 다시 해결하려 들면서
+#   멀쩡한 env 를 깨뜨릴 수 있다.
+#
+# 아래 PYTHONPATH 는 editable 설치가 없어도 동작하게 하는 안전망이다. 둘 중 하나만
+# 되어 있으면 되고, preflight.sh 가 계산 노드에서 실제 import 경로를 확인해서
+# 설치본을 집고 있으면 실험을 시작하지 않는다.
 export SGLANG_SRC_DIR=${SGLANG_SRC_DIR:-"$HOME/sglang-source"}
+if [ -d "$SGLANG_SRC_DIR/python/sglang" ]; then
+  export PYTHONPATH="$SGLANG_SRC_DIR/python${PYTHONPATH:+:$PYTHONPATH}"
+else
+  echo "[env] WARNING: $SGLANG_SRC_DIR/python/sglang 이 없다."
+  echo "[env]          SGLANG_SRC_DIR 을 클론 위치로 지정하라 (기본: \$HOME/sglang-source)."
+fi
 
 # ─── 모델 ─────────────────────────────────────────────────────────────────────
 # 클러스터 홈이 server17 과 다른 파일시스템일 수 있으므로 후보를 훑는다.
@@ -120,6 +141,9 @@ esac
 gpu_at() { echo "${A100_GPU_LIST[$1]}"; }
 
 export A100_TOPOLOGY=${A100_TOPOLOGY:-1p1d}   # 1p1d (GPU 2장) | 2p2d (4장)
+# run_why_faster.sh 가 읽는 이름. 그쪽 기본값은 2p2d 라, 이걸 export 하지 않으면
+# srun 셸에서 손으로 러너를 부를 때 GPU 2장짜리 할당에 4장짜리 구성을 띄우려 든다.
+export NODES=${NODES:-$A100_TOPOLOGY}
 case "$A100_TOPOLOGY" in
   1p1d)
     [ "$A100_NGPU" -ge 2 ] || { echo "[env] ERROR: 1p1d 는 GPU 2장 필요, 받은 건 $A100_NGPU" >&2; return 1 2>/dev/null || exit 1; }

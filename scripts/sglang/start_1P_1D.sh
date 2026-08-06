@@ -29,6 +29,12 @@ if [ -z "${SLURM_JOB_ID:-}" ] || [ -z "${CONDA_PREFIX:-}" ]; then
   source "$(conda info --base)/etc/profile.d/conda.sh"
   conda activate sglang
 fi
+# 수정한 sglang 소스 트리를 쓰게 만들고, 설치본을 import 하고 있으면 loud 하게 죽는다.
+# start_2P_2D.sh 와 start_single.sh 에는 처음부터 있었는데 이 파일에는 없었다. 그래서
+# 1P1D 로 도는 동안에는 idle-KV-parking 패치가 적용되지 않은 채로 실험이 돌 수 있었고,
+# 증상은 "park arm 과 baseline 이 이상하게 비슷하다" 뿐이다 -- 정확히 이 가드가
+# 막으려고 존재하는 실패다. A100 은 1P1D 가 기본이므로 여기가 주 경로다.
+source "$(dirname "${BASH_SOURCE[0]}")/_use_source.sh"
 # 내 job 소속 프로세스만 죽이는 job_pkill (공유 노드 대비). 자세한 이유는 파일 주석 참고.
 source "$(dirname "${BASH_SOURCE[0]}")/_job_scope.sh"
 

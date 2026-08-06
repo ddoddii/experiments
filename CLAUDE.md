@@ -22,10 +22,24 @@ SGLang의 Prefill-Decode (PD) disaggregation 성능을 BFCL v3 multi-turn 벤치
 bash 에서 직접 서버를 띄우지 않는다. `.sh` 로 만들어 `sbatch` 로 올린다.
 
 - **Partition / QOS**: `-p suma_a100 -q a100_qos`
+- **GPU**: 2장 → **1P1D 전용** (2P2D 는 4장 필요)
 - **실행**: `./scripts/slurm/submit.sh` (또는 `sbatch ~/experiments/scripts/slurm/submit_bench.sh`)
-- **대화형**: `srun -p suma_a100 -q a100_qos --gres=gpu:1 --pty bash -i`
+- **대화형**: `srun -p suma_a100 -q a100_qos --gres=gpu:2 --pty bash -i`
 - **도는 job 에 붙기**: `srun --jobid=<jobid> --pty bash`
 - **문서**: `scripts/slurm/README.md`
+
+**수정한 sglang 소스를 반영하려면** 한 번만:
+
+```bash
+conda activate sglang
+cd ~/sglang-source/python && pip install -e . --no-deps --no-build-isolation
+```
+
+이후로는 `.py` 를 고치고 서버만 재시작하면 된다 (`run_why_faster.sh` 는 arm 마다
+재시작하므로 자동). 이걸 안 하면 `import sglang` 이 conda env 의 **설치본**을 집어서
+park 패치 없는 upstream 이 도는데, 서버도 로그도 정상이라 증상이 "park arm 이 baseline
+과 비슷하다" 뿐이다. `preflight.sh` 와 `_use_source.sh` 가 그 상태면 실험을 막는다.
+`sgl-kernel/` (C++/CUDA) 을 고쳤다면 재빌드가 필요하다.
 
 노드를 남과 공유하므로 포트/pkill/GPU번호/공유디렉터리가 전부 job 단위로 격리된다
 (`scripts/slurm/env.sh`). 이 격리를 우회해서 서버를 손으로 띄우면 같은 노드의 다른

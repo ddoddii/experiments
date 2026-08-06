@@ -21,6 +21,9 @@ set -e
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
+# 수정한 소스 트리를 쓰게 만든다. 이 가드가 없으면 설치본(park 패치 없는 upstream)이
+# 조용히 돌고, 증상은 "park arm 이 baseline 과 비슷하다" 하나뿐이다.
+source "$(dirname "${BASH_SOURCE[0]}")/_use_source.sh"
 
 MODEL_PATH=${MODEL_PATH:-"/home/uhmturks/hf_models/Qwen3-14B"}
 QUANTIZATION=${QUANTIZATION:-""}

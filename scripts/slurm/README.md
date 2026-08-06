@@ -4,6 +4,11 @@ server17 (A6000 x4 전용 머신) 에서 A100 클러스터로 옮기면서 달�
 아니다. **노드를 남과 공유한다**는 게 더 크고, 기존 스크립트는 전부 전용 머신을 가정하고
 있었다. 이 디렉터리가 그 간극을 메운다.
 
+**GPU 2장 = 1P1D 전용.** 여기서는 그게 제약이 아니라 오히려 이 주장을 보여주기에 가장
+깨끗한 구성이다. park 대상이 decode GPU 하나뿐이라, A6000 4장 실험을 괴롭혔던 혼동 —
+각 prefill 의 후보 목록에 NVLink 대상과 PCIe 대상이 섞여 있고 둘 다 "peer" 로 보고되던
+문제 — 이 구조적으로 사라진다. 아래 2P2D 관련 내용은 4장을 받게 될 때를 위한 것이다.
+
 ## 빠른 사용법
 
 ```bash
@@ -39,6 +44,47 @@ sbatch --export=ALL,MODE=full,WORKLOAD=bfcl,REPEATS=3 \
 ```bash
 ./scripts/slurm/interactive.sh          # = srun -p suma_a100 -q a100_qos --gres=gpu:2 --pty bash -i
 ```
+
+## 수정한 sglang 소스가 실제로 도는가
+
+`~/sglang-source` 를 클론해 두는 것만으로는 반영되지 않는다. `import sglang` 은 conda
+env 에 pip 로 설치된 복사본을 집고, 서버는 정상적으로 뜨고, 로그도 정상이고, 다만
+**park 패치가 없는 upstream 이 돈다.** 증상은 "park arm 이 baseline 과 비슷하다" 하나뿐이다.
+
+**한 번만 해두면 되는 것 (권장):**
+
+```bash
+conda activate sglang
+cd ~/sglang-source/python
+pip install -e . --no-deps --no-build-isolation
+```
+
+`--no-deps` 를 빼면 pip 가 torch/flashinfer 를 다시 해결하려 들면서 멀쩡한 env 를
+깨뜨릴 수 있다. 이걸 해두면 이후로는 **`.py` 를 고치고 서버만 재시작하면 끝**이다.
+(`env.sh` 가 `PYTHONPATH` 에도 소스 트리를 얹으므로 editable 설치 없이도 동작하지만,
+editable 쪽이 도구들이 일관되게 같은 트리를 보게 해서 낫다.)
+
+**반영되는 범위:**
+
+| 고친 것 | 필요한 조치 |
+|---|---|
+| `python/sglang/**/*.py` (park 코드 전부 여기 있다) | 서버 재시작만. `run_why_faster.sh` 는 arm 마다 재시작하므로 자동 |
+| `sgl-kernel/` (C++/CUDA) | 재빌드 필요. editable 설치도 PYTHONPATH 도 커널은 못 건드린다 |
+| 도는 서버에 실시간 반영 | 불가능. 파이썬은 import 시점에 모듈을 읽는다 |
+
+**확인 방법:** `preflight.sh` 가 계산 노드에서 실제 import 경로를 찍고, 설치본을 집고
+있으면 **실험을 시작하지 않는다.** 손으로 볼 때는:
+
+```bash
+python -c "import sglang; print(sglang.__file__)"     # ~/sglang-source/... 여야 한다
+./scripts/sglang/which_sglang.sh                       # 도는 서버가 뭘 실행 중인지까지
+```
+
+각 arm 의 `meta_<arm>.json` 에 그 arm 이 돈 sglang 커밋 SHA 가 찍힌다. 한 OUTDIR 에
+서로 다른 빌드의 arm 이 섞이면 (한 arm 만 재실행했을 때 실제로 있었던 일) 여기서 보인다.
+
+주의: 클론과 conda env 가 **계산 노드에서 보이는 파일시스템**에 있어야 한다. 홈이 NFS 로
+공유되는 보통의 클러스터면 문제없고, 아니면 preflight 의 import 검사에서 걸린다.
 
 ## 파일
 
