@@ -1,0 +1,21 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 22:17:13] max_total_num_tokens=202000, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=36.59 GB
+[2026-08-06 22:17:16] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 22:17:00] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-08-06 22:24:52] INFO:     127.0.0.1:37606 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:52] Decode batch, #running-req: 1, #token: 4561, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 10.73, #queue-req: 0, 
+[2026-08-06 22:24:52] INFO:     127.0.0.1:37620 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:53] Decode batch, #running-req: 1, #token: 4601, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 88.89, #queue-req: 0, 
+[2026-08-06 22:24:53] INFO:     127.0.0.1:37626 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:53] Decode batch, #running-req: 1, #token: 4641, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 88.96, #queue-req: 0, 
+[2026-08-06 22:24:53] INFO:     127.0.0.1:37628 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:54] INFO:     127.0.0.1:37636 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:54] INFO:     127.0.0.1:37640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 22:24:54] INFO:     127.0.0.1:37642 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:55] INFO:     127.0.0.1:37652 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:55] Decode batch, #running-req: 1, #token: 4723, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 20.44, #queue-req: 0, 
+[2026-08-06 22:24:55] Decode batch, #running-req: 1, #token: 4763, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 88.74, #queue-req: 0, 
+[2026-08-06 22:24:55] INFO:     127.0.0.1:34238 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:24:56] INFO:     127.0.0.1:34248 - "GET /metrics HTTP/1.1" 200 OK

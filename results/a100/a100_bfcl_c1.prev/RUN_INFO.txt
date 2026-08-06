@@ -1,0 +1,12 @@
+job        : 1976681  (j1976681)
+node       : node43
+started    : 2026-08-06T22:04:48+09:00
+mode       : sweep
+workload   : bfcl  concurrency=32  repeats=1
+topology   : 1p1d  gpus=[0,1]
+experiments: claude/a100-experiment-setup-dtubqr @ 37c9264
+sglang     : claude/a100-experiment-setup-dtubqr @ f965e24bd
+mooncake   : protocol=rdma ld_fix=system ib_device=<auto>
+MC_* env   : MC_FORCE_TCP=1 
+decode pool: 202000
+concurrency: 1 (sweep)

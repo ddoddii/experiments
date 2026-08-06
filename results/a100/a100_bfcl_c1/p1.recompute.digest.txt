@@ -1,0 +1,21 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 22:08:39] max_total_num_tokens=105000, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=49.39 GB
+[2026-08-06 22:08:43] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 22:08:30] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-08-06 22:16:13] INFO:     127.0.0.1:47448 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:14] INFO:     127.0.0.1:47450 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:14] INFO:     127.0.0.1:32780 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 22:16:14] Prefill batch, #new-seq: 1, #new-token: 4549, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 2067.64, 
+[2026-08-06 22:16:14] INFO:     127.0.0.1:47452 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:15] INFO:     127.0.0.1:47466 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:15] INFO:     127.0.0.1:47478 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:16] INFO:     127.0.0.1:50700 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:16] INFO:     127.0.0.1:50710 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:16] INFO:     127.0.0.1:32780 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 22:16:16] Prefill batch, #new-seq: 1, #new-token: 4628, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 1920.48, 
+[2026-08-06 22:16:17] INFO:     127.0.0.1:50722 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:17] INFO:     127.0.0.1:50724 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:18] INFO:     127.0.0.1:50738 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:16:18] INFO:     127.0.0.1:50748 - "GET /metrics HTTP/1.1" 200 OK

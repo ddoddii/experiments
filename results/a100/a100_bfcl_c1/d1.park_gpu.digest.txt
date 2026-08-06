@@ -1,0 +1,21 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 22:25:59] max_total_num_tokens=202000, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=4.86 GB
+[2026-08-06 22:26:01] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 22:25:44] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-08-06 22:32:53] INFO:     127.0.0.1:35318 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:53] INFO:     127.0.0.1:35328 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:54] INFO:     127.0.0.1:35344 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:54] INFO:     127.0.0.1:35360 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:55] INFO:     127.0.0.1:35368 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:55] INFO:     127.0.0.1:35382 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 22:32:55] INFO:     127.0.0.1:60770 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:56] INFO:     127.0.0.1:60780 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:56] Decode batch, #running-req: 1, #token: 4570, token usage: 0.02, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 12.64, #queue-req: 0, 
+[2026-08-06 22:32:56] INFO:     127.0.0.1:60790 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:57] INFO:     127.0.0.1:60804 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:57] INFO:     127.0.0.1:60810 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 22:32:57] INFO:     127.0.0.1:60816 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:58] INFO:     127.0.0.1:60824 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 22:32:58] INFO:     127.0.0.1:60838 - "GET /metrics HTTP/1.1" 200 OK

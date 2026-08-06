@@ -1,11 +1,11 @@
-job        : 1976049  (j1976049)
+job        : 1976693  (j1976693)
 node       : node43
-started    : 2026-08-06T19:31:50+09:00
-mode       : full CONCURRENCY=64
+started    : 2026-08-06T22:07:47+09:00
+mode       : sweep
 workload   : bfcl  concurrency=32  repeats=1
 topology   : 1p1d  gpus=[0,1]
-experiments: claude/a100-experiment-setup-dtubqr @ 4a7871b
+experiments: claude/a100-experiment-setup-dtubqr @ 37c9264
 sglang     : claude/a100-experiment-setup-dtubqr @ f965e24bd
-mooncake   : protocol=rdma ld_fix=none ib_device=<auto>
-MC_* env   : 
-decode pool: <unpinned>
+mooncake   : protocol=rdma ld_fix=system ib_device=<auto>
+MC_* env   : MC_FORCE_TCP=1 
+decode pool: 202000
