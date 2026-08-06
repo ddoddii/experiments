@@ -366,3 +366,47 @@ GPUS=4 ./scripts/slurm/submit.sh MODE=full A100_TOPOLOGY=2p2d   # + sbatch --exc
 애초에 2GPU 1P1D 가 이 주장을 가장 깨끗하게 보여주는 구성이다: park 대상이 NVLink 로
 붙은 decode GPU 하나뿐이라, A6000 4장 실험을 괴롭혔던 혼동 — 각 prefill 의 후보 목록에
 NVLink 대상과 PCIe 대상이 섞여 있고 둘 다 "peer" 로 보고되던 문제 — 이 사라진다.
+
+## 왜 hicache 가 압박 아래서 무너지는가 (측정된 메커니즘)
+
+C=64, prefill pool 79,000 (99% 점유) 에서 실측:
+
+| arm | reuse | 서버측 TTFT | 완주 |
+|---|---|---|---|
+| recompute | 0% | 32.6s | 200/200 |
+| radix | 7.6% | 37.7s | 200/200 |
+| hicache | 6.1% | **112.3s** | 44/200 (156개 120초 타임아웃) |
+
+**radix 와 hicache 의 reuse 가 거의 같은데(7.6% vs 6.1%) TTFT 는 3배 차이난다.**
+재사용량이 같으므로 그 3배는 캐시의 이득이 아니라 hicache 계층의 비용이다.
+
+원인은 대역폭이 아니다. hicache 가 쓴 양은 ~1M 토큰 × 128 KiB ≈ 131 GB 이고 480초에
+나눠도 273 MB/s 라 PCIe 근처도 못 간다. 진짜 원인은 `hiradix_cache.py` 에 있다:
+
+```python
+write_through_threshold = 1 if policy == "write_through" else 2   # 기본이 write_through
+...
+self.ongoing_write_through[node.id] = node
+if not write_back:
+    self.inc_lock_ref(node)      # <- 쓰는 동안 노드를 잠근다
+```
+
+기본 정책에서 **모든 노드가 첫 접근에 host 로 복사되고, 복사가 끝날 때까지 잠긴다.**
+잠긴 노드는 축출 대상에서 빠진다. 풀이 99% 인 상황에서는:
+
+1. 새 prefix 마다 host 로 write-through 가 걸리고
+2. 그동안 그 노드는 축출 불가
+3. 그런데 풀이 꽉 차서 할당하려면 축출해야 함
+4. → 축출 가능한 집합이 in-flight write 만큼 줄어들고, 할당이 write 완료를 기다린다
+
+즉 **write-through 가 자기가 비우려는 풀의 페이지를 붙잡는다.** radix 는 쓸 게 없으니
+즉시 축출하고, 그래서 같은 재사용률에 3배 빠르다.
+
+이게 GPU park 이 유리한 이유의 정확한 형태다. 락을 잡고 있는 시간이 곧 복사 시간이고,
+peer GPU 270 GB/s vs host PCIe ~25 GB/s 이므로 **락 보유 시간이 ~10배 짧다.**
+1,000 토큰 노드 기준 5.1 ms → 0.47 ms. 이득의 정체는 "매체가 빨라서 fetch 가 빠르다"
+보다 "축출 경로가 막히지 않는다" 쪽이다.
+
+**단, 압박이 과하면 아무도 못 이긴다.** 위 run 은 W(318k) / P(79k) = 4배
+oversubscribe 라 reuse 가 6~7% 로 붕괴했다 -- 재사용 전에 전부 쫓겨난다. victim cache
+가 값을 하려면 1.5배 근처여야 한다 (`check_pressure.py --plan-concurrency`).
