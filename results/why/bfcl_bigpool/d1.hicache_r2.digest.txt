@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 07:03:35] max_total_num_tokens=154304, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=11.53 GB
+[2026-08-06 07:03:37] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:40] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:41] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:41] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:41] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:41] Error in parse_streaming_increment:  {"name": "send_message", "parameters": {"receiver_id": "get_user_id", "user": "Bob", "message": "The distance from Rivermist to Stonebrook is {0:.1f} km.".format(estimate_distance(cityA="Rivermist", city
+[2026-08-06 07:04:41] Error in parse_streaming_increment:  {"name": "send_message", "parameters": {"receiver_id": "get_user_id", "user": "Bob", "message": "The distance from Rivermist to Stonebrook is {0:.1f} km.".format(estimate_distance(cityA="Rivermist", cityB
+[2026-08-06 07:04:41] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+[2026-08-06 07:04:41] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 156 (char 155)
+---- tail ----
+[2026-08-06 07:06:52] INFO:     127.0.0.1:43684 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:43692 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:43696 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:43702 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:43716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:43732 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:54] INFO:     127.0.0.1:43748 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:54] Decode batch, #running-req: 1, #token: 5003, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 24.76, #queue-req: 0, 
+[2026-08-06 07:06:54] INFO:     127.0.0.1:43754 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:55] INFO:     127.0.0.1:43766 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:55] INFO:     127.0.0.1:43770 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:56] INFO:     127.0.0.1:43776 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:56] INFO:     127.0.0.1:43786 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:58] INFO:     127.0.0.1:43792 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:06:58] INFO:     127.0.0.1:43798 - "GET /metrics HTTP/1.1" 200 OK

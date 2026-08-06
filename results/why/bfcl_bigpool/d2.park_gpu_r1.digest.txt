@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 06:57:18] max_total_num_tokens=42565, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=1.05 GB
+[2026-08-06 06:57:20] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+[2026-08-06 06:57:59] Error in parse_streaming_increment: Invalid \escape: line 1 column 68 (char 67)
+  return self.create_error_response(
+---- tail ----
+[2026-08-06 07:02:43] INFO:     127.0.0.1:60656 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:43] INFO:     127.0.0.1:60658 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:60664 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:60666 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:60668 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:60672 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:45] INFO:     127.0.0.1:60682 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:45] INFO:     127.0.0.1:60692 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:46] INFO:     127.0.0.1:60704 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:02:46] INFO:     127.0.0.1:60706 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:46] INFO:     127.0.0.1:60716 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:47] Decode batch, #running-req: 1, #token: 5431, token usage: 0.13, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 1.99, #queue-req: 0, 
+[2026-08-06 07:02:47] INFO:     127.0.0.1:60732 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:49] INFO:     127.0.0.1:60744 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:02:49] INFO:     127.0.0.1:60746 - "GET /metrics HTTP/1.1" 200 OK

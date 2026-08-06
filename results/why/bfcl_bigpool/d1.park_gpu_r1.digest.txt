@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 06:57:15] max_total_num_tokens=42565, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=1.05 GB
+[2026-08-06 06:57:17] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 07:00:09] Error in parse_streaming_increment: Expecting ':' delimiter: line 1 column 5 (char 4)
+[2026-08-06 07:00:09] Error in parse_streaming_increment: Expecting ':' delimiter: line 1 column 5 (char 4)
+[2026-08-06 07:00:09] Error in parse_streaming_increment: Expecting ':' delimiter: line 1 column 5 (char 4)
+[2026-08-06 07:00:09] Error in parse_streaming_increment: Expecting ':' delimiter: line 1 column 5 (char 4)
+[2026-08-06 07:00:09] Error in parse_streaming_increment: Expecting ':' delimiter: line 1 column 5 (char 4)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: {name: "retrieve_invoice", parameters
+[2026-08-06 07:01:22] Error in parse_streaming_increment: {name: "retrieve_invoice", parameters:
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+[2026-08-06 07:01:22] Error in parse_streaming_increment: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+---- tail ----
+[2026-08-06 07:02:44] Decode batch, #running-req: 1, #token: 5350, token usage: 0.13, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 41.58, #queue-req: 0, 
+[2026-08-06 07:02:44] INFO:     127.0.0.1:46940 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:46952 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:46962 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:46974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:02:44] INFO:     127.0.0.1:46978 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:45] INFO:     127.0.0.1:46982 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:45] Decode batch, #running-req: 1, #token: 5345, token usage: 0.13, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 26.62, #queue-req: 0, 
+[2026-08-06 07:02:45] INFO:     127.0.0.1:46990 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:46] INFO:     127.0.0.1:47006 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:46] INFO:     127.0.0.1:47018 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:47] INFO:     127.0.0.1:47020 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:47] INFO:     127.0.0.1:47034 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:02:49] INFO:     127.0.0.1:47044 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:02:49] INFO:     127.0.0.1:47050 - "GET /metrics HTTP/1.1" 200 OK

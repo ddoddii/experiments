@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 07:03:37] max_total_num_tokens=154304, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=11.53 GB
+[2026-08-06 07:03:39] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 07:05:59] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", '
+[2026-08-06 07:05:59] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", 'travel
+[2026-08-06 07:05:59] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", 'travel_date
+[2026-08-06 07:05:59] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", '
+[2026-08-06 07:05:59] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", 'travel
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", 'travel_from
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", '
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", 'travel
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", 'travel_to
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", '
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", 'travel
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", 'travel_class
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", "travel_class": "business", '
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", "travel_class": "business", 'travel
+[2026-08-06 07:06:00] Error in parse_streaming_increment: {"name": "book_flight", "parameters": {"access_token": "abc123xyz", "card_id": "AMEX123456789", "travel_date": "2024-11-16", "travel_from": "SFO", "travel_to": "LAX", "travel_class": "business", 'travel_cost
+---- tail ----
+[2026-08-06 07:06:52] INFO:     127.0.0.1:50474 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:06:52] INFO:     127.0.0.1:50484 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:50490 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:50500 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:50502 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:53] INFO:     127.0.0.1:50504 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:54] INFO:     127.0.0.1:50512 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:54] INFO:     127.0.0.1:50520 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:55] INFO:     127.0.0.1:50524 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:06:55] INFO:     127.0.0.1:50536 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:55] Decode batch, #running-req: 1, #token: 5058, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 14.42, #queue-req: 0, 
+[2026-08-06 07:06:55] INFO:     127.0.0.1:50540 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:56] INFO:     127.0.0.1:50550 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:06:58] INFO:     127.0.0.1:50564 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:06:58] INFO:     127.0.0.1:50578 - "GET /metrics HTTP/1.1" 200 OK
