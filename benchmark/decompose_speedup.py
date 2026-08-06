@@ -56,6 +56,44 @@ BW_GPU_GBPS = 52.7
 BW_HOST_GBPS = 26.3      # one direction; a park+fetch round trip pays it twice
 KIB_PER_TOKEN = 128.0
 
+
+# --- hardware profile -----------------------------------------------------------------
+# These constants were measured on 4x RTX A6000 with Llama-3.1-8B and they are
+# load-bearing: the link budget, and what a cache hit is worth, both scale with them. On
+# any other machine they are wrong in a way that still produces a plausible number.
+# benchmark/hwprofile.py writes results/hwprofile.json; it is picked up here when present.
+def _load_hwprofile():
+    import json as _json
+    import os as _os
+    for p in (_os.environ.get("HWPROFILE"), "results/hwprofile.json",
+              _os.path.join(_os.path.dirname(__file__), "..", "results", "hwprofile.json")):
+        if p and _os.path.exists(p):
+            try:
+                return _json.load(open(p)), p
+            except Exception:  # noqa: BLE001
+                pass
+    return None, None
+
+
+_HW, _HW_PATH = _load_hwprofile()
+if _HW:
+    BW_GPU_GBPS = _HW.get("peer_gpu_gbps") or BW_GPU_GBPS
+    BW_HOST_GBPS = _HW.get("host_gbps") or BW_HOST_GBPS
+    if _HW.get("prefill_ms_per_tok"):
+        PREFILL_MS_PER_TOK = _HW["prefill_ms_per_tok"]
+    if _HW.get("prefill_ms_per_tok2"):
+        PREFILL_MS_PER_TOK2 = _HW["prefill_ms_per_tok2"]
+
+def _hw_banner():
+    if _HW:
+        miss = "" if _HW.get("prefill_ms_per_tok") else \
+            "  (prefill_ms_per_tok not measured here -- hit value still uses the A6000 fit)"
+        return (f"[hw] {_HW.get('gpu_name')} x{_HW.get('gpu_count')} from {_HW_PATH}: "
+                f"peer {BW_GPU_GBPS} GB/s, host {BW_HOST_GBPS} GB/s{miss}")
+    return ("[hw] NO results/hwprofile.json -- using values measured on 4x RTX A6000 "
+            "(peer 52.7, host 26.3 GB/s, prefill 0.1317 ms/tok). On different hardware "
+            "every derived number below is wrong. Run benchmark/hwprofile.py.")
+
 # recompute is the floor; radix is optional and reported when present (see FLOOR below).
 ORDER = ["recompute", "radix", "hicache", "park_host", "park_sync", "park_gpu",
          "park_nvlink"]
@@ -157,6 +195,7 @@ def main():
     ap.add_argument("--kib-per-token", type=float, default=KIB_PER_TOKEN)
     args = ap.parse_args()
     d = args.dir
+    print(_hw_banner())
 
     arms = [a for a in ORDER if load_bench(d, a)]
     caps = sorted(

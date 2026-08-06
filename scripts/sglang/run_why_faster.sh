@@ -66,7 +66,16 @@ export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-32000}
 # Pinning decode's capacity to the smaller value gives both arms the same decode pool, so
 # the only thing left differing is where evicted prefill KV goes. Set it to 0 to opt out
 # and let each arm size itself, but then do not compare the arms on latency.
-export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-154304}
+# NO DEFAULT. 154304 was measured on this box's A6000s and pinning it on any other
+# machine would clamp decode to a number that means nothing there -- a silent
+# misconfiguration dressed as a control. Set it explicitly, to the SMALLER of the two
+# arms' decode capacities as reported by decompose_speedup.py, once both have run once.
+export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
+if [ -z "$DECODE_MAX_TOTAL_TOKENS" ]; then
+  echo "  [note] DECODE_MAX_TOTAL_TOKENS unset: each arm sizes its own decode pool, and a"
+  echo "         park pool on a decode GPU shrinks that decode's pool. Run once, read the"
+  echo "         capacities from decompose_speedup.py, then pin the smaller value."
+fi
 
 # Park onto the DECODE GPUs. Under PD_LAYOUT=b, P0=gpu0 D0=gpu1 P1=gpu2 D1=gpu3, so each
 # prefill lists its NVLink-bridged decode first and the far decode as a fallback. This is
