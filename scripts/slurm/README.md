@@ -253,6 +253,32 @@ python scripts/slurm/probe_mooncake.py --sweep
 `mooncake_sweep/` 의 저장된 출력에서 `installTransport` 줄이 없거나 `tcp` 인지
 직접 확인하는 게 맞다.
 
+## 결과 디렉터리 이름
+
+```
+results/a100/a100_<workload>_c<concurrency>/          # 본 실험
+results/a100/a100_<workload>_c<concurrency>_probe/    # probe
+results/a100/... .prev/                               # 직전 run
+```
+
+job id 는 이름에 넣지 않는다 — 제출할 때마다 새 디렉터리가 생겨 쌓인다. 다만 job id 는
+장식이 아니라 **출처 정보**였으므로 (어느 job/노드/커밋/전송설정에서 나온 숫자인지),
+이름에서 뺀 대신 디렉터리 안 두 파일에 남긴다:
+
+| 파일 | 내용 |
+|---|---|
+| `RUN_INFO.txt` | job id, 노드, 시각, experiments/sglang 커밋, `MC_*` 환경변수, decode pool 고정값 |
+| `preflight.json` | job, 노드, GPU, 카드명, 측정 peer 대역폭, P/D 링크 종류 |
+
+**같은 이름을 재사용하면 새 위험이 생긴다**: 이번 run 에서 실패한 arm 자리에 지난 run 의
+파일이 남아, 분석 스크립트가 그걸 이번 결과로 읽는다. 이 리포는 이미 그 함정에 빠진 적이
+있다 (arm 하나만 재실행했더니 나머지는 옛 빌드 것이 남아 있었다). 그래서 run 시작 시
+직전 디렉터리를 `.prev` 로 **옮긴다** (지우지 않는다). 설정당 최대 두 세대만 남는다.
+`KEEP_OUTDIR=1` 이면 그냥 덮어쓴다.
+
+`CONCURRENCY` 는 이름에 남긴다. c4 probe 와 c32 본 실험은 비교 대상이 아닌데 이름이
+같으면 뒤엣것이 앞엣것을 덮어쓴다. 완전히 고정하려면 `TAG=...` 로 직접 넘겨라.
+
 ## 파일
 
 | 파일 | 역할 |

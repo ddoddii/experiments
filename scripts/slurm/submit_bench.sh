@@ -53,9 +53,46 @@ export NODES=$A100_TOPOLOGY            # run_why_faster.sh 가 읽는 이름
 export WORKLOAD=${WORKLOAD:-bfcl}
 export CONCURRENCY=${CONCURRENCY:-32}
 export REPEATS=${REPEATS:-1}
-export TAG=${TAG:-"a100_${WORKLOAD}_c${CONCURRENCY}_${JOB_TAG}"}
+# 디렉터리 이름에 job id 를 넣지 않는다. 제출할 때마다 새 디렉터리가 생겨서 쌓인다.
+#
+# 다만 job id 는 이름표가 아니라 출처 정보였다 -- 어느 job, 어느 노드, 어느 커밋,
+# 어떤 전송 설정으로 나온 숫자인지가 이름에만 있었다. 그래서 이름에서 뺀 대신
+# RUN_INFO.txt 로 디렉터리 안에 남긴다.
+#
+# CONCURRENCY 는 이름에 남긴다. c4 probe 와 c32 본 실험은 비교 대상이 아닌데 이름이
+# 같으면 뒤엣것이 앞엣것을 덮어쓴다 (run_why_faster.sh 가 WORKLOAD 를 태그에 넣는
+# 이유와 같다). 완전히 고정하고 싶으면 TAG=... 로 직접 넘겨라.
+export TAG=${TAG:-"a100_${WORKLOAD}_c${CONCURRENCY}"}
 export OUTDIR=${OUTDIR:-"results/a100/${TAG}"}
+
+# 같은 이름을 재사용하면 새로 생기는 위험이 있다: 이번 run 에서 실패한 arm 의 자리에
+# 지난 run 의 파일이 그대로 남아, 분석 스크립트가 그걸 이번 결과로 읽는다. 이 리포는
+# 이미 그 함정에 빠진 적이 있다 (arm 하나만 재실행했더니 다른 arm 은 옛 빌드의 것이
+# 남아 있었다). 그래서 시작할 때 직전 run 을 .prev 로 밀어둔다 -- 지우는 게 아니라
+# 옮기는 것이고, 설정당 최대 두 세대만 남는다.
+for _d in "$OUTDIR" "${OUTDIR}_probe"; do
+  if [ -d "$_d" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+    rm -rf "${_d}.prev"
+    mv "$_d" "${_d}.prev"
+    echo "  직전 run 을 ${_d}.prev 로 옮겼다 (KEEP_OUTDIR=1 이면 덮어쓰기)."
+  fi
+done
 mkdir -p "$OUTDIR"
+
+# 이름에서 뺀 출처 정보를 여기에 남긴다.
+{
+  echo "job        : ${SLURM_JOB_ID:-<none>}  (${JOB_TAG})"
+  echo "node       : $(hostname)"
+  echo "started    : $(date -Is)"
+  echo "mode       : ${MODE}"
+  echo "workload   : ${WORKLOAD}  concurrency=${CONCURRENCY}  repeats=${REPEATS}"
+  echo "topology   : ${A100_TOPOLOGY}  gpus=[${A100_GPU_CSV}]"
+  echo "experiments: $(git -C "$EXP_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null) @ $(git -C "$EXP_ROOT" rev-parse --short HEAD 2>/dev/null)"
+  echo "sglang     : $(git -C "$SGLANG_SRC_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null) @ $(git -C "$SGLANG_SRC_DIR" rev-parse --short HEAD 2>/dev/null)"
+  echo "mooncake   : protocol=${SGLANG_MOONCAKE_PROTOCOL} ld_fix=${MOONCAKE_LD_FIX:-none} ib_device=${IB_DEVICE:-<auto>}"
+  echo "MC_* env   : $(env | grep '^MC_' | sort | tr '\n' ' ')"
+  echo "decode pool: ${DECODE_MAX_TOTAL_TOKENS:-<unpinned>}"
+} > "$OUTDIR/RUN_INFO.txt"
 
 echo "################################################################"
 echo " A100 ${MODE}  |  ${TAG}"
