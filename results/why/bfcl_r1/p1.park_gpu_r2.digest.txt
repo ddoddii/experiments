@@ -1,0 +1,22 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-07-13 11:13:40] max_total_num_tokens=120000, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=15.85 GB
+[2026-07-13 11:13:40] Idle KV parking [prefill]: 2 idle-GPU park pool(s) on GPU[2, 3] = 50000 tokens x 32 layers each (~13.1 GB total). Parking picks the pool with most headroom.
+[2026-07-13 11:13:42] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-07-13 11:13:36] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-07-13 11:48:50] INFO:     127.0.0.1:7612 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:49:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:49:50] INFO:     127.0.0.1:14686 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:50:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:50:50] INFO:     127.0.0.1:58956 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:51:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:51:50] INFO:     127.0.0.1:36994 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:52:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:52:50] INFO:     127.0.0.1:8578 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:53:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:53:50] INFO:     127.0.0.1:42960 - "GET /health HTTP/1.1" 200 OK
+[2026-07-13 11:54:49] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, token usage: 0.00, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 0.02, 
+[2026-07-13 11:54:50] INFO:     127.0.0.1:50846 - "GET /health HTTP/1.1" 200 OK
+/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
