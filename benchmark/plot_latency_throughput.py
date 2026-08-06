@@ -101,7 +101,11 @@ def _point(d, arm, xmode="throughput"):
                 tok += ot
     if not tok:
         return None, None, rate
-    if xmode == "rps":
+    if xmode == "rate":
+        # 걸어준 부하. 측정값이 아니라 제어변수라 서버가 포화해도 계속 오른다 --
+        # 참조 논문들의 hockey-stick 이 이 축에서 나온다.
+        x = s.get("session_rate")
+    elif xmode == "rps":
         turns, wall = s.get("n_ttft_samples") or 0, s.get("total_wall_time_s") or 0
         x = (turns / wall) if wall else None
     else:
@@ -113,16 +117,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dirs", required=True)
     ap.add_argument("--out", default="results/a100/fig_latency_throughput")
-    ap.add_argument("--x", choices=["throughput", "rps"], default="throughput")
+    ap.add_argument("--x", choices=["throughput", "rps", "rate"], default="throughput",
+                    help="rate = open-loop 으로 걸어준 세션 도착률 (MODE=ratesweep 전용)")
     args = ap.parse_args()
 
     points = {}
     for d in sorted(glob.glob(args.dirs)):
         if d.endswith(".prev") or d.endswith("_probe") or not os.path.isdir(d):
             continue
-        m = re.search(r"_c(\d+)$", os.path.basename(d.rstrip("/")))
+        base = os.path.basename(d.rstrip("/"))
+        # closed loop 은 _c<정수>, open loop 은 _r<소수, 점은 p> (예: r0p25).
+        m = re.search(r"_c(\d+)$", base)
         if m:
-            points[int(m.group(1))] = d
+            points[float(m.group(1))] = d
+            continue
+        m = re.search(r"_r([0-9p]+)$", base)
+        if m:
+            points[float(m.group(1).replace("p", "."))] = d
     if not points:
         print(f"동시성을 읽을 수 있는 디렉터리가 없다: {args.dirs}")
         return 1
@@ -163,12 +174,14 @@ def main():
 
     # 각 점이 어느 동시성인지 표시한다. 처리량 축만 보면 부하 수준을 알 수 없다.
     base = [t for t in table if t[1] == "recompute"] or table
-    for c, _, x, y, _ in sorted(base):
-        ax.annotate(f"C={c}", (x, y), textcoords="offset points", xytext=(3, -9),
-                    fontsize=5.5, color="#666666")
+    if args.x != "rate":     # rate 축에서는 x 자체가 부하라 라벨이 중복이다
+        for c, _, x, y, _ in sorted(base):
+            ax.annotate(f"C={c:g}", (x, y), textcoords="offset points", xytext=(3, -9),
+                        fontsize=5.5, color="#666666")
 
-    ax.set_xlabel("Throughput (tokens / s)" if args.x == "throughput"
-                  else "Request rate (requests / s)")
+    ax.set_xlabel({"throughput": "Throughput (tokens / s)",
+                   "rps": "Request rate (requests / s)",
+                   "rate": "Offered load (sessions / s)"}[args.x])
     ax.set_ylabel("Normalized latency\n(ms / token)")
     ax.grid(color=PALETTE["grid"], lw=0.5)
     ax.set_axisbelow(True)
@@ -181,9 +194,9 @@ def main():
         print(f"[제외] C={c} {label}: {rate*100:.0f}% 실패 -> 점 없음")
     tsv = args.out + "_values.tsv"
     with open(tsv, "w") as f:
-        f.write(f"concurrency\tarm\t{args.x}\tnorm_latency_ms_per_tok\terr_rate\n")
+        f.write(f"load\tarm\t{args.x}\tnorm_latency_ms_per_tok\terr_rate\n")
         for c, arm, x, y, rate in sorted(table):
-            f.write(f"{c}\t{arm}\t{x:.4f}\t{y:.2f}\t{rate:.4f}\n")
+            f.write(f"{c:g}\t{arm}\t{x:.4f}\t{y:.2f}\t{rate:.4f}\n")
     print(f"저장: {args.out}.pdf / .png\n수치: {tsv}")
     return 0
 

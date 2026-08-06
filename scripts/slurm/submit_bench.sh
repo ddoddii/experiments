@@ -190,6 +190,53 @@ if [ "$MODE" = "sweep" ]; then
   exit 0
 fi
 
+# ─── 2c. ratesweep: 걸어준 요청률 축 (open-loop) ──────────────────────────────
+# MODE=sweep 은 동시성을 바꾸는 closed loop 이라, 서버가 포화하면 처리량/요청률 축이
+# 더는 움직이지 않는다 (BFCL 에서 C=4 부터 그랬다). 그래서 지연-처리량 곡선이 오른쪽으로
+# 뻗지 않고 수직으로 선다. 참조 논문들의 hockey-stick 모양은 **걸어준 부하**를 축으로
+# 둘 때 나온다.
+#
+# sharegpt 벤치에는 이미 open-loop 이 있다: SESSION_RATE>0 이면 Poisson 도착으로
+# 세션을 밀어넣고, 서버가 따라오든 말든 정해진 비율로 쏜다. BFCL/longctx 에는 없다.
+if [ "$MODE" = "ratesweep" ]; then
+  if [ "$WORKLOAD" != "sharegpt" ]; then
+    echo "MODE=ratesweep 은 WORKLOAD=sharegpt 에서만 된다 (open-loop 이 거기에만 있다)." >&2
+    exit 1
+  fi
+  RATESWEEP=${RATESWEEP:-"0.25 0.5 1 2 4"}
+  export LOAD_DURATION=${LOAD_DURATION:-180}
+  export WARMUP_S=${WARMUP_S:-30}
+  echo
+  echo "################################################################"
+  echo " RATE SWEEP  rate=[$RATESWEEP] sessions/s  duration=${LOAD_DURATION}s"
+  echo " arms=[${ARMS:-recompute hicache park_gpu}]  pool=${PREFILL_MAX_TOTAL_TOKENS:-<미설정>}"
+  echo "################################################################"
+  for _r in $RATESWEEP; do
+    echo
+    echo "════════════════ rate=${_r}/s ════════════════"
+    # 디렉터리 이름에 소수점을 넣지 않는다 (glob/파싱이 지저분해진다). r0p25 형태.
+    _rtag=$(echo "$_r" | tr '.' 'p')
+    _tag="a100_${WORKLOAD}_r${_rtag}"
+    _out="results/a100/${_tag}"
+    if [ -d "$_out" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+      rm -rf "${_out}.prev"; mv "$_out" "${_out}.prev"
+    fi
+    mkdir -p "$_out"
+    cp "$OUTDIR/RUN_INFO.txt" "$_out/RUN_INFO.txt" 2>/dev/null || true
+    echo "session_rate: $_r (open loop)" >> "$_out/RUN_INFO.txt"
+    SESSION_RATE=$_r MAX_ITEMS=${SWEEP_ITEMS:-400}       ARMS="${ARMS:-recompute hicache park_gpu}"       TAG="$_tag" OUTDIR="$_out"       ./scripts/sglang/run_why_faster.sh || true
+    python scripts/slurm/check_pressure.py --dir "$_out" \
+      > "$_out/pressure_check.txt" 2>&1 || true
+  done
+  ./scripts/sglang/stop_1P_1D.sh || true
+  echo
+  echo "그림:"
+  echo "  python benchmark/plot_latency_throughput.py \\"
+  echo "      --dirs 'results/a100/a100_${WORKLOAD}_r*' --x rate \\"
+  echo "      --out results/a100/fig_rate_${WORKLOAD}"
+  exit 0
+fi
+
 # ─── 3. full run ──────────────────────────────────────────────────────────────
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 export ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
