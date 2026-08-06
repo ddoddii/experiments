@@ -37,6 +37,89 @@ import os
 import subprocess
 import sys
 
+# ─── sweep 모드 ───────────────────────────────────────────────────────────────
+# 측정된 사실: protocol='tcp' 를 넘겨도 mooncake 0.3.8 은 무시한다. 로그가
+# "installTransport, type=rdma" 로 나오고 GPU 등록은 여전히 EFAULT 다. 즉 전송
+# 방식은 initialize() 인자가 아니라 "topology auto-discovery 가 HCA 를 찾았는가"로
+# 정해진다. 그러니 HCA 를 못 찾게 만들어야 하고, 그 방법은 mooncake 내부 환경변수라
+# 문서가 없다. 이름을 추측해서 job 을 던지면 라운드마다 몇 분씩 날아가므로, 후보를
+# 서브프로세스로 한 번에 돌려서 어느 것이 transport 를 tcp 로 바꾸는지 표로 뽑는다.
+#
+#   python scripts/slurm/probe_mooncake.py --sweep
+SWEEP_CANDIDATES = [
+    ("(baseline)", {}),
+    # sglang 의 공식 플래그 경로: --disaggregation-ib-device 가 device_name 이 된다.
+    # 로그상 mlx5_1 은 "port not active" 라 mooncake 가 스스로 disable 한다. 그것만
+    # 지정하면 쓸 수 있는 장치가 0개가 된다.
+    ("ib_device=mlx5_1(inactive)", {"PROBE_IB_DEVICE": "mlx5_1"}),
+    ("ib_device=nonexistent", {"PROBE_IB_DEVICE": "mlx5_99"}),
+    # mooncake 의 장치 필터 후보들. 이름이 문서화돼 있지 않아 전부 시도한다.
+    ("MC_FILTERS=[]", {"MC_FILTERS": "[]"}),
+    ("MC_FILTERS=[nomatch]", {"MC_FILTERS": '["nomatch"]'}),
+    ("MC_MS_FILTERS=[]", {"MC_MS_FILTERS": "[]"}),
+    ("MC_DISABLE_RDMA=1", {"MC_DISABLE_RDMA": "1"}),
+    ("MC_USE_TCP=1", {"MC_USE_TCP": "1"}),
+    ("MC_FORCE_TCP=1", {"MC_FORCE_TCP": "1"}),
+    ("MC_TRANSPORT=tcp", {"MC_TRANSPORT": "tcp"}),
+    ("MC_PROTOCOL=tcp", {"MC_PROTOCOL": "tcp"}),
+    ("MC_TOPO_JSON={}", {"MC_CUSTOM_TOPO_JSON": "{}"}),
+]
+
+
+def run_sweep():
+    print("mooncake transport sweep -- 목표: installTransport 를 tcp 로 바꾸고")
+    print("GPU 메모리 등록을 성공시키는 설정 찾기.\n")
+    print(f"  {'후보':<28} {'transport':<10} {'device reg':<12} rc")
+    print("  " + "-" * 62)
+    winners = []
+    for label, extra in SWEEP_CANDIDATES:
+        env = dict(os.environ)
+        env.update(extra)
+        env["PROBE_ONE"] = "1"
+        env.pop("PROBE_PROTOCOL", None)
+        try:
+            p = subprocess.run(
+                [sys.executable, __file__],
+                env=env, capture_output=True, text=True, timeout=180,
+            )
+            out = p.stdout + p.stderr
+        except subprocess.TimeoutExpired:
+            print(f"  {label:<28} {'<timeout>':<10}")
+            continue
+        transport = "?"
+        for line in out.splitlines():
+            if "installTransport, type=" in line:
+                transport = line.split("installTransport, type=")[-1].strip()
+        devreg, rc = "?", p.returncode
+        for line in out.splitlines():
+            if line.strip().startswith("DEVICE"):
+                devreg = "OK" if " rc=0 " in line else "FAIL"
+        mark = ""
+        if devreg == "OK":
+            winners.append((label, extra))
+            mark = "  <<< 이걸 쓰면 된다"
+        print(f"  {label:<28} {transport:<10} {devreg:<12} {rc}{mark}")
+
+    print()
+    if winners:
+        label, extra = winners[0]
+        print(f"  통하는 설정: {label}")
+        kv = " ".join(f"{k}={v}" for k, v in extra.items())
+        if "PROBE_IB_DEVICE" in extra:
+            print("  sglang 서버에는 --disaggregation-ib-device 로 넘어간다:")
+            print(f"    ./scripts/slurm/submit.sh IB_DEVICE={extra['PROBE_IB_DEVICE']}")
+        else:
+            print("  mooncake 환경변수이므로 서버 프로세스에 그대로 넘기면 된다:")
+            print(f"    ./scripts/slurm/submit.sh {kv}")
+    else:
+        print("  통하는 설정 없음. 이 노드에서 mooncake 로 GPU KV 전송은 불가능하다.")
+        print("  남는 선택지는 셋뿐이고, 전부 실험 설계에 영향을 준다:")
+        print("    1. 관리자에게 nvidia_peermem 로드 요청 (가장 깨끗하다)")
+        print("    2. --disaggregation-transfer-backend nixl 로 백엔드 교체")
+        print("       -> A6000 결과는 전부 mooncake 였으므로 교차 비교가 깨진다")
+        print("    3. RDMA 없는 노드/파티션을 쓴다 (server17 이 그랬듯 TCP 자동 폴백)")
+    return 0 if winners else 5
+
 
 def sh(cmd):
     try:
@@ -49,6 +132,11 @@ def sh(cmd):
 
 def section(t):
     print(f"\n=== {t} ===")
+
+
+# sweep 은 자식 프로세스만 돌리고 끝낸다 (본체는 각 자식이 실행한다).
+if "--sweep" in sys.argv:
+    sys.exit(run_sweep())
 
 
 section("환경")

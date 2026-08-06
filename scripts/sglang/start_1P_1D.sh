@@ -56,6 +56,13 @@ ROUTER_HOST=${ROUTER_HOST:-0.0.0.0}
 # 로그 위치. run_why_faster.sh 의 digest 수집이 LOG_DIR 을 먼저 보므로 여기와 같아야 한다.
 LOG_DIR=${LOG_DIR:-logs}
 XFER=${XFER:-mooncake}                # disaggregation transfer backend
+# --disaggregation-ib-device. mooncake 는 이 값을 그대로 TransferEngine 에 넘긴다.
+# RDMA 가 있는 노드에서 GPUDirect 가 없으면 KV pool 등록이 EFAULT 로 실패하는데,
+# 쓸 수 있는 HCA 가 0개가 되면 mooncake 가 TCP 로 폴백한다. 어느 값이 그렇게 만드는지는
+# scripts/slurm/probe_mooncake.py --sweep 이 찾아준다. 빈 값이면 종전대로 자동 탐색.
+IB_DEVICE=${IB_DEVICE:-}
+IB_ARG=""
+[ -n "$IB_DEVICE" ] && IB_ARG="--disaggregation-ib-device ${IB_DEVICE}"
 # 압박(pressure) knob: prefill KV pool을 작게 잡아 radix eviction을 유발한다.
 # (빈 값이면 미적용 = 기본 대용량 pool). 값 예: 30000, 20000
 PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
@@ -175,7 +182,7 @@ env CUDA_VISIBLE_DEVICES=${PREFILL_CVD} ${PREFILL_ENV} python3 -m sglang.launch_
   --model-path "$MODEL_PATH" --tp 1 --port ${PREFILL_PORT} ${PREFILL_GPU_ARG} \
   --enable-metrics \
   ${PREFILL_CACHE_ARGS} \
-  --disaggregation-mode prefill --disaggregation-transfer-backend ${XFER} \
+  --disaggregation-mode prefill --disaggregation-transfer-backend ${XFER} ${IB_ARG} \
   --disaggregation-bootstrap-port ${BOOTSTRAP_PORT} \
   > "$LOG_DIR/p1.log" 2>&1 &
 P1_PID=$!
@@ -186,7 +193,7 @@ CUDA_VISIBLE_DEVICES=${DECODE_CVD} python3 -m sglang.launch_server \
   --model-path "$MODEL_PATH" --tp 1 --port ${DECODE_PORT} ${DECODE_GPU_ARG} \
   --enable-metrics \
   ${DECODE_CACHE_ARGS} \
-  --disaggregation-mode decode --disaggregation-transfer-backend ${XFER} \
+  --disaggregation-mode decode --disaggregation-transfer-backend ${XFER} ${IB_ARG} \
   > "$LOG_DIR/d1.log" 2>&1 &
 D1_PID=$!
 sleep 3

@@ -137,6 +137,12 @@ esac
 # 비교 가능성 측면에서도 tcp 가 맞다: A6000 결과가 전부 TCP 였으므로, 여기서 RDMA 를
 # 쓰면 머신뿐 아니라 전송 경로까지 달라진다.
 export SGLANG_MOONCAKE_PROTOCOL=${SGLANG_MOONCAKE_PROTOCOL:-rdma}
+# 다만 실측 결과 mooncake 0.3.8 은 이 인자를 무시한다 (HCA 를 찾으면 무조건 rdma).
+# 실제로 통하는 건 "auto-discovery 가 HCA 를 못 찾게 하는 것" 이고, IB_DEVICE 가 그
+# 경로다 (--disaggregation-ib-device). 어느 값이 통하는지는
+#   python scripts/slurm/probe_mooncake.py --sweep
+# 가 후보를 전부 돌려서 찾아준다.
+export IB_DEVICE=${IB_DEVICE:-}
 
 # ─── 모델 ─────────────────────────────────────────────────────────────────────
 # 클러스터 홈이 server17 과 다른 파일시스템일 수 있으므로 후보를 훑는다.
@@ -323,7 +329,8 @@ env_summary() {
   echo "  model       : ${MODEL_PATH}"
   echo "  sglang src  : ${SGLANG_SRC_DIR}"
   echo "  logs        : ${LOG_DIR}"
-  echo "  mooncake    : protocol=${SGLANG_MOONCAKE_PROTOCOL}  ld_fix=${MOONCAKE_LD_FIX:-none}"
+  echo "  mooncake    : protocol=${SGLANG_MOONCAKE_PROTOCOL}  ld_fix=${MOONCAKE_LD_FIX:-none}" \
+       "ib_device=${IB_DEVICE:-<auto>}"
   echo "  park dir    : ${SGLANG_KV_PARK_DIR}"
   echo "  hicache dir : ${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR}"
 }
