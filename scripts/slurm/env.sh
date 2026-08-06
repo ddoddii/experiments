@@ -331,6 +331,11 @@ env_summary() {
   echo "  logs        : ${LOG_DIR}"
   echo "  mooncake    : protocol=${SGLANG_MOONCAKE_PROTOCOL}  ld_fix=${MOONCAKE_LD_FIX:-none}" \
        "ib_device=${IB_DEVICE:-<auto>}"
+  # MC_* 는 mooncake 가 직접 읽는 변수라 이 스크립트를 거치지 않는다. 그래서 어떤
+  # 전송 설정으로 돈 run 인지가 로그에 남지 않았다 -- RDMA 로 돈 run 과 TCP 로 돈 run
+  # 은 비교하면 안 되므로, 결과에 그 사실이 남아야 한다.
+  _mc_env=$(env | grep "^MC_" | sort | tr '\n' ' ')
+  echo "  mooncake env: ${_mc_env:-<none>}"
   echo "  park dir    : ${SGLANG_KV_PARK_DIR}"
   echo "  hicache dir : ${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR}"
 }

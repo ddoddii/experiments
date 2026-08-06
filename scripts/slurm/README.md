@@ -201,6 +201,58 @@ conda install -c conda-forge libcurl openldap    # 전부 conda 쪽으로 통일
 것만 보던 동안에는 preflight 를 통과한 뒤 8분 뒤 `p1.log` 에서 터졌다 — 파이썬 모듈은
 멀쩡히 import 되고 C++ 확장만 로드에 실패하는 상태였기 때문이다.
 
+## RDMA 는 있는데 GPUDirect 가 없을 때 (이 클러스터가 그렇다)
+
+엔진이 로드된 뒤 다음 단계에서 이렇게 죽는다:
+
+```
+Topology discovery complete. Found 2 HCAs.
+installTransport, type=rdma
+E rdma_context.cpp:265] Failed to register memory 0x...: Bad address [14]
+```
+
+`[14]` 은 `ibv_reg_mr` 의 EFAULT 다. node43 에서 측정한 결과:
+
+| | 결과 |
+|---|---|
+| HOST 버퍼 등록 | `rc=0` OK |
+| DEVICE 버퍼 등록 | `rc=-202` FAIL |
+| `nvidia_peermem` | 로드되지 않음 |
+| `ulimit -l` | unlimited |
+
+host 는 되고 device 만 안 되는 건 **GPUDirect RDMA 부재**의 정확한 지문이다.
+`nvidia_peermem` 로드는 root 권한이라 job 안에서는 못 한다.
+
+**중요 (측정으로 확인):** `SGLANG_MOONCAKE_PROTOCOL=tcp` 만으로는 안 된다.
+mooncake 0.3.8 은 `initialize()` 의 protocol 인자를 무시하고, **topology
+auto-discovery 가 HCA 를 찾았는지**로 transport 를 정한다. 그래서 tcp 를 넘겨도
+로그는 여전히 `installTransport, type=rdma` 다.
+
+실제로 통하는 설정은 `--sweep` 이 찾는다:
+
+```bash
+python scripts/slurm/probe_mooncake.py --sweep
+```
+
+후보별로 transport 와 GPU 등록 결과를 표로 뽑고, 전체 출력을
+`results/a100/mooncake_sweep/` 에 저장한다. node43 에서 통한 것:
+
+| 설정 | 비고 |
+|---|---|
+| `MC_FORCE_TCP=1` | **권장.** 명시적이고 mooncake 환경변수라 서버로 그대로 상속된다 |
+| `IB_DEVICE=mlx5_99` | 없는 장치를 지정해 HCA 를 0개로 만드는 우회. 로그에 가짜 장치명이 남는다 |
+
+```bash
+./scripts/slurm/submit.sh MOONCAKE_LD_FIX=system MC_FORCE_TCP=1
+```
+
+`env_summary` 가 `MC_*` 변수를 전부 찍는다. **RDMA 로 돈 run 과 TCP 로 돈 run 은
+비교하면 안 되므로** 어느 쪽이었는지가 결과에 남아야 한다.
+
+등록이 성공했다는 것만으로 RDMA 를 안 쓴다고 단정하지는 말 것 —
+`mooncake_sweep/` 의 저장된 출력에서 `installTransport` 줄이 없거나 `tcp` 인지
+직접 확인하는 게 맞다.
+
 ## 파일
 
 | 파일 | 역할 |

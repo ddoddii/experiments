@@ -46,33 +46,40 @@ import sys
 # 서브프로세스로 한 번에 돌려서 어느 것이 transport 를 tcp 로 바꾸는지 표로 뽑는다.
 #
 #   python scripts/slurm/probe_mooncake.py --sweep
+# (라벨, 환경변수, 선호도). 선호도가 낮을수록 먼저 권한다.
+#
+# 선호도가 필요한 이유: 통하는 방법이 여럿일 때 "먼저 시도한 것"이 아니라 "덜 거짓말하는
+# 것"을 골라야 한다. ib_device 에 없는 장치 이름을 넣는 건 mooncake 의 에러 경로를
+# 이용하는 우회이고, 그 값이 sglang 의 --disaggregation-ib-device 로도 그대로 넘어가
+# 로그에 가짜 장치 이름이 남는다. 명시적으로 TCP 를 요구하는 쪽이 읽기에도 낫다.
 SWEEP_CANDIDATES = [
-    ("(baseline)", {}),
-    # sglang 의 공식 플래그 경로: --disaggregation-ib-device 가 device_name 이 된다.
-    # 로그상 mlx5_1 은 "port not active" 라 mooncake 가 스스로 disable 한다. 그것만
-    # 지정하면 쓸 수 있는 장치가 0개가 된다.
-    ("ib_device=mlx5_1(inactive)", {"PROBE_IB_DEVICE": "mlx5_1"}),
-    ("ib_device=nonexistent", {"PROBE_IB_DEVICE": "mlx5_99"}),
-    # mooncake 의 장치 필터 후보들. 이름이 문서화돼 있지 않아 전부 시도한다.
-    ("MC_FILTERS=[]", {"MC_FILTERS": "[]"}),
-    ("MC_FILTERS=[nomatch]", {"MC_FILTERS": '["nomatch"]'}),
-    ("MC_MS_FILTERS=[]", {"MC_MS_FILTERS": "[]"}),
-    ("MC_DISABLE_RDMA=1", {"MC_DISABLE_RDMA": "1"}),
-    ("MC_USE_TCP=1", {"MC_USE_TCP": "1"}),
-    ("MC_FORCE_TCP=1", {"MC_FORCE_TCP": "1"}),
-    ("MC_TRANSPORT=tcp", {"MC_TRANSPORT": "tcp"}),
-    ("MC_PROTOCOL=tcp", {"MC_PROTOCOL": "tcp"}),
-    ("MC_TOPO_JSON={}", {"MC_CUSTOM_TOPO_JSON": "{}"}),
+    ("(baseline)", {}, 99),
+    ("MC_FORCE_TCP=1", {"MC_FORCE_TCP": "1"}, 0),
+    ("MC_DISABLE_RDMA=1", {"MC_DISABLE_RDMA": "1"}, 1),
+    ("MC_USE_TCP=1", {"MC_USE_TCP": "1"}, 1),
+    ("MC_TRANSPORT=tcp", {"MC_TRANSPORT": "tcp"}, 1),
+    ("MC_PROTOCOL=tcp", {"MC_PROTOCOL": "tcp"}, 1),
+    ("MC_FILTERS=[]", {"MC_FILTERS": "[]"}, 2),
+    ("MC_FILTERS=[nomatch]", {"MC_FILTERS": '["nomatch"]'}, 2),
+    ("MC_MS_FILTERS=[]", {"MC_MS_FILTERS": "[]"}, 2),
+    ("MC_TOPO_JSON={}", {"MC_CUSTOM_TOPO_JSON": "{}"}, 2),
+    # 아래 둘은 "없는/죽은 장치를 지정해서 HCA 를 0개로 만든다" 는 우회다. 통하더라도
+    # 위의 명시적 방법이 있으면 그쪽을 쓴다.
+    ("ib_device=mlx5_1(inactive)", {"PROBE_IB_DEVICE": "mlx5_1"}, 5),
+    ("ib_device=nonexistent", {"PROBE_IB_DEVICE": "mlx5_99"}, 5),
 ]
 
 
 def run_sweep():
-    print("mooncake transport sweep -- 목표: installTransport 를 tcp 로 바꾸고")
-    print("GPU 메모리 등록을 성공시키는 설정 찾기.\n")
-    print(f"  {'후보':<28} {'transport':<10} {'device reg':<12} rc")
-    print("  " + "-" * 62)
+    outdir = os.environ.get("SWEEP_OUTDIR", "results/a100/mooncake_sweep")
+    os.makedirs(outdir, exist_ok=True)
+    print("mooncake transport sweep -- 목표: RDMA 경로를 벗어나 GPU 메모리 등록을")
+    print("성공시키는 설정 찾기.")
+    print(f"후보별 전체 출력은 {outdir}/ 에 저장된다 (transport 를 직접 확인할 것).\n")
+    print(f"  {'후보':<28} {'transport':<12} {'device reg':<12} rc")
+    print("  " + "-" * 66)
     winners = []
-    for label, extra in SWEEP_CANDIDATES:
+    for label, extra, pref in SWEEP_CANDIDATES:
         env = dict(os.environ)
         env.update(extra)
         env["PROBE_ONE"] = "1"
@@ -84,41 +91,57 @@ def run_sweep():
             )
             out = p.stdout + p.stderr
         except subprocess.TimeoutExpired:
-            print(f"  {label:<28} {'<timeout>':<10}")
+            print(f"  {label:<28} {'<timeout>':<12}")
             continue
-        transport = "?"
+        safe = label.replace("/", "_").replace("=", "-").replace(" ", "")
+        with open(os.path.join(outdir, f"{safe}.txt"), "w") as f:
+            f.write(out)
+        # installTransport 줄이 아예 없으면 "<no rdma>" 로 표시한다. "?" 로 두면
+        # "못 읽었다" 와 "RDMA transport 를 설치하지 않았다" 가 구분되지 않는데,
+        # 후자야말로 우리가 찾는 상태다.
+        transport = "<no rdma>"
         for line in out.splitlines():
             if "installTransport, type=" in line:
                 transport = line.split("installTransport, type=")[-1].strip()
-        devreg, rc = "?", p.returncode
+        devreg = "?"
         for line in out.splitlines():
             if line.strip().startswith("DEVICE"):
                 devreg = "OK" if " rc=0 " in line else "FAIL"
         mark = ""
-        if devreg == "OK":
-            winners.append((label, extra))
-            mark = "  <<< 이걸 쓰면 된다"
-        print(f"  {label:<28} {transport:<10} {devreg:<12} {rc}{mark}")
+        if devreg == "OK" and p.returncode == 0:
+            winners.append((pref, label, extra))
+            mark = "  <<<"
+        print(f"  {label:<28} {transport:<12} {devreg:<12} {p.returncode}{mark}")
 
     print()
-    if winners:
-        label, extra = winners[0]
-        print(f"  통하는 설정: {label}")
-        kv = " ".join(f"{k}={v}" for k, v in extra.items())
-        if "PROBE_IB_DEVICE" in extra:
-            print("  sglang 서버에는 --disaggregation-ib-device 로 넘어간다:")
-            print(f"    ./scripts/slurm/submit.sh IB_DEVICE={extra['PROBE_IB_DEVICE']}")
-        else:
-            print("  mooncake 환경변수이므로 서버 프로세스에 그대로 넘기면 된다:")
-            print(f"    ./scripts/slurm/submit.sh {kv}")
-    else:
+    if not winners:
         print("  통하는 설정 없음. 이 노드에서 mooncake 로 GPU KV 전송은 불가능하다.")
         print("  남는 선택지는 셋뿐이고, 전부 실험 설계에 영향을 준다:")
         print("    1. 관리자에게 nvidia_peermem 로드 요청 (가장 깨끗하다)")
         print("    2. --disaggregation-transfer-backend nixl 로 백엔드 교체")
         print("       -> A6000 결과는 전부 mooncake 였으므로 교차 비교가 깨진다")
         print("    3. RDMA 없는 노드/파티션을 쓴다 (server17 이 그랬듯 TCP 자동 폴백)")
-    return 0 if winners else 5
+        return 5
+
+    winners.sort()
+    print(f"  통하는 설정 {len(winners)}개:")
+    for pref, label, _ in winners:
+        print(f"    - {label}" + ("   (권장)" if pref == winners[0][0] else ""))
+    print()
+    _, label, extra = winners[0]
+    if "PROBE_IB_DEVICE" in extra:
+        print("  권장이 ib_device 우회밖에 없다. sglang 서버로는 이렇게 넘어간다:")
+        print(f"    ./scripts/slurm/submit.sh IB_DEVICE={extra['PROBE_IB_DEVICE']}")
+        print("  (없는 장치 이름이 로그에 남는다는 점은 감안할 것.)")
+    else:
+        kv = " ".join(f"{k}={v}" for k, v in extra.items())
+        print(f"  권장: {label} -- mooncake 환경변수라 서버 프로세스로 그대로 상속된다.")
+        print(f"    ./scripts/slurm/submit.sh {kv}")
+    print()
+    print("  확인할 것: 권장 후보의 저장된 출력에 installTransport 줄이 없거나 tcp 여야")
+    print(f"  한다. {outdir}/ 를 열어 직접 보라 -- 등록이 성공했다는 것만으로 RDMA 를")
+    print("  안 쓴다고 단정할 수는 없다.")
+    return 0
 
 
 def sh(cmd):
