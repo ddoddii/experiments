@@ -231,8 +231,27 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   local MEM_PID=$!
   trap 'kill '"$OCC_PID $MEM_PID"' 2>/dev/null || true' EXIT
 
+  # Is the BASELINE actually offloading? hicache only writes to its host tier when the
+  # prefill radix evicts, so on a workload that never fills the prefill pool it is a
+  # no-op and "ours vs hicache" is really "ours vs radix" -- a different, much weaker
+  # claim. sglang:hicache_host_used_tokens says whether the tier holds anything, and
+  # prefetched_tokens_total whether the L3 storage path is being used at all. Snapshot
+  # before and after so the DELTA over the run is visible, not just a level.
+  python benchmark/phase0_metrics_scraper.py \
+    --prefill-url "http://127.0.0.1:30000/metrics" \
+    --decode-url "http://127.0.0.1:30002/metrics" \
+    --tag before --out "$OUTDIR/metrics_${label}_before.json" > /dev/null 2>&1 || true
+
   CONFIG="why_$label" python "$BENCH" 2>&1 \
     | tee "$OUTDIR/bench_$label.log" | tail -15
+
+  python benchmark/phase0_metrics_scraper.py \
+    --prefill-url "http://127.0.0.1:30000/metrics" \
+    --decode-url "http://127.0.0.1:30002/metrics" \
+    --tag after --out "$OUTDIR/metrics_${label}_after.json" > /dev/null 2>&1 || true
+  python benchmark/phase0_metrics_scraper.py \
+    --delta "$OUTDIR/metrics_${label}_before.json" "$OUTDIR/metrics_${label}_after.json" \
+    --out "$OUTDIR/metrics_${label}_delta.json" > /dev/null 2>&1 || true
 
   kill $OCC_PID $MEM_PID 2>/dev/null || true
   trap - EXIT
