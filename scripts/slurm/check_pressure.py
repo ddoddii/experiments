@@ -47,9 +47,99 @@ def col(rows, key):
     return out
 
 
+BYTES_PER_TOKEN = 131072  # 측정값 (park telemetry 의 bytes_per_token). 8B, 32 layers.
+
+
+def plan(per_session, conc, oversub, card_gb, weights_gb=16.0):
+    """압박이 '캐시가 이기는 구간' 에 오도록 knob 을 함께 계산한다.
+
+    구간이 셋이고, 가운데만 쓸모가 있다:
+
+      P >> W   밀려나는 게 없다. victim cache 는 잡을 게 없고 비용만 낸다.
+               (A100 80GB 기본값이 여기였다: 점유 38%, hicache 가 recompute 보다 1.84배 나쁨)
+      P ~< W   밀려난 것이 곧 '곧 다시 쓸 것' 이다. victim cache 가 그걸 받아서 돌려준다.
+               <- 여기를 노려야 한다
+      P << W   thrashing. victim tier 에서도 재사용 전에 쫓겨나고, 재계산이 지배한다.
+               (C=64 + P=79k 는 4배 oversubscribe 라 여기로 간다)
+
+    그리고 두 번째 조건이 하나 더 있다. 밀려난 양(overflow = W - P)을 victim tier 가
+    담을 수 있어야 한다. hicache 의 host tier 는 P x HICACHE_RATIO 로 정해지므로,
+    P 를 줄이면 host tier 도 같이 줄어든다 -- 압박을 만들려고 P 를 줄였는데 받아줄
+    곳도 같이 줄어드는 함정이 있다. park pool 은 반대로 P 와 무관하게 지정된다.
+    그래서 두 tier 를 같은 크기로 맞춰야 '용량' 이 아니라 '매체/소프트웨어' 를 비교하게 된다.
+    """
+    W = per_session * conc
+    P = int(W / oversub / 1000) * 1000
+    overflow = W - P
+    # tier 는 두 조건을 동시에 만족해야 한다.
+    #
+    #   (1) 밀려난 양(overflow)을 여유 있게 담아야 한다  -> overflow x 1.3
+    #   (2) sglang 은 host tier 가 device pool 보다 크기를 요구한다:
+    #         memory_pool_host.py: assert self.size > device_pool.size
+    #       즉 HICACHE_RATIO 는 1 미만이 될 수 없다. 이 제약을 무시하면 서버가
+    #       assertion 으로 죽는다 (계산상 0.67 이 나올 수 있어서 실제로 걸린다).
+    #       park pool 에는 이 제약이 없지만, 두 tier 를 같은 크기로 맞춰야
+    #       '어디에 두느냐' 를 비교하게 되므로 park 쪽도 같은 값을 쓴다.
+    tier = int(max(overflow * 1.3, P * 1.1) / 1000) * 1000
+    ratio = round(tier / P, 2) if P else 0
+    tier_gb = tier * BYTES_PER_TOKEN / 2**30
+    # decode GPU 에 park pool 이 들어갈 자리가 있는가.
+    free_gb = card_gb - weights_gb - tier_gb
+
+    print()
+    print("  ─── 캐시가 이기는 구간으로 맞추기 ─────────────────────────────")
+    print(f"  가정: 세션당 {per_session:.0f} tokens (이 run 실측), C={conc},"
+          f" 목표 oversubscribe {oversub}배")
+    print()
+    print(f"    워킹셋 W          = {per_session:.0f} x {conc} = {W:.0f} tokens")
+    print(f"    prefill pool P    = W / {oversub} = {P} tokens   <- PREFILL_MAX_TOTAL_TOKENS")
+    print(f"    밀려나는 양       = W - P = {overflow:.0f} tokens")
+    _why = "밀려난 양 x1.3" if overflow * 1.3 >= P * 1.1 else "P x1.1 (sglang 이 host>device 를 요구)"
+    print(f"    victim tier 크기  = {tier} tokens ({tier_gb:.1f} GB)   [{_why}]")
+    print()
+    print("  두 arm 의 victim tier 를 같은 크기로 맞춘다. 안 맞추면 '어디에 두느냐'가")
+    print("  아니라 '얼마나 담느냐'를 비교하게 된다:")
+    print(f"    park_gpu : PARK_POOL_TOKENS_PER_GPU={tier}")
+    print(f"    hicache  : HICACHE_RATIO={ratio}   (host tier = P x ratio = {int(P * ratio)})")
+    print()
+    print(f"  decode GPU 여유: {card_gb:.0f}GB - 가중치 {weights_gb:.0f}GB"
+          f" - park pool {tier_gb:.1f}GB = {free_gb:.1f}GB 가 decode KV 몫")
+    if free_gb < 8:
+        print("    [경고] 남는 게 너무 적다. C 를 낮추거나 oversubscribe 를 줄여라.")
+    print()
+    print("  park pool 이 커지면 decode pool 이 그만큼 줄어든다. 그 값은 다시 재야 하므로")
+    print("  probe 를 먼저 돌린다:")
+    print()
+    print(f"    ./scripts/slurm/submit.sh CONCURRENCY={conc} \\")
+    print(f"        PREFILL_MAX_TOTAL_TOKENS={P} PARK_POOL_TOKENS_PER_GPU={tier} \\")
+    print(f"        HICACHE_RATIO={ratio} MOONCAKE_LD_FIX=system MC_FORCE_TCP=1")
+    print()
+    print("  probe 가 알려준 DECODE_MAX_TOTAL_TOKENS 를 넣어 본 실험:")
+    print()
+    print(f"    ./scripts/slurm/submit.sh MODE=full CONCURRENCY={conc} \\")
+    print(f"        PREFILL_MAX_TOTAL_TOKENS={P} PARK_POOL_TOKENS_PER_GPU={tier} \\")
+    print(f"        HICACHE_RATIO={ratio} DECODE_MAX_TOTAL_TOKENS=<probe 값> \\")
+    print('        ARMS="recompute radix hicache park_gpu" \\')
+    print("        MOONCAKE_LD_FIX=system MC_FORCE_TCP=1")
+    print()
+    print("  radix arm 을 꼭 넣어라. 압박이 생기면 hicache 의 L2/L3 가 처음으로 실제로")
+    print("  동작하는데, 그때 '캐싱 자체의 이득' 과 'hicache 계층의 비용' 을 분리하는")
+    print("  유일한 대조군이다.")
+    print()
+    print("  다음 run 에서 확인할 것 (이 순서로):")
+    print("    1. peak util 이 100% 에 닿는가          -> 안 닿으면 P 를 더 줄인다")
+    print("    2. park telemetry 의 fetch_hits > 0 인가 -> 0 이면 tier 가 작거나 재사용 전에 쫓겨난다")
+    print("    3. 그 다음에 TTFT 를 본다")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", required=True)
+    ap.add_argument("--plan-concurrency", type=int, default=None,
+                    help="이 동시성에 맞춘 knob 조합을 계산한다")
+    ap.add_argument("--oversubscribe", type=float, default=1.5,
+                    help="워킹셋 / prefill 풀 비율 목표 (기본 1.5)")
+    ap.add_argument("--card-gb", type=float, default=80.0)
     args = ap.parse_args()
 
     files = sorted(glob.glob(os.path.join(args.dir, "occ_*.csv")))
@@ -117,6 +207,9 @@ def main():
     # 상주하고, 점유는 대체로 선형으로 오른다. 실제로 이 run 에서 세션당 몫이
     # 일정하게 나오므로 (아래) 그 선형 가정을 데이터로 확인할 수 있다.
     conc = _concurrency(args.dir)
+    if args.plan_concurrency and conc and peak_used:
+        plan(peak_used / conc, args.plan_concurrency, args.oversubscribe, args.card_gb)
+        return 2
     if conc and peak_used:
         per = peak_used / conc
         cap = max(c for _, _, c, _ in low) if low else 0
