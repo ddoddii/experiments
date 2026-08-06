@@ -32,8 +32,13 @@ OUTDIR=${OUTDIR:-"results/a100/${JOB_TAG}"}
 mkdir -p "$OUTDIR"
 FAIL=0
 WARN=0
+# 실패 사유를 모아둔다. 지금까지는 [FAIL] 줄이 해당 검사 위치에 한 번 찍히고 끝이라,
+# 뒤에 hwprofile/p2p 출력이 수십 줄 쌓이고 나면 마지막 배너에는 개수만 남았다.
+# "PREFLIGHT FAILED: 1 개" 만 보고는 무엇이 실패했는지 알 수 없다.
+FAIL_MSGS=""
 say()  { echo "  $*"; }
-bad()  { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
+bad()  { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); FAIL_MSGS="${FAIL_MSGS}
+  - $*"; }
 warn() { echo "  [warn] $*"; WARN=$((WARN + 1)); }
 
 echo "================================================================"
@@ -336,6 +341,10 @@ echo
 echo "================================================================"
 if [ "$FAIL" -gt 0 ]; then
   echo " PREFLIGHT FAILED: ${FAIL} 개 (경고 ${WARN}개).  실행하지 않는다."
+  echo "----------------------------------------------------------------"
+  echo "${FAIL_MSGS}"
+  echo
+  echo "  위 항목의 자세한 설명은 출력 위쪽 해당 검사 부분에 있다."
   echo "================================================================"
   exit 1
 fi

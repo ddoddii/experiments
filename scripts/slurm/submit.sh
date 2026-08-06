@@ -27,16 +27,27 @@ MEM=${MEM:-128G}
 CPUS=${CPUS:-16}
 JOBNAME=${JOBNAME:-sglang-why}
 
-EXPORTS="ALL,EXP_ROOT=$ROOT"
+# KEY=VALUE 를 이 셸의 환경에 export 하고 --export=ALL 로 넘긴다.
+#
+# 예전에는 "ALL,K=V,K=V,..." 문자열을 만들어 --export 에 줬는데, 값에 공백이 있으면
+# 깨진다. --export 는 콤마로 자르는 목록이라 ARMS="recompute radix hicache park_gpu"
+# 같은 값이 들어가면 SLURM 이 그 자리에서 목록 파싱을 망치고, 그 뒤에 오는 변수들이
+# job 에 도착하지 않는다. 증상은 엉뚱한 곳에서 나타난다 -- MC_FORCE_TCP 가 사라져서
+# mooncake 가 RDMA 로 돌고 preflight 가 "GPU 메모리 등록 실패" 하나로 죽는 식이다.
+#
+# 환경에 export 한 뒤 --export=ALL 을 쓰면 sbatch 가 이 셸의 환경을 통째로 넘기므로
+# 공백이 그대로 보존된다.
+export EXP_ROOT="$ROOT"
 for kv in "$@"; do
   case "$kv" in
-    *=*) EXPORTS="$EXPORTS,$kv" ;;
+    *=*) export "$kv" ;;
     *)   echo "인자는 KEY=VALUE 형태여야 한다: $kv" >&2; exit 1 ;;
   esac
 done
 
 echo "sbatch -p $PARTITION -q $QOS --gres=gpu:$GPUS --time=$TIME"
-echo "  exports: $EXPORTS"
+echo "  EXP_ROOT=$ROOT"
+for kv in "$@"; do echo "  $kv"; done
 sbatch \
   --job-name="$JOBNAME" \
   --partition="$PARTITION" \
@@ -48,7 +59,7 @@ sbatch \
   --time="$TIME" \
   --output="$ROOT/logs/slurm/%x-%j.out" \
   --error="$ROOT/logs/slurm/%x-%j.err" \
-  --export="$EXPORTS" \
+  --export=ALL \
   "$ROOT/scripts/slurm/submit_bench.sh"
 
 echo
