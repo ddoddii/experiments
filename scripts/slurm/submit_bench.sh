@@ -190,6 +190,96 @@ if [ "$MODE" = "sweep" ]; then
   exit 0
 fi
 
+# ─── 2c. ratesweep: 걸어준 요청률 축 (open-loop) ──────────────────────────────
+# MODE=sweep 은 동시성을 바꾸는 closed loop 이라, 서버가 포화하면 처리량/요청률 축이
+# 더는 움직이지 않는다 (BFCL 에서 C=4 부터 그랬다). 그래서 지연-처리량 곡선이 오른쪽으로
+# 뻗지 않고 수직으로 선다. 참조 논문들의 hockey-stick 모양은 **걸어준 부하**를 축으로
+# 둘 때 나온다.
+#
+# sharegpt 벤치에는 이미 open-loop 이 있다: SESSION_RATE>0 이면 Poisson 도착으로
+# 세션을 밀어넣고, 서버가 따라오든 말든 정해진 비율로 쏜다. BFCL/longctx 에는 없다.
+if [ "$MODE" = "ratesweep" ]; then
+  if [ "$WORKLOAD" != "sharegpt" ]; then
+    echo "MODE=ratesweep 은 WORKLOAD=sharegpt 에서만 된다 (open-loop 이 거기에만 있다)." >&2
+    exit 1
+  fi
+  RATESWEEP=${RATESWEEP:-"0.25 0.5 1 2 4"}
+  export LOAD_DURATION=${LOAD_DURATION:-180}
+  export WARMUP_S=${WARMUP_S:-30}
+  echo
+  echo "################################################################"
+  echo " RATE SWEEP  rate=[$RATESWEEP] sessions/s  duration=${LOAD_DURATION}s"
+  echo " arms=[${ARMS:-recompute hicache park_gpu}]  pool=${PREFILL_MAX_TOTAL_TOKENS:-<미설정>}"
+  echo "################################################################"
+  for _r in $RATESWEEP; do
+    echo
+    echo "════════════════ rate=${_r}/s ════════════════"
+    # 디렉터리 이름에 소수점을 넣지 않는다 (glob/파싱이 지저분해진다). r0p25 형태.
+    _rtag=$(echo "$_r" | tr '.' 'p')
+    _tag="a100_${WORKLOAD}_r${_rtag}"
+    _out="results/a100/${_tag}"
+    if [ -d "$_out" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+      rm -rf "${_out}.prev"; mv "$_out" "${_out}.prev"
+    fi
+    mkdir -p "$_out"
+    cp "$OUTDIR/RUN_INFO.txt" "$_out/RUN_INFO.txt" 2>/dev/null || true
+    echo "session_rate: $_r (open loop)" >> "$_out/RUN_INFO.txt"
+    SESSION_RATE=$_r MAX_ITEMS=${SWEEP_ITEMS:-400}       ARMS="${ARMS:-recompute hicache park_gpu}"       TAG="$_tag" OUTDIR="$_out"       ./scripts/sglang/run_why_faster.sh || true
+    python scripts/slurm/check_pressure.py --dir "$_out" \
+      > "$_out/pressure_check.txt" 2>&1 || true
+  done
+  ./scripts/sglang/stop_1P_1D.sh || true
+  echo
+  echo "그림:"
+  echo "  python benchmark/plot_latency_throughput.py \\"
+  echo "      --dirs 'results/a100/a100_${WORKLOAD}_r*' --x rate \\"
+  echo "      --out results/a100/fig_rate_${WORKLOAD}"
+  exit 0
+fi
+
+# ─── 2d. ctxsweep: 컨텍스트 길이 축 ───────────────────────────────────────────
+# KV 캐시 연구에서 가장 자연스러운 축이다. 컨텍스트가 길수록 KV 가 커지고, 그걸 어디에
+# 두느냐의 차이가 단조롭게 벌어진다 -- 처리량 축처럼 포화해서 멈추지 않는다.
+#
+# longctx 워크로드의 PREFIX_WORDS 가 그 노브다 (단어 -> 대략 1.33배가 토큰).
+# 두 지표를 본다:
+#   Host->GPU 트래픽   sglang:load_back_tokens_total (L2->L1 로 되읽은 토큰)
+#                      host DRAM 에 KV 를 두는 설계가 PCIe 로 실제 옮기는 양.
+#                      park 은 peer GPU 에서 가져오므로 여기 거의 안 잡힌다.
+#   p95 TTFT           꼬리 지연. 평균은 스톨을 감춘다.
+if [ "$MODE" = "ctxsweep" ]; then
+  export WORKLOAD=longctx
+  CTXSWEEP=${CTXSWEEP:-"3000 6000 12000 24000"}   # PREFIX_WORDS
+  echo
+  echo "################################################################"
+  echo " CONTEXT SWEEP  PREFIX_WORDS=[$CTXSWEEP]  arms=[${ARMS:-recompute hicache park_gpu}]"
+  echo "################################################################"
+  for _w in $CTXSWEEP; do
+    echo
+    echo "════════════════ PREFIX_WORDS=$_w ════════════════"
+    _tag="a100_longctx_w${_w}"
+    _out="results/a100/${_tag}"
+    if [ -d "$_out" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+      rm -rf "${_out}.prev"; mv "$_out" "${_out}.prev"
+    fi
+    mkdir -p "$_out"
+    cp "$OUTDIR/RUN_INFO.txt" "$_out/RUN_INFO.txt" 2>/dev/null || true
+    echo "prefix_words: $_w (ctxsweep)" >> "$_out/RUN_INFO.txt"
+    PREFIX_WORDS=$_w MAX_ITEMS=${SWEEP_ITEMS:-64} \
+      ARMS="${ARMS:-recompute hicache park_gpu}" \
+      TAG="$_tag" OUTDIR="$_out" \
+      ./scripts/sglang/run_why_faster.sh || true
+    python scripts/slurm/check_pressure.py --dir "$_out" \
+      > "$_out/pressure_check.txt" 2>&1 || true
+  done
+  ./scripts/sglang/stop_1P_1D.sh || true
+  echo
+  echo "그림:"
+  echo "  python benchmark/plot_context.py --dirs 'results/a100/a100_longctx_w*' \\"
+  echo "      --out results/a100/fig_context"
+  exit 0
+fi
+
 # ─── 3. full run ──────────────────────────────────────────────────────────────
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 export ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
