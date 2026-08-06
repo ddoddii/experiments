@@ -76,7 +76,7 @@ if [ "$_c" -lt 2 ] 2>/dev/null; then
 elif python -c "import sglang" 2>/dev/null && \
      ! python -c "import sglang, sys; sys.exit(0 if '"'"'$SRC'"'"' in sglang.__file__ else 1)" 2>/dev/null; then
   echo "  sglang imports from OUTSIDE $SRC. PYTHONPATH is not reaching the servers:"
-  echo "     cd $SRC/python && pip install -e . --no-deps --no-build-isolation"
+  echo "     cd $SRC/python && pip install -e . --no-deps"
 else
   echo "  Source is current and the path is right, so the running servers predate the"
   echo "  pull. Restart them:"

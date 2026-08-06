@@ -59,7 +59,7 @@ else
           "@ $(git -C "$SGLANG_SRC_DIR" rev-parse --short HEAD 2>/dev/null)" ;;
     *)
       bad "설치본을 import 하고 있다. idle-KV-parking 패치가 적용되지 않는다."
-      say "      cd $SGLANG_SRC_DIR/python && pip install -e . --no-deps --no-build-isolation" ;;
+      say "      cd $SGLANG_SRC_DIR/python && pip install -e . --no-deps" ;;
   esac
 fi
 

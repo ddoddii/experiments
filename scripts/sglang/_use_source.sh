@@ -10,9 +10,19 @@
 #
 # Preferred fix (do this once, then the guard just confirms it):
 #     conda activate sglang
-#     cd ~/sglang-source/python && pip install -e . --no-deps --no-build-isolation
+#     cd ~/sglang-source/python && pip install -e . --no-deps
 #   --no-deps matters: without it pip re-resolves torch/flashinfer/etc and can break a
 #   working env.
+#
+#   DO NOT add --no-build-isolation here, which this file used to recommend. The two
+#   flags turn off different things: --no-deps disables RUNTIME dependency resolution
+#   (the part that breaks the env), --no-build-isolation disables the PEP 517 BUILD
+#   environment. sglang's pyproject lists grpcio-tools in build-system.requires and its
+#   setup.py egg_info hook generates *_pb2.py from sglang_scheduler.proto, so turning
+#   build isolation off makes the install fail outright:
+#       error: Failed to import grpc_tools: No module named 'grpc_tools'
+#   Leaving build isolation ON installs grpcio-tools into a throwaway env and never
+#   touches the conda env's runtime packages, which is exactly what we want.
 #
 # This script also prepends the source tree to PYTHONPATH, so it works even without the
 # editable install.
@@ -60,7 +70,7 @@ case "$_SG_LOADED" in
     echo "[env] ERROR: sglang is being imported from the INSTALLED copy, not from"
     echo "[env]        $SGLANG_SRC_DIR. Your edits would NOT take effect."
     echo "[env]        Fix: cd $SGLANG_SRC_DIR/python && \\"
-    echo "[env]             pip install -e . --no-deps --no-build-isolation"
+    echo "[env]             pip install -e . --no-deps"
     exit 1
     ;;
 esac

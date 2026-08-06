@@ -56,13 +56,45 @@ env 에 pip 로 설치된 복사본을 집고, 서버는 정상적으로 뜨고,
 ```bash
 conda activate sglang
 cd ~/sglang-source/python
-pip install -e . --no-deps --no-build-isolation
+pip install -e . --no-deps
 ```
 
 `--no-deps` 를 빼면 pip 가 torch/flashinfer 를 다시 해결하려 들면서 멀쩡한 env 를
 깨뜨릴 수 있다. 이걸 해두면 이후로는 **`.py` 를 고치고 서버만 재시작하면 끝**이다.
 (`env.sh` 가 `PYTHONPATH` 에도 소스 트리를 얹으므로 editable 설치 없이도 동작하지만,
 editable 쪽이 도구들이 일관되게 같은 트리를 보게 해서 낫다.)
+
+### `--no-build-isolation` 을 붙이면 안 된다
+
+이 리포의 예전 안내(`_use_source.sh`, `which_sglang.sh`)는 `--no-build-isolation` 을
+같이 쓰라고 했는데, 지금 sglang 트리에서는 그게 **실패한다**:
+
+```
+error: Failed to import grpc_tools: No module named 'grpc_tools'.
+error: metadata-generation-failed
+```
+
+`python/pyproject.toml` 의 `build-system.requires` 에 `grpcio-tools==1.75.1` 가 있고,
+`setup.py` 의 `egg_info` 훅이 `sglang_scheduler.proto` 에서 `*_pb2.py` 를 생성한다.
+`--no-build-isolation` 은 바로 그 빌드 환경 구성을 끄는 플래그라, grpcio-tools 가
+설치되지 않은 채로 생성 단계가 돌아 죽는다.
+
+**`--no-deps` 와 `--no-build-isolation` 은 서로 다른 것을 끈다.** 앞은 *런타임* 의존성
+재해결(torch/flashinfer — 이게 env 를 깨뜨린다), 뒤는 *빌드* 요구사항이다. 우리가 피하고
+싶은 건 앞쪽뿐이므로, 빌드 격리는 켜둔 채로 두면 된다: pip 가 임시 환경에 grpcio-tools 만
+받아서 proto 를 생성하고, conda env 의 런타임 패키지는 건드리지 않는다.
+
+PyPI 접근이 안 되는 노드라면 grpcio-tools 를 먼저 넣고 예전 방식으로:
+
+```bash
+pip install "grpcio-tools==1.75.1"
+cd ~/sglang-source/python && pip install -e . --no-deps --no-build-isolation
+```
+
+**둘 다 안 되면 editable 설치를 건너뛰어도 된다.** `env.sh` 의 `PYTHONPATH` 만으로 충분하다.
+생성되는 `*_pb2.py` 는 `.gitignore` 대상이라 클론에 원래 없고, import 하는 곳은
+`srt/entrypoints/grpc_server.py` 와 `srt/grpc/health_servicer.py` 뿐이다 — 이 실험은
+`sglang.launch_server` (HTTP) 만 쓰므로 그 경로를 아예 타지 않는다.
 
 **반영되는 범위:**
 

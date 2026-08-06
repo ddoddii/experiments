@@ -32,7 +32,7 @@ bash 에서 직접 서버를 띄우지 않는다. `.sh` 로 만들어 `sbatch` �
 
 ```bash
 conda activate sglang
-cd ~/sglang-source/python && pip install -e . --no-deps --no-build-isolation
+cd ~/sglang-source/python && pip install -e . --no-deps
 ```
 
 이후로는 `.py` 를 고치고 서버만 재시작하면 된다 (`run_why_faster.sh` 는 arm 마다

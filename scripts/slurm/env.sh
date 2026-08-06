@@ -78,7 +78,7 @@ conda activate "$SGLANG_CONDA_ENV" || {
 # 아무것도 다시 할 필요가 없다 (서버 재시작만 하면 된다):
 #
 #     conda activate sglang
-#     cd $SGLANG_SRC_DIR/python && pip install -e . --no-deps --no-build-isolation
+#     cd $SGLANG_SRC_DIR/python && pip install -e . --no-deps
 #
 #   --no-deps 가 중요하다. 빼면 pip 가 torch/flashinfer 를 다시 해결하려 들면서
 #   멀쩡한 env 를 깨뜨릴 수 있다.
