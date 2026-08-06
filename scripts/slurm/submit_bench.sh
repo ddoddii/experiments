@@ -151,6 +151,45 @@ if [ "$MODE" = "probe" ]; then
   exit 0
 fi
 
+# ─── 2b. sweep: 동시성 축 ─────────────────────────────────────────────────────
+# 부하가 커질수록 victim cache 가 유리해진다는 걸 보이는 그림용. prefill 풀 P 는
+# 고정하고 C 만 올린다 -- 그게 "배포는 그대로인데 부하가 늘었다" 는 상황이고,
+# 워킹셋이 P 를 넘어서는 지점부터 eviction 이 생기면서 victim cache 가 일을 시작한다.
+# P 를 C 마다 바꾸면 축이 둘이 되어 곡선이 무엇을 뜻하는지 말할 수 없게 된다.
+if [ "$MODE" = "sweep" ]; then
+  CSWEEP=${CSWEEP:-"1 4 8 16 32"}
+  # 낮은 C 는 직렬에 가까워 아이템당 벽시계가 길다. 전체 아이템을 다 돌리면 C=1 만
+  # 30분을 먹는다. 포인트마다 아이템 수를 같게 유지하면서 줄인다 (정규화된 TTFT 를
+  # 그리므로 포인트 내부 비교는 그대로 성립한다).
+  SWEEP_ITEMS=${SWEEP_ITEMS:-64}
+  echo
+  echo "################################################################"
+  echo " SWEEP  C=[$CSWEEP]  items=$SWEEP_ITEMS  arms=[${ARMS:-recompute hicache park_gpu}]"
+  echo " prefill pool 고정: ${PREFILL_MAX_TOTAL_TOKENS:-<미설정>}"
+  echo "################################################################"
+  for _c in $CSWEEP; do
+    echo
+    echo "════════════════ C=$_c ════════════════"
+    _tag="a100_${WORKLOAD}_c${_c}"
+    _out="results/a100/${_tag}"
+    if [ -d "$_out" ] && [ -z "${KEEP_OUTDIR:-}" ]; then
+      rm -rf "${_out}.prev"; mv "$_out" "${_out}.prev"
+    fi
+    mkdir -p "$_out"
+    cp "$OUTDIR/RUN_INFO.txt" "$_out/RUN_INFO.txt" 2>/dev/null || true
+    echo "concurrency: $_c (sweep)" >> "$_out/RUN_INFO.txt"
+    CONCURRENCY=$_c MAX_ITEMS=$SWEEP_ITEMS       ARMS="${ARMS:-recompute hicache park_gpu}"       TAG="$_tag" OUTDIR="$_out"       ./scripts/sglang/run_why_faster.sh || true
+    python scripts/slurm/check_pressure.py --dir "$_out" \
+      > "$_out/pressure_check.txt" 2>&1 || true
+  done
+  ./scripts/sglang/stop_1P_1D.sh || true
+  echo
+  echo "선 그래프:"
+  echo "  python benchmark/plot_scaling.py --dirs results/a100/a100_${WORKLOAD}_c'*' \\"
+  echo "      --out results/a100/fig_scaling"
+  exit 0
+fi
+
 # ─── 3. full run ──────────────────────────────────────────────────────────────
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 export ARMS=${ARMS:-"recompute hicache park_host park_gpu"}
