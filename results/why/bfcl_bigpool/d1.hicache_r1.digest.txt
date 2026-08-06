@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 06:52:30] max_total_num_tokens=154304, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=11.53 GB
+[2026-08-06 06:52:32] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 06:55:23] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", '
+[2026-08-06 06:55:23] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", 'travel
+[2026-08-06 06:55:23] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", 'travel_date
+[2026-08-06 06:55:23] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", '
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", 'travel
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", 'travel_from
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", '
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", 'travel
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", 'travel_to
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", '
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", 'travel
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", 'travel_class
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", "travel_class": "business", '
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", "travel_class": "business", 'travel
+[2026-08-06 06:55:24] Error in parse_streaming_increment: {"access_token": "abc123xyz", "card_id": "1_3456", "travel_date": "2024-11-15", "travel_from": "RIV", "travel_to": "LAX", "travel_class": "business", 'travel_cost
+---- tail ----
+[2026-08-06 06:55:42] Decode batch, #running-req: 1, #token: 10951, token usage: 0.07, pre-allocated usage: 0.04, #prealloc-req: 0, #transfer-req: 1, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 23.13, #queue-req: 0, 
+[2026-08-06 06:55:42] INFO:     127.0.0.1:44602 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] INFO:     127.0.0.1:44606 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] INFO:     127.0.0.1:44614 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:44620 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] Decode batch, #running-req: 1, #token: 6138, token usage: 0.04, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.50, #queue-req: 0, 
+[2026-08-06 06:55:43] INFO:     127.0.0.1:44622 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:44628 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:44642 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:44650 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:45] INFO:     127.0.0.1:44662 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:45] Decode batch, #running-req: 1, #token: 0, token usage: 0.00, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 21.93, #queue-req: 0, 
+[2026-08-06 06:55:45] INFO:     127.0.0.1:44678 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:44682 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:44686 - "GET /metrics HTTP/1.1" 200 OK

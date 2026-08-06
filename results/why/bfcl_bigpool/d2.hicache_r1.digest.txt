@@ -1,0 +1,29 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 06:52:32] max_total_num_tokens=154304, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=11.53 GB
+[2026-08-06 06:52:34] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 06:52:28] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+  return self.create_error_response(
+[2026-08-06 06:53:35] Error in parse_streaming_increment: Expecting value: line 1 column 55 (char 54)
+[2026-08-06 06:53:35] Error in parse_streaming_increment: Expecting value: line 1 column 55 (char 54)
+[2026-08-06 06:53:35] Error in parse_streaming_increment: {"name": "fillFuelTank", "parameters": {"fuelAmount": round(38 * 0.264172, 2
+[2026-08-06 06:53:35] Error in parse_streaming_increment: Expecting value: line 1 column 55 (char 54)
+[2026-08-06 06:53:35] Error in parse_streaming_increment: Expecting value: line 1 column 55 (char 54)
+[2026-08-06 06:54:50] Error in parse_streaming_increment: Expecting value: line 1 column 87 (char 86)
+[2026-08-06 06:54:50] Error in parse_streaming_increment: Expecting value: line 1 column 87 (char 86)
+---- tail ----
+[2026-08-06 06:55:42] INFO:     127.0.0.1:48482 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] INFO:     127.0.0.1:48490 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] Decode batch, #running-req: 1, #token: 5314, token usage: 0.03, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 36.94, #queue-req: 0, 
+[2026-08-06 06:55:42] INFO:     127.0.0.1:48496 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:48512 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:48526 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:48542 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:48550 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] Decode batch, #running-req: 1, #token: 5387, token usage: 0.03, pre-allocated usage: 0.03, #prealloc-req: 0, #transfer-req: 1, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 30.58, #queue-req: 0, 
+[2026-08-06 06:55:44] INFO:     127.0.0.1:48566 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:48582 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:48586 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:45] INFO:     127.0.0.1:48588 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:48594 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:48598 - "GET /metrics HTTP/1.1" 200 OK

@@ -1,0 +1,35 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 07:08:26] max_total_num_tokens=42565, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=1.05 GB
+[2026-08-06 07:08:28] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 07:09:15] Error in parse_streaming_increment: {"name": "echo", "parameters": {"content": ""Q1: $5000, Q2: $7000, Q3: $6000, Q4:
+[2026-08-06 07:09:15] Error in parse_streaming_increment: {"name": "echo", "parameters": {"content": ""Q1: $5000, Q2: $7000, Q3: $6000, Q4: $
+[2026-08-06 07:09:15] Error in parse_streaming_increment: {"name": "echo", "parameters": {"content": ""Q1: $5000, Q2: $7000, Q3: $6000, Q4: $800
+[2026-08-06 07:09:15] Error in parse_streaming_increment: {"name": "echo", "parameters": {"content": ""Q1: $5000, Q2: $7000, Q3: $6000, Q4: $8000
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+[2026-08-06 07:09:15] Error in parse_streaming_increment: Expecting ',' delimiter: line 1 column 46 (char 45)
+  return self.create_error_response(
+---- tail ----
+[2026-08-06 07:13:05] INFO:     127.0.0.1:42632 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:05] Decode batch, #running-req: 1, #token: 5265, token usage: 0.12, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 31.53, #queue-req: 0, 
+[2026-08-06 07:13:05] INFO:     127.0.0.1:42642 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:05] INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:13:06] INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 07:13:06] INFO:     127.0.0.1:42670 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:06] INFO:     127.0.0.1:42676 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:07] Decode batch, #running-req: 2, #token: 9451, token usage: 0.22, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 35.06, #queue-req: 0, 
+[2026-08-06 07:13:07] INFO:     127.0.0.1:42680 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:07] INFO:     127.0.0.1:42686 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:08] Decode batch, #running-req: 1, #token: 5425, token usage: 0.13, pre-allocated usage: 0.00, #prealloc-req: 0, #transfer-req: 0, #retracted-req: 0, cuda graph: True, gen throughput (token/s): 77.04, #queue-req: 0, 
+[2026-08-06 07:13:08] INFO:     127.0.0.1:42692 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:08] INFO:     127.0.0.1:42698 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 07:13:09] INFO:     127.0.0.1:42714 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 07:13:09] INFO:     127.0.0.1:42728 - "GET /metrics HTTP/1.1" 200 OK

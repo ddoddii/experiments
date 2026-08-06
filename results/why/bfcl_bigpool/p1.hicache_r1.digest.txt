@@ -1,0 +1,22 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-06 06:52:18] max_total_num_tokens=60000, chunked_prefill_size=4096, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=23.22 GB
+[2026-08-06 06:52:25] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-06 06:52:15] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+  return self.create_error_response(
+---- tail ----
+[2026-08-06 06:55:42] INFO:     127.0.0.1:42536 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] INFO:     127.0.0.1:42546 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] INFO:     127.0.0.1:36100 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:42] Prefill batch, #new-seq: 1, #new-token: 161, #cached-token: 4723, token usage: 0.17, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 1, input throughput (token/s): 101.07, 
+[2026-08-06 06:55:42] INFO:     127.0.0.1:42562 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:42566 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:43] INFO:     127.0.0.1:42582 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:36100 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] Prefill batch, #new-seq: 1, #new-token: 111, #cached-token: 4884, token usage: 0.08, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 96.52, 
+[2026-08-06 06:55:44] INFO:     127.0.0.1:42596 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:44] INFO:     127.0.0.1:42598 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:45] INFO:     127.0.0.1:42608 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:45] INFO:     127.0.0.1:42622 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:42626 - "GET /server_info HTTP/1.1" 200 OK
+[2026-08-06 06:55:47] INFO:     127.0.0.1:42628 - "GET /metrics HTTP/1.1" 200 OK
