@@ -273,9 +273,29 @@ _PREV_DIGEST=""
 # from 1.45 to 6.58 s -- so grouping by arm confounds the arm with whenever it happened
 # to run. Interleaving spreads that drift across both arms instead of loading it onto one.
 REPEATS=${REPEATS:-1}
+
+# GAPS turns the tool-call gap into an AXIS instead of a constant, and it has to be one.
+# TOOL_DELAY is a time.sleep in the harness -- the benchmark replays recorded turns and
+# does not execute the tools -- so any single value is a number someone chose. A result
+# that only holds at "3 s" is a result about that choice.
+#
+# Swept, it becomes a finding instead: the gap is idle time background work can hide in,
+# so the question is HOW MUCH gap the advantage needs, and that break-even can be compared
+# against what real tool calls actually cost (file ops ~ms, HTTP APIs 100 ms-2 s, sandboxed
+# code execution seconds). If the break-even is tens of milliseconds the claim covers
+# essentially every agentic deployment; if it needs seconds, it covers few.
+#
+# Note the gap helps BOTH arms -- hicache's writeback thread uses it too -- so this is not
+# a handicap being handed to one side, it is the axis on which the two differ.
+GAPS=${GAPS:-}
 for rep in $(seq 1 "$REPEATS"); do
-  for arm in $ARMS; do
-    if [ "$REPEATS" = "1" ]; then run_one "$arm" "$arm"; else run_one "${arm}_r${rep}" "$arm"; fi
+  for gap in ${GAPS:-__none__}; do
+    for arm in $ARMS; do
+      lab="$arm"
+      [ "$gap" != "__none__" ] && { export TOOL_DELAY="$gap"; lab="${arm}_g${gap}"; }
+      [ "$REPEATS" = "1" ] || lab="${lab}_r${rep}"
+      run_one "$lab" "$arm"
+    done
   done
 done
 
