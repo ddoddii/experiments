@@ -51,6 +51,23 @@ export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.70}
 export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.88}
 export PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-32000}
 
+# HOLD DECODE KV CAPACITY CONSTANT ACROSS ARMS. This is not a tuning detail, it is the
+# control that was missing, and without it every park-vs-hicache number in this directory
+# is confounded.
+#
+# sglang sizes a KV pool from memory that is AVAILABLE, not from the whole card:
+# rest = available - total * (1 - mem_fraction_static). A park pool allocated on a decode
+# GPU is already-used memory when that decode sizes its own pool, so the decode pool
+# SHRINKS by exactly the park pool. Measured: decode went from 216,374 tokens under
+# hicache to 154,304 under park -- 29% less cache for the same work -- while total HBM on
+# the card stayed identical, which is why this hid so well. Comparing those two is
+# comparing a cache tier AND a 29% capacity cut at the same time.
+#
+# Pinning decode's capacity to the smaller value gives both arms the same decode pool, so
+# the only thing left differing is where evicted prefill KV goes. Set it to 0 to opt out
+# and let each arm size itself, but then do not compare the arms on latency.
+export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-154304}
+
 # Park onto the DECODE GPUs. Under PD_LAYOUT=b, P0=gpu0 D0=gpu1 P1=gpu2 D1=gpu3, so each
 # prefill lists its NVLink-bridged decode first and the far decode as a fallback. This is
 # the configuration the paper claims: the victim cache lives in decode's idle HBM.
