@@ -671,3 +671,66 @@ So the remaining work is NOT more transfer-path optimisation. It is the 5.7:1 ra
 the current rate, parking only what is later fetched would cut that traffic 5.7x. That is
 a policy question -- what deserves parking -- and it is now the only lever left that is
 large enough to matter.
+
+---
+
+## Why a peer GPU beats CPU DRAM (`results/why/media_r1`, 3 interleaved repeats)
+
+park_host and park_gpu differ by ONE environment variable
+(`SGLANG_KV_PARK_FORCE_HOST`). Same index, same reuse-value eviction, same fetch path, and
+the GPU park pools are allocated in both arms so HBM is matched. The only difference is
+where a park lands.
+
+### The headline is not a latency number
+
+| | r1 | r2 | r3 |
+|---|---|---|---|
+| park_gpu failures | 0 | 0 | 0 |
+| park_host failures | 8 | 4 | **102 of 128** |
+| park_host output tokens | 7,265 | 7,469 | **1,218** |
+
+Every park_host run produced 180 s read timeouts; r3 additionally returned **97x HTTP 503**
+— the server stopped serving. **The host tier did not merely run slower, it failed to
+sustain the workload.** TTFT medians (park_gpu 38.4% lower, all same sign) are a LOWER
+BOUND, because failed requests are excluded from the averages, which deletes the host arm's
+slowest requests from its own mean.
+
+### The mechanism, measured (r1, the cleanest host run)
+
+| | park_gpu | park_host |
+|---|---|---|
+| park path total | **3.2 s** | **110.3 s** |
+| per park | 7.5 ms | **243.5 ms (32.5x)** |
+| effective rate | 139 GB/s (enqueue) | 4.3 GB/s |
+| **`alloc` (pinning)** | **0 s — structurally absent** | **76.1 s = 69%** |
+| cold pins | — | 55 of 453 parks, **1,382 ms each** |
+| host PSS peak | 15.6 GB | **114 GB** |
+| system memory available, min | — | **0 GB** |
+
+Pinning alone is 168 ms/park — **22.4x the entire GPU park**.
+
+### Why this is structural rather than a tuning problem
+
+A GPU park pool is allocated once at startup and reused for the process lifetime, so a park
+into it is pure DMA. Host memory cannot receive DMA until it is pinned, and both ways out
+of that fail:
+
+- **Pin a pool up front** — committed DRAM stops tracking cached KV. This is exactly
+  HiCache's 61 GB problem and the thing this design exists to avoid.
+- **Pin on demand** — committed tracks cached in principle, but each new size class pays
+  ~1.4 s on the scheduler thread, AND PyTorch's caching host allocator does not return
+  freed pages to the OS. Measured: PSS still reached 114 GB on a 125 GB machine with a
+  32 GB cap configured, available memory hit zero, and the server died.
+
+So on-demand pinning gets the worst of both: the per-park cost *and* the committed
+footprint. **The GPU tier has no equivalent step at all**, and that asymmetry does not
+shrink as interconnects get faster — unlike the bandwidth argument, which is worth only
+1.9% of what a hit saves (2.49 vs 4.98 us/token against a 131.7 us/token re-prefill) and
+would weaken with every interconnect generation.
+
+### How to state it in the paper
+
+Not "peer GPU is faster than CPU DRAM" (true, but the bandwidth term is 2%). Instead: **a
+victim cache in peer HBM needs no allocation on the serving path, while a host-DRAM one
+must pin, and pinning forces a choice between committing DRAM it is not using and paying
+seconds per park — at which point it stops serving.**

@@ -82,6 +82,32 @@ def main():
         raise SystemExit(f"need both {args.gpu_arm} and {args.host_arm} telemetry in "
                          f"{args.dir}")
 
+    # Failed requests are excluded from the latency averages, so an arm that TIMES OUT
+    # gets its slowest requests deleted from its own mean. Comparing that against an arm
+    # with no failures flatters the failing one, and a latency gap quoted across such a
+    # pair is a lower bound at best. Say so before printing any of it.
+    errs = {}
+    for lab, arm in (("gpu", args.gpu_arm), ("host", args.host_arm)):
+        p = os.path.join(args.dir, f"bench_{arm}.json")
+        if os.path.exists(p):
+            try:
+                errs[lab] = json.load(open(p))["summary"]
+            except Exception:  # noqa: BLE001
+                pass
+    if len(errs) == 2:
+        eg, eh = errs["gpu"].get("error_items", 0), errs["host"].get("error_items", 0)
+        og = errs["gpu"].get("total_output_tokens", 0)
+        oh = errs["host"].get("total_output_tokens", 0)
+        if eg != eh or (og and oh and abs(og - oh) / max(og, oh) > 0.2):
+            print(f"\n!!! THE ARMS DID NOT DO THE SAME WORK !!!")
+            print(f"    {args.gpu_arm:>16}: {eg:>4} failed, {og:>7} output tokens")
+            print(f"    {args.host_arm:>16}: {eh:>4} failed, {oh:>7} output tokens")
+            print("    Failures are dropped from the latency averages, so the arm that")
+            print("    failed had its slowest requests removed from its own mean. Any")
+            print("    latency gap below is a LOWER BOUND, and if the failure counts are")
+            print("    large the right claim is that the arm could not sustain the load,")
+            print("    not that it was slower.")
+
     bpt = KIB_PER_TOKEN * 1024
     print("\n=== 1. the bandwidth argument, and why it is not enough ===")
     us_g = bpt / (MICRO["peer_gpu_gbps"] * 1e9) * 1e6
