@@ -277,10 +277,11 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
           pgrep -af "sglang.launch_server" 2>/dev/null | head -6
           echo "--- park lines from each prefill log (tail) ---"
           for f in p1 p2; do
-            [ -f "logs/$f.log" ] || continue
-            echo "[$f]"
+            _L=${LOG_DIR:-logs/sglang}; [ -d "$_L" ] || _L=logs
+            [ -f "$_L/$f.log" ] || continue
+            echo "[$_L/$f]"
             grep -iE "idle kv parking|park pool|telemetry publish failed|DISABLED" \
-              "logs/$f.log" 2>/dev/null | tail -12
+              "$_L/$f.log" 2>/dev/null | tail -12
           done
         } > "$OUTDIR/telemetry_missing_$label.txt" 2>&1
         echo "  [warn] no parked_gpu*.json for $label -- diagnosis written to"
@@ -295,13 +296,18 @@ run_one() {   # $1 = arm label (may carry a _capNNN suffix), $2 = arm kind
   # seven byte-identical digests reporting a pool size that belonged to a stale log from
   # a previous session. Config was unverifiable for the whole run. Taking the LAST
   # startup block gets the server this arm actually started.
+  # logs/sglang/, not logs/ -- the 2P2D starter writes there. Reading the wrong path is
+  # why every digest in every run so far carried a stale July startup block and the
+  # "identical to the previous arm" warning fired on runs whose logs were fine.
+  LOGD=${LOG_DIR:-logs/sglang}
+  [ -d "$LOGD" ] || LOGD=logs
   for f in p1 p2 d1 d2; do
-    [ -f "logs/$f.log" ] || continue
+    [ -f "$LOGD/$f.log" ] || continue
     { echo "---- startup (LAST occurrence: the log is not truncated between arms) ----"
-      grep -iE "park pool|clamp|ready to roll|max_total_num_tokens" "logs/$f.log" | tail -8
+      grep -iE "park pool|clamp|ready to roll|max_total_num_tokens" "$LOGD/$f.log" | tail -8
       echo "---- errors (last) ----"
-      grep -iE "error|traceback|out of memory|SIGQUIT received" "logs/$f.log" | tail -15
-      echo "---- tail ----"; tail -15 "logs/$f.log"
+      grep -iE "error|traceback|out of memory|SIGQUIT received" "$LOGD/$f.log" | tail -15
+      echo "---- tail ----"; tail -15 "$LOGD/$f.log"
     } > "$OUTDIR/$f.$label.digest.txt" 2>/dev/null || true
   done
   # Fail loudly rather than silently reporting a stale config next run.
