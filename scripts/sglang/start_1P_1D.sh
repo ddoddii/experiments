@@ -131,9 +131,37 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
     PREFILL_ENV="SGLANG_KV_PARK_GPU=${PARK_GPU}"
     [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
   fi
+  # 중복 제거 (순서 유지). 1P1D 에서 park 대상은 decode GPU 자신이므로
+  # PARK_VISIBLE="0,1" 에 PARK_GPUS="1" 이 붙어 "0,1,1" 이 된다. CUDA 는
+  # CUDA_VISIBLE_DEVICES 에 중복이 있으면 그 지점부터 목록을 무효로 보고,
+  # cudaGetDeviceCount() 가 "Error 101: invalid device ordinal" 을 낸다. 그러면
+  # 서버는 GPU 를 하나도 못 보고 "No accelerator is available" 로 죽는다.
+  PARK_VISIBLE=$(echo "$PARK_VISIBLE" | tr ',' '\n' | awk 'NF && !seen[$0]++' | paste -sd, -)
+
+  # --base-gpu-id 와 SGLANG_KV_PARK_GPUS 는 물리 번호가 아니라 CUDA_VISIBLE_DEVICES
+  # 안에서의 INDEX 다. cgroup 격리가 되는 사이트에서는 할당 GPU 가 0..N-1 로 재번호되어
+  # 둘이 우연히 같지만, 격리가 없는 사이트에서 SLURM 이 물리 4,5 를 주면
+  # CUDA_VISIBLE_DEVICES="4,5" 이고 보이는 장치는 0,1 뿐이라 --base-gpu-id 4 는 없는
+  # 장치를 가리킨다. 목록 안 위치로 변환한다.
+  _vis_index() {   # $1 = 목록, $2 = 물리번호 -> 목록 안 위치
+    echo "$1" | tr ',' '\n' | awk -v g="$2" '{ if ($0 == g) { print NR - 1; exit } }'
+  }
   PREFILL_CVD="$PARK_VISIBLE"; DECODE_CVD="$PARK_VISIBLE"
-  PREFILL_GPU_ARG="--base-gpu-id ${PREFILL_GPU}"
-  DECODE_GPU_ARG="--base-gpu-id ${DECODE_GPU}"
+  PREFILL_GPU_ARG="--base-gpu-id $(_vis_index "$PARK_VISIBLE" "$PREFILL_GPU")"
+  DECODE_GPU_ARG="--base-gpu-id $(_vis_index "$PARK_VISIBLE" "$DECODE_GPU")"
+  # park 후보도 같은 이유로 변환한다. 이 값은 서버 프로세스 안에서 cuda:<N> 로 쓰인다.
+  if [ -n "${PARK_GPUS:-}" ]; then
+    _mapped=""
+    for _g in $(echo "$PARK_GPUS" | tr ',' ' '); do
+      _mapped="${_mapped}${_mapped:+,}$(_vis_index "$PARK_VISIBLE" "$_g")"
+    done
+    PREFILL_ENV="SGLANG_KV_PARK_GPUS=${_mapped}"
+    [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
+  elif [ -n "${PARK_GPU:-}" ]; then
+    PREFILL_ENV="SGLANG_KV_PARK_GPU=$(_vis_index "$PARK_VISIBLE" "$PARK_GPU")"
+    [ -n "${PARK_POOL_TOKENS:-}" ] && PREFILL_ENV="${PREFILL_ENV} SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}"
+  fi
+  echo "  parking: visible=[${PARK_VISIBLE}] P${PREFILL_GPU_ARG} D${DECODE_GPU_ARG} env=[${PREFILL_ENV}]"
 fi
 
 # 압박 knob 적용 (prefill radix eviction 유발용)
