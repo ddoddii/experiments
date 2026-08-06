@@ -78,6 +78,55 @@ else
   say "      MOONCAKE_PORT=8080 으로 두고, 노드를 독점(--exclusive)해서 돌려라."
 fi
 
+# 메타데이터 서버가 import 된다고 KV 전송이 되는 건 아니다. 실제로 바이트를 옮기는 건
+# mooncake.engine 의 C++ 확장(TransferEngine)이고, 그건 시스템 라이브러리에 링크된다.
+# 파이썬 모듈은 멀쩡히 import 되는데 확장만 로드에 실패하는 상태가 실제로 있었고,
+# preflight 는 통과시킨 다음 8분 뒤 p1.log 에서 터졌다:
+#
+#   ImportError: /lib64/libldap.so.2: undefined symbol: EVP_md2, version OPENSSL_3.0.0
+#
+# 게다가 sglang 은 이 원인을 "Please install mooncake ..." 라는 엉뚱한 메시지로 덮는다
+# (transfer_engine.py 가 ImportError 를 갈아끼운다). 그래서 여기서 직접 import 해보고,
+# 실패하면 sglang 이 가린 진짜 예외를 그대로 보여준다.
+_mc_err=$(python -c 'from mooncake.engine import TransferEngine' 2>&1)
+if [ -n "$_mc_err" ]; then
+  bad "mooncake.engine (TransferEngine) 로드 실패 — 서버는 뜨다가 SIGQUIT 로 죽는다."
+  echo "$_mc_err" | tail -3 | sed 's/^/         | /'
+  # conda 의 OpenSSL 과 시스템 OpenSSL 이 섞이면 나는 증상이다. conda-forge 의
+  # libcrypto 는 MD2 를 빼고 빌드되는데, 시스템 libldap 은 EVP_md2 를 요구한다.
+  # 어느 쪽으로 통일해도 풀리므로, 실제로 되는 쪽을 여기서 찾아서 알려준다.
+  case "$_mc_err" in
+    *EVP_md2*|*libldap*|*libcrypto*|*OPENSSL*)
+      say "      conda OpenSSL 과 시스템 OpenSSL 이 섞였다. 통하는 조합을 찾는 중..."
+      _found=""
+      # 두 방향 모두 "체인을 한쪽으로 통일"하는 것이다. 어느 쪽이 되는지는 이 노드가
+      # 어떤 libcurl/libldap 을 물고 있느냐에 달렸으니, 설명하지 말고 실제로 돌려본다.
+      _syscrypto=$(ls /lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3 2>/dev/null | head -1)
+      for _pair in "conda|LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}" \
+                   "system|LD_PRELOAD=${_syscrypto:-/lib64/libcrypto.so.3}"; do
+        _name=${_pair%%|*}; _fix=${_pair#*|}
+        if env "$_fix" python -c 'from mooncake.engine import TransferEngine' >/dev/null 2>&1; then
+          say "      >>> MOONCAKE_LD_FIX=${_name} 으로 하면 로드된다 (${_fix})."
+          say "          모든 서버 프로세스에 적용하려면:"
+          say "            ./scripts/slurm/submit.sh MOONCAKE_LD_FIX=${_name}"
+          _found=1
+          break
+        fi
+      done
+      if [ -z "$_found" ]; then
+        say "      두 가지 모두 실패. 라이브러리 체인을 직접 봐야 한다:"
+        say "        python -c 'import mooncake,os;print(os.path.dirname(mooncake.__file__))'"
+        say "        ldd <위 경로>/engine*.so | grep -E 'ldap|curl|crypto|ssl'"
+        say "      해결책은 체인을 한쪽으로 통일하는 것이다:"
+        say "        conda install -c conda-forge libcurl openldap   # 전부 conda 쪽으로"
+      fi ;;
+    *No\ module\ named*)
+      say "      pip install mooncake-transfer-engine==0.3.8.post1" ;;
+  esac
+else
+  say "mooncake.engine (TransferEngine): 로드 OK"
+fi
+
 # ─── 3. GPU 와 배선 ───────────────────────────────────────────────────────────
 echo "[3/7] GPU topology"
 nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader | sed 's/^/  /'

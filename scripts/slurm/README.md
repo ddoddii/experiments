@@ -118,6 +118,66 @@ python -c "import sglang; print(sglang.__file__)"     # ~/sglang-source/... 여�
 주의: 클론과 conda env 가 **계산 노드에서 보이는 파일시스템**에 있어야 한다. 홈이 NFS 로
 공유되는 보통의 클러스터면 문제없고, 아니면 preflight 의 import 검사에서 걸린다.
 
+## mooncake 가 안 뜰 때
+
+PD disaggregation 의 KV 전송 백엔드다. 없으면 서버가 아예 안 뜬다.
+
+```bash
+conda activate sglang
+pip install mooncake-transfer-engine==0.3.8.post1   # sglang CI 가 쓰는 핀
+```
+
+설치했는데도 `p1.log` 가 이렇게 죽는 경우가 있다:
+
+```
+ImportError: /lib64/libldap.so.2: undefined symbol: EVP_md2, version OPENSSL_3.0.0
+...
+ImportError: Please install mooncake by following the instructions at ...
+[..] Received sigquit from a child process.
+```
+
+**두 번째 메시지는 무시하라. 진짜 원인은 첫 번째다.** sglang 의 `transfer_engine.py`
+가 `ImportError` 를 통째로 "설치하세요" 메시지로 갈아끼우기 때문에, 이미 설치돼 있는데도
+설치하라는 말이 나온다.
+
+실제 원인은 OpenSSL 이 섞인 것이다. 시스템 `libldap` 은 `EVP_md2` 를 요구하는데,
+먼저 로드된 conda-forge `libcrypto` 는 MD2 를 빼고 빌드돼 있어 그 심볼이 없다.
+체인을 어느 한쪽으로 통일하면 풀린다:
+
+| `MOONCAKE_LD_FIX` | 하는 일 |
+|---|---|
+| `conda` | `LD_LIBRARY_PATH` 에 conda 의 `lib` 을 먼저 놓는다 (libcurl/libldap 까지 conda 것으로) |
+| `system` | 시스템 `libcrypto.so.3` 을 `LD_PRELOAD` 해서 `EVP_md2` 를 제공한다 |
+| `none` (기본) | 아무것도 안 한다 |
+
+**어느 쪽인지는 preflight 가 실제로 돌려보고 알려준다.** 둘 다 시도해서 되는 쪽의
+이름을 출력하므로, 그대로 넘기면 된다:
+
+```bash
+./scripts/slurm/submit.sh MOONCAKE_LD_FIX=conda     # preflight 가 알려준 값
+```
+
+기본값이 `none` 인 건 의도한 것이다. 멀쩡히 도는 환경에서 라이브러리 해석 순서를
+말없이 바꾸는 건 그 자체로 새 실패를 만든다. 지금 이 노드에서 확인하려면:
+
+```bash
+python -c 'from mooncake.engine import TransferEngine' && echo OK
+LD_PRELOAD=/lib64/libcrypto.so.3 python -c 'from mooncake.engine import TransferEngine' && echo "system 으로 됨"
+LD_LIBRARY_PATH=$CONDA_PREFIX/lib python -c 'from mooncake.engine import TransferEngine' && echo "conda 로 됨"
+```
+
+셋 다 실패하면 체인을 직접 봐야 한다:
+
+```bash
+ldd $(python -c 'import mooncake,os;print(os.path.dirname(mooncake.__file__))')/engine*.so \
+  | grep -E 'ldap|curl|crypto|ssl'
+conda install -c conda-forge libcurl openldap    # 전부 conda 쪽으로 통일
+```
+
+`preflight.sh` 는 이제 메타데이터 서버 import 와 **엔진 로드를 따로** 확인한다. 앞의
+것만 보던 동안에는 preflight 를 통과한 뒤 8분 뒤 `p1.log` 에서 터졌다 — 파이썬 모듈은
+멀쩡히 import 되고 C++ 확장만 로드에 실패하는 상태였기 때문이다.
+
 ## 파일
 
 | 파일 | 역할 |

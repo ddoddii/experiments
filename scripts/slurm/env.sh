@@ -94,6 +94,33 @@ else
   echo "[env]          SGLANG_SRC_DIR 을 클론 위치로 지정하라 (기본: \$HOME/sglang-source)."
 fi
 
+# ─── mooncake C++ 확장의 라이브러리 충돌 ──────────────────────────────────────
+# 어떤 클러스터에서는 `import mooncake.engine` 이 이렇게 죽는다:
+#
+#   ImportError: /lib64/libldap.so.2: undefined symbol: EVP_md2, version OPENSSL_3.0.0
+#
+# 시스템 libldap 은 EVP_md2 를 요구하는데, 먼저 로드된 conda-forge libcrypto 는 MD2 를
+# 빼고 빌드돼 있어서 심볼이 없다. 체인을 어느 한쪽으로 통일하면 풀린다:
+#
+#   conda   conda 의 lib 을 먼저 찾게 한다 (libcurl/libldap 까지 conda 것으로)
+#   system  시스템 libcrypto 를 preload 해서 EVP_md2 를 제공한다
+#
+# 기본값은 none 이다. 멀쩡히 도는 환경에서 라이브러리 해석 순서를 말없이 바꾸는 건
+# 그 자체로 새 실패를 만드는 짓이라, preflight 가 "이 노드에서는 이게 된다"고 확인해
+# 준 값만 켠다. preflight.sh 가 두 가지를 실제로 시도해서 알려준다.
+case "${MOONCAKE_LD_FIX:-none}" in
+  conda)  export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+  system)
+    _syscrypto=$(ls /lib64/libcrypto.so.3 /usr/lib64/libcrypto.so.3 2>/dev/null | head -1)
+    if [ -n "$_syscrypto" ]; then
+      export LD_PRELOAD="${_syscrypto}${LD_PRELOAD:+:$LD_PRELOAD}"
+    else
+      echo "[env] WARNING: MOONCAKE_LD_FIX=system 인데 시스템 libcrypto.so.3 을 못 찾았다."
+    fi ;;
+  none) : ;;
+  *) echo "[env] WARNING: MOONCAKE_LD_FIX 는 conda|system|none (받은 값: ${MOONCAKE_LD_FIX})" ;;
+esac
+
 # ─── 모델 ─────────────────────────────────────────────────────────────────────
 # 클러스터 홈이 server17 과 다른 파일시스템일 수 있으므로 후보를 훑는다.
 # preflight.sh 가 최종적으로 존재 여부를 검증한다.
@@ -266,6 +293,8 @@ env_summary() {
   echo "  model       : ${MODEL_PATH}"
   echo "  sglang src  : ${SGLANG_SRC_DIR}"
   echo "  logs        : ${LOG_DIR}"
+  [ "${MOONCAKE_LD_FIX:-none}" != "none" ] && \
+    echo "  ld fix      : MOONCAKE_LD_FIX=${MOONCAKE_LD_FIX}"
   echo "  park dir    : ${SGLANG_KV_PARK_DIR}"
   echo "  hicache dir : ${SGLANG_HICACHE_FILE_BACKEND_STORAGE_DIR}"
 }
