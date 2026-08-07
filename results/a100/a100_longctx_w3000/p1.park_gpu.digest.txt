@@ -1,0 +1,22 @@
+---- startup (LAST occurrence: the log is not truncated between arms) ----
+[2026-08-07 01:39:13] max_total_num_tokens=105000, chunked_prefill_size=8192, max_prefill_tokens=16384, max_running_requests=2048, context_len=131072, available_gpu_mem=49.39 GB
+[2026-08-07 01:39:13] Idle KV parking [prefill]: 1 idle-GPU park pool(s) on GPU[1] = [256000] tokens x 32 layers each (~33.6 GB total). Parking picks the pool with most headroom.
+[2026-08-07 01:39:19] The server is fired up and ready to roll!
+---- errors (last) ----
+[2026-08-07 01:39:02] Ignore import error when loading sglang.srt.models.glmasr: cannot import name 'GlmAsrConfig' from 'transformers' (/home/uhmturks/miniconda3/envs/sglang/lib/python3.12/site-packages/transformers/__init__.py)
+---- tail ----
+[2026-08-07 01:41:27] INFO:     127.0.0.1:52918 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:28] INFO:     127.0.0.1:52922 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:28] INFO:     127.0.0.1:42886 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-07 01:41:28] Prefill batch, #new-seq: 1, #new-token: 35, #cached-token: 3299, token usage: 0.03, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 38.20, 
+[2026-08-07 01:41:28] INFO:     127.0.0.1:52926 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:29] INFO:     127.0.0.1:42886 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-07 01:41:29] Prefill batch, #new-seq: 1, #new-token: 35, #cached-token: 3282, token usage: 0.03, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 60.05, 
+[2026-08-07 01:41:29] INFO:     127.0.0.1:52928 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:29] INFO:     127.0.0.1:52944 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:30] INFO:     127.0.0.1:52960 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:30] INFO:     127.0.0.1:42886 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-08-07 01:41:30] Prefill batch, #new-seq: 1, #new-token: 35, #cached-token: 3276, token usage: 0.03, #running-req: 0, #queue-req: 0, #prealloc-req: 0, #inflight-req: 0, input throughput (token/s): 25.13, 
+[2026-08-07 01:41:30] INFO:     127.0.0.1:52962 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:31] INFO:     127.0.0.1:52966 - "GET /metrics HTTP/1.1" 200 OK
+[2026-08-07 01:41:31] INFO:     127.0.0.1:52974 - "GET /metrics HTTP/1.1" 200 OK
