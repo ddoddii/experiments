@@ -34,12 +34,18 @@
 #   ./scripts/sglang/run_qps_sweep.sh
 #   RATES="0.05 0.1 0.2 0.4" ARMS="recompute park" ./scripts/sglang/run_qps_sweep.sh
 #   MODEL_KEY=qwen14b ./scripts/sglang/run_qps_sweep.sh
+#   WORKLOAD=bfcl RATES="0.2 0.4 0.8 1.5 3" ./scripts/sglang/run_qps_sweep.sh
 set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
 cd "$(dirname "$0")/../.."
 
 MODEL_KEY=${MODEL_KEY:-llama8b}
+# sharegpt (default) or bfcl. Both benchmark scripts already speak the same open-loop
+# protocol (SESSION_RATE/ITEM_OFFSET in, {mode:open_loop, window_*, job_delay_*} out),
+# so this sweep and collect_qps.py/plot_job_delay.py need no per-workload branch below
+# this block -- only which script gets launched and which of its env knobs apply.
+WORKLOAD=${WORKLOAD:-sharegpt}
 # Reuse the sweep's per-model geometry rather than restating it, so this run cannot drift
 # from the closed-loop numbers it is meant to sit beside.
 eval "$(sed -n '/^model_path()/,/^}/p;/^model_pool()/,/^}/p;/^model_park_pool()/,/^}/p;/^model_memfrac()/,/^}/p;/^model_parser()/,/^}/p;/^model_max_ctx()/,/^}/p;/^model_kv_bytes()/,/^}/p;/^workload_for()/,/^}/p' scripts/sglang/run_models_sweep.sh)"
@@ -65,17 +71,40 @@ export PARK_POOL_TOKENS=${PARK_POOL_TOKENS:-$(model_park_pool "$MODEL_KEY")}
 export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-$(model_memfrac "$MODEL_KEY")}
 read -r _MT _TURNS <<< "$(workload_for "$MODEL_KEY")"
 
-export MAX_TOKENS=${MAX_TOKENS:-$_MT}
-export MAX_TURNS=${MAX_TURNS:-$_TURNS}
-export MIN_TURNS=${MIN_TURNS:-6}
-export MAX_PROMPT_CHARS=${MAX_PROMPT_CHARS:-16000}
-export TOOL_DELAY=${TOOL_DELAY:-3}
 export TIMEOUT=${TIMEOUT:-600}
-export DATA_PATH=${DATA_PATH:-data/ShareGPT_V3_unfiltered_cleaned_split.json}
 
-# Offered SESSION rate (conversations/s). A session is MAX_TURNS turns with TOOL_DELAY
-# between them, so the turn rate the server sees is roughly RATE x MAX_TURNS -- but only
-# while it keeps up, which is exactly what the sweep measures.
+case "$WORKLOAD" in
+  sharegpt)
+    BENCH=benchmark/sglang_sharegpt_multi_turn_concurrent.py
+    export MAX_TOKENS=${MAX_TOKENS:-$_MT}
+    export MAX_TURNS=${MAX_TURNS:-$_TURNS}
+    export MIN_TURNS=${MIN_TURNS:-6}
+    export MAX_PROMPT_CHARS=${MAX_PROMPT_CHARS:-16000}
+    export TOOL_DELAY=${TOOL_DELAY:-3}
+    export DATA_PATH=${DATA_PATH:-data/ShareGPT_V3_unfiltered_cleaned_split.json}
+    if [ ! -f "$DATA_PATH" ]; then
+      echo "ERROR: $DATA_PATH not found. Fetch it once:"
+      echo "  cd data && wget https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+      exit 1
+    fi
+    ;;
+  bfcl)
+    # No DATA_PATH / MIN_TURNS / MAX_PROMPT_CHARS -- the BFCL runner loads its own fixed
+    # data/BFCL_v3_multi_turn_base.json (200 conversations, ~4 turns each) and ignores
+    # those knobs. TOOL_DELAY DEFAULTS TO 0 here for the same reason it does in
+    # run_why_faster.sh: the harness replays recorded turns rather than executing tools,
+    # so any nonzero delay is a number someone picked, and the 66% TTFT share that makes
+    # BFCL a valid prefill-bound testbed was measured at 0.
+    BENCH=benchmark/sglang_BFCL_multi_turn_concurrent.py
+    export MAX_TOKENS=${MAX_TOKENS:-512}
+    export TOOL_DELAY=${TOOL_DELAY:-0}
+    ;;
+  *) echo "unknown WORKLOAD: $WORKLOAD (want sharegpt | bfcl)"; exit 1 ;;
+esac
+
+# Offered SESSION rate (conversations/s). A session is however many turns the item has,
+# with TOOL_DELAY between them, so the turn rate the server sees is roughly
+# RATE x turns/session -- but only while it keeps up, which is what the sweep measures.
 RATES=${RATES:-"0.05 0.1 0.2 0.35 0.5 0.75"}
 ARMS=${ARMS:-"recompute hicache park"}
 export LOAD_DURATION=${LOAD_DURATION:-300}
@@ -96,30 +125,38 @@ for r in $RATES; do
 done
 export MAX_ITEMS=${MAX_ITEMS:-$_need}
 
-TAG=${TAG:-"qps_${MODEL_KEY}"}
+TAG=${TAG:-"qps_${MODEL_KEY}_${WORKLOAD}"}
 OUTDIR=${OUTDIR:-results/qps/$TAG}
 LOG_DIR=${LOG_DIR:-logs/sglang}
 mkdir -p "$OUTDIR"
 
-if [ ! -f "$DATA_PATH" ]; then
-  echo "ERROR: $DATA_PATH not found. Fetch it once:"
-  echo "  cd data && wget https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
-  exit 1
-fi
-
 # Preflight the corpus budget before spending hours discovering it mid-run.
+#
+# BFCL's corpus is a FIXED 200 conversations -- a sweep at realistic rates routinely
+# needs more disjoint sessions than that exists (e.g. the default RATES already needs
+# ~705). There the corpus WILL wrap and MAX_ITEMS cannot fix it, so this is a warning
+# (each script's own sessions_repeated field marks and reports which points wrapped)
+# rather than the hard stop ShareGPT gets, where a 90k-conversation corpus makes running
+# out an actual misconfiguration worth failing loudly on.
 if [ "$MAX_ITEMS" -lt "$_need" ]; then
-  echo "ERROR: MAX_ITEMS=$MAX_ITEMS but the sweep needs >= $_need disjoint conversations"
-  echo "       (sum of rate x LOAD_DURATION over $(echo $RATES | wc -w) points, plus slack)."
-  echo "       Re-run with MAX_ITEMS=$_need, or shorten RATES / LOAD_DURATION."
-  exit 1
+  if [ "$WORKLOAD" = "bfcl" ]; then
+    echo "[warn] MAX_ITEMS=$MAX_ITEMS < needed $_need, and BFCL only has 200 total --"
+    echo "       every point past the corpus's own capacity will wrap and replay"
+    echo "       conversations, biasing the cached arms. Check sessions_repeated in"
+    echo "       each point's summary; qps.md flags it per-arm as WRAPPED."
+  else
+    echo "ERROR: MAX_ITEMS=$MAX_ITEMS but the sweep needs >= $_need disjoint conversations"
+    echo "       (sum of rate x LOAD_DURATION over $(echo $RATES | wc -w) points, plus slack)."
+    echo "       Re-run with MAX_ITEMS=$_need, or shorten RATES / LOAD_DURATION."
+    exit 1
+  fi
 fi
 
 echo "================================================================"
-echo " OPEN-LOOP QPS sweep   model=$MODEL_KEY  pool=$PREFILL_MAX_TOTAL_TOKENS"
+echo " OPEN-LOOP $WORKLOAD sweep   model=$MODEL_KEY  pool=$PREFILL_MAX_TOTAL_TOKENS"
 echo " rates: $RATES  (sessions/s)   load=${LOAD_DURATION}s warmup=${WARMUP_S}s"
-echo " max_tokens=$MAX_TOKENS turns=$MIN_TURNS..$MAX_TURNS  corpus=$MAX_ITEMS"
-echo " arms: $ARMS  -> $OUTDIR"
+echo " max_tokens=$MAX_TOKENS tool_delay=${TOOL_DELAY}s  corpus_need=$MAX_ITEMS"
+echo " arms: $ARMS  bench=$BENCH  -> $OUTDIR"
 echo "================================================================"
 
 start_arm() {
@@ -185,7 +222,7 @@ for arm in $ARMS; do
     CONFIG="qps_${TAG}_${arm}_r${rate}" \
       ROUTER_URL="http://127.0.0.1:8000/v1/chat/completions" \
       SESSION_RATE="$rate" ITEM_OFFSET="$_off" \
-      stdbuf -oL -eL python -u benchmark/sglang_sharegpt_multi_turn_concurrent.py 2>&1 \
+      stdbuf -oL -eL python -u "$BENCH" 2>&1 \
       | tee "$OUTDIR/bench_${arm}_r${rate}.log"
     echo "  [point done in $(( (SECONDS-_t0)/60 ))m $(( (SECONDS-_t0)%60 ))s]"
 
@@ -222,6 +259,7 @@ echo "================================================================"
 python benchmark/collect_qps.py --dir "$OUTDIR" --out "$OUTDIR/qps.json" \
   | tee "$OUTDIR/qps.md"
 python benchmark/plot_qps.py "$OUTDIR/qps.json" --out "$OUTDIR/fig_qps"
+python benchmark/plot_job_delay.py "$OUTDIR/qps.json" --out "$OUTDIR/fig_job_delay"
 echo "================================================================"
 echo "READ THE PLATEAU, NOT THE TOP POINT. If delivered throughput is still rising at the"
 echo "highest rate, no arm reached capacity and the sweep is still client-limited --"

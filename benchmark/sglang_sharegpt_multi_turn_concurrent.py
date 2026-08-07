@@ -351,7 +351,7 @@ def run_open_loop(items):
     peak_inflight = [0]
     rng = random.Random(0xC0FFEE ^ int(SESSION_RATE * 1000))
 
-    def task(item):
+    def task(item, t_arrival_s):
         with lock:
             inflight[0] += 1
             peak_inflight[0] = max(peak_inflight[0], inflight[0])
@@ -360,6 +360,20 @@ def run_open_loop(items):
         except Exception as e:  # noqa: BLE001
             r = {"id": item.get("id"), "turns": [{"turn": 0, "error": str(e)}],
                  "total_output_tokens": 0, "num_turns": 0}
+        # JOB DELAY, in the scheduling-paper sense: completion time minus arrival time,
+        # where arrival is when this session entered the Poisson process (the instant it
+        # was launched below), not when its first request happened to fire. The gap
+        # between the two is thread-pool scheduling jitter, which OPEN_WORKERS being
+        # large keeps small -- unlike a bounded pool, a session is never queued behind
+        # another session's turns here, only behind the GPU's own queueing (which shows
+        # up as inflated TTFT inside the turns and is exactly what this metric should
+        # capture).
+        r["t_arrival_s"] = round(t_arrival_s, 3)
+        turns = [t for t in (r.get("turns") or []) if not t.get("error")]
+        if turns and turns[-1].get("t_done_s") is not None:
+            r["job_delay_s"] = round(turns[-1]["t_done_s"] - t_arrival_s, 3)
+        else:
+            r["job_delay_s"] = None
         with lock:
             inflight[0] -= 1
             results.append(r)
@@ -376,7 +390,7 @@ def run_open_loop(items):
                 break
             it = dict(items[launched % len(items)])
             it["id"] = f"{it.get('id')}#{launched}"
-            futs.append(pool.submit(task, it))
+            futs.append(pool.submit(task, it, elapsed))
             launched += 1
             time.sleep(rng.expovariate(SESSION_RATE))
             if elapsed >= next_report:
@@ -402,6 +416,11 @@ def run_open_loop(items):
     lo, hi = WARMUP_S, t_load_end
     win_tokens = win_turns = 0
     win_ttfts = []
+    # Job delay is windowed on the SESSION, not the turn: a session only belongs to the
+    # steady-state window if it arrived after warmup AND finished before the load window
+    # closed, otherwise its delay is either padded by warmup slack or truncated by the
+    # drain and would misrepresent the offered rate either way.
+    win_job_delays = []
     for r in results:
         for t in (r.get("turns") or []):
             ts, td = t.get("t_start_s"), t.get("t_done_s")
@@ -412,14 +431,25 @@ def run_open_loop(items):
                 win_turns += 1
                 if t.get("ttft_s") is not None:
                     win_ttfts.append(t["ttft_s"])
+        ta, jd = r.get("t_arrival_s"), r.get("job_delay_s")
+        if ta is not None and jd is not None and ta >= lo and ta + jd <= hi:
+            win_job_delays.append(jd)
     win = max(1e-9, hi - lo)
     win_ttfts.sort()
+    win_job_delays.sort()
 
     def _p(p):
         if not win_ttfts:
             return None
         k = max(0, min(len(win_ttfts) - 1, int(round((p / 100.0) * (len(win_ttfts) - 1)))))
         return round(win_ttfts[k], 4)
+
+    def _pd(p):
+        if not win_job_delays:
+            return None
+        k = max(0, min(len(win_job_delays) - 1,
+                        int(round((p / 100.0) * (len(win_job_delays) - 1)))))
+        return round(win_job_delays[k], 4)
 
     stats = {
         "mode": "open_loop",
@@ -441,6 +471,16 @@ def run_open_loop(items):
         "window_ttft_p50_s": _p(50),
         "window_ttft_p95_s": _p(95),
         "window_ttft_p99_s": _p(99),
+        # Average Job Delay, in the sense the scheduling-figure convention uses it:
+        # session arrival to session completion, all turns and think-time included.
+        # This is the metric the "JPS vs delay" curve plots -- NOT window_ttft, which is
+        # per-turn and blind to a session queued for multiple turns.
+        "window_job_delay_n": len(win_job_delays),
+        "window_job_delay_mean_s": round(sum(win_job_delays) / len(win_job_delays), 4)
+                                    if win_job_delays else None,
+        "window_job_delay_p50_s": _pd(50),
+        "window_job_delay_p95_s": _pd(95),
+        "window_job_delay_p99_s": _pd(99),
     }
     if stats["sessions_repeated"] > 0:
         print(f"\n  *** WARNING: the corpus wrapped -- {stats['sessions_repeated']} of "

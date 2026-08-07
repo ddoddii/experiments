@@ -13,12 +13,19 @@ cache에 eviction 압박을 준다. 이때 tool-call 유휴시간 동안 다른 
   CONFIG          결과 파일 태그 (기본 concurrent)
   CONCURRENCY     동시 실행 대화 수 (기본 16)
   MAX_ITEMS       처리할 item 수 제한 (기본 전체 200)
+  ITEM_OFFSET     시작 offset (open-loop sweep에서 rate point마다 서로 다른
+                   corpus slice를 쓰기 위함; sharegpt 러너와 동일한 관례)
   ROUTER_URL      (기본 http://127.0.0.1:8000/v1/chat/completions)
+  SESSION_RATE    >0이면 open-loop: 대화가 SESSION_RATE/s로 Poisson 도착.
+                   0(기본)이면 기존 closed-loop (CONCURRENCY개 워커 풀).
 
 출력 스키마는 순차 버전과 동일 → phase0_analyze.py가 그대로 처리.
+open-loop 모드는 sglang_sharegpt_multi_turn_concurrent.py의 run_open_loop()와
+동일한 설계 -- "job delay" (세션 도착 -> 세션 완료) 정의를 그쪽과 맞추기 위함.
 """
 import json
 import os
+import random
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -31,12 +38,26 @@ MODEL = os.environ.get("MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 CONFIG = os.environ.get("CONFIG", "concurrent")
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "16"))
 MAX_ITEMS = int(os.environ.get("MAX_ITEMS", "0"))  # 0 = 전체
+ITEM_OFFSET = int(os.environ.get("ITEM_OFFSET", "0"))
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "512"))
 TIMEOUT = int(os.environ.get("TIMEOUT", "120"))
 # tool-call 유휴시간(think-time) 모사. 턴 사이에 이 시간만큼 쉰다.
 # >0이면 낮은 동시성으로도 "유휴 중 타세션이 내 prefix를 evict"하는 상황이 생겨,
 # radix(재계산) vs hicache(fetch)의 TTFT 차이가 queueing 없이 드러난다.
 TOOL_DELAY = float(os.environ.get("TOOL_DELAY", "0"))
+
+# ---------------------------------------------------------------- open-loop mode
+# Ported from sglang_sharegpt_multi_turn_concurrent.py -- see the comment there for why
+# this exists (closed loop makes the CLIENT the bottleneck, so throughput/delay are flat
+# across arms no matter how fast the server is; open loop makes the SERVER the
+# bottleneck, which is what a JPS-vs-delay figure needs).
+SESSION_RATE = float(os.environ.get("SESSION_RATE", "0"))      # sessions/s; >0 = open loop
+LOAD_DURATION = float(os.environ.get("LOAD_DURATION", "240"))  # seconds of arrivals
+WARMUP_S = float(os.environ.get("WARMUP_S", "45"))
+DRAIN_TIMEOUT = float(os.environ.get("DRAIN_TIMEOUT", "420"))
+OPEN_WORKERS = int(os.environ.get("OPEN_WORKERS", "3072"))
+
+T0 = time.perf_counter()
 
 CLASS_TO_FILE = {
     "GorillaFileSystem": "multi_turn_func_doc/gorilla_file_system.json",
@@ -77,9 +98,14 @@ def load_func_doc(path):
 
 
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
-items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
-if MAX_ITEMS > 0:
-    items = items[:MAX_ITEMS]
+_all_items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
+# ITEM_OFFSET slices out a DISJOINT range of the (small, fixed-200) corpus so a sweep's
+# rate points do not each replay the same conversations against a server the previous
+# point already warmed -- same reasoning as the ShareGPT runner. Unlike ShareGPT, BFCL
+# has only 200 conversations total, so an offset-heavy sweep will exhaust the corpus and
+# an open-loop run cycles back to the start; run_open_loop() below reports that via
+# sessions_repeated exactly like the ShareGPT path does.
+items = _all_items[ITEM_OFFSET:ITEM_OFFSET + MAX_ITEMS] if MAX_ITEMS > 0 else _all_items[ITEM_OFFSET:]
 
 
 def run_turn(conversation, tools):
@@ -138,6 +164,11 @@ def run_turn(conversation, tools):
         "output_tokens": token_count,
         "e2e_latency_s": round(e2e, 4) if e2e else None,
         "throughput_tok_per_s": round(tput, 2) if tput else None,
+        # Absolute clock relative to T0, same convention as the ShareGPT runner: needed
+        # to window a turn into an open-loop steady-state measurement and to compute
+        # session-level job delay (arrival -> last turn done).
+        "t_start_s": round(t_request - T0, 3),
+        "t_done_s": round((t_last or t_request) - T0, 3),
     }, assistant_content, tool_calls)
 
 
@@ -183,19 +214,152 @@ def process_item(item):
     }
 
 
-def main():
-    print(f"[concurrent] CONFIG={CONFIG} CONCURRENCY={CONCURRENCY} items={len(items)} url={ROUTER_URL}")
-    results = []
-    lock = threading.Lock()
-    t0 = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
-        futs = {ex.submit(process_item, it): it for it in items}
-        for fut in tqdm(as_completed(futs), total=len(futs), desc="items"):
-            r = fut.result()
-            with lock:
-                results.append(r)
-    wall = time.perf_counter() - t0
+def run_open_loop(items):
+    """Poisson session arrivals at SESSION_RATE for LOAD_DURATION seconds, then drain.
 
+    Direct port of sglang_sharegpt_multi_turn_concurrent.py's run_open_loop -- same
+    windowing, same job-delay definition (arrival -> last turn done) -- so a BFCL point
+    and a ShareGPT point on the same JPS-vs-delay figure mean the same thing.
+    """
+    global T0
+    results, lock = [], threading.Lock()
+    inflight = [0]
+    peak_inflight = [0]
+    rng = random.Random(0xC0FFEE ^ int(SESSION_RATE * 1000))
+
+    def task(item, t_arrival_s):
+        with lock:
+            inflight[0] += 1
+            peak_inflight[0] = max(peak_inflight[0], inflight[0])
+        try:
+            r = process_item(item)
+        except Exception as e:  # noqa: BLE001
+            r = {"id": item.get("id"), "turns": [{"turn": 0, "error": str(e)}],
+                 "total_output_tokens": 0, "num_turns": 0}
+        r["t_arrival_s"] = round(t_arrival_s, 3)
+        turns = [t for t in (r.get("turns") or []) if not t.get("error")]
+        if turns and turns[-1].get("t_done_s") is not None:
+            r["job_delay_s"] = round(turns[-1]["t_done_s"] - t_arrival_s, 3)
+        else:
+            r["job_delay_s"] = None
+        with lock:
+            inflight[0] -= 1
+            results.append(r)
+
+    pool = ThreadPoolExecutor(max_workers=OPEN_WORKERS)
+    futs = []
+    T0 = time.perf_counter()
+    launched = 0
+    next_report = WARMUP_S
+    with pool:
+        while True:
+            elapsed = time.perf_counter() - T0
+            if elapsed >= LOAD_DURATION:
+                break
+            it = dict(items[launched % len(items)])
+            it["id"] = f"{it.get('id')}#{launched}"
+            futs.append(pool.submit(task, it, elapsed))
+            launched += 1
+            time.sleep(rng.expovariate(SESSION_RATE))
+            if elapsed >= next_report:
+                with lock:
+                    n_done, n_live = len(results), inflight[0]
+                print(f"  [t={elapsed:6.0f}s] launched={launched:4d} done={n_done:4d} "
+                      f"inflight={n_live:4d}", flush=True)
+                next_report += 60
+        t_load_end = time.perf_counter() - T0
+        print(f"  [load window closed at {t_load_end:.0f}s] launched={launched}, "
+              f"draining up to {DRAIN_TIMEOUT:.0f}s ...", flush=True)
+        deadline = time.perf_counter() + DRAIN_TIMEOUT
+        n_unfinished = 0
+        for f in futs:
+            try:
+                f.result(timeout=max(0.0, deadline - time.perf_counter()))
+            except Exception:  # noqa: BLE001
+                n_unfinished += 1
+
+    lo, hi = WARMUP_S, t_load_end
+    win_tokens = win_turns = 0
+    win_ttfts = []
+    win_job_delays = []
+    for r in results:
+        for t in (r.get("turns") or []):
+            ts, td = t.get("t_start_s"), t.get("t_done_s")
+            if ts is None or td is None or t.get("error"):
+                continue
+            if ts >= lo and td <= hi:
+                win_tokens += t.get("output_tokens") or 0
+                win_turns += 1
+                if t.get("ttft_s") is not None:
+                    win_ttfts.append(t["ttft_s"])
+        ta, jd = r.get("t_arrival_s"), r.get("job_delay_s")
+        if ta is not None and jd is not None and ta >= lo and ta + jd <= hi:
+            win_job_delays.append(jd)
+    win = max(1e-9, hi - lo)
+    win_ttfts.sort()
+    win_job_delays.sort()
+
+    def _p(seq, p):
+        if not seq:
+            return None
+        k = max(0, min(len(seq) - 1, int(round((p / 100.0) * (len(seq) - 1)))))
+        return round(seq[k], 4)
+
+    stats = {
+        "mode": "open_loop",
+        "session_rate": SESSION_RATE,
+        "load_duration_s": round(t_load_end, 2),
+        "warmup_s": WARMUP_S,
+        "window_s": round(win, 2),
+        "sessions_launched": launched,
+        "sessions_repeated": max(0, launched - len(items)),
+        "sessions_completed": len(results),
+        "sessions_unfinished_at_drain": n_unfinished,
+        "peak_inflight_sessions": peak_inflight[0],
+        "window_throughput_tok_s": round(win_tokens / win, 2),
+        "window_turns": win_turns,
+        "window_turn_rate_s": round(win_turns / win, 3),
+        "window_ttft_p50_s": _p(win_ttfts, 50),
+        "window_ttft_p95_s": _p(win_ttfts, 95),
+        "window_ttft_p99_s": _p(win_ttfts, 99),
+        # Average Job Delay: session arrival to session completion (all turns, all
+        # TOOL_DELAY gaps included). This is the metric a JPS-vs-delay figure plots.
+        "window_job_delay_n": len(win_job_delays),
+        "window_job_delay_mean_s": round(sum(win_job_delays) / len(win_job_delays), 4)
+                                    if win_job_delays else None,
+        "window_job_delay_p50_s": _p(win_job_delays, 50),
+        "window_job_delay_p95_s": _p(win_job_delays, 95),
+        "window_job_delay_p99_s": _p(win_job_delays, 99),
+    }
+    if stats["sessions_repeated"] > 0:
+        print(f"\n  *** WARNING: the corpus wrapped -- {stats['sessions_repeated']} of "
+              f"{launched} sessions replayed a conversation already served (BFCL has "
+              f"only 200 total). Repeats are free cache hits for the cached arms and no "
+              f"help to recompute; this point OVERSTATES the cached arms.\n", flush=True)
+    return results, stats
+
+
+def _atomic_dump(obj, path):
+    """Write to a sibling temp file, then rename -- json.dump straight onto the final
+    path truncates it first, so a disk-full mid-write destroys the previous contents.
+    Ported from the ShareGPT runner, which hit exactly this during a long sweep."""
+    tmp = f"{path}.tmp.{os.getpid()}"
+    try:
+        with open(tmp, "w") as fh:
+            json.dump(obj, fh, indent=2, ensure_ascii=False)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _finish(results, wall, extra=None):
+    """Summarise, write, print. Shared by the closed- and open-loop paths."""
     total_out = sum(r["total_output_tokens"] for r in results)
     valid = [r for r in results if r.get("avg_ttft_s")]
     summary = {
@@ -231,17 +395,65 @@ def main():
             "ttft_p95_s": _pct(95), "ttft_p99_s": _pct(99),
             "ttft_mean_per_turn_s": round(sum(all_ttft) / len(all_ttft), 4),
         })
+    if extra:
+        summary.update(extra)
 
     output = {"summary": summary, "results": results}
     os.makedirs("results", exist_ok=True)
     out_path = f"results/{CONFIG}.json"  # CONFIG가 실험 이름 (데이터/구성 반영)
-    json.dump(output, open(out_path, "w"), indent=2, ensure_ascii=False)
+    # Summary first (small, atomic), then the full file -- if disk fills on the big write
+    # the summary survives and carries every field collect_qps.py reads.
+    try:
+        _atomic_dump({"summary": summary}, out_path.replace(".json", ".summary.json"))
+    except OSError as e:
+        print(f"[error] could not even write the summary: {e}")
+    try:
+        _atomic_dump(output, out_path)
+    except OSError as e:
+        print(f"[error] full results not written ({e}); the summary survived at "
+              f"{out_path.replace('.json', '.summary.json')}.")
 
     print(f"\n{'='*60}")
     print(f"완료: {summary['total_items']}개 / 에러: {summary['error_items']}개  (C={CONCURRENCY})")
     print(f"전체 소요시간: {wall:.2f}s  overall throughput: {summary['overall_throughput_tok_per_s']} tok/s")
     print(f"평균 TTFT: {summary['avg_ttft_s']}s  평균 TPOT: {summary['avg_tpot_s']}s")
+    if extra:
+        print(f"[open-loop] offered {extra['session_rate']}/s -> "
+              f"{extra['window_throughput_tok_s']} tok/s in window, "
+              f"job delay mean {extra['window_job_delay_mean_s']}s "
+              f"p50 {extra['window_job_delay_p50_s']}s p95 {extra['window_job_delay_p95_s']}s, "
+              f"TTFT p50 {extra['window_ttft_p50_s']}s, "
+              f"peak inflight {extra['peak_inflight_sessions']}, "
+              f"unfinished {extra['sessions_unfinished_at_drain']}")
     print(f"결과 저장: {out_path}")
+
+
+def main():
+    print(f"[concurrent] CONFIG={CONFIG} CONCURRENCY={CONCURRENCY} items={len(items)} url={ROUTER_URL}")
+    if not items:
+        raise SystemExit(f"ITEM_OFFSET={ITEM_OFFSET} leaves no items (corpus has "
+                          f"{len(_all_items)}).")
+
+    if SESSION_RATE > 0:
+        print(f"[open-loop] rate={SESSION_RATE}/s load={LOAD_DURATION}s "
+              f"warmup={WARMUP_S}s drain<={DRAIN_TIMEOUT}s", flush=True)
+        t0 = time.perf_counter()
+        results, open_stats = run_open_loop(items)
+        wall = time.perf_counter() - t0
+        _finish(results, wall, extra=open_stats)
+        return
+
+    results = []
+    lock = threading.Lock()
+    t0 = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=CONCURRENCY) as ex:
+        futs = {ex.submit(process_item, it): it for it in items}
+        for fut in tqdm(as_completed(futs), total=len(futs), desc="items"):
+            r = fut.result()
+            with lock:
+                results.append(r)
+    wall = time.perf_counter() - t0
+    _finish(results, wall)
 
 
 if __name__ == "__main__":

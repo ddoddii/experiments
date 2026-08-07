@@ -99,6 +99,14 @@ def main():
             "ttft_p50_s": s.get("window_ttft_p50_s"),
             "ttft_p95_s": s.get("window_ttft_p95_s"),
             "ttft_p99_s": s.get("window_ttft_p99_s"),
+            # Job delay: session arrival -> session completion (all turns + think-time).
+            # Present only on scripts ported to the job-delay convention (BFCL, ShareGPT
+            # open-loop as of this addition); older result files simply lack the key and
+            # these come back None, same as any other missing field here.
+            "job_delay_mean_s": s.get("window_job_delay_mean_s"),
+            "job_delay_p50_s": s.get("window_job_delay_p50_s"),
+            "job_delay_p95_s": s.get("window_job_delay_p95_s"),
+            "job_delay_p99_s": s.get("window_job_delay_p99_s"),
             "turns": s.get("window_turns"),
             "peak_inflight": s.get("peak_inflight_sessions"),
             "unfinished": unfinished,
@@ -123,14 +131,15 @@ def main():
         rows = curves[arm]
         print(f"\n### {arm}\n")
         print("| rate (sess/s) | turn rate/s | throughput (tok/s) | TTFT p50 | TTFT p95 "
-              "| peak inflight | unfinished | flags |")
-        print("|---|---|---|---|---|---|---|---|")
+              "| job delay mean | job delay p95 | peak inflight | unfinished | flags |")
+        print("|---|---|---|---|---|---|---|---|---|---|")
         for r in rows:
             flags = " ".join(f for f, on in
                              (("SATURATED", r["past_saturation"]), ("WRAPPED", r["wrapped"]))
                              if on) or ""
             print(f"| {r['rate']} | {r['turn_rate_s']} | {r['throughput_tok_s']} | "
-                  f"{r['ttft_p50_s']} | {r['ttft_p95_s']} | {r['peak_inflight']} | "
+                  f"{r['ttft_p50_s']} | {r['ttft_p95_s']} | {r['job_delay_mean_s']} | "
+                  f"{r['job_delay_p95_s']} | {r['peak_inflight']} | "
                   f"{r['unfinished']}/{r['launched']} | {flags} |")
 
     # SLO capacity: the most load an arm carries while STAYING under a latency budget.
