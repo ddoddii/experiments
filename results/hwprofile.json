@@ -1,0 +1,74 @@
+{
+ "gpu_name": "NVIDIA RTX A6000",
+ "gpu_count": 4,
+ "card_gb": 47.4,
+ "peer_gpu_gbps": 52.7,
+ "host_gbps": 26.3,
+ "peer": {
+  "0->1": {
+   "can_peer": true,
+   "gbps": 52.7
+  },
+  "0->2": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "0->3": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "1->0": {
+   "can_peer": true,
+   "gbps": 52.7
+  },
+  "1->2": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "1->3": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "2->0": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "2->1": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "2->3": {
+   "can_peer": true,
+   "gbps": 52.7
+  },
+  "3->0": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "3->1": {
+   "can_peer": true,
+   "gbps": 26.3
+  },
+  "3->2": {
+   "can_peer": true,
+   "gbps": 52.7
+  }
+ },
+ "prefill_ms_per_tok": null,
+ "prefill_ms_per_tok2": null,
+ "topo": [
+  "\u001b[4mGPU0\tGPU1\tGPU2\tGPU3\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m",
+  "GPU0\t X \tNV4\tNODE\tNODE\t0-47\t0\t\tN/A",
+  "GPU1\tNV4\t X \tPHB\tNODE\t0-47\t0\t\tN/A",
+  "GPU2\tNODE\tPHB\t X \tNV4\t0-47\t0\t\tN/A",
+  "GPU3\tNODE\tNODE\tNV4\t X \t0-47\t0\t\tN/A",
+  "",
+  "Legend:",
+  "",
+  "  X    = Self",
+  "  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)",
+  "  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node",
+  "  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)"
+ ],
+ "measured_at": "2026-08-06 08:01:52"
+}
