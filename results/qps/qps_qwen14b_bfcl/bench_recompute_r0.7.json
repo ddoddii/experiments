@@ -1,0 +1,6356 @@
+{
+  "summary": {
+    "config": "qps_qps_qwen14b_bfcl_recompute_r0.7",
+    "concurrency": 16,
+    "tool_delay_s": 0.0,
+    "total_items": 176,
+    "success_items": 130,
+    "error_items": 46,
+    "total_output_tokens": 106122,
+    "total_wall_time_s": 2092.66,
+    "overall_throughput_tok_per_s": 50.71,
+    "avg_ttft_s": 179.5209,
+    "avg_tpot_s": 0.0507,
+    "avg_throughput_tok_per_s": 20.21,
+    "n_ttft_samples": 326,
+    "ttft_p50_s": 171.3414,
+    "ttft_p90_s": 295.6328,
+    "ttft_p95_s": 326.0694,
+    "ttft_p99_s": 384.7247,
+    "ttft_mean_per_turn_s": 167.023,
+    "mode": "open_loop",
+    "session_rate": 0.7,
+    "load_duration_s": 242.08,
+    "warmup_s": 30.0,
+    "window_s": 212.08,
+    "sessions_launched": 176,
+    "sessions_repeated": 0,
+    "sessions_completed": 176,
+    "sessions_unfinished_at_drain": 132,
+    "peak_inflight_sessions": 137,
+    "window_throughput_tok_s": 139.21,
+    "window_turns": 87,
+    "window_turn_rate_s": 0.41,
+    "window_ttft_p50_s": 47.6163,
+    "window_ttft_p95_s": 96.2643,
+    "window_ttft_p99_s": 111.6808,
+    "window_job_delay_n": 8,
+    "window_job_delay_mean_s": 58.8436,
+    "window_job_delay_p50_s": 0.001,
+    "window_job_delay_p95_s": 176.799,
+    "window_job_delay_p99_s": 176.799,
+    "window_norm_latency_mean_ms_tok": 270.8433,
+    "window_norm_latency_p50_ms_tok": 233.299,
+    "window_norm_latency_p95_ms_tok": 395.559
+  },
+  "results": [
+    {
+      "id": "multi_turn_miss_func_157#1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.158,
+          "tpot_s": 0.0481,
+          "output_tokens": 180,
+          "e2e_latency_s": 10.7687,
+          "throughput_tok_per_s": 20.79,
+          "t_start_s": 0.952,
+          "t_done_s": 11.721,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.158,
+      "avg_tpot_s": 0.0481,
+      "avg_throughput_tok_per_s": 20.79,
+      "total_output_tokens": 180,
+      "normalized_latency_ms_per_tok": 59.826,
+      "t_arrival_s": 0.952,
+      "job_delay_s": 10.769
+    },
+    {
+      "id": "multi_turn_miss_func_162#6",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 8.372,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_161#5",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 6.02,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_165#9",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 10.589,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_158#2",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.368,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_182#26",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 27.629,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_163#7",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 8.844,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_167#11",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 11.37,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_169#13",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 13.597,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_171#15",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 16.184,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_166#10",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 10.598,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_170#14",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 14.409,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_176#20",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 18.185,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_174#18",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 17.381,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_168#12",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 12.22,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_177#21",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 19.082,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_186#30",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.389,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_180#24",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 26.668,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_187#31",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.711,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_159#3",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.516,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_173#17",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 17.101,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_184#28",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 31.016,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_156#0",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 0.0,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_160#4",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.837,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_185#29",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 33.921,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_189#33",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.999,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_195#39",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 41.001,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_175#19",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 18.147,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_198#42",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 45.908,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_188#32",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.722,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_164#8",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 9.964,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_172#16",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 16.268,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_197#41",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 45.506,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_193#37",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 38.96,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_190#34",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 35.091,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_179#23",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 23.21,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_181#25",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 26.863,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_191#35",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 36.575,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_11#55",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.3311,
+          "tpot_s": 0.0518,
+          "output_tokens": 157,
+          "e2e_latency_s": 13.4195,
+          "throughput_tok_per_s": 19.29,
+          "t_start_s": 59.087,
+          "t_done_s": 72.507,
+          "turn": 0
+        },
+        {
+          "ttft_s": 21.7676,
+          "tpot_s": 0.0464,
+          "output_tokens": 512,
+          "e2e_latency_s": 45.4856,
+          "throughput_tok_per_s": 21.54,
+          "t_start_s": 72.613,
+          "t_done_s": 118.098,
+          "turn": 1
+        },
+        {
+          "ttft_s": 103.8487,
+          "tpot_s": 0.0477,
+          "output_tokens": 293,
+          "e2e_latency_s": 117.7872,
+          "throughput_tok_per_s": 20.95,
+          "t_start_s": 118.099,
+          "t_done_s": 235.886,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 43.6491,
+      "avg_tpot_s": 0.0486,
+      "avg_throughput_tok_per_s": 20.59,
+      "total_output_tokens": 962,
+      "normalized_latency_ms_per_tok": 183.672,
+      "t_arrival_s": 59.087,
+      "job_delay_s": 176.799
+    },
+    {
+      "id": "multi_turn_miss_param_3#47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 13.3165,
+          "tpot_s": 0.0555,
+          "output_tokens": 160,
+          "e2e_latency_s": 22.1332,
+          "throughput_tok_per_s": 18.03,
+          "t_start_s": 48.562,
+          "t_done_s": 70.695,
+          "turn": 0
+        },
+        {
+          "ttft_s": 33.1154,
+          "tpot_s": 0.0485,
+          "output_tokens": 512,
+          "e2e_latency_s": 57.8994,
+          "throughput_tok_per_s": 20.62,
+          "t_start_s": 70.801,
+          "t_done_s": 128.7,
+          "turn": 1
+        },
+        {
+          "ttft_s": 109.5281,
+          "tpot_s": 0.0483,
+          "output_tokens": 512,
+          "e2e_latency_s": 134.1853,
+          "throughput_tok_per_s": 20.72,
+          "t_start_s": 128.701,
+          "t_done_s": 262.886,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 51.9867,
+      "avg_tpot_s": 0.0508,
+      "avg_throughput_tok_per_s": 19.79,
+      "total_output_tokens": 1184,
+      "normalized_latency_ms_per_tok": 180.927,
+      "t_arrival_s": 48.561,
+      "job_delay_s": 214.325
+    },
+    {
+      "id": "multi_turn_miss_param_78#122",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 142.3699,
+          "tpot_s": 0.046,
+          "output_tokens": 410,
+          "e2e_latency_s": 161.1993,
+          "throughput_tok_per_s": 21.72,
+          "t_start_s": 149.217,
+          "t_done_s": 310.417,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 142.3699,
+      "avg_tpot_s": 0.046,
+      "avg_throughput_tok_per_s": 21.72,
+      "total_output_tokens": 410,
+      "normalized_latency_ms_per_tok": 393.169,
+      "t_arrival_s": 149.217,
+      "job_delay_s": 161.2
+    },
+    {
+      "id": "multi_turn_miss_func_178#22",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 21.427,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_192#36",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 37.604,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_20#64",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 31.5209,
+          "tpot_s": 0.0912,
+          "output_tokens": 20,
+          "e2e_latency_s": 33.2538,
+          "throughput_tok_per_s": 10.96,
+          "t_start_s": 64.666,
+          "t_done_s": 97.92,
+          "turn": 0
+        },
+        {
+          "ttft_s": 45.2495,
+          "tpot_s": 0.0538,
+          "output_tokens": 229,
+          "e2e_latency_s": 57.5145,
+          "throughput_tok_per_s": 18.59,
+          "t_start_s": 99.491,
+          "t_done_s": 157.006,
+          "turn": 1
+        },
+        {
+          "ttft_s": 246.7121,
+          "tpot_s": 0.0467,
+          "output_tokens": 512,
+          "e2e_latency_s": 270.5992,
+          "throughput_tok_per_s": 21.39,
+          "t_start_s": 157.102,
+          "t_done_s": 427.701,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 107.8275,
+      "avg_tpot_s": 0.0639,
+      "avg_throughput_tok_per_s": 16.98,
+      "total_output_tokens": 761,
+      "normalized_latency_ms_per_tok": 474.859,
+      "t_arrival_s": 64.666,
+      "job_delay_s": 363.035
+    },
+    {
+      "id": "multi_turn_miss_func_196#40",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 44.656,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_128#172",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 227.5077,
+          "tpot_s": 0.0469,
+          "output_tokens": 170,
+          "e2e_latency_s": 235.4379,
+          "throughput_tok_per_s": 21.31,
+          "t_start_s": 229.121,
+          "t_done_s": 464.559,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 227.5077,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 21.31,
+      "total_output_tokens": 170,
+      "normalized_latency_ms_per_tok": 1384.929,
+      "t_arrival_s": 229.121,
+      "job_delay_s": 235.438
+    },
+    {
+      "id": "multi_turn_miss_param_123#167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 264.0631,
+          "tpot_s": 0.0479,
+          "output_tokens": 305,
+          "e2e_latency_s": 278.633,
+          "throughput_tok_per_s": 20.86,
+          "t_start_s": 227.81,
+          "t_done_s": 506.443,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 264.0631,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.86,
+      "total_output_tokens": 305,
+      "normalized_latency_ms_per_tok": 913.551,
+      "t_arrival_s": 227.809,
+      "job_delay_s": 278.634
+    },
+    {
+      "id": "multi_turn_miss_param_50#94",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 64.4719,
+          "tpot_s": 0.0536,
+          "output_tokens": 327,
+          "e2e_latency_s": 81.9603,
+          "throughput_tok_per_s": 18.64,
+          "t_start_s": 114.924,
+          "t_done_s": 196.885,
+          "turn": 0
+        },
+        {
+          "ttft_s": 306.786,
+          "tpot_s": 0.048,
+          "output_tokens": 323,
+          "e2e_latency_s": 322.2479,
+          "throughput_tok_per_s": 20.83,
+          "t_start_s": 196.984,
+          "t_done_s": 519.232,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 185.629,
+      "avg_tpot_s": 0.0508,
+      "avg_throughput_tok_per_s": 19.73,
+      "total_output_tokens": 650,
+      "normalized_latency_ms_per_tok": 621.859,
+      "t_arrival_s": 114.924,
+      "job_delay_s": 404.308
+    },
+    {
+      "id": "multi_turn_miss_param_131#175",
+      "num_turns": 8,
+      "turns": [
+        {
+          "ttft_s": 286.828,
+          "tpot_s": 0.049,
+          "output_tokens": 84,
+          "e2e_latency_s": 290.8976,
+          "throughput_tok_per_s": 20.4,
+          "t_start_s": 237.752,
+          "t_done_s": 528.65,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 286.828,
+      "avg_tpot_s": 0.049,
+      "avg_throughput_tok_per_s": 20.4,
+      "total_output_tokens": 84,
+      "normalized_latency_ms_per_tok": 3463.067,
+      "t_arrival_s": 237.752,
+      "job_delay_s": 290.898
+    },
+    {
+      "id": "multi_turn_miss_param_17#61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 8.7358,
+          "tpot_s": 0.0692,
+          "output_tokens": 45,
+          "e2e_latency_s": 11.7803,
+          "throughput_tok_per_s": 14.45,
+          "t_start_s": 62.34,
+          "t_done_s": 74.12,
+          "turn": 0
+        },
+        {
+          "ttft_s": 48.4675,
+          "tpot_s": 0.0516,
+          "output_tokens": 302,
+          "e2e_latency_s": 63.9929,
+          "throughput_tok_per_s": 19.39,
+          "t_start_s": 74.226,
+          "t_done_s": 138.219,
+          "turn": 1
+        },
+        {
+          "ttft_s": 111.7397,
+          "tpot_s": 0.0528,
+          "output_tokens": 205,
+          "e2e_latency_s": 122.5152,
+          "throughput_tok_per_s": 18.93,
+          "t_start_s": 139.442,
+          "t_done_s": 261.957,
+          "turn": 2
+        },
+        {
+          "ttft_s": 265.3574,
+          "tpot_s": 0.0583,
+          "output_tokens": 49,
+          "e2e_latency_s": 268.1546,
+          "throughput_tok_per_s": 17.16,
+          "t_start_s": 262.886,
+          "t_done_s": 531.041,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 108.5751,
+      "avg_tpot_s": 0.058,
+      "avg_throughput_tok_per_s": 17.48,
+      "total_output_tokens": 601,
+      "normalized_latency_ms_per_tok": 776.111,
+      "t_arrival_s": 62.34,
+      "job_delay_s": 468.701
+    },
+    {
+      "id": "multi_turn_miss_param_110#154",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 367.0109,
+          "tpot_s": 0.0465,
+          "output_tokens": 162,
+          "e2e_latency_s": 374.4955,
+          "throughput_tok_per_s": 21.51,
+          "t_start_s": 206.679,
+          "t_done_s": 581.174,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 367.0109,
+      "avg_tpot_s": 0.0465,
+      "avg_throughput_tok_per_s": 21.51,
+      "total_output_tokens": 162,
+      "normalized_latency_ms_per_tok": 2311.701,
+      "t_arrival_s": 206.678,
+      "job_delay_s": 374.496
+    },
+    {
+      "id": "multi_turn_miss_param_116#160",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 361.3574,
+          "tpot_s": 0.0459,
+          "output_tokens": 235,
+          "e2e_latency_s": 372.1068,
+          "throughput_tok_per_s": 21.77,
+          "t_start_s": 220.128,
+          "t_done_s": 592.235,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 361.3574,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.77,
+      "total_output_tokens": 235,
+      "normalized_latency_ms_per_tok": 1583.433,
+      "t_arrival_s": 220.127,
+      "job_delay_s": 372.108
+    },
+    {
+      "id": "multi_turn_miss_param_108#152",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 385.9836,
+          "tpot_s": 0.0505,
+          "output_tokens": 83,
+          "e2e_latency_s": 390.1233,
+          "throughput_tok_per_s": 19.81,
+          "t_start_s": 205.474,
+          "t_done_s": 595.598,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 385.9836,
+      "avg_tpot_s": 0.0505,
+      "avg_throughput_tok_per_s": 19.81,
+      "total_output_tokens": 83,
+      "normalized_latency_ms_per_tok": 4700.281,
+      "t_arrival_s": 205.474,
+      "job_delay_s": 390.124
+    },
+    {
+      "id": "multi_turn_miss_param_18#62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 10.5556,
+          "tpot_s": 0.0508,
+          "output_tokens": 512,
+          "e2e_latency_s": 36.5005,
+          "throughput_tok_per_s": 19.7,
+          "t_start_s": 63.774,
+          "t_done_s": 100.274,
+          "turn": 0
+        },
+        {
+          "ttft_s": 57.1605,
+          "tpot_s": 0.0493,
+          "output_tokens": 512,
+          "e2e_latency_s": 82.3534,
+          "throughput_tok_per_s": 20.28,
+          "t_start_s": 100.274,
+          "t_done_s": 182.628,
+          "turn": 1
+        },
+        {
+          "ttft_s": 144.8367,
+          "tpot_s": 0.0481,
+          "output_tokens": 512,
+          "e2e_latency_s": 169.4016,
+          "throughput_tok_per_s": 20.8,
+          "t_start_s": 182.628,
+          "t_done_s": 352.029,
+          "turn": 2
+        },
+        {
+          "ttft_s": 246.7881,
+          "tpot_s": 0.0469,
+          "output_tokens": 499,
+          "e2e_latency_s": 270.1504,
+          "throughput_tok_per_s": 21.32,
+          "t_start_s": 352.03,
+          "t_done_s": 622.18,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 114.8352,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.52,
+      "total_output_tokens": 2035,
+      "normalized_latency_ms_per_tok": 274.401,
+      "t_arrival_s": 63.773,
+      "job_delay_s": 558.407
+    },
+    {
+      "id": "multi_turn_miss_func_199#43",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 47.18,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_27#71",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 22.3551,
+          "tpot_s": 0.0503,
+          "output_tokens": 233,
+          "e2e_latency_s": 34.0228,
+          "throughput_tok_per_s": 19.88,
+          "t_start_s": 74.242,
+          "t_done_s": 108.265,
+          "turn": 0
+        },
+        {
+          "ttft_s": 62.9934,
+          "tpot_s": 0.0502,
+          "output_tokens": 512,
+          "e2e_latency_s": 88.6236,
+          "throughput_tok_per_s": 19.94,
+          "t_start_s": 108.36,
+          "t_done_s": 196.983,
+          "turn": 1
+        },
+        {
+          "ttft_s": 176.4176,
+          "tpot_s": 0.0491,
+          "output_tokens": 469,
+          "e2e_latency_s": 199.4032,
+          "throughput_tok_per_s": 20.36,
+          "t_start_s": 196.985,
+          "t_done_s": 396.389,
+          "turn": 2
+        },
+        {
+          "ttft_s": 266.8338,
+          "tpot_s": 0.052,
+          "output_tokens": 168,
+          "e2e_latency_s": 275.5256,
+          "throughput_tok_per_s": 19.21,
+          "t_start_s": 396.485,
+          "t_done_s": 672.01,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 132.15,
+      "avg_tpot_s": 0.0504,
+      "avg_throughput_tok_per_s": 19.85,
+      "total_output_tokens": 1382,
+      "normalized_latency_ms_per_tok": 432.399,
+      "t_arrival_s": 74.242,
+      "job_delay_s": 597.768
+    },
+    {
+      "id": "multi_turn_miss_param_34#78",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 80.3188,
+          "tpot_s": 0.0483,
+          "output_tokens": 512,
+          "e2e_latency_s": 104.985,
+          "throughput_tok_per_s": 20.72,
+          "t_start_s": 85.979,
+          "t_done_s": 190.964,
+          "turn": 0
+        },
+        {
+          "ttft_s": 194.3376,
+          "tpot_s": 0.0476,
+          "output_tokens": 512,
+          "e2e_latency_s": 218.6563,
+          "throughput_tok_per_s": 21.01,
+          "t_start_s": 190.964,
+          "t_done_s": 409.621,
+          "turn": 1
+        },
+        {
+          "ttft_s": 267.2182,
+          "tpot_s": 0.0475,
+          "output_tokens": 347,
+          "e2e_latency_s": 283.6623,
+          "throughput_tok_per_s": 21.04,
+          "t_start_s": 409.621,
+          "t_done_s": 693.284,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 180.6249,
+      "avg_tpot_s": 0.0478,
+      "avg_throughput_tok_per_s": 20.92,
+      "total_output_tokens": 1371,
+      "normalized_latency_ms_per_tok": 442.964,
+      "t_arrival_s": 85.979,
+      "job_delay_s": 607.305
+    },
+    {
+      "id": "multi_turn_miss_param_55#99",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 75.6507,
+          "tpot_s": 0.0456,
+          "output_tokens": 512,
+          "e2e_latency_s": 98.9707,
+          "throughput_tok_per_s": 21.91,
+          "t_start_s": 118.211,
+          "t_done_s": 217.181,
+          "turn": 0
+        },
+        {
+          "ttft_s": 182.2677,
+          "tpot_s": 0.0532,
+          "output_tokens": 183,
+          "e2e_latency_s": 191.9519,
+          "throughput_tok_per_s": 18.79,
+          "t_start_s": 217.182,
+          "t_done_s": 409.133,
+          "turn": 1
+        },
+        {
+          "ttft_s": 285.6033,
+          "tpot_s": 0.0476,
+          "output_tokens": 165,
+          "e2e_latency_s": 293.4071,
+          "throughput_tok_per_s": 21.02,
+          "t_start_s": 410.289,
+          "t_done_s": 703.696,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 181.1739,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.57,
+      "total_output_tokens": 860,
+      "normalized_latency_ms_per_tok": 679.453,
+      "t_arrival_s": 118.21,
+      "job_delay_s": 585.486
+    },
+    {
+      "id": "multi_turn_miss_param_86#130",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 274.4177,
+          "tpot_s": 0.0499,
+          "output_tokens": 191,
+          "e2e_latency_s": 283.9073,
+          "throughput_tok_per_s": 20.02,
+          "t_start_s": 171.091,
+          "t_done_s": 454.999,
+          "turn": 0
+        },
+        {
+          "ttft_s": 264.9645,
+          "tpot_s": 0.1405,
+          "output_tokens": 7,
+          "e2e_latency_s": 265.8072,
+          "throughput_tok_per_s": 7.12,
+          "t_start_s": 457.826,
+          "t_done_s": 723.633,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 269.6911,
+      "avg_tpot_s": 0.0952,
+      "avg_throughput_tok_per_s": 13.57,
+      "total_output_tokens": 198,
+      "normalized_latency_ms_per_tok": 2776.336,
+      "t_arrival_s": 171.091,
+      "job_delay_s": 552.542
+    },
+    {
+      "id": "multi_turn_miss_param_113#157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 261.6611,
+          "tpot_s": 0.0482,
+          "output_tokens": 310,
+          "e2e_latency_s": 276.5439,
+          "throughput_tok_per_s": 20.76,
+          "t_start_s": 218.247,
+          "t_done_s": 494.791,
+          "turn": 0
+        },
+        {
+          "ttft_s": 251.5825,
+          "tpot_s": 0.0637,
+          "output_tokens": 23,
+          "e2e_latency_s": 252.9842,
+          "throughput_tok_per_s": 15.69,
+          "t_start_s": 495.686,
+          "t_done_s": 748.67,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 256.6218,
+      "avg_tpot_s": 0.0559,
+      "avg_throughput_tok_per_s": 18.23,
+      "total_output_tokens": 333,
+      "normalized_latency_ms_per_tok": 1590.174,
+      "t_arrival_s": 218.247,
+      "job_delay_s": 530.423
+    },
+    {
+      "id": "multi_turn_miss_param_125#169",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 277.0332,
+          "tpot_s": 0.0465,
+          "output_tokens": 288,
+          "e2e_latency_s": 290.3871,
+          "throughput_tok_per_s": 21.49,
+          "t_start_s": 228.221,
+          "t_done_s": 518.608,
+          "turn": 0
+        },
+        {
+          "ttft_s": 254.4162,
+          "tpot_s": 0.0484,
+          "output_tokens": 138,
+          "e2e_latency_s": 261.0414,
+          "throughput_tok_per_s": 20.68,
+          "t_start_s": 518.654,
+          "t_done_s": 779.696,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 265.7247,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.09,
+      "total_output_tokens": 426,
+      "normalized_latency_ms_per_tok": 1294.433,
+      "t_arrival_s": 228.221,
+      "job_delay_s": 551.475
+    },
+    {
+      "id": "multi_turn_miss_param_53#97",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 67.4945,
+          "tpot_s": 0.0612,
+          "output_tokens": 98,
+          "e2e_latency_s": 73.4338,
+          "throughput_tok_per_s": 16.33,
+          "t_start_s": 117.367,
+          "t_done_s": 190.801,
+          "turn": 0
+        },
+        {
+          "ttft_s": 334.5941,
+          "tpot_s": 0.0568,
+          "output_tokens": 67,
+          "e2e_latency_s": 338.346,
+          "throughput_tok_per_s": 17.59,
+          "t_start_s": 190.9,
+          "t_done_s": 529.246,
+          "turn": 1
+        },
+        {
+          "ttft_s": 267.9385,
+          "tpot_s": 0.0512,
+          "output_tokens": 65,
+          "e2e_latency_s": 271.215,
+          "throughput_tok_per_s": 19.53,
+          "t_start_s": 529.338,
+          "t_done_s": 800.553,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 223.3424,
+      "avg_tpot_s": 0.0564,
+      "avg_throughput_tok_per_s": 17.82,
+      "total_output_tokens": 230,
+      "normalized_latency_ms_per_tok": 2969.543,
+      "t_arrival_s": 117.366,
+      "job_delay_s": 683.187
+    },
+    {
+      "id": "multi_turn_miss_param_19#63",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 9.714,
+          "tpot_s": 0.0522,
+          "output_tokens": 335,
+          "e2e_latency_s": 27.1577,
+          "throughput_tok_per_s": 19.15,
+          "t_start_s": 64.431,
+          "t_done_s": 91.588,
+          "turn": 0
+        },
+        {
+          "ttft_s": 80.6352,
+          "tpot_s": 0.048,
+          "output_tokens": 512,
+          "e2e_latency_s": 105.1775,
+          "throughput_tok_per_s": 20.82,
+          "t_start_s": 91.692,
+          "t_done_s": 196.869,
+          "turn": 1
+        },
+        {
+          "ttft_s": 296.9827,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 319.8613,
+          "throughput_tok_per_s": 22.34,
+          "t_start_s": 196.869,
+          "t_done_s": 516.731,
+          "turn": 2
+        },
+        {
+          "ttft_s": 263.0582,
+          "tpot_s": 0.0441,
+          "output_tokens": 512,
+          "e2e_latency_s": 285.59,
+          "throughput_tok_per_s": 22.68,
+          "t_start_s": 516.731,
+          "t_done_s": 802.321,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 162.5975,
+      "avg_tpot_s": 0.0473,
+      "avg_throughput_tok_per_s": 21.25,
+      "total_output_tokens": 1871,
+      "normalized_latency_ms_per_tok": 394.327,
+      "t_arrival_s": 64.43,
+      "job_delay_s": 737.891
+    },
+    {
+      "id": "multi_turn_miss_param_52#96",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 144.6913,
+          "tpot_s": 0.0468,
+          "output_tokens": 340,
+          "e2e_latency_s": 160.5678,
+          "throughput_tok_per_s": 21.35,
+          "t_start_s": 117.313,
+          "t_done_s": 277.881,
+          "turn": 0
+        },
+        {
+          "ttft_s": 266.0671,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 289.4722,
+          "throughput_tok_per_s": 21.83,
+          "t_start_s": 277.972,
+          "t_done_s": 567.445,
+          "turn": 1
+        },
+        {
+          "ttft_s": 245.2757,
+          "tpot_s": 0.0591,
+          "output_tokens": 31,
+          "e2e_latency_s": 247.0497,
+          "throughput_tok_per_s": 16.91,
+          "t_start_s": 567.445,
+          "t_done_s": 814.495,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 218.678,
+      "avg_tpot_s": 0.0506,
+      "avg_throughput_tok_per_s": 20.03,
+      "total_output_tokens": 883,
+      "normalized_latency_ms_per_tok": 789.456,
+      "t_arrival_s": 117.312,
+      "job_delay_s": 697.183
+    },
+    {
+      "id": "multi_turn_miss_param_9#53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 33.0176,
+          "tpot_s": 0.0498,
+          "output_tokens": 512,
+          "e2e_latency_s": 58.4418,
+          "throughput_tok_per_s": 20.1,
+          "t_start_s": 55.691,
+          "t_done_s": 114.133,
+          "turn": 0
+        },
+        {
+          "ttft_s": 60.2981,
+          "tpot_s": 0.0485,
+          "output_tokens": 512,
+          "e2e_latency_s": 85.1015,
+          "throughput_tok_per_s": 20.6,
+          "t_start_s": 114.133,
+          "t_done_s": 199.235,
+          "turn": 1
+        },
+        {
+          "ttft_s": 372.7011,
+          "tpot_s": 0.0642,
+          "output_tokens": 43,
+          "e2e_latency_s": 375.3962,
+          "throughput_tok_per_s": 15.58,
+          "t_start_s": 199.235,
+          "t_done_s": 574.632,
+          "turn": 2
+        },
+        {
+          "ttft_s": 247.0648,
+          "tpot_s": 0.0638,
+          "output_tokens": 39,
+          "e2e_latency_s": 249.4887,
+          "throughput_tok_per_s": 15.68,
+          "t_start_s": 574.72,
+          "t_done_s": 824.209,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 178.2704,
+      "avg_tpot_s": 0.0566,
+      "avg_throughput_tok_per_s": 17.99,
+      "total_output_tokens": 1106,
+      "normalized_latency_ms_per_tok": 694.781,
+      "t_arrival_s": 55.691,
+      "job_delay_s": 768.518
+    },
+    {
+      "id": "multi_turn_miss_param_46#90",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 96.2643,
+          "tpot_s": 0.0454,
+          "output_tokens": 512,
+          "e2e_latency_s": 119.449,
+          "throughput_tok_per_s": 22.04,
+          "t_start_s": 106.232,
+          "t_done_s": 225.681,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 225.681,
+          "t_done_s": 225.681,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 96.2643,
+      "avg_tpot_s": 0.0454,
+      "avg_throughput_tok_per_s": 22.04,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 233.299,
+      "t_arrival_s": 106.232,
+      "job_delay_s": 119.449
+    },
+    {
+      "id": "multi_turn_miss_param_65#109",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 202.0069,
+          "tpot_s": 0.044,
+          "output_tokens": 512,
+          "e2e_latency_s": 224.5024,
+          "throughput_tok_per_s": 22.72,
+          "t_start_s": 127.266,
+          "t_done_s": 351.769,
+          "turn": 0
+        },
+        {
+          "ttft_s": 238.5432,
+          "tpot_s": 0.0503,
+          "output_tokens": 189,
+          "e2e_latency_s": 247.9941,
+          "throughput_tok_per_s": 19.89,
+          "t_start_s": 351.769,
+          "t_done_s": 599.763,
+          "turn": 1
+        },
+        {
+          "ttft_s": 220.1443,
+          "tpot_s": 0.0487,
+          "output_tokens": 177,
+          "e2e_latency_s": 228.7225,
+          "throughput_tok_per_s": 20.52,
+          "t_start_s": 607.205,
+          "t_done_s": 835.927,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 220.2315,
+      "avg_tpot_s": 0.0477,
+      "avg_throughput_tok_per_s": 21.04,
+      "total_output_tokens": 878,
+      "normalized_latency_ms_per_tok": 798.655,
+      "t_arrival_s": 127.266,
+      "job_delay_s": 708.661
+    },
+    {
+      "id": "multi_turn_miss_param_1#45",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 5.0296,
+          "tpot_s": 0.053,
+          "output_tokens": 512,
+          "e2e_latency_s": 32.0999,
+          "throughput_tok_per_s": 18.88,
+          "t_start_s": 47.518,
+          "t_done_s": 79.617,
+          "turn": 0
+        },
+        {
+          "ttft_s": 48.4317,
+          "tpot_s": 0.0478,
+          "output_tokens": 512,
+          "e2e_latency_s": 72.849,
+          "throughput_tok_per_s": 20.93,
+          "t_start_s": 79.618,
+          "t_done_s": 152.467,
+          "turn": 1
+        },
+        {
+          "ttft_s": 150.9267,
+          "tpot_s": 0.0466,
+          "output_tokens": 512,
+          "e2e_latency_s": 174.7548,
+          "throughput_tok_per_s": 21.45,
+          "t_start_s": 152.467,
+          "t_done_s": 327.222,
+          "turn": 2
+        },
+        {
+          "ttft_s": 251.7723,
+          "tpot_s": 0.0454,
+          "output_tokens": 512,
+          "e2e_latency_s": 274.9546,
+          "throughput_tok_per_s": 22.04,
+          "t_start_s": 327.222,
+          "t_done_s": 602.177,
+          "turn": 3
+        },
+        {
+          "ttft_s": 237.916,
+          "tpot_s": 0.0592,
+          "output_tokens": 61,
+          "e2e_latency_s": 241.4666,
+          "throughput_tok_per_s": 16.9,
+          "t_start_s": 602.177,
+          "t_done_s": 843.644,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 138.8153,
+      "avg_tpot_s": 0.0504,
+      "avg_throughput_tok_per_s": 20.04,
+      "total_output_tokens": 2109,
+      "normalized_latency_ms_per_tok": 377.489,
+      "t_arrival_s": 47.517,
+      "job_delay_s": 796.127
+    },
+    {
+      "id": "multi_turn_miss_param_4#48",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 5.2424,
+          "tpot_s": 0.0552,
+          "output_tokens": 310,
+          "e2e_latency_s": 22.285,
+          "throughput_tok_per_s": 18.13,
+          "t_start_s": 52.622,
+          "t_done_s": 74.907,
+          "turn": 0
+        },
+        {
+          "ttft_s": 29.4842,
+          "tpot_s": 0.0588,
+          "output_tokens": 59,
+          "e2e_latency_s": 32.8972,
+          "throughput_tok_per_s": 16.99,
+          "t_start_s": 75.968,
+          "t_done_s": 108.865,
+          "turn": 1
+        },
+        {
+          "ttft_s": 113.8747,
+          "tpot_s": 0.0617,
+          "output_tokens": 69,
+          "e2e_latency_s": 118.0728,
+          "throughput_tok_per_s": 16.2,
+          "t_start_s": 108.958,
+          "t_done_s": 227.03,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 227.121,
+          "t_done_s": 227.121,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 49.5338,
+      "avg_tpot_s": 0.0586,
+      "avg_throughput_tok_per_s": 17.11,
+      "total_output_tokens": 438,
+      "normalized_latency_ms_per_tok": 395.559,
+      "t_arrival_s": 52.622,
+      "job_delay_s": 174.499
+    },
+    {
+      "id": "multi_turn_miss_param_13#57",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 38.1741,
+          "tpot_s": 0.049,
+          "output_tokens": 512,
+          "e2e_latency_s": 63.1903,
+          "throughput_tok_per_s": 20.43,
+          "t_start_s": 60.104,
+          "t_done_s": 123.294,
+          "turn": 0
+        },
+        {
+          "ttft_s": 110.2316,
+          "tpot_s": 0.0506,
+          "output_tokens": 292,
+          "e2e_latency_s": 124.9448,
+          "throughput_tok_per_s": 19.78,
+          "t_start_s": 123.294,
+          "t_done_s": 248.239,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 248.337,
+          "t_done_s": 248.337,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 74.2028,
+      "avg_tpot_s": 0.0498,
+      "avg_throughput_tok_per_s": 20.11,
+      "total_output_tokens": 804,
+      "normalized_latency_ms_per_tok": 233.999,
+      "t_arrival_s": 60.103,
+      "job_delay_s": 188.234
+    },
+    {
+      "id": "multi_turn_miss_param_15#59",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 4.6225,
+          "tpot_s": 0.0581,
+          "output_tokens": 136,
+          "e2e_latency_s": 12.4635,
+          "throughput_tok_per_s": 17.22,
+          "t_start_s": 61.395,
+          "t_done_s": 73.859,
+          "turn": 0
+        },
+        {
+          "ttft_s": 24.1133,
+          "tpot_s": 0.047,
+          "output_tokens": 159,
+          "e2e_latency_s": 31.5342,
+          "throughput_tok_per_s": 21.29,
+          "t_start_s": 73.965,
+          "t_done_s": 105.499,
+          "turn": 1
+        },
+        {
+          "ttft_s": 64.1704,
+          "tpot_s": 0.0501,
+          "output_tokens": 512,
+          "e2e_latency_s": 89.779,
+          "throughput_tok_per_s": 19.95,
+          "t_start_s": 105.592,
+          "t_done_s": 195.371,
+          "turn": 2
+        },
+        {
+          "ttft_s": 290.867,
+          "tpot_s": 0.0481,
+          "output_tokens": 248,
+          "e2e_latency_s": 302.7574,
+          "throughput_tok_per_s": 20.77,
+          "t_start_s": 195.372,
+          "t_done_s": 498.129,
+          "turn": 3
+        },
+        {
+          "ttft_s": 259.9085,
+          "tpot_s": 0.0529,
+          "output_tokens": 124,
+          "e2e_latency_s": 266.414,
+          "throughput_tok_per_s": 18.91,
+          "t_start_s": 498.221,
+          "t_done_s": 764.635,
+          "turn": 4
+        },
+        {
+          "ttft_s": 157.842,
+          "tpot_s": 0.055,
+          "output_tokens": 122,
+          "e2e_latency_s": 164.5015,
+          "throughput_tok_per_s": 18.17,
+          "t_start_s": 764.726,
+          "t_done_s": 929.228,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 133.5873,
+      "avg_tpot_s": 0.0519,
+      "avg_throughput_tok_per_s": 19.39,
+      "total_output_tokens": 1301,
+      "normalized_latency_ms_per_tok": 666.756,
+      "t_arrival_s": 61.395,
+      "job_delay_s": 867.833
+    },
+    {
+      "id": "multi_turn_miss_param_105#149",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 190.3283,
+          "tpot_s": 0.0474,
+          "output_tokens": 512,
+          "e2e_latency_s": 214.5705,
+          "throughput_tok_per_s": 21.08,
+          "t_start_s": 201.481,
+          "t_done_s": 416.051,
+          "turn": 0
+        },
+        {
+          "ttft_s": 281.3364,
+          "tpot_s": 0.0444,
+          "output_tokens": 512,
+          "e2e_latency_s": 304.049,
+          "throughput_tok_per_s": 22.5,
+          "t_start_s": 416.052,
+          "t_done_s": 720.101,
+          "turn": 1
+        },
+        {
+          "ttft_s": 185.9658,
+          "tpot_s": 0.0469,
+          "output_tokens": 512,
+          "e2e_latency_s": 209.9373,
+          "throughput_tok_per_s": 21.32,
+          "t_start_s": 720.101,
+          "t_done_s": 930.038,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 219.2102,
+      "avg_tpot_s": 0.0462,
+      "avg_throughput_tok_per_s": 21.63,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 474.321,
+      "t_arrival_s": 201.481,
+      "job_delay_s": 728.557
+    },
+    {
+      "id": "multi_turn_miss_param_30#74",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 51.1855,
+          "tpot_s": 0.0495,
+          "output_tokens": 495,
+          "e2e_latency_s": 75.6609,
+          "throughput_tok_per_s": 20.18,
+          "t_start_s": 78.727,
+          "t_done_s": 154.388,
+          "turn": 0
+        },
+        {
+          "ttft_s": 158.45,
+          "tpot_s": 0.053,
+          "output_tokens": 121,
+          "e2e_latency_s": 164.8063,
+          "throughput_tok_per_s": 18.88,
+          "t_start_s": 154.535,
+          "t_done_s": 319.341,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 319.436,
+          "t_done_s": 319.436,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 104.8177,
+      "avg_tpot_s": 0.0513,
+      "avg_throughput_tok_per_s": 19.53,
+      "total_output_tokens": 616,
+      "normalized_latency_ms_per_tok": 390.369,
+      "t_arrival_s": 78.727,
+      "job_delay_s": 240.709
+    },
+    {
+      "id": "multi_turn_miss_param_36#80",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 83.9581,
+          "tpot_s": 0.049,
+          "output_tokens": 512,
+          "e2e_latency_s": 109.0172,
+          "throughput_tok_per_s": 20.39,
+          "t_start_s": 88.952,
+          "t_done_s": 197.969,
+          "turn": 0
+        },
+        {
+          "ttft_s": 346.7765,
+          "tpot_s": 0.0599,
+          "output_tokens": 47,
+          "e2e_latency_s": 349.5326,
+          "throughput_tok_per_s": 16.69,
+          "t_start_s": 197.97,
+          "t_done_s": 547.502,
+          "turn": 1
+        },
+        {
+          "ttft_s": 256.3573,
+          "tpot_s": 0.0642,
+          "output_tokens": 44,
+          "e2e_latency_s": 259.1185,
+          "throughput_tok_per_s": 15.57,
+          "t_start_s": 547.594,
+          "t_done_s": 806.713,
+          "turn": 2
+        },
+        {
+          "ttft_s": 146.0772,
+          "tpot_s": 0.0679,
+          "output_tokens": 43,
+          "e2e_latency_s": 148.9297,
+          "throughput_tok_per_s": 14.72,
+          "t_start_s": 806.804,
+          "t_done_s": 955.734,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 208.2923,
+      "avg_tpot_s": 0.0602,
+      "avg_throughput_tok_per_s": 16.84,
+      "total_output_tokens": 646,
+      "normalized_latency_ms_per_tok": 1341.483,
+      "t_arrival_s": 88.952,
+      "job_delay_s": 866.782
+    },
+    {
+      "id": "multi_turn_miss_param_42#86",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 131.1367,
+          "tpot_s": 0.0422,
+          "output_tokens": 351,
+          "e2e_latency_s": 145.8976,
+          "throughput_tok_per_s": 23.71,
+          "t_start_s": 100.032,
+          "t_done_s": 245.93,
+          "turn": 0
+        },
+        {
+          "ttft_s": 242.5386,
+          "tpot_s": 0.0468,
+          "output_tokens": 512,
+          "e2e_latency_s": 266.4325,
+          "throughput_tok_per_s": 21.39,
+          "t_start_s": 245.974,
+          "t_done_s": 512.407,
+          "turn": 1
+        },
+        {
+          "ttft_s": 244.5103,
+          "tpot_s": 0.045,
+          "output_tokens": 512,
+          "e2e_latency_s": 267.5236,
+          "throughput_tok_per_s": 22.2,
+          "t_start_s": 512.407,
+          "t_done_s": 779.931,
+          "turn": 2
+        },
+        {
+          "ttft_s": 152.641,
+          "tpot_s": 0.046,
+          "output_tokens": 512,
+          "e2e_latency_s": 176.1254,
+          "throughput_tok_per_s": 21.76,
+          "t_start_s": 779.931,
+          "t_done_s": 956.057,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 192.7066,
+      "avg_tpot_s": 0.045,
+      "avg_throughput_tok_per_s": 22.27,
+      "total_output_tokens": 1887,
+      "normalized_latency_ms_per_tok": 453.619,
+      "t_arrival_s": 100.031,
+      "job_delay_s": 856.026
+    },
+    {
+      "id": "multi_turn_miss_param_88#132",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 206.3429,
+          "tpot_s": 0.0544,
+          "output_tokens": 147,
+          "e2e_latency_s": 214.2912,
+          "throughput_tok_per_s": 18.37,
+          "t_start_s": 174.0,
+          "t_done_s": 388.291,
+          "turn": 0
+        },
+        {
+          "ttft_s": 243.7294,
+          "tpot_s": 0.0497,
+          "output_tokens": 222,
+          "e2e_latency_s": 254.7041,
+          "throughput_tok_per_s": 20.14,
+          "t_start_s": 388.386,
+          "t_done_s": 643.09,
+          "turn": 1
+        },
+        {
+          "ttft_s": 226.4345,
+          "tpot_s": 0.0688,
+          "output_tokens": 31,
+          "e2e_latency_s": 228.4984,
+          "throughput_tok_per_s": 14.54,
+          "t_start_s": 645.955,
+          "t_done_s": 874.453,
+          "turn": 2
+        },
+        {
+          "ttft_s": 103.4006,
+          "tpot_s": 0.0639,
+          "output_tokens": 52,
+          "e2e_latency_s": 106.6595,
+          "throughput_tok_per_s": 15.65,
+          "t_start_s": 876.71,
+          "t_done_s": 983.369,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 194.9769,
+      "avg_tpot_s": 0.0592,
+      "avg_throughput_tok_per_s": 17.18,
+      "total_output_tokens": 452,
+      "normalized_latency_ms_per_tok": 1779.1,
+      "t_arrival_s": 173.999,
+      "job_delay_s": 809.37
+    },
+    {
+      "id": "multi_turn_miss_param_14#58",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 38.3581,
+          "tpot_s": 0.0513,
+          "output_tokens": 328,
+          "e2e_latency_s": 55.1217,
+          "throughput_tok_per_s": 19.51,
+          "t_start_s": 60.543,
+          "t_done_s": 115.665,
+          "turn": 0
+        },
+        {
+          "ttft_s": 173.6399,
+          "tpot_s": 0.0492,
+          "output_tokens": 466,
+          "e2e_latency_s": 196.5252,
+          "throughput_tok_per_s": 20.32,
+          "t_start_s": 116.901,
+          "t_done_s": 313.426,
+          "turn": 1
+        },
+        {
+          "ttft_s": 258.7339,
+          "tpot_s": 0.0531,
+          "output_tokens": 111,
+          "e2e_latency_s": 264.579,
+          "throughput_tok_per_s": 18.82,
+          "t_start_s": 313.52,
+          "t_done_s": 578.099,
+          "turn": 2
+        },
+        {
+          "ttft_s": 238.3823,
+          "tpot_s": 0.0525,
+          "output_tokens": 111,
+          "e2e_latency_s": 244.1521,
+          "throughput_tok_per_s": 19.06,
+          "t_start_s": 578.189,
+          "t_done_s": 822.341,
+          "turn": 3
+        },
+        {
+          "ttft_s": 144.7021,
+          "tpot_s": 0.0456,
+          "output_tokens": 497,
+          "e2e_latency_s": 167.3367,
+          "throughput_tok_per_s": 21.91,
+          "t_start_s": 822.435,
+          "t_done_s": 989.771,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 170.7633,
+      "avg_tpot_s": 0.0503,
+      "avg_throughput_tok_per_s": 19.92,
+      "total_output_tokens": 1513,
+      "normalized_latency_ms_per_tok": 613.162,
+      "t_arrival_s": 60.543,
+      "job_delay_s": 929.228
+    },
+    {
+      "id": "multi_turn_miss_param_70#114",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 108.0625,
+          "tpot_s": 0.0517,
+          "output_tokens": 285,
+          "e2e_latency_s": 122.7472,
+          "throughput_tok_per_s": 19.34,
+          "t_start_s": 138.965,
+          "t_done_s": 261.712,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 266.781,
+          "t_done_s": 266.781,
+          "turn": 1
+        },
+        {
+          "ttft_s": 91.4685,
+          "tpot_s": 0.0451,
+          "output_tokens": 512,
+          "e2e_latency_s": 114.5051,
+          "throughput_tok_per_s": 22.18,
+          "t_start_s": 895.921,
+          "t_done_s": 1010.426,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 99.7655,
+      "avg_tpot_s": 0.0484,
+      "avg_throughput_tok_per_s": 20.76,
+      "total_output_tokens": 797,
+      "normalized_latency_ms_per_tok": 297.682,
+      "t_arrival_s": 138.965,
+      "job_delay_s": 871.461
+    },
+    {
+      "id": "multi_turn_miss_param_67#111",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 240.23,
+          "tpot_s": 0.0447,
+          "output_tokens": 512,
+          "e2e_latency_s": 263.0845,
+          "throughput_tok_per_s": 22.36,
+          "t_start_s": 134.882,
+          "t_done_s": 397.967,
+          "turn": 0
+        },
+        {
+          "ttft_s": 299.3317,
+          "tpot_s": 0.0503,
+          "output_tokens": 158,
+          "e2e_latency_s": 307.2297,
+          "throughput_tok_per_s": 19.88,
+          "t_start_s": 397.967,
+          "t_done_s": 705.197,
+          "turn": 1
+        },
+        {
+          "ttft_s": 188.198,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 211.6203,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 706.394,
+          "t_done_s": 918.014,
+          "turn": 2
+        },
+        {
+          "ttft_s": 75.044,
+          "tpot_s": 0.0468,
+          "output_tokens": 495,
+          "e2e_latency_s": 98.1666,
+          "throughput_tok_per_s": 21.36,
+          "t_start_s": 918.015,
+          "t_done_s": 1016.181,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 200.7009,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 21.36,
+      "total_output_tokens": 1677,
+      "normalized_latency_ms_per_tok": 524.807,
+      "t_arrival_s": 134.882,
+      "job_delay_s": 881.299
+    },
+    {
+      "id": "multi_turn_miss_param_99#143",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 169.4149,
+          "tpot_s": 0.0464,
+          "output_tokens": 512,
+          "e2e_latency_s": 193.1129,
+          "throughput_tok_per_s": 21.56,
+          "t_start_s": 195.688,
+          "t_done_s": 388.801,
+          "turn": 0
+        },
+        {
+          "ttft_s": 254.3787,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 277.7468,
+          "throughput_tok_per_s": 21.87,
+          "t_start_s": 388.801,
+          "t_done_s": 666.548,
+          "turn": 1
+        },
+        {
+          "ttft_s": 222.9169,
+          "tpot_s": 0.0555,
+          "output_tokens": 67,
+          "e2e_latency_s": 226.5814,
+          "throughput_tok_per_s": 18.01,
+          "t_start_s": 666.548,
+          "t_done_s": 893.13,
+          "turn": 2
+        },
+        {
+          "ttft_s": 122.1044,
+          "tpot_s": 0.0478,
+          "output_tokens": 128,
+          "e2e_latency_s": 128.1733,
+          "throughput_tok_per_s": 20.93,
+          "t_start_s": 898.087,
+          "t_done_s": 1026.261,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 192.2037,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.59,
+      "total_output_tokens": 1219,
+      "normalized_latency_ms_per_tok": 677.288,
+      "t_arrival_s": 195.688,
+      "job_delay_s": 830.573
+    },
+    {
+      "id": "multi_turn_miss_param_101#145",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 230.7427,
+          "tpot_s": 0.0477,
+          "output_tokens": 151,
+          "e2e_latency_s": 237.904,
+          "throughput_tok_per_s": 20.95,
+          "t_start_s": 198.321,
+          "t_done_s": 436.225,
+          "turn": 0
+        },
+        {
+          "ttft_s": 284.011,
+          "tpot_s": 0.0578,
+          "output_tokens": 78,
+          "e2e_latency_s": 288.4636,
+          "throughput_tok_per_s": 17.29,
+          "t_start_s": 436.313,
+          "t_done_s": 724.777,
+          "turn": 1
+        },
+        {
+          "ttft_s": 181.0582,
+          "tpot_s": 0.0474,
+          "output_tokens": 29,
+          "e2e_latency_s": 182.3854,
+          "throughput_tok_per_s": 21.1,
+          "t_start_s": 724.868,
+          "t_done_s": 907.254,
+          "turn": 2
+        },
+        {
+          "ttft_s": 124.081,
+          "tpot_s": 0.0518,
+          "output_tokens": 100,
+          "e2e_latency_s": 129.2091,
+          "throughput_tok_per_s": 19.31,
+          "t_start_s": 907.302,
+          "t_done_s": 1036.511,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 204.9732,
+      "avg_tpot_s": 0.0512,
+      "avg_throughput_tok_per_s": 19.66,
+      "total_output_tokens": 358,
+      "normalized_latency_ms_per_tok": 2340.676,
+      "t_arrival_s": 198.32,
+      "job_delay_s": 838.191
+    },
+    {
+      "id": "multi_turn_miss_param_130#174",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 239.4509,
+          "tpot_s": 0.0531,
+          "output_tokens": 181,
+          "e2e_latency_s": 249.0038,
+          "throughput_tok_per_s": 18.84,
+          "t_start_s": 231.422,
+          "t_done_s": 480.426,
+          "turn": 0
+        },
+        {
+          "ttft_s": 259.5511,
+          "tpot_s": 0.0446,
+          "output_tokens": 512,
+          "e2e_latency_s": 282.3392,
+          "throughput_tok_per_s": 22.42,
+          "t_start_s": 480.521,
+          "t_done_s": 762.86,
+          "turn": 1
+        },
+        {
+          "ttft_s": 158.6676,
+          "tpot_s": 0.0463,
+          "output_tokens": 512,
+          "e2e_latency_s": 182.3252,
+          "throughput_tok_per_s": 21.6,
+          "t_start_s": 762.861,
+          "t_done_s": 945.186,
+          "turn": 2
+        },
+        {
+          "ttft_s": 62.8003,
+          "tpot_s": 0.0497,
+          "output_tokens": 251,
+          "e2e_latency_s": 75.2184,
+          "throughput_tok_per_s": 20.13,
+          "t_start_s": 945.186,
+          "t_done_s": 1020.404,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.7546,
+          "tpot_s": 0.048,
+          "output_tokens": 315,
+          "e2e_latency_s": 16.8138,
+          "throughput_tok_per_s": 20.85,
+          "t_start_s": 1020.501,
+          "t_done_s": 1037.314,
+          "turn": 4
+        },
+        {
+          "turn": 5,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 144.4449,
+      "avg_tpot_s": 0.0483,
+      "avg_throughput_tok_per_s": 20.77,
+      "total_output_tokens": 1771,
+      "normalized_latency_ms_per_tok": 454.941,
+      "t_arrival_s": 231.422,
+      "job_delay_s": 805.892
+    },
+    {
+      "id": "multi_turn_miss_param_48#92",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 153.2346,
+          "tpot_s": 0.0456,
+          "output_tokens": 512,
+          "e2e_latency_s": 176.5406,
+          "throughput_tok_per_s": 21.93,
+          "t_start_s": 113.681,
+          "t_done_s": 290.221,
+          "turn": 0
+        },
+        {
+          "ttft_s": 324.2578,
+          "tpot_s": 0.0455,
+          "output_tokens": 512,
+          "e2e_latency_s": 347.5169,
+          "throughput_tok_per_s": 21.97,
+          "t_start_s": 290.222,
+          "t_done_s": 637.739,
+          "turn": 1
+        },
+        {
+          "ttft_s": 234.9908,
+          "tpot_s": 0.0442,
+          "output_tokens": 512,
+          "e2e_latency_s": 257.596,
+          "throughput_tok_per_s": 22.61,
+          "t_start_s": 637.739,
+          "t_done_s": 895.335,
+          "turn": 2
+        },
+        {
+          "ttft_s": 123.8874,
+          "tpot_s": 0.0471,
+          "output_tokens": 502,
+          "e2e_latency_s": 147.503,
+          "throughput_tok_per_s": 21.21,
+          "t_start_s": 895.335,
+          "t_done_s": 1042.838,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 209.0926,
+      "avg_tpot_s": 0.0456,
+      "avg_throughput_tok_per_s": 21.93,
+      "total_output_tokens": 2038,
+      "normalized_latency_ms_per_tok": 455.916,
+      "t_arrival_s": 113.68,
+      "job_delay_s": 929.158
+    },
+    {
+      "id": "multi_turn_miss_param_51#95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 130.2946,
+          "tpot_s": 0.048,
+          "output_tokens": 254,
+          "e2e_latency_s": 142.4272,
+          "throughput_tok_per_s": 20.85,
+          "t_start_s": 116.95,
+          "t_done_s": 259.377,
+          "turn": 0
+        },
+        {
+          "ttft_s": 247.0264,
+          "tpot_s": 0.0549,
+          "output_tokens": 113,
+          "e2e_latency_s": 253.175,
+          "throughput_tok_per_s": 18.22,
+          "t_start_s": 259.465,
+          "t_done_s": 512.64,
+          "turn": 1
+        },
+        {
+          "ttft_s": 248.5044,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 271.3805,
+          "throughput_tok_per_s": 22.34,
+          "t_start_s": 512.734,
+          "t_done_s": 784.114,
+          "turn": 2
+        },
+        {
+          "ttft_s": 157.6633,
+          "tpot_s": 0.0474,
+          "output_tokens": 444,
+          "e2e_latency_s": 178.6422,
+          "throughput_tok_per_s": 21.12,
+          "t_start_s": 784.114,
+          "t_done_s": 962.757,
+          "turn": 3
+        },
+        {
+          "ttft_s": 69.7107,
+          "tpot_s": 0.0507,
+          "output_tokens": 222,
+          "e2e_latency_s": 80.9172,
+          "throughput_tok_per_s": 19.72,
+          "t_start_s": 962.845,
+          "t_done_s": 1043.762,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 170.6399,
+      "avg_tpot_s": 0.0492,
+      "avg_throughput_tok_per_s": 20.45,
+      "total_output_tokens": 1545,
+      "normalized_latency_ms_per_tok": 599.704,
+      "t_arrival_s": 116.95,
+      "job_delay_s": 926.812
+    },
+    {
+      "id": "multi_turn_miss_param_6#50",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 25.3467,
+          "tpot_s": 0.0484,
+          "output_tokens": 512,
+          "e2e_latency_s": 50.0853,
+          "throughput_tok_per_s": 20.66,
+          "t_start_s": 52.757,
+          "t_done_s": 102.842,
+          "turn": 0
+        },
+        {
+          "ttft_s": 87.3476,
+          "tpot_s": 0.0486,
+          "output_tokens": 421,
+          "e2e_latency_s": 107.7547,
+          "throughput_tok_per_s": 20.58,
+          "t_start_s": 102.842,
+          "t_done_s": 210.597,
+          "turn": 1
+        },
+        {
+          "ttft_s": 256.6303,
+          "tpot_s": 0.0482,
+          "output_tokens": 243,
+          "e2e_latency_s": 268.2852,
+          "throughput_tok_per_s": 20.76,
+          "t_start_s": 213.249,
+          "t_done_s": 481.535,
+          "turn": 2
+        },
+        {
+          "ttft_s": 252.7488,
+          "tpot_s": 0.0468,
+          "output_tokens": 340,
+          "e2e_latency_s": 268.6234,
+          "throughput_tok_per_s": 21.35,
+          "t_start_s": 481.627,
+          "t_done_s": 750.25,
+          "turn": 3
+        },
+        {
+          "ttft_s": 196.2727,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 219.1668,
+          "throughput_tok_per_s": 22.32,
+          "t_start_s": 750.338,
+          "t_done_s": 969.505,
+          "turn": 4
+        },
+        {
+          "ttft_s": 65.8549,
+          "tpot_s": 0.0449,
+          "output_tokens": 512,
+          "e2e_latency_s": 88.8226,
+          "throughput_tok_per_s": 22.25,
+          "t_start_s": 969.506,
+          "t_done_s": 1058.328,
+          "turn": 5
+        }
+      ],
+      "avg_ttft_s": 147.3668,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 21.32,
+      "total_output_tokens": 2540,
+      "normalized_latency_ms_per_tok": 394.779,
+      "t_arrival_s": 52.757,
+      "job_delay_s": 1005.571
+    },
+    {
+      "id": "multi_turn_miss_param_91#135",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 142.8097,
+          "tpot_s": 0.0485,
+          "output_tokens": 512,
+          "e2e_latency_s": 167.5827,
+          "throughput_tok_per_s": 20.63,
+          "t_start_s": 180.587,
+          "t_done_s": 348.17,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 348.17,
+          "t_done_s": 348.17,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.4675,
+          "tpot_s": 0.0466,
+          "output_tokens": 186,
+          "e2e_latency_s": 17.0971,
+          "throughput_tok_per_s": 21.44,
+          "t_start_s": 1162.854,
+          "t_done_s": 1179.952,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 75.6386,
+      "avg_tpot_s": 0.0476,
+      "avg_throughput_tok_per_s": 21.04,
+      "total_output_tokens": 698,
+      "normalized_latency_ms_per_tok": 264.584,
+      "t_arrival_s": 180.587,
+      "job_delay_s": 999.365
+    },
+    {
+      "id": "multi_turn_miss_param_63#107",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 197.9253,
+          "tpot_s": 0.0512,
+          "output_tokens": 150,
+          "e2e_latency_s": 205.5579,
+          "throughput_tok_per_s": 19.52,
+          "t_start_s": 123.362,
+          "t_done_s": 328.92,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 329.014,
+          "t_done_s": 329.014,
+          "turn": 1
+        },
+        {
+          "ttft_s": 7.8161,
+          "tpot_s": 0.0457,
+          "output_tokens": 325,
+          "e2e_latency_s": 22.6205,
+          "throughput_tok_per_s": 21.89,
+          "t_start_s": 1147.603,
+          "t_done_s": 1170.223,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.4244,
+          "tpot_s": 0.0534,
+          "output_tokens": 193,
+          "e2e_latency_s": 11.6849,
+          "throughput_tok_per_s": 18.71,
+          "t_start_s": 1170.272,
+          "t_done_s": 1181.957,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 69.0553,
+      "avg_tpot_s": 0.0501,
+      "avg_throughput_tok_per_s": 20.04,
+      "total_output_tokens": 668,
+      "normalized_latency_ms_per_tok": 359.077,
+      "t_arrival_s": 123.361,
+      "job_delay_s": 1058.596
+    },
+    {
+      "id": "multi_turn_miss_param_82#126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 158.3347,
+          "tpot_s": 0.048,
+          "output_tokens": 512,
+          "e2e_latency_s": 182.8606,
+          "throughput_tok_per_s": 20.84,
+          "t_start_s": 156.684,
+          "t_done_s": 339.545,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 339.545,
+          "t_done_s": 339.545,
+          "turn": 1
+        },
+        {
+          "ttft_s": 6.1539,
+          "tpot_s": 0.0487,
+          "output_tokens": 384,
+          "e2e_latency_s": 24.8089,
+          "throughput_tok_per_s": 20.53,
+          "t_start_s": 1151.858,
+          "t_done_s": 1176.667,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.3392,
+          "tpot_s": 0.0575,
+          "output_tokens": 85,
+          "e2e_latency_s": 6.1729,
+          "throughput_tok_per_s": 17.38,
+          "t_start_s": 1176.765,
+          "t_done_s": 1182.938,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 55.2759,
+      "avg_tpot_s": 0.0514,
+      "avg_throughput_tok_per_s": 19.58,
+      "total_output_tokens": 981,
+      "normalized_latency_ms_per_tok": 217.984,
+      "t_arrival_s": 156.684,
+      "job_delay_s": 1026.254
+    },
+    {
+      "id": "multi_turn_miss_param_81#125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 156.9214,
+          "tpot_s": 0.0505,
+          "output_tokens": 293,
+          "e2e_latency_s": 171.6596,
+          "throughput_tok_per_s": 19.81,
+          "t_start_s": 156.155,
+          "t_done_s": 327.815,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 327.916,
+          "t_done_s": 327.916,
+          "turn": 1
+        },
+        {
+          "ttft_s": 12.7466,
+          "tpot_s": 0.0487,
+          "output_tokens": 328,
+          "e2e_latency_s": 28.656,
+          "throughput_tok_per_s": 20.55,
+          "t_start_s": 1145.129,
+          "t_done_s": 1173.785,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.615,
+          "tpot_s": 0.0512,
+          "output_tokens": 147,
+          "e2e_latency_s": 9.0854,
+          "throughput_tok_per_s": 19.54,
+          "t_start_s": 1174.906,
+          "t_done_s": 1183.991,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 57.0943,
+      "avg_tpot_s": 0.0501,
+      "avg_throughput_tok_per_s": 19.97,
+      "total_output_tokens": 768,
+      "normalized_latency_ms_per_tok": 272.658,
+      "t_arrival_s": 156.155,
+      "job_delay_s": 1027.836
+    },
+    {
+      "id": "multi_turn_miss_param_33#77",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 57.6575,
+          "tpot_s": 0.0452,
+          "output_tokens": 512,
+          "e2e_latency_s": 80.7576,
+          "throughput_tok_per_s": 22.12,
+          "t_start_s": 82.632,
+          "t_done_s": 163.389,
+          "turn": 0
+        },
+        {
+          "ttft_s": 156.833,
+          "tpot_s": 0.0485,
+          "output_tokens": 512,
+          "e2e_latency_s": 181.6126,
+          "throughput_tok_per_s": 20.62,
+          "t_start_s": 163.39,
+          "t_done_s": 345.002,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 345.003,
+          "t_done_s": 345.003,
+          "turn": 2
+        },
+        {
+          "ttft_s": 5.314,
+          "tpot_s": 0.0477,
+          "output_tokens": 499,
+          "e2e_latency_s": 29.0474,
+          "throughput_tok_per_s": 20.98,
+          "t_start_s": 1162.816,
+          "t_done_s": 1191.864,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 73.2682,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.24,
+      "total_output_tokens": 1523,
+      "normalized_latency_ms_per_tok": 191.344,
+      "t_arrival_s": 82.632,
+      "job_delay_s": 1109.232
+    },
+    {
+      "id": "multi_turn_miss_param_21#65",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 9.4184,
+          "tpot_s": 0.0557,
+          "output_tokens": 262,
+          "e2e_latency_s": 23.9449,
+          "throughput_tok_per_s": 17.97,
+          "t_start_s": 64.726,
+          "t_done_s": 88.671,
+          "turn": 0
+        },
+        {
+          "ttft_s": 40.6018,
+          "tpot_s": 0.0481,
+          "output_tokens": 512,
+          "e2e_latency_s": 65.1751,
+          "throughput_tok_per_s": 20.79,
+          "t_start_s": 88.777,
+          "t_done_s": 153.952,
+          "turn": 1
+        },
+        {
+          "ttft_s": 233.5242,
+          "tpot_s": 0.0466,
+          "output_tokens": 512,
+          "e2e_latency_s": 257.3158,
+          "throughput_tok_per_s": 21.48,
+          "t_start_s": 153.952,
+          "t_done_s": 411.268,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 411.268,
+          "t_done_s": 411.268,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 94.5148,
+      "avg_tpot_s": 0.0501,
+      "avg_throughput_tok_per_s": 20.08,
+      "total_output_tokens": 1286,
+      "normalized_latency_ms_per_tok": 269.39,
+      "t_arrival_s": 64.725,
+      "job_delay_s": 346.543
+    },
+    {
+      "id": "multi_turn_miss_param_104#148",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 189.3335,
+          "tpot_s": 0.0506,
+          "output_tokens": 232,
+          "e2e_latency_s": 201.0258,
+          "throughput_tok_per_s": 19.76,
+          "t_start_s": 201.324,
+          "t_done_s": 402.35,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 402.448,
+          "t_done_s": 402.448,
+          "turn": 1
+        },
+        {
+          "ttft_s": 2.177,
+          "tpot_s": 0.0489,
+          "output_tokens": 155,
+          "e2e_latency_s": 9.709,
+          "throughput_tok_per_s": 20.45,
+          "t_start_s": 1209.093,
+          "t_done_s": 1218.802,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 95.7552,
+      "avg_tpot_s": 0.0498,
+      "avg_throughput_tok_per_s": 20.11,
+      "total_output_tokens": 387,
+      "normalized_latency_ms_per_tok": 544.534,
+      "t_arrival_s": 201.323,
+      "job_delay_s": 1017.479
+    },
+    {
+      "id": "multi_turn_miss_param_22#66",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 17.7215,
+          "tpot_s": 0.0552,
+          "output_tokens": 194,
+          "e2e_latency_s": 28.366,
+          "throughput_tok_per_s": 18.13,
+          "t_start_s": 66.266,
+          "t_done_s": 94.632,
+          "turn": 0
+        },
+        {
+          "ttft_s": 47.0722,
+          "tpot_s": 0.049,
+          "output_tokens": 512,
+          "e2e_latency_s": 72.1317,
+          "throughput_tok_per_s": 20.39,
+          "t_start_s": 94.732,
+          "t_done_s": 166.864,
+          "turn": 1
+        },
+        {
+          "ttft_s": 197.0956,
+          "tpot_s": 0.0462,
+          "output_tokens": 512,
+          "e2e_latency_s": 220.7175,
+          "throughput_tok_per_s": 21.63,
+          "t_start_s": 166.864,
+          "t_done_s": 387.582,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 387.582,
+          "t_done_s": 387.582,
+          "turn": 3
+        },
+        {
+          "ttft_s": 1.8417,
+          "tpot_s": 0.0442,
+          "output_tokens": 512,
+          "e2e_latency_s": 24.4128,
+          "throughput_tok_per_s": 22.64,
+          "t_start_s": 1204.879,
+          "t_done_s": 1229.292,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 65.9327,
+      "avg_tpot_s": 0.0486,
+      "avg_throughput_tok_per_s": 20.7,
+      "total_output_tokens": 1730,
+      "normalized_latency_ms_per_tok": 199.785,
+      "t_arrival_s": 66.266,
+      "job_delay_s": 1163.026
+    },
+    {
+      "id": "multi_turn_miss_param_24#68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 42.5045,
+          "tpot_s": 0.0488,
+          "output_tokens": 512,
+          "e2e_latency_s": 67.4269,
+          "throughput_tok_per_s": 20.5,
+          "t_start_s": 71.773,
+          "t_done_s": 139.2,
+          "turn": 0
+        },
+        {
+          "ttft_s": 67.4121,
+          "tpot_s": 0.0551,
+          "output_tokens": 109,
+          "e2e_latency_s": 73.3611,
+          "throughput_tok_per_s": 18.15,
+          "t_start_s": 139.2,
+          "t_done_s": 212.561,
+          "turn": 1
+        },
+        {
+          "ttft_s": 182.9642,
+          "tpot_s": 0.0501,
+          "output_tokens": 365,
+          "e2e_latency_s": 201.2138,
+          "throughput_tok_per_s": 19.95,
+          "t_start_s": 212.654,
+          "t_done_s": 413.867,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 413.961,
+          "t_done_s": 413.961,
+          "turn": 3
+        },
+        {
+          "ttft_s": 2.7656,
+          "tpot_s": 0.0502,
+          "output_tokens": 147,
+          "e2e_latency_s": 10.0931,
+          "throughput_tok_per_s": 19.92,
+          "t_start_s": 1231.573,
+          "t_done_s": 1241.666,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 73.9116,
+      "avg_tpot_s": 0.051,
+      "avg_throughput_tok_per_s": 19.63,
+      "total_output_tokens": 1133,
+      "normalized_latency_ms_per_tok": 310.763,
+      "t_arrival_s": 71.773,
+      "job_delay_s": 1169.893
+    },
+    {
+      "id": "multi_turn_miss_param_98#142",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 210.115,
+          "tpot_s": 0.0535,
+          "output_tokens": 184,
+          "e2e_latency_s": 219.9011,
+          "throughput_tok_per_s": 18.7,
+          "t_start_s": 195.465,
+          "t_done_s": 415.366,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 415.461,
+          "t_done_s": 415.461,
+          "turn": 1
+        },
+        {
+          "ttft_s": 8.1051,
+          "tpot_s": 0.044,
+          "output_tokens": 197,
+          "e2e_latency_s": 16.7232,
+          "throughput_tok_per_s": 22.74,
+          "t_start_s": 1237.317,
+          "t_done_s": 1254.04,
+          "turn": 2
+        },
+        {
+          "ttft_s": 2.9827,
+          "tpot_s": 0.0479,
+          "output_tokens": 215,
+          "e2e_latency_s": 13.2333,
+          "throughput_tok_per_s": 20.88,
+          "t_start_s": 1254.085,
+          "t_done_s": 1267.318,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 73.7343,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.77,
+      "total_output_tokens": 596,
+      "normalized_latency_ms_per_tok": 419.224,
+      "t_arrival_s": 195.464,
+      "job_delay_s": 1071.854
+    },
+    {
+      "id": "multi_turn_miss_param_69#113",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 254.1793,
+          "tpot_s": 0.047,
+          "output_tokens": 512,
+          "e2e_latency_s": 278.2207,
+          "throughput_tok_per_s": 21.26,
+          "t_start_s": 138.819,
+          "t_done_s": 417.039,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 254.1793,
+      "avg_tpot_s": 0.047,
+      "avg_throughput_tok_per_s": 21.26,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 543.4,
+      "t_arrival_s": 138.818,
+      "job_delay_s": 278.221
+    },
+    {
+      "id": "multi_turn_miss_param_80#124",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 238.6769,
+          "tpot_s": 0.047,
+          "output_tokens": 508,
+          "e2e_latency_s": 262.5309,
+          "throughput_tok_per_s": 21.25,
+          "t_start_s": 154.922,
+          "t_done_s": 417.453,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 238.6769,
+      "avg_tpot_s": 0.047,
+      "avg_throughput_tok_per_s": 21.25,
+      "total_output_tokens": 508,
+      "normalized_latency_ms_per_tok": 516.793,
+      "t_arrival_s": 154.922,
+      "job_delay_s": 262.531
+    },
+    {
+      "id": "multi_turn_miss_param_112#156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 197.3518,
+          "tpot_s": 0.0445,
+          "output_tokens": 187,
+          "e2e_latency_s": 205.6308,
+          "throughput_tok_per_s": 22.47,
+          "t_start_s": 218.016,
+          "t_done_s": 423.647,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 197.3518,
+      "avg_tpot_s": 0.0445,
+      "avg_throughput_tok_per_s": 22.47,
+      "total_output_tokens": 187,
+      "normalized_latency_ms_per_tok": 1099.63,
+      "t_arrival_s": 218.015,
+      "job_delay_s": 205.632
+    },
+    {
+      "id": "multi_turn_miss_param_73#117",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 256.2839,
+          "tpot_s": 0.0468,
+          "output_tokens": 512,
+          "e2e_latency_s": 280.211,
+          "throughput_tok_per_s": 21.36,
+          "t_start_s": 143.689,
+          "t_done_s": 423.9,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 256.2839,
+      "avg_tpot_s": 0.0468,
+      "avg_throughput_tok_per_s": 21.36,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 547.287,
+      "t_arrival_s": 143.689,
+      "job_delay_s": 280.211
+    },
+    {
+      "id": "multi_turn_miss_param_32#76",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 47.868,
+          "tpot_s": 0.046,
+          "output_tokens": 512,
+          "e2e_latency_s": 71.3952,
+          "throughput_tok_per_s": 21.72,
+          "t_start_s": 82.527,
+          "t_done_s": 153.922,
+          "turn": 0
+        },
+        {
+          "ttft_s": 274.0956,
+          "tpot_s": 0.0799,
+          "output_tokens": 28,
+          "e2e_latency_s": 276.2525,
+          "throughput_tok_per_s": 12.52,
+          "t_start_s": 153.922,
+          "t_done_s": 430.175,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 160.9818,
+      "avg_tpot_s": 0.063,
+      "avg_throughput_tok_per_s": 17.12,
+      "total_output_tokens": 540,
+      "normalized_latency_ms_per_tok": 643.792,
+      "t_arrival_s": 82.526,
+      "job_delay_s": 347.649
+    },
+    {
+      "id": "multi_turn_miss_param_84#128",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 245.86,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 269.328,
+          "throughput_tok_per_s": 21.77,
+          "t_start_s": 165.01,
+          "t_done_s": 434.338,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 245.86,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.77,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 526.031,
+      "t_arrival_s": 165.01,
+      "job_delay_s": 269.328
+    },
+    {
+      "id": "multi_turn_miss_param_85#129",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 251.9759,
+          "tpot_s": 0.045,
+          "output_tokens": 512,
+          "e2e_latency_s": 274.9897,
+          "throughput_tok_per_s": 22.2,
+          "t_start_s": 168.12,
+          "t_done_s": 443.11,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 251.9759,
+      "avg_tpot_s": 0.045,
+      "avg_throughput_tok_per_s": 22.2,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 537.089,
+      "t_arrival_s": 168.119,
+      "job_delay_s": 274.991
+    },
+    {
+      "id": "multi_turn_miss_param_31#75",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 51.33,
+          "tpot_s": 0.0499,
+          "output_tokens": 339,
+          "e2e_latency_s": 68.1903,
+          "throughput_tok_per_s": 20.05,
+          "t_start_s": 79.852,
+          "t_done_s": 148.043,
+          "turn": 0
+        },
+        {
+          "ttft_s": 270.3651,
+          "tpot_s": 0.0484,
+          "output_tokens": 276,
+          "e2e_latency_s": 283.6869,
+          "throughput_tok_per_s": 20.64,
+          "t_start_s": 152.319,
+          "t_done_s": 436.006,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 160.8475,
+      "avg_tpot_s": 0.0491,
+      "avg_throughput_tok_per_s": 20.34,
+      "total_output_tokens": 615,
+      "normalized_latency_ms_per_tok": 572.158,
+      "t_arrival_s": 79.852,
+      "job_delay_s": 356.154
+    },
+    {
+      "id": "multi_turn_miss_param_115#159",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 224.3165,
+          "tpot_s": 0.0471,
+          "output_tokens": 195,
+          "e2e_latency_s": 233.4591,
+          "throughput_tok_per_s": 21.22,
+          "t_start_s": 219.654,
+          "t_done_s": 453.113,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 224.3165,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.22,
+      "total_output_tokens": 195,
+      "normalized_latency_ms_per_tok": 1197.226,
+      "t_arrival_s": 219.654,
+      "job_delay_s": 233.459
+    },
+    {
+      "id": "multi_turn_miss_param_38#82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 48.4325,
+          "tpot_s": 0.0491,
+          "output_tokens": 512,
+          "e2e_latency_s": 73.5262,
+          "throughput_tok_per_s": 20.36,
+          "t_start_s": 91.438,
+          "t_done_s": 164.964,
+          "turn": 0
+        },
+        {
+          "ttft_s": 276.4435,
+          "tpot_s": 0.046,
+          "output_tokens": 469,
+          "e2e_latency_s": 297.9641,
+          "throughput_tok_per_s": 21.75,
+          "t_start_s": 164.964,
+          "t_done_s": 462.928,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 162.438,
+      "avg_tpot_s": 0.0475,
+      "avg_throughput_tok_per_s": 21.05,
+      "total_output_tokens": 981,
+      "normalized_latency_ms_per_tok": 378.685,
+      "t_arrival_s": 91.437,
+      "job_delay_s": 371.491
+    },
+    {
+      "id": "multi_turn_miss_param_89#133",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 282.5403,
+          "tpot_s": 0.048,
+          "output_tokens": 272,
+          "e2e_latency_s": 295.5562,
+          "throughput_tok_per_s": 20.82,
+          "t_start_s": 174.746,
+          "t_done_s": 470.302,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 282.5403,
+      "avg_tpot_s": 0.048,
+      "avg_throughput_tok_per_s": 20.82,
+      "total_output_tokens": 272,
+      "normalized_latency_ms_per_tok": 1086.604,
+      "t_arrival_s": 174.745,
+      "job_delay_s": 295.557
+    },
+    {
+      "id": "multi_turn_miss_param_106#150",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 247.9512,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 270.6664,
+          "throughput_tok_per_s": 22.5,
+          "t_start_s": 202.314,
+          "t_done_s": 472.981,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 247.9512,
+      "avg_tpot_s": 0.0445,
+      "avg_throughput_tok_per_s": 22.5,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 528.645,
+      "t_arrival_s": 202.314,
+      "job_delay_s": 270.667
+    },
+    {
+      "id": "multi_turn_miss_param_7#51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 32.6934,
+          "tpot_s": 0.0532,
+          "output_tokens": 249,
+          "e2e_latency_s": 45.8862,
+          "throughput_tok_per_s": 18.8,
+          "t_start_s": 54.799,
+          "t_done_s": 100.685,
+          "turn": 0
+        },
+        {
+          "ttft_s": 55.5528,
+          "tpot_s": 0.0493,
+          "output_tokens": 512,
+          "e2e_latency_s": 80.7458,
+          "throughput_tok_per_s": 20.28,
+          "t_start_s": 101.882,
+          "t_done_s": 182.628,
+          "turn": 1
+        },
+        {
+          "ttft_s": 275.7242,
+          "tpot_s": 0.0449,
+          "output_tokens": 512,
+          "e2e_latency_s": 298.6455,
+          "throughput_tok_per_s": 22.29,
+          "t_start_s": 182.628,
+          "t_done_s": 481.274,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 121.3235,
+      "avg_tpot_s": 0.0491,
+      "avg_throughput_tok_per_s": 20.46,
+      "total_output_tokens": 1273,
+      "normalized_latency_ms_per_tok": 334.075,
+      "t_arrival_s": 54.798,
+      "job_delay_s": 426.476
+    },
+    {
+      "id": "multi_turn_miss_param_129#173",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 229.4636,
+          "tpot_s": 0.0463,
+          "output_tokens": 493,
+          "e2e_latency_s": 252.2499,
+          "throughput_tok_per_s": 21.59,
+          "t_start_s": 229.965,
+          "t_done_s": 482.215,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 229.4636,
+      "avg_tpot_s": 0.0463,
+      "avg_throughput_tok_per_s": 21.59,
+      "total_output_tokens": 493,
+      "normalized_latency_ms_per_tok": 511.663,
+      "t_arrival_s": 229.965,
+      "job_delay_s": 252.25
+    },
+    {
+      "id": "multi_turn_miss_param_5#49",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 24.3931,
+          "tpot_s": 0.0497,
+          "output_tokens": 512,
+          "e2e_latency_s": 49.809,
+          "throughput_tok_per_s": 20.11,
+          "t_start_s": 52.735,
+          "t_done_s": 102.544,
+          "turn": 0
+        },
+        {
+          "ttft_s": 63.7897,
+          "tpot_s": 0.05,
+          "output_tokens": 512,
+          "e2e_latency_s": 89.3284,
+          "throughput_tok_per_s": 20.01,
+          "t_start_s": 102.544,
+          "t_done_s": 191.872,
+          "turn": 1
+        },
+        {
+          "ttft_s": 291.2427,
+          "tpot_s": 0.0521,
+          "output_tokens": 143,
+          "e2e_latency_s": 298.6446,
+          "throughput_tok_per_s": 19.18,
+          "t_start_s": 191.873,
+          "t_done_s": 490.517,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 126.4752,
+      "avg_tpot_s": 0.0506,
+      "avg_throughput_tok_per_s": 19.77,
+      "total_output_tokens": 1167,
+      "normalized_latency_ms_per_tok": 375.135,
+      "t_arrival_s": 52.735,
+      "job_delay_s": 437.782
+    },
+    {
+      "id": "multi_turn_miss_param_121#165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 255.8765,
+          "tpot_s": 0.0459,
+          "output_tokens": 269,
+          "e2e_latency_s": 268.1684,
+          "throughput_tok_per_s": 21.8,
+          "t_start_s": 227.747,
+          "t_done_s": 495.916,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 255.8765,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.8,
+      "total_output_tokens": 269,
+      "normalized_latency_ms_per_tok": 996.909,
+      "t_arrival_s": 227.747,
+      "job_delay_s": 268.169
+    },
+    {
+      "id": "multi_turn_miss_param_44#88",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 62.695,
+          "tpot_s": 0.0514,
+          "output_tokens": 429,
+          "e2e_latency_s": 84.7071,
+          "throughput_tok_per_s": 19.44,
+          "t_start_s": 102.642,
+          "t_done_s": 187.349,
+          "turn": 0
+        },
+        {
+          "ttft_s": 287.143,
+          "tpot_s": 0.0451,
+          "output_tokens": 512,
+          "e2e_latency_s": 310.1808,
+          "throughput_tok_per_s": 22.18,
+          "t_start_s": 190.601,
+          "t_done_s": 500.782,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 174.919,
+      "avg_tpot_s": 0.0483,
+      "avg_throughput_tok_per_s": 20.81,
+      "total_output_tokens": 941,
+      "normalized_latency_ms_per_tok": 419.647,
+      "t_arrival_s": 102.642,
+      "job_delay_s": 398.14
+    },
+    {
+      "id": "multi_turn_miss_param_40#84",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 111.6808,
+          "tpot_s": 0.0449,
+          "output_tokens": 512,
+          "e2e_latency_s": 134.6377,
+          "throughput_tok_per_s": 22.26,
+          "t_start_s": 99.638,
+          "t_done_s": 234.276,
+          "turn": 0
+        },
+        {
+          "ttft_s": 244.4594,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 267.7871,
+          "throughput_tok_per_s": 21.91,
+          "t_start_s": 234.276,
+          "t_done_s": 502.063,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 178.0701,
+      "avg_tpot_s": 0.0453,
+      "avg_throughput_tok_per_s": 22.09,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 392.993,
+      "t_arrival_s": 99.638,
+      "job_delay_s": 402.425
+    },
+    {
+      "id": "multi_turn_miss_param_23#67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 19.0943,
+          "tpot_s": 0.0533,
+          "output_tokens": 268,
+          "e2e_latency_s": 33.3163,
+          "throughput_tok_per_s": 18.77,
+          "t_start_s": 66.764,
+          "t_done_s": 100.08,
+          "turn": 0
+        },
+        {
+          "ttft_s": 145.3114,
+          "tpot_s": 0.0493,
+          "output_tokens": 121,
+          "e2e_latency_s": 151.2237,
+          "throughput_tok_per_s": 20.3,
+          "t_start_s": 100.179,
+          "t_done_s": 251.402,
+          "turn": 1
+        },
+        {
+          "ttft_s": 249.4784,
+          "tpot_s": 0.0499,
+          "output_tokens": 316,
+          "e2e_latency_s": 265.195,
+          "throughput_tok_per_s": 20.04,
+          "t_start_s": 251.491,
+          "t_done_s": 516.685,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 137.9614,
+      "avg_tpot_s": 0.0508,
+      "avg_throughput_tok_per_s": 19.7,
+      "total_output_tokens": 705,
+      "normalized_latency_ms_per_tok": 637.922,
+      "t_arrival_s": 66.764,
+      "job_delay_s": 449.921
+    },
+    {
+      "id": "multi_turn_miss_param_8#52",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 8.2187,
+          "tpot_s": 0.0512,
+          "output_tokens": 512,
+          "e2e_latency_s": 34.406,
+          "throughput_tok_per_s": 19.51,
+          "t_start_s": 55.038,
+          "t_done_s": 89.444,
+          "turn": 0
+        },
+        {
+          "ttft_s": 95.8759,
+          "tpot_s": 0.0788,
+          "output_tokens": 27,
+          "e2e_latency_s": 97.9239,
+          "throughput_tok_per_s": 12.7,
+          "t_start_s": 89.444,
+          "t_done_s": 187.368,
+          "turn": 1
+        },
+        {
+          "ttft_s": 317.471,
+          "tpot_s": 0.076,
+          "output_tokens": 33,
+          "e2e_latency_s": 319.9034,
+          "throughput_tok_per_s": 13.16,
+          "t_start_s": 190.714,
+          "t_done_s": 510.618,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 140.5219,
+      "avg_tpot_s": 0.0687,
+      "avg_throughput_tok_per_s": 15.12,
+      "total_output_tokens": 572,
+      "normalized_latency_ms_per_tok": 790.618,
+      "t_arrival_s": 55.038,
+      "job_delay_s": 455.58
+    },
+    {
+      "id": "multi_turn_miss_param_124#168",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 269.2705,
+          "tpot_s": 0.0463,
+          "output_tokens": 512,
+          "e2e_latency_s": 292.9169,
+          "throughput_tok_per_s": 21.61,
+          "t_start_s": 228.134,
+          "t_done_s": 521.051,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 269.2705,
+      "avg_tpot_s": 0.0463,
+      "avg_throughput_tok_per_s": 21.61,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 572.103,
+      "t_arrival_s": 228.134,
+      "job_delay_s": 292.917
+    },
+    {
+      "id": "multi_turn_miss_param_100#144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 314.6363,
+          "tpot_s": 0.0444,
+          "output_tokens": 512,
+          "e2e_latency_s": 337.3498,
+          "throughput_tok_per_s": 22.5,
+          "t_start_s": 198.283,
+          "t_done_s": 535.633,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 314.6363,
+      "avg_tpot_s": 0.0444,
+      "avg_throughput_tok_per_s": 22.5,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 658.886,
+      "t_arrival_s": 198.282,
+      "job_delay_s": 337.351
+    },
+    {
+      "id": "multi_turn_miss_param_56#100",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 107.4384,
+          "tpot_s": 0.0486,
+          "output_tokens": 490,
+          "e2e_latency_s": 131.2021,
+          "throughput_tok_per_s": 20.58,
+          "t_start_s": 118.716,
+          "t_done_s": 249.918,
+          "turn": 0
+        },
+        {
+          "ttft_s": 283.9124,
+          "tpot_s": 0.0453,
+          "output_tokens": 200,
+          "e2e_latency_s": 292.9244,
+          "throughput_tok_per_s": 22.08,
+          "t_start_s": 250.064,
+          "t_done_s": 542.988,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 195.6754,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 21.33,
+      "total_output_tokens": 690,
+      "normalized_latency_ms_per_tok": 614.676,
+      "t_arrival_s": 118.716,
+      "job_delay_s": 424.272
+    },
+    {
+      "id": "multi_turn_miss_param_47#91",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 60.1708,
+          "tpot_s": 0.05,
+          "output_tokens": 512,
+          "e2e_latency_s": 85.7136,
+          "throughput_tok_per_s": 20.01,
+          "t_start_s": 113.297,
+          "t_done_s": 199.011,
+          "turn": 0
+        },
+        {
+          "ttft_s": 323.4083,
+          "tpot_s": 0.0444,
+          "output_tokens": 512,
+          "e2e_latency_s": 346.1168,
+          "throughput_tok_per_s": 22.5,
+          "t_start_s": 199.011,
+          "t_done_s": 545.128,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 191.7895,
+      "avg_tpot_s": 0.0472,
+      "avg_throughput_tok_per_s": 21.26,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 421.709,
+      "t_arrival_s": 113.297,
+      "job_delay_s": 431.831
+    },
+    {
+      "id": "multi_turn_miss_param_103#147",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 343.8963,
+          "tpot_s": 0.0402,
+          "output_tokens": 170,
+          "e2e_latency_s": 350.6821,
+          "throughput_tok_per_s": 24.9,
+          "t_start_s": 201.124,
+          "t_done_s": 551.806,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 343.8963,
+      "avg_tpot_s": 0.0402,
+      "avg_throughput_tok_per_s": 24.9,
+      "total_output_tokens": 170,
+      "normalized_latency_ms_per_tok": 2062.836,
+      "t_arrival_s": 201.124,
+      "job_delay_s": 350.682
+    },
+    {
+      "id": "multi_turn_miss_param_12#56",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 34.256,
+          "tpot_s": 0.0493,
+          "output_tokens": 512,
+          "e2e_latency_s": 59.4682,
+          "throughput_tok_per_s": 20.27,
+          "t_start_s": 59.286,
+          "t_done_s": 118.755,
+          "turn": 0
+        },
+        {
+          "ttft_s": 108.2587,
+          "tpot_s": 0.0482,
+          "output_tokens": 441,
+          "e2e_latency_s": 129.4844,
+          "throughput_tok_per_s": 20.73,
+          "t_start_s": 118.755,
+          "t_done_s": 248.239,
+          "turn": 1
+        },
+        {
+          "ttft_s": 283.2543,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 306.1571,
+          "throughput_tok_per_s": 22.31,
+          "t_start_s": 249.729,
+          "t_done_s": 555.886,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 141.923,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.1,
+      "total_output_tokens": 1465,
+      "normalized_latency_ms_per_tok": 337.959,
+      "t_arrival_s": 59.286,
+      "job_delay_s": 496.6
+    },
+    {
+      "id": "multi_turn_miss_param_0#44",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 9.6113,
+          "tpot_s": 0.0517,
+          "output_tokens": 512,
+          "e2e_latency_s": 36.0302,
+          "throughput_tok_per_s": 19.34,
+          "t_start_s": 47.4,
+          "t_done_s": 83.43,
+          "turn": 0
+        },
+        {
+          "ttft_s": 83.8604,
+          "tpot_s": 0.0475,
+          "output_tokens": 512,
+          "e2e_latency_s": 108.1374,
+          "throughput_tok_per_s": 21.05,
+          "t_start_s": 83.43,
+          "t_done_s": 191.568,
+          "turn": 1
+        },
+        {
+          "ttft_s": 348.4367,
+          "tpot_s": 0.0446,
+          "output_tokens": 512,
+          "e2e_latency_s": 371.2396,
+          "throughput_tok_per_s": 22.41,
+          "t_start_s": 191.568,
+          "t_done_s": 562.807,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 147.3028,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.93,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 335.552,
+      "t_arrival_s": 47.399,
+      "job_delay_s": 515.408
+    },
+    {
+      "id": "multi_turn_miss_param_29#73",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 28.9598,
+          "tpot_s": 0.0441,
+          "output_tokens": 512,
+          "e2e_latency_s": 51.4835,
+          "throughput_tok_per_s": 22.69,
+          "t_start_s": 77.94,
+          "t_done_s": 129.424,
+          "turn": 0
+        },
+        {
+          "ttft_s": 111.8084,
+          "tpot_s": 0.0479,
+          "output_tokens": 205,
+          "e2e_latency_s": 121.5702,
+          "throughput_tok_per_s": 20.9,
+          "t_start_s": 129.424,
+          "t_done_s": 250.994,
+          "turn": 1
+        },
+        {
+          "ttft_s": 292.7336,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 316.1239,
+          "throughput_tok_per_s": 21.85,
+          "t_start_s": 251.041,
+          "t_done_s": 567.165,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 144.5006,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.81,
+      "total_output_tokens": 1229,
+      "normalized_latency_ms_per_tok": 398.029,
+      "t_arrival_s": 77.94,
+      "job_delay_s": 489.225
+    },
+    {
+      "id": "multi_turn_miss_param_54#98",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 152.531,
+          "tpot_s": 0.0458,
+          "output_tokens": 374,
+          "e2e_latency_s": 169.6253,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 117.821,
+          "t_done_s": 287.446,
+          "turn": 0
+        },
+        {
+          "ttft_s": 264.9814,
+          "tpot_s": 0.0486,
+          "output_tokens": 352,
+          "e2e_latency_s": 282.0308,
+          "throughput_tok_per_s": 20.59,
+          "t_start_s": 287.493,
+          "t_done_s": 569.524,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 208.7562,
+      "avg_tpot_s": 0.0472,
+      "avg_throughput_tok_per_s": 21.2,
+      "total_output_tokens": 726,
+      "normalized_latency_ms_per_tok": 622.116,
+      "t_arrival_s": 117.821,
+      "job_delay_s": 451.703
+    },
+    {
+      "id": "multi_turn_miss_param_109#153",
+      "num_turns": 8,
+      "turns": [
+        {
+          "ttft_s": 351.8078,
+          "tpot_s": 0.0467,
+          "output_tokens": 328,
+          "e2e_latency_s": 367.0914,
+          "throughput_tok_per_s": 21.4,
+          "t_start_s": 205.843,
+          "t_done_s": 572.934,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 351.8078,
+      "avg_tpot_s": 0.0467,
+      "avg_throughput_tok_per_s": 21.4,
+      "total_output_tokens": 328,
+      "normalized_latency_ms_per_tok": 1119.181,
+      "t_arrival_s": 205.843,
+      "job_delay_s": 367.091
+    },
+    {
+      "id": "multi_turn_miss_func_183#27",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 1.6015,
+          "tpot_s": 0.0592,
+          "output_tokens": 433,
+          "e2e_latency_s": 27.1795,
+          "throughput_tok_per_s": 16.89,
+          "t_start_s": 29.469,
+          "t_done_s": 56.648,
+          "turn": 0
+        },
+        {
+          "ttft_s": 30.2989,
+          "tpot_s": 0.0521,
+          "output_tokens": 444,
+          "e2e_latency_s": 53.3781,
+          "throughput_tok_per_s": 19.19,
+          "t_start_s": 56.757,
+          "t_done_s": 110.135,
+          "turn": 1
+        },
+        {
+          "ttft_s": 82.5243,
+          "tpot_s": 0.0677,
+          "output_tokens": 53,
+          "e2e_latency_s": 86.0465,
+          "throughput_tok_per_s": 14.76,
+          "t_start_s": 112.499,
+          "t_done_s": 198.546,
+          "turn": 2
+        },
+        {
+          "ttft_s": 365.446,
+          "tpot_s": 0.049,
+          "output_tokens": 208,
+          "e2e_latency_s": 375.5919,
+          "throughput_tok_per_s": 20.4,
+          "t_start_s": 198.641,
+          "t_done_s": 574.233,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 119.9677,
+      "avg_tpot_s": 0.057,
+      "avg_throughput_tok_per_s": 17.81,
+      "total_output_tokens": 1138,
+      "normalized_latency_ms_per_tok": 476.446,
+      "t_arrival_s": 29.468,
+      "job_delay_s": 544.765
+    },
+    {
+      "id": "multi_turn_miss_param_37#81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 43.6633,
+          "tpot_s": 0.0505,
+          "output_tokens": 310,
+          "e2e_latency_s": 59.2668,
+          "throughput_tok_per_s": 19.8,
+          "t_start_s": 90.585,
+          "t_done_s": 149.852,
+          "turn": 0
+        },
+        {
+          "ttft_s": 137.9837,
+          "tpot_s": 0.0461,
+          "output_tokens": 439,
+          "e2e_latency_s": 158.1549,
+          "throughput_tok_per_s": 21.71,
+          "t_start_s": 150.851,
+          "t_done_s": 309.006,
+          "turn": 1
+        },
+        {
+          "ttft_s": 256.0257,
+          "tpot_s": 0.0482,
+          "output_tokens": 333,
+          "e2e_latency_s": 272.0142,
+          "throughput_tok_per_s": 20.76,
+          "t_start_s": 309.099,
+          "t_done_s": 581.113,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 145.8909,
+      "avg_tpot_s": 0.0483,
+      "avg_throughput_tok_per_s": 20.76,
+      "total_output_tokens": 1082,
+      "normalized_latency_ms_per_tok": 452.344,
+      "t_arrival_s": 90.584,
+      "job_delay_s": 490.529
+    },
+    {
+      "id": "multi_turn_miss_param_72#116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 110.5912,
+          "tpot_s": 0.0507,
+          "output_tokens": 325,
+          "e2e_latency_s": 127.02,
+          "throughput_tok_per_s": 19.72,
+          "t_start_s": 142.582,
+          "t_done_s": 269.602,
+          "turn": 0
+        },
+        {
+          "ttft_s": 308.8059,
+          "tpot_s": 0.0664,
+          "output_tokens": 39,
+          "e2e_latency_s": 311.3279,
+          "throughput_tok_per_s": 15.07,
+          "t_start_s": 269.693,
+          "t_done_s": 581.021,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 209.6986,
+      "avg_tpot_s": 0.0586,
+      "avg_throughput_tok_per_s": 17.39,
+      "total_output_tokens": 364,
+      "normalized_latency_ms_per_tok": 1204.252,
+      "t_arrival_s": 142.581,
+      "job_delay_s": 438.44
+    },
+    {
+      "id": "multi_turn_miss_param_28#72",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 59.1388,
+          "tpot_s": 0.0474,
+          "output_tokens": 289,
+          "e2e_latency_s": 72.7967,
+          "throughput_tok_per_s": 21.09,
+          "t_start_s": 76.966,
+          "t_done_s": 149.763,
+          "turn": 0
+        },
+        {
+          "ttft_s": 157.7498,
+          "tpot_s": 0.0473,
+          "output_tokens": 512,
+          "e2e_latency_s": 181.9116,
+          "throughput_tok_per_s": 21.15,
+          "t_start_s": 149.809,
+          "t_done_s": 331.721,
+          "turn": 1
+        },
+        {
+          "ttft_s": 252.9215,
+          "tpot_s": 0.0473,
+          "output_tokens": 344,
+          "e2e_latency_s": 269.1286,
+          "throughput_tok_per_s": 21.16,
+          "t_start_s": 331.722,
+          "t_done_s": 600.851,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 156.6034,
+      "avg_tpot_s": 0.0473,
+      "avg_throughput_tok_per_s": 21.13,
+      "total_output_tokens": 1145,
+      "normalized_latency_ms_per_tok": 457.499,
+      "t_arrival_s": 76.965,
+      "job_delay_s": 523.886
+    },
+    {
+      "id": "multi_turn_miss_param_77#121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 117.0342,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 139.7627,
+          "throughput_tok_per_s": 22.48,
+          "t_start_s": 148.991,
+          "t_done_s": 288.754,
+          "turn": 0
+        },
+        {
+          "ttft_s": 313.698,
+          "tpot_s": 0.0511,
+          "output_tokens": 157,
+          "e2e_latency_s": 321.6714,
+          "throughput_tok_per_s": 19.56,
+          "t_start_s": 288.755,
+          "t_done_s": 610.426,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 215.3661,
+      "avg_tpot_s": 0.0478,
+      "avg_throughput_tok_per_s": 21.02,
+      "total_output_tokens": 669,
+      "normalized_latency_ms_per_tok": 689.737,
+      "t_arrival_s": 148.991,
+      "job_delay_s": 461.435
+    },
+    {
+      "id": "multi_turn_miss_param_79#123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 147.0719,
+          "tpot_s": 0.0498,
+          "output_tokens": 236,
+          "e2e_latency_s": 158.7813,
+          "throughput_tok_per_s": 20.07,
+          "t_start_s": 149.297,
+          "t_done_s": 308.078,
+          "turn": 0
+        },
+        {
+          "ttft_s": 308.1283,
+          "tpot_s": 0.0566,
+          "output_tokens": 60,
+          "e2e_latency_s": 311.4659,
+          "throughput_tok_per_s": 17.68,
+          "t_start_s": 308.174,
+          "t_done_s": 619.639,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 227.6001,
+      "avg_tpot_s": 0.0532,
+      "avg_throughput_tok_per_s": 18.88,
+      "total_output_tokens": 296,
+      "normalized_latency_ms_per_tok": 1588.673,
+      "t_arrival_s": 149.297,
+      "job_delay_s": 470.342
+    },
+    {
+      "id": "multi_turn_miss_param_45#89",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 92.536,
+          "tpot_s": 0.0465,
+          "output_tokens": 468,
+          "e2e_latency_s": 114.2365,
+          "throughput_tok_per_s": 21.52,
+          "t_start_s": 104.507,
+          "t_done_s": 218.744,
+          "turn": 0
+        },
+        {
+          "ttft_s": 390.2988,
+          "tpot_s": 0.0439,
+          "output_tokens": 512,
+          "e2e_latency_s": 412.7122,
+          "throughput_tok_per_s": 22.8,
+          "t_start_s": 218.834,
+          "t_done_s": 631.546,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 241.4174,
+      "avg_tpot_s": 0.0452,
+      "avg_throughput_tok_per_s": 22.16,
+      "total_output_tokens": 980,
+      "normalized_latency_ms_per_tok": 537.703,
+      "t_arrival_s": 104.507,
+      "job_delay_s": 527.039
+    },
+    {
+      "id": "multi_turn_miss_param_96#140",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 163.1346,
+          "tpot_s": 0.0471,
+          "output_tokens": 480,
+          "e2e_latency_s": 185.6978,
+          "throughput_tok_per_s": 21.23,
+          "t_start_s": 191.926,
+          "t_done_s": 377.624,
+          "turn": 0
+        },
+        {
+          "ttft_s": 251.8611,
+          "tpot_s": 0.0555,
+          "output_tokens": 112,
+          "e2e_latency_s": 258.0261,
+          "throughput_tok_per_s": 18.0,
+          "t_start_s": 377.993,
+          "t_done_s": 636.019,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 207.4978,
+      "avg_tpot_s": 0.0513,
+      "avg_throughput_tok_per_s": 19.62,
+      "total_output_tokens": 592,
+      "normalized_latency_ms_per_tok": 749.534,
+      "t_arrival_s": 191.926,
+      "job_delay_s": 444.093
+    },
+    {
+      "id": "multi_turn_miss_param_26#70",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 48.3748,
+          "tpot_s": 0.0521,
+          "output_tokens": 252,
+          "e2e_latency_s": 61.4494,
+          "throughput_tok_per_s": 19.2,
+          "t_start_s": 73.973,
+          "t_done_s": 135.422,
+          "turn": 0
+        },
+        {
+          "ttft_s": 64.8056,
+          "tpot_s": 0.0449,
+          "output_tokens": 436,
+          "e2e_latency_s": 84.3524,
+          "throughput_tok_per_s": 22.25,
+          "t_start_s": 136.405,
+          "t_done_s": 220.757,
+          "turn": 1
+        },
+        {
+          "ttft_s": 394.658,
+          "tpot_s": 0.0427,
+          "output_tokens": 512,
+          "e2e_latency_s": 416.4624,
+          "throughput_tok_per_s": 23.44,
+          "t_start_s": 220.801,
+          "t_done_s": 637.264,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 169.2795,
+      "avg_tpot_s": 0.0466,
+      "avg_throughput_tok_per_s": 21.63,
+      "total_output_tokens": 1200,
+      "normalized_latency_ms_per_tok": 468.553,
+      "t_arrival_s": 73.973,
+      "job_delay_s": 563.291
+    },
+    {
+      "id": "multi_turn_miss_param_59#103",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 178.8892,
+          "tpot_s": 0.0533,
+          "output_tokens": 138,
+          "e2e_latency_s": 186.1914,
+          "throughput_tok_per_s": 18.76,
+          "t_start_s": 121.192,
+          "t_done_s": 307.384,
+          "turn": 0
+        },
+        {
+          "ttft_s": 323.42,
+          "tpot_s": 0.052,
+          "output_tokens": 138,
+          "e2e_latency_s": 330.5484,
+          "throughput_tok_per_s": 19.22,
+          "t_start_s": 308.693,
+          "t_done_s": 639.241,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 251.1546,
+      "avg_tpot_s": 0.0527,
+      "avg_throughput_tok_per_s": 18.99,
+      "total_output_tokens": 276,
+      "normalized_latency_ms_per_tok": 1872.246,
+      "t_arrival_s": 121.192,
+      "job_delay_s": 518.049
+    },
+    {
+      "id": "multi_turn_miss_param_64#108",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 175.3052,
+          "tpot_s": 0.0505,
+          "output_tokens": 326,
+          "e2e_latency_s": 191.7095,
+          "throughput_tok_per_s": 19.81,
+          "t_start_s": 125.812,
+          "t_done_s": 317.522,
+          "turn": 0
+        },
+        {
+          "ttft_s": 326.3826,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 349.7848,
+          "throughput_tok_per_s": 21.84,
+          "t_start_s": 317.613,
+          "t_done_s": 667.398,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 250.8439,
+      "avg_tpot_s": 0.0481,
+      "avg_throughput_tok_per_s": 20.82,
+      "total_output_tokens": 838,
+      "normalized_latency_ms_per_tok": 646.175,
+      "t_arrival_s": 125.812,
+      "job_delay_s": 541.586
+    },
+    {
+      "id": "multi_turn_miss_param_93#137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 141.2303,
+          "tpot_s": 0.0511,
+          "output_tokens": 163,
+          "e2e_latency_s": 149.5024,
+          "throughput_tok_per_s": 19.58,
+          "t_start_s": 187.002,
+          "t_done_s": 336.505,
+          "turn": 0
+        },
+        {
+          "ttft_s": 323.2958,
+          "tpot_s": 0.0496,
+          "output_tokens": 284,
+          "e2e_latency_s": 337.3382,
+          "throughput_tok_per_s": 20.15,
+          "t_start_s": 336.603,
+          "t_done_s": 673.942,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 232.263,
+      "avg_tpot_s": 0.0503,
+      "avg_throughput_tok_per_s": 19.86,
+      "total_output_tokens": 447,
+      "normalized_latency_ms_per_tok": 1089.129,
+      "t_arrival_s": 187.002,
+      "job_delay_s": 486.94
+    },
+    {
+      "id": "multi_turn_miss_func_194#38",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 5.1447,
+          "tpot_s": 0.054,
+          "output_tokens": 512,
+          "e2e_latency_s": 32.7321,
+          "throughput_tok_per_s": 18.52,
+          "t_start_s": 39.286,
+          "t_done_s": 72.018,
+          "turn": 0
+        },
+        {
+          "ttft_s": 48.3009,
+          "tpot_s": 0.0488,
+          "output_tokens": 512,
+          "e2e_latency_s": 73.2223,
+          "throughput_tok_per_s": 20.5,
+          "t_start_s": 72.018,
+          "t_done_s": 145.24,
+          "turn": 1
+        },
+        {
+          "ttft_s": 225.5861,
+          "tpot_s": 0.0442,
+          "output_tokens": 512,
+          "e2e_latency_s": 248.1756,
+          "throughput_tok_per_s": 22.62,
+          "t_start_s": 145.241,
+          "t_done_s": 393.416,
+          "turn": 2
+        },
+        {
+          "ttft_s": 262.7614,
+          "tpot_s": 0.0461,
+          "output_tokens": 504,
+          "e2e_latency_s": 285.961,
+          "throughput_tok_per_s": 21.68,
+          "t_start_s": 393.417,
+          "t_done_s": 679.378,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 135.4483,
+      "avg_tpot_s": 0.0483,
+      "avg_throughput_tok_per_s": 20.83,
+      "total_output_tokens": 2040,
+      "normalized_latency_ms_per_tok": 313.77,
+      "t_arrival_s": 39.285,
+      "job_delay_s": 640.093
+    },
+    {
+      "id": "multi_turn_miss_param_83#127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 165.3936,
+          "tpot_s": 0.0481,
+          "output_tokens": 512,
+          "e2e_latency_s": 189.9676,
+          "throughput_tok_per_s": 20.79,
+          "t_start_s": 161.925,
+          "t_done_s": 351.893,
+          "turn": 0
+        },
+        {
+          "ttft_s": 325.1297,
+          "tpot_s": 0.0617,
+          "output_tokens": 59,
+          "e2e_latency_s": 328.7111,
+          "throughput_tok_per_s": 16.19,
+          "t_start_s": 351.893,
+          "t_done_s": 680.604,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 245.2617,
+      "avg_tpot_s": 0.0549,
+      "avg_throughput_tok_per_s": 18.49,
+      "total_output_tokens": 571,
+      "normalized_latency_ms_per_tok": 908.369,
+      "t_arrival_s": 161.925,
+      "job_delay_s": 518.679
+    },
+    {
+      "id": "multi_turn_miss_param_66#110",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 207.4342,
+          "tpot_s": 0.0495,
+          "output_tokens": 245,
+          "e2e_latency_s": 219.5219,
+          "throughput_tok_per_s": 20.19,
+          "t_start_s": 131.704,
+          "t_done_s": 351.226,
+          "turn": 0
+        },
+        {
+          "ttft_s": 327.9634,
+          "tpot_s": 0.0498,
+          "output_tokens": 171,
+          "e2e_latency_s": 336.4334,
+          "throughput_tok_per_s": 20.07,
+          "t_start_s": 353.087,
+          "t_done_s": 689.52,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 267.6988,
+      "avg_tpot_s": 0.0496,
+      "avg_throughput_tok_per_s": 20.13,
+      "total_output_tokens": 416,
+      "normalized_latency_ms_per_tok": 1336.431,
+      "t_arrival_s": 131.703,
+      "job_delay_s": 557.817
+    },
+    {
+      "id": "multi_turn_miss_param_74#118",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 262.9492,
+          "tpot_s": 0.0747,
+          "output_tokens": 39,
+          "e2e_latency_s": 265.7867,
+          "throughput_tok_per_s": 13.39,
+          "t_start_s": 145.82,
+          "t_done_s": 411.606,
+          "turn": 0
+        },
+        {
+          "ttft_s": 308.6195,
+          "tpot_s": 0.0699,
+          "output_tokens": 33,
+          "e2e_latency_s": 310.8558,
+          "throughput_tok_per_s": 14.31,
+          "t_start_s": 411.703,
+          "t_done_s": 722.559,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 285.7844,
+      "avg_tpot_s": 0.0723,
+      "avg_throughput_tok_per_s": 13.85,
+      "total_output_tokens": 72,
+      "normalized_latency_ms_per_tok": 8008.924,
+      "t_arrival_s": 145.82,
+      "job_delay_s": 576.739
+    },
+    {
+      "id": "multi_turn_miss_param_35#79",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 83.1943,
+          "tpot_s": 0.0491,
+          "output_tokens": 512,
+          "e2e_latency_s": 108.2949,
+          "throughput_tok_per_s": 20.36,
+          "t_start_s": 88.818,
+          "t_done_s": 197.113,
+          "turn": 0
+        },
+        {
+          "ttft_s": 214.4706,
+          "tpot_s": 0.0449,
+          "output_tokens": 512,
+          "e2e_latency_s": 237.3945,
+          "throughput_tok_per_s": 22.29,
+          "t_start_s": 197.113,
+          "t_done_s": 434.508,
+          "turn": 1
+        },
+        {
+          "ttft_s": 271.5682,
+          "tpot_s": 0.0447,
+          "output_tokens": 512,
+          "e2e_latency_s": 294.4129,
+          "throughput_tok_per_s": 22.37,
+          "t_start_s": 434.508,
+          "t_done_s": 728.921,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 189.7444,
+      "avg_tpot_s": 0.0462,
+      "avg_throughput_tok_per_s": 21.67,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 416.733,
+      "t_arrival_s": 88.817,
+      "job_delay_s": 640.104
+    },
+    {
+      "id": "multi_turn_miss_param_90#134",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 285.3696,
+          "tpot_s": 0.0485,
+          "output_tokens": 221,
+          "e2e_latency_s": 296.0374,
+          "throughput_tok_per_s": 20.62,
+          "t_start_s": 179.742,
+          "t_done_s": 475.779,
+          "turn": 0
+        },
+        {
+          "ttft_s": 252.7526,
+          "tpot_s": 0.0593,
+          "output_tokens": 64,
+          "e2e_latency_s": 256.4907,
+          "throughput_tok_per_s": 16.85,
+          "t_start_s": 477.884,
+          "t_done_s": 734.375,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 269.0611,
+      "avg_tpot_s": 0.0539,
+      "avg_throughput_tok_per_s": 18.73,
+      "total_output_tokens": 285,
+      "normalized_latency_ms_per_tok": 1938.695,
+      "t_arrival_s": 179.741,
+      "job_delay_s": 554.634
+    },
+    {
+      "id": "multi_turn_miss_param_49#93",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 103.4507,
+          "tpot_s": 0.0475,
+          "output_tokens": 212,
+          "e2e_latency_s": 113.4722,
+          "throughput_tok_per_s": 21.05,
+          "t_start_s": 114.736,
+          "t_done_s": 228.208,
+          "turn": 0
+        },
+        {
+          "ttft_s": 289.8969,
+          "tpot_s": 0.0459,
+          "output_tokens": 454,
+          "e2e_latency_s": 310.6839,
+          "throughput_tok_per_s": 21.79,
+          "t_start_s": 228.301,
+          "t_done_s": 538.985,
+          "turn": 1
+        },
+        {
+          "ttft_s": 261.6342,
+          "tpot_s": 0.0444,
+          "output_tokens": 512,
+          "e2e_latency_s": 284.3252,
+          "throughput_tok_per_s": 22.52,
+          "t_start_s": 540.376,
+          "t_done_s": 824.701,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 218.3273,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.79,
+      "total_output_tokens": 1178,
+      "normalized_latency_ms_per_tok": 601.427,
+      "t_arrival_s": 114.736,
+      "job_delay_s": 709.965
+    },
+    {
+      "id": "multi_turn_miss_param_117#161",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 224.556,
+          "t_done_s": 224.556,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 224.555,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_75#119",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 106.6643,
+          "tpot_s": 0.0562,
+          "output_tokens": 134,
+          "e2e_latency_s": 114.142,
+          "throughput_tok_per_s": 17.79,
+          "t_start_s": 148.352,
+          "t_done_s": 262.495,
+          "turn": 0
+        },
+        {
+          "ttft_s": 294.2829,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 317.7009,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 263.641,
+          "t_done_s": 581.342,
+          "turn": 1
+        },
+        {
+          "ttft_s": 240.3496,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 263.1022,
+          "throughput_tok_per_s": 22.46,
+          "t_start_s": 581.343,
+          "t_done_s": 844.445,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 213.7656,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.69,
+      "total_output_tokens": 1158,
+      "normalized_latency_ms_per_tok": 600.125,
+      "t_arrival_s": 148.352,
+      "job_delay_s": 696.093
+    },
+    {
+      "id": "multi_turn_miss_param_118#162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 226.237,
+          "t_done_s": 226.237,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 226.237,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_120#164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 227.19,
+          "t_done_s": 227.19,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 227.19,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_25#69",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 45.5513,
+          "tpot_s": 0.0478,
+          "output_tokens": 512,
+          "e2e_latency_s": 69.9589,
+          "throughput_tok_per_s": 20.94,
+          "t_start_s": 72.92,
+          "t_done_s": 142.879,
+          "turn": 0
+        },
+        {
+          "ttft_s": 215.2696,
+          "tpot_s": 0.0484,
+          "output_tokens": 171,
+          "e2e_latency_s": 223.4915,
+          "throughput_tok_per_s": 20.68,
+          "t_start_s": 142.879,
+          "t_done_s": 366.371,
+          "turn": 1
+        },
+        {
+          "ttft_s": 246.5995,
+          "tpot_s": 0.0499,
+          "output_tokens": 165,
+          "e2e_latency_s": 254.7802,
+          "throughput_tok_per_s": 20.05,
+          "t_start_s": 366.459,
+          "t_done_s": 621.239,
+          "turn": 2
+        },
+        {
+          "ttft_s": 229.7612,
+          "tpot_s": 0.0478,
+          "output_tokens": 165,
+          "e2e_latency_s": 237.5925,
+          "throughput_tok_per_s": 20.94,
+          "t_start_s": 621.331,
+          "t_done_s": 858.924,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 184.2954,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.65,
+      "total_output_tokens": 1013,
+      "normalized_latency_ms_per_tok": 775.738,
+      "t_arrival_s": 72.92,
+      "job_delay_s": 786.004
+    },
+    {
+      "id": "multi_turn_miss_param_126#170",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.236,
+          "t_done_s": 228.236,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.236,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_107#151",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 383.0891,
+          "tpot_s": 0.0442,
+          "output_tokens": 512,
+          "e2e_latency_s": 405.6733,
+          "throughput_tok_per_s": 22.63,
+          "t_start_s": 204.118,
+          "t_done_s": 609.791,
+          "turn": 0
+        },
+        {
+          "ttft_s": 254.8146,
+          "tpot_s": 0.0555,
+          "output_tokens": 59,
+          "e2e_latency_s": 258.0358,
+          "throughput_tok_per_s": 18.01,
+          "t_start_s": 609.791,
+          "t_done_s": 867.827,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 318.9518,
+      "avg_tpot_s": 0.0499,
+      "avg_throughput_tok_per_s": 20.32,
+      "total_output_tokens": 571,
+      "normalized_latency_ms_per_tok": 1162.363,
+      "t_arrival_s": 204.118,
+      "job_delay_s": 663.709
+    },
+    {
+      "id": "multi_turn_miss_param_127#171",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.437,
+          "t_done_s": 228.437,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.436,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_41#85",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 120.594,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 143.3383,
+          "throughput_tok_per_s": 22.47,
+          "t_start_s": 99.818,
+          "t_done_s": 243.156,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 243.156,
+          "t_done_s": 243.156,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 120.594,
+      "avg_tpot_s": 0.0445,
+      "avg_throughput_tok_per_s": 22.47,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 279.958,
+      "t_arrival_s": 99.817,
+      "job_delay_s": 143.339
+    },
+    {
+      "id": "multi_turn_miss_param_16#60",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 47.6163,
+          "tpot_s": 0.0487,
+          "output_tokens": 512,
+          "e2e_latency_s": 72.5192,
+          "throughput_tok_per_s": 20.52,
+          "t_start_s": 62.174,
+          "t_done_s": 134.694,
+          "turn": 0
+        },
+        {
+          "ttft_s": 107.7342,
+          "tpot_s": 0.0508,
+          "output_tokens": 372,
+          "e2e_latency_s": 126.5754,
+          "throughput_tok_per_s": 19.69,
+          "t_start_s": 134.694,
+          "t_done_s": 261.27,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 261.37,
+          "t_done_s": 261.37,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 77.6753,
+      "avg_tpot_s": 0.0498,
+      "avg_throughput_tok_per_s": 20.11,
+      "total_output_tokens": 884,
+      "normalized_latency_ms_per_tok": 225.22,
+      "t_arrival_s": 62.174,
+      "job_delay_s": 199.196
+    },
+    {
+      "id": "multi_turn_miss_param_71#115",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 110.8236,
+          "tpot_s": 0.0467,
+          "output_tokens": 318,
+          "e2e_latency_s": 125.6356,
+          "throughput_tok_per_s": 21.4,
+          "t_start_s": 141.285,
+          "t_done_s": 266.921,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 266.967,
+          "t_done_s": 266.967,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 110.8236,
+      "avg_tpot_s": 0.0467,
+      "avg_throughput_tok_per_s": 21.4,
+      "total_output_tokens": 318,
+      "normalized_latency_ms_per_tok": 395.081,
+      "t_arrival_s": 141.285,
+      "job_delay_s": 125.682
+    },
+    {
+      "id": "multi_turn_miss_param_76#120",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 100.0345,
+          "tpot_s": 0.0473,
+          "output_tokens": 512,
+          "e2e_latency_s": 124.1884,
+          "throughput_tok_per_s": 21.16,
+          "t_start_s": 148.967,
+          "t_done_s": 273.155,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 273.155,
+          "t_done_s": 273.155,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 100.0345,
+      "avg_tpot_s": 0.0473,
+      "avg_throughput_tok_per_s": 21.16,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 242.555,
+      "t_arrival_s": 148.966,
+      "job_delay_s": 124.189
+    },
+    {
+      "id": "multi_turn_miss_param_57#101",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 158.693,
+          "tpot_s": 0.0464,
+          "output_tokens": 363,
+          "e2e_latency_s": 175.4728,
+          "throughput_tok_per_s": 21.57,
+          "t_start_s": 119.414,
+          "t_done_s": 294.887,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 294.935,
+          "t_done_s": 294.935,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 158.693,
+      "avg_tpot_s": 0.0464,
+      "avg_throughput_tok_per_s": 21.57,
+      "total_output_tokens": 363,
+      "normalized_latency_ms_per_tok": 483.396,
+      "t_arrival_s": 119.414,
+      "job_delay_s": 175.521
+    },
+    {
+      "id": "multi_turn_miss_param_62#106",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 187.152,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 210.5082,
+          "throughput_tok_per_s": 21.88,
+          "t_start_s": 123.339,
+          "t_done_s": 333.847,
+          "turn": 0
+        },
+        {
+          "ttft_s": 312.4572,
+          "tpot_s": 0.0478,
+          "output_tokens": 450,
+          "e2e_latency_s": 333.9201,
+          "throughput_tok_per_s": 20.92,
+          "t_start_s": 333.848,
+          "t_done_s": 667.768,
+          "turn": 1
+        },
+        {
+          "ttft_s": 225.6678,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 249.0916,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 669.017,
+          "t_done_s": 918.108,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 241.759,
+      "avg_tpot_s": 0.0464,
+      "avg_throughput_tok_per_s": 21.54,
+      "total_output_tokens": 1474,
+      "normalized_latency_ms_per_tok": 538.345,
+      "t_arrival_s": 123.339,
+      "job_delay_s": 794.769
+    },
+    {
+      "id": "multi_turn_miss_param_114#158",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 211.0488,
+          "tpot_s": 0.0489,
+          "output_tokens": 181,
+          "e2e_latency_s": 219.8483,
+          "throughput_tok_per_s": 20.46,
+          "t_start_s": 218.923,
+          "t_done_s": 438.772,
+          "turn": 0
+        },
+        {
+          "ttft_s": 286.7307,
+          "tpot_s": 0.0518,
+          "output_tokens": 111,
+          "e2e_latency_s": 292.433,
+          "throughput_tok_per_s": 19.29,
+          "t_start_s": 439.827,
+          "t_done_s": 732.26,
+          "turn": 1
+        },
+        {
+          "ttft_s": 179.4352,
+          "tpot_s": 0.0503,
+          "output_tokens": 249,
+          "e2e_latency_s": 191.9126,
+          "throughput_tok_per_s": 19.88,
+          "t_start_s": 732.351,
+          "t_done_s": 924.263,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 225.7382,
+      "avg_tpot_s": 0.0503,
+      "avg_throughput_tok_per_s": 19.88,
+      "total_output_tokens": 541,
+      "normalized_latency_ms_per_tok": 1301.652,
+      "t_arrival_s": 218.923,
+      "job_delay_s": 705.34
+    },
+    {
+      "id": "multi_turn_miss_param_94#138",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 191.6083,
+          "tpot_s": 0.0473,
+          "output_tokens": 512,
+          "e2e_latency_s": 215.804,
+          "throughput_tok_per_s": 21.12,
+          "t_start_s": 189.06,
+          "t_done_s": 404.864,
+          "turn": 0
+        },
+        {
+          "ttft_s": 266.3627,
+          "tpot_s": 0.045,
+          "output_tokens": 512,
+          "e2e_latency_s": 289.3397,
+          "throughput_tok_per_s": 22.24,
+          "t_start_s": 404.865,
+          "t_done_s": 694.204,
+          "turn": 1
+        },
+        {
+          "ttft_s": 210.274,
+          "tpot_s": 0.0469,
+          "output_tokens": 512,
+          "e2e_latency_s": 234.236,
+          "throughput_tok_per_s": 21.33,
+          "t_start_s": 694.205,
+          "t_done_s": 928.441,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 222.7483,
+      "avg_tpot_s": 0.0464,
+      "avg_throughput_tok_per_s": 21.56,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 481.367,
+      "t_arrival_s": 189.06,
+      "job_delay_s": 739.381
+    },
+    {
+      "id": "multi_turn_miss_param_10#54",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 32.2013,
+          "tpot_s": 0.0497,
+          "output_tokens": 512,
+          "e2e_latency_s": 57.6111,
+          "throughput_tok_per_s": 20.11,
+          "t_start_s": 57.295,
+          "t_done_s": 114.906,
+          "turn": 0
+        },
+        {
+          "ttft_s": 163.2313,
+          "tpot_s": 0.0465,
+          "output_tokens": 512,
+          "e2e_latency_s": 186.9699,
+          "throughput_tok_per_s": 21.53,
+          "t_start_s": 114.906,
+          "t_done_s": 301.876,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 301.876,
+          "t_done_s": 301.876,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 97.7163,
+      "avg_tpot_s": 0.0481,
+      "avg_throughput_tok_per_s": 20.82,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 238.849,
+      "t_arrival_s": 57.294,
+      "job_delay_s": 244.582
+    },
+    {
+      "id": "multi_turn_miss_param_97#141",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 207.4507,
+          "tpot_s": 0.0541,
+          "output_tokens": 160,
+          "e2e_latency_s": 216.06,
+          "throughput_tok_per_s": 18.47,
+          "t_start_s": 194.506,
+          "t_done_s": 410.566,
+          "turn": 0
+        },
+        {
+          "ttft_s": 313.3601,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 336.0868,
+          "throughput_tok_per_s": 22.48,
+          "t_start_s": 411.823,
+          "t_done_s": 747.91,
+          "turn": 1
+        },
+        {
+          "ttft_s": 184.6601,
+          "tpot_s": 0.0511,
+          "output_tokens": 186,
+          "e2e_latency_s": 194.1064,
+          "throughput_tok_per_s": 19.58,
+          "t_start_s": 747.91,
+          "t_done_s": 942.016,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 235.157,
+      "avg_tpot_s": 0.0499,
+      "avg_throughput_tok_per_s": 20.18,
+      "total_output_tokens": 858,
+      "normalized_latency_ms_per_tok": 869.759,
+      "t_arrival_s": 194.505,
+      "job_delay_s": 747.511
+    },
+    {
+      "id": "multi_turn_miss_param_58#102",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 173.2679,
+          "tpot_s": 0.0469,
+          "output_tokens": 368,
+          "e2e_latency_s": 190.4957,
+          "throughput_tok_per_s": 21.3,
+          "t_start_s": 120.189,
+          "t_done_s": 310.685,
+          "turn": 0
+        },
+        {
+          "ttft_s": 259.1557,
+          "tpot_s": 0.0736,
+          "output_tokens": 35,
+          "e2e_latency_s": 261.6587,
+          "throughput_tok_per_s": 13.58,
+          "t_start_s": 310.733,
+          "t_done_s": 572.392,
+          "turn": 1
+        },
+        {
+          "ttft_s": 233.8642,
+          "tpot_s": 0.0763,
+          "output_tokens": 29,
+          "e2e_latency_s": 235.9998,
+          "throughput_tok_per_s": 13.11,
+          "t_start_s": 572.485,
+          "t_done_s": 808.485,
+          "turn": 2
+        },
+        {
+          "ttft_s": 146.8644,
+          "tpot_s": 0.0726,
+          "output_tokens": 29,
+          "e2e_latency_s": 148.8964,
+          "throughput_tok_per_s": 13.78,
+          "t_start_s": 809.679,
+          "t_done_s": 958.576,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 203.288,
+      "avg_tpot_s": 0.0673,
+      "avg_throughput_tok_per_s": 15.44,
+      "total_output_tokens": 461,
+      "normalized_latency_ms_per_tok": 1815.728,
+      "t_arrival_s": 120.189,
+      "job_delay_s": 838.387
+    },
+    {
+      "id": "multi_turn_miss_param_102#146",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 385.2699,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 408.1597,
+          "throughput_tok_per_s": 22.32,
+          "t_start_s": 200.928,
+          "t_done_s": 609.088,
+          "turn": 0
+        },
+        {
+          "ttft_s": 234.7363,
+          "tpot_s": 0.0638,
+          "output_tokens": 68,
+          "e2e_latency_s": 239.0086,
+          "throughput_tok_per_s": 15.68,
+          "t_start_s": 609.088,
+          "t_done_s": 848.097,
+          "turn": 1
+        },
+        {
+          "ttft_s": 125.8002,
+          "tpot_s": 0.0574,
+          "output_tokens": 61,
+          "e2e_latency_s": 129.2424,
+          "throughput_tok_per_s": 17.43,
+          "t_start_s": 848.185,
+          "t_done_s": 977.428,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 248.6021,
+      "avg_tpot_s": 0.0553,
+      "avg_throughput_tok_per_s": 18.48,
+      "total_output_tokens": 641,
+      "normalized_latency_ms_per_tok": 1211.249,
+      "t_arrival_s": 200.928,
+      "job_delay_s": 776.5
+    },
+    {
+      "id": "multi_turn_miss_param_122#166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 227.791,
+          "t_done_s": 227.791,
+          "turn": 0
+        },
+        {
+          "ttft_s": 116.245,
+          "tpot_s": 0.0653,
+          "output_tokens": 67,
+          "e2e_latency_s": 120.5572,
+          "throughput_tok_per_s": 15.31,
+          "t_start_s": 862.812,
+          "t_done_s": 983.369,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 116.245,
+      "avg_tpot_s": 0.0653,
+      "avg_throughput_tok_per_s": 15.31,
+      "total_output_tokens": 67,
+      "normalized_latency_ms_per_tok": 1799.361,
+      "t_arrival_s": 227.79,
+      "job_delay_s": 755.579
+    },
+    {
+      "id": "multi_turn_miss_param_60#104",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 108.5569,
+          "tpot_s": 0.0497,
+          "output_tokens": 270,
+          "e2e_latency_s": 121.92,
+          "throughput_tok_per_s": 20.13,
+          "t_start_s": 121.626,
+          "t_done_s": 243.546,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 243.644,
+          "t_done_s": 243.644,
+          "turn": 1
+        },
+        {
+          "ttft_s": 139.2246,
+          "tpot_s": 0.0536,
+          "output_tokens": 139,
+          "e2e_latency_s": 146.6178,
+          "throughput_tok_per_s": 18.67,
+          "t_start_s": 874.721,
+          "t_done_s": 1021.339,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 123.8907,
+      "avg_tpot_s": 0.0517,
+      "avg_throughput_tok_per_s": 19.4,
+      "total_output_tokens": 409,
+      "normalized_latency_ms_per_tok": 656.572,
+      "t_arrival_s": 121.625,
+      "job_delay_s": 899.714
+    },
+    {
+      "id": "multi_turn_miss_param_111#155",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 381.3984,
+          "tpot_s": 0.0451,
+          "output_tokens": 238,
+          "e2e_latency_s": 392.0953,
+          "throughput_tok_per_s": 22.16,
+          "t_start_s": 212.731,
+          "t_done_s": 604.826,
+          "turn": 0
+        },
+        {
+          "ttft_s": 248.1827,
+          "tpot_s": 0.0877,
+          "output_tokens": 18,
+          "e2e_latency_s": 249.674,
+          "throughput_tok_per_s": 11.4,
+          "t_start_s": 604.872,
+          "t_done_s": 854.546,
+          "turn": 1
+        },
+        {
+          "ttft_s": 155.7439,
+          "tpot_s": 0.0465,
+          "output_tokens": 512,
+          "e2e_latency_s": 179.5096,
+          "throughput_tok_per_s": 21.5,
+          "t_start_s": 854.634,
+          "t_done_s": 1034.144,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 261.775,
+      "avg_tpot_s": 0.0598,
+      "avg_throughput_tok_per_s": 18.35,
+      "total_output_tokens": 768,
+      "normalized_latency_ms_per_tok": 1069.374,
+      "t_arrival_s": 212.731,
+      "job_delay_s": 821.413
+    },
+    {
+      "id": "multi_turn_miss_param_119#163",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 226.646,
+          "t_done_s": 226.646,
+          "turn": 0
+        },
+        {
+          "ttft_s": 134.941,
+          "tpot_s": 0.0449,
+          "output_tokens": 512,
+          "e2e_latency_s": 157.8693,
+          "throughput_tok_per_s": 22.29,
+          "t_start_s": 847.599,
+          "t_done_s": 1005.468,
+          "turn": 1
+        },
+        {
+          "ttft_s": 37.4187,
+          "tpot_s": 0.0527,
+          "output_tokens": 105,
+          "e2e_latency_s": 42.8967,
+          "throughput_tok_per_s": 18.99,
+          "t_start_s": 1005.468,
+          "t_done_s": 1048.365,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 86.1799,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.64,
+      "total_output_tokens": 617,
+      "normalized_latency_ms_per_tok": 325.391,
+      "t_arrival_s": 226.646,
+      "job_delay_s": 821.719
+    },
+    {
+      "id": "multi_turn_miss_param_92#136",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 291.7699,
+          "tpot_s": 0.0452,
+          "output_tokens": 228,
+          "e2e_latency_s": 302.0201,
+          "throughput_tok_per_s": 22.15,
+          "t_start_s": 185.566,
+          "t_done_s": 487.586,
+          "turn": 0
+        },
+        {
+          "ttft_s": 264.41,
+          "tpot_s": 0.0507,
+          "output_tokens": 142,
+          "e2e_latency_s": 271.5572,
+          "throughput_tok_per_s": 19.73,
+          "t_start_s": 487.633,
+          "t_done_s": 759.191,
+          "turn": 1
+        },
+        {
+          "ttft_s": 160.5895,
+          "tpot_s": 0.0463,
+          "output_tokens": 512,
+          "e2e_latency_s": 184.265,
+          "throughput_tok_per_s": 21.58,
+          "t_start_s": 759.284,
+          "t_done_s": 943.549,
+          "turn": 2
+        },
+        {
+          "ttft_s": 59.7534,
+          "tpot_s": 0.0491,
+          "output_tokens": 307,
+          "e2e_latency_s": 74.7638,
+          "throughput_tok_per_s": 20.39,
+          "t_start_s": 943.549,
+          "t_done_s": 1018.313,
+          "turn": 3
+        },
+        {
+          "ttft_s": 24.8489,
+          "tpot_s": 0.0483,
+          "output_tokens": 206,
+          "e2e_latency_s": 34.7412,
+          "throughput_tok_per_s": 20.72,
+          "t_start_s": 1018.406,
+          "t_done_s": 1053.147,
+          "turn": 4
+        },
+        {
+          "turn": 5,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 160.2743,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.91,
+      "total_output_tokens": 1395,
+      "normalized_latency_ms_per_tok": 621.754,
+      "t_arrival_s": 185.565,
+      "job_delay_s": 867.582
+    },
+    {
+      "id": "multi_turn_miss_param_2#46",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 12.9488,
+          "tpot_s": 0.0544,
+          "output_tokens": 322,
+          "e2e_latency_s": 30.4182,
+          "throughput_tok_per_s": 18.38,
+          "t_start_s": 47.768,
+          "t_done_s": 78.186,
+          "turn": 0
+        },
+        {
+          "ttft_s": 46.8727,
+          "tpot_s": 0.0589,
+          "output_tokens": 82,
+          "e2e_latency_s": 51.6443,
+          "throughput_tok_per_s": 16.98,
+          "t_start_s": 79.448,
+          "t_done_s": 131.093,
+          "turn": 1
+        },
+        {
+          "ttft_s": 193.6442,
+          "tpot_s": 0.0481,
+          "output_tokens": 329,
+          "e2e_latency_s": 209.4177,
+          "throughput_tok_per_s": 20.79,
+          "t_start_s": 131.194,
+          "t_done_s": 340.612,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 340.705,
+          "t_done_s": 340.705,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 84.4886,
+      "avg_tpot_s": 0.0538,
+      "avg_throughput_tok_per_s": 18.72,
+      "total_output_tokens": 733,
+      "normalized_latency_ms_per_tok": 397.654,
+      "t_arrival_s": 47.768,
+      "job_delay_s": 292.937
+    },
+    {
+      "id": "multi_turn_miss_param_39#83",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 47.7129,
+          "tpot_s": 0.0473,
+          "output_tokens": 512,
+          "e2e_latency_s": 71.858,
+          "throughput_tok_per_s": 21.16,
+          "t_start_s": 94.052,
+          "t_done_s": 165.91,
+          "turn": 0
+        },
+        {
+          "ttft_s": 173.9894,
+          "tpot_s": 0.0502,
+          "output_tokens": 187,
+          "e2e_latency_s": 183.3209,
+          "throughput_tok_per_s": 19.93,
+          "t_start_s": 165.911,
+          "t_done_s": 349.231,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 349.324,
+          "t_done_s": 349.324,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 110.8511,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.55,
+      "total_output_tokens": 699,
+      "normalized_latency_ms_per_tok": 365.063,
+      "t_arrival_s": 94.052,
+      "job_delay_s": 255.272
+    },
+    {
+      "id": "multi_turn_miss_param_68#112",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 199.9889,
+          "tpot_s": 0.0476,
+          "output_tokens": 334,
+          "e2e_latency_s": 215.8537,
+          "throughput_tok_per_s": 20.99,
+          "t_start_s": 138.423,
+          "t_done_s": 354.276,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 354.365,
+          "t_done_s": 354.365,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 199.9889,
+      "avg_tpot_s": 0.0476,
+      "avg_throughput_tok_per_s": 20.99,
+      "total_output_tokens": 334,
+      "normalized_latency_ms_per_tok": 646.269,
+      "t_arrival_s": 138.422,
+      "job_delay_s": 215.943
+    },
+    {
+      "id": "multi_turn_miss_param_95#139",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 160.2477,
+          "tpot_s": 0.0482,
+          "output_tokens": 188,
+          "e2e_latency_s": 169.2594,
+          "throughput_tok_per_s": 20.75,
+          "t_start_s": 190.118,
+          "t_done_s": 359.378,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 359.466,
+          "t_done_s": 359.466,
+          "turn": 1
+        },
+        {
+          "ttft_s": 1.5445,
+          "tpot_s": 0.1778,
+          "output_tokens": 8,
+          "e2e_latency_s": 2.7889,
+          "throughput_tok_per_s": 5.63,
+          "t_start_s": 1181.489,
+          "t_done_s": 1184.278,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 80.8961,
+      "avg_tpot_s": 0.113,
+      "avg_throughput_tok_per_s": 13.19,
+      "total_output_tokens": 196,
+      "normalized_latency_ms_per_tok": 877.797,
+      "t_arrival_s": 190.118,
+      "job_delay_s": 994.16
+    },
+    {
+      "id": "multi_turn_miss_param_61#105",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 177.6382,
+          "tpot_s": 0.0467,
+          "output_tokens": 512,
+          "e2e_latency_s": 201.5015,
+          "throughput_tok_per_s": 21.41,
+          "t_start_s": 122.575,
+          "t_done_s": 324.076,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 324.076,
+          "t_done_s": 324.076,
+          "turn": 1
+        },
+        {
+          "ttft_s": 3.5464,
+          "tpot_s": 0.0441,
+          "output_tokens": 512,
+          "e2e_latency_s": 26.0972,
+          "throughput_tok_per_s": 22.66,
+          "t_start_s": 1135.638,
+          "t_done_s": 1161.735,
+          "turn": 2
+        },
+        {
+          "ttft_s": 4.3157,
+          "tpot_s": 0.0492,
+          "output_tokens": 449,
+          "e2e_latency_s": 26.343,
+          "throughput_tok_per_s": 20.34,
+          "t_start_s": 1161.735,
+          "t_done_s": 1188.078,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 61.8334,
+      "avg_tpot_s": 0.0467,
+      "avg_throughput_tok_per_s": 21.47,
+      "total_output_tokens": 1473,
+      "normalized_latency_ms_per_tok": 172.398,
+      "t_arrival_s": 122.574,
+      "job_delay_s": 1065.504
+    },
+    {
+      "id": "multi_turn_miss_param_87#131",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 194.7294,
+          "tpot_s": 0.046,
+          "output_tokens": 230,
+          "e2e_latency_s": 205.2734,
+          "throughput_tok_per_s": 21.72,
+          "t_start_s": 172.211,
+          "t_done_s": 377.484,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 377.532,
+          "t_done_s": 377.532,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 194.7294,
+      "avg_tpot_s": 0.046,
+      "avg_throughput_tok_per_s": 21.72,
+      "total_output_tokens": 230,
+      "normalized_latency_ms_per_tok": 892.493,
+      "t_arrival_s": 172.21,
+      "job_delay_s": 205.322
+    },
+    {
+      "id": "multi_turn_miss_param_43#87",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 55.6598,
+          "tpot_s": 0.0545,
+          "output_tokens": 122,
+          "e2e_latency_s": 62.2539,
+          "throughput_tok_per_s": 18.35,
+          "t_start_s": 100.574,
+          "t_done_s": 162.828,
+          "turn": 0
+        },
+        {
+          "ttft_s": 167.246,
+          "tpot_s": 0.0475,
+          "output_tokens": 512,
+          "e2e_latency_s": 191.5181,
+          "throughput_tok_per_s": 21.05,
+          "t_start_s": 162.926,
+          "t_done_s": 354.444,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 354.444,
+          "t_done_s": 354.444,
+          "turn": 2
+        },
+        {
+          "ttft_s": 1.5477,
+          "tpot_s": 0.049,
+          "output_tokens": 193,
+          "e2e_latency_s": 10.9484,
+          "throughput_tok_per_s": 20.42,
+          "t_start_s": 1181.488,
+          "t_done_s": 1192.436,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out."
+        }
+      ],
+      "avg_ttft_s": 74.8178,
+      "avg_tpot_s": 0.0503,
+      "avg_throughput_tok_per_s": 19.94,
+      "total_output_tokens": 827,
+      "normalized_latency_ms_per_tok": 320.097,
+      "t_arrival_s": 100.574,
+      "job_delay_s": 1091.862
+    }
+  ]
+}

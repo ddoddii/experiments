@@ -1,0 +1,5960 @@
+{
+  "summary": {
+    "config": "qps_qps_qwen14b_bfcl_hicache_r0.7",
+    "concurrency": 16,
+    "tool_delay_s": 0.0,
+    "total_items": 176,
+    "success_items": 120,
+    "error_items": 56,
+    "total_output_tokens": 71224,
+    "total_wall_time_s": 552.4,
+    "overall_throughput_tok_per_s": 128.94,
+    "avg_ttft_s": 158.9819,
+    "avg_tpot_s": 0.0496,
+    "avg_throughput_tok_per_s": 20.43,
+    "n_ttft_samples": 207,
+    "ttft_p50_s": 137.6805,
+    "ttft_p90_s": 269.7011,
+    "ttft_p95_s": 299.2265,
+    "ttft_p99_s": 313.0243,
+    "ttft_mean_per_turn_s": 141.1037,
+    "mode": "open_loop",
+    "session_rate": 0.7,
+    "load_duration_s": 242.06,
+    "warmup_s": 30.0,
+    "window_s": 212.06,
+    "sessions_launched": 176,
+    "sessions_repeated": 0,
+    "sessions_completed": 176,
+    "sessions_unfinished_at_drain": 127,
+    "peak_inflight_sessions": 135,
+    "window_throughput_tok_s": 124.53,
+    "window_turns": 99,
+    "window_turn_rate_s": 0.467,
+    "window_ttft_p50_s": 42.7013,
+    "window_ttft_p95_s": 115.0587,
+    "window_ttft_p99_s": 120.6403,
+    "window_job_delay_n": 24,
+    "window_job_delay_mean_s": 51.7643,
+    "window_job_delay_p50_s": 0.001,
+    "window_job_delay_p95_s": 171.856,
+    "window_job_delay_p99_s": 171.904,
+    "window_norm_latency_mean_ms_tok": 277.7903,
+    "window_norm_latency_p50_ms_tok": 257.307,
+    "window_norm_latency_p95_ms_tok": 600.643
+  },
+  "results": [
+    {
+      "id": "multi_turn_miss_func_157#1",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 2.8047,
+          "tpot_s": 0.0468,
+          "output_tokens": 174,
+          "e2e_latency_s": 10.8974,
+          "throughput_tok_per_s": 21.38,
+          "t_start_s": 0.952,
+          "t_done_s": 11.85,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 2.8047,
+      "avg_tpot_s": 0.0468,
+      "avg_throughput_tok_per_s": 21.38,
+      "total_output_tokens": 174,
+      "normalized_latency_ms_per_tok": 62.629,
+      "t_arrival_s": 0.952,
+      "job_delay_s": 10.898
+    },
+    {
+      "id": "multi_turn_miss_func_162#6",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 8.372,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_161#5",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 6.019,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_165#9",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 10.588,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_174#18",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 17.378,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_163#7",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 8.844,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_167#11",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 11.369,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_166#10",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 10.597,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_169#13",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 13.595,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_171#15",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 16.182,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_170#14",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 14.406,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_176#20",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 18.183,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_182#26",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 27.623,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_177#21",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 19.079,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_168#12",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 12.218,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_158#2",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.367,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_180#24",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 26.664,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_173#17",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 17.098,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_159#3",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.516,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_184#28",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 31.01,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_186#30",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.382,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_185#29",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 33.914,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_189#33",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.992,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_187#31",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.704,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_156#0",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 0.0,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_160#4",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 5.836,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_195#39",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 40.993,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_175#19",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 18.143,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_1#45",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 15.3748,
+          "tpot_s": 0.0533,
+          "output_tokens": 421,
+          "e2e_latency_s": 37.7612,
+          "throughput_tok_per_s": 18.76,
+          "t_start_s": 47.51,
+          "t_done_s": 85.271,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 15.3748,
+      "avg_tpot_s": 0.0533,
+      "avg_throughput_tok_per_s": 18.76,
+      "total_output_tokens": 421,
+      "normalized_latency_ms_per_tok": 89.694,
+      "t_arrival_s": 47.51,
+      "job_delay_s": 37.761
+    },
+    {
+      "id": "multi_turn_miss_func_198#42",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 45.901,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_164#8",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 9.965,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_172#16",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 16.265,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_178#22",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 21.425,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_188#32",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 34.715,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_193#37",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 38.953,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_179#23",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 23.205,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_190#34",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 35.085,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_197#41",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 45.499,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_181#25",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 26.857,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_func_191#35",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 36.569,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_37#81",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 117.6892,
+          "tpot_s": 0.0463,
+          "output_tokens": 505,
+          "e2e_latency_s": 141.0043,
+          "throughput_tok_per_s": 21.62,
+          "t_start_s": 90.572,
+          "t_done_s": 231.576,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 117.6892,
+      "avg_tpot_s": 0.0463,
+      "avg_throughput_tok_per_s": 21.62,
+      "total_output_tokens": 505,
+      "normalized_latency_ms_per_tok": 279.216,
+      "t_arrival_s": 90.572,
+      "job_delay_s": 141.004
+    },
+    {
+      "id": "multi_turn_miss_param_78#122",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 107.6613,
+          "tpot_s": 0.0506,
+          "output_tokens": 298,
+          "e2e_latency_s": 122.6779,
+          "throughput_tok_per_s": 19.78,
+          "t_start_s": 149.2,
+          "t_done_s": 271.878,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 107.6613,
+      "avg_tpot_s": 0.0506,
+      "avg_throughput_tok_per_s": 19.78,
+      "total_output_tokens": 298,
+      "normalized_latency_ms_per_tok": 411.671,
+      "t_arrival_s": 149.199,
+      "job_delay_s": 122.679
+    },
+    {
+      "id": "multi_turn_miss_param_3#47",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 7.7767,
+          "tpot_s": 0.0587,
+          "output_tokens": 295,
+          "e2e_latency_s": 25.0225,
+          "throughput_tok_per_s": 17.05,
+          "t_start_s": 48.555,
+          "t_done_s": 73.578,
+          "turn": 0
+        },
+        {
+          "ttft_s": 70.0103,
+          "tpot_s": 0.0526,
+          "output_tokens": 110,
+          "e2e_latency_s": 75.7406,
+          "throughput_tok_per_s": 19.02,
+          "t_start_s": 73.686,
+          "t_done_s": 149.426,
+          "turn": 1
+        },
+        {
+          "ttft_s": 148.9309,
+          "tpot_s": 0.0537,
+          "output_tokens": 115,
+          "e2e_latency_s": 155.0561,
+          "throughput_tok_per_s": 18.61,
+          "t_start_s": 149.519,
+          "t_done_s": 304.575,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 75.5726,
+      "avg_tpot_s": 0.055,
+      "avg_throughput_tok_per_s": 18.23,
+      "total_output_tokens": 520,
+      "normalized_latency_ms_per_tok": 491.96,
+      "t_arrival_s": 48.555,
+      "job_delay_s": 256.02
+    },
+    {
+      "id": "multi_turn_miss_func_192#36",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 37.596,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_52#96",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 44.5223,
+          "tpot_s": 0.0552,
+          "output_tokens": 116,
+          "e2e_latency_s": 50.8703,
+          "throughput_tok_per_s": 18.12,
+          "t_start_s": 117.298,
+          "t_done_s": 168.169,
+          "turn": 0
+        },
+        {
+          "ttft_s": 180.4766,
+          "tpot_s": 0.0481,
+          "output_tokens": 115,
+          "e2e_latency_s": 185.9646,
+          "throughput_tok_per_s": 20.77,
+          "t_start_s": 170.402,
+          "t_done_s": 356.367,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 112.4994,
+      "avg_tpot_s": 0.0517,
+      "avg_throughput_tok_per_s": 19.45,
+      "total_output_tokens": 231,
+      "normalized_latency_ms_per_tok": 1025.259,
+      "t_arrival_s": 117.298,
+      "job_delay_s": 239.069
+    },
+    {
+      "id": "multi_turn_miss_param_11#55",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 23.2498,
+          "tpot_s": 0.0575,
+          "output_tokens": 161,
+          "e2e_latency_s": 32.4419,
+          "throughput_tok_per_s": 17.41,
+          "t_start_s": 59.082,
+          "t_done_s": 91.524,
+          "turn": 0
+        },
+        {
+          "ttft_s": 53.8988,
+          "tpot_s": 0.0477,
+          "output_tokens": 512,
+          "e2e_latency_s": 78.2984,
+          "throughput_tok_per_s": 20.94,
+          "t_start_s": 91.626,
+          "t_done_s": 169.925,
+          "turn": 1
+        },
+        {
+          "ttft_s": 182.5129,
+          "tpot_s": 0.045,
+          "output_tokens": 512,
+          "e2e_latency_s": 205.5267,
+          "throughput_tok_per_s": 22.2,
+          "t_start_s": 169.925,
+          "t_done_s": 375.452,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 86.5538,
+      "avg_tpot_s": 0.0501,
+      "avg_throughput_tok_per_s": 20.18,
+      "total_output_tokens": 1185,
+      "normalized_latency_ms_per_tok": 266.892,
+      "t_arrival_s": 59.082,
+      "job_delay_s": 316.37
+    },
+    {
+      "id": "multi_turn_miss_param_31#75",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 16.9856,
+          "tpot_s": 0.0501,
+          "output_tokens": 512,
+          "e2e_latency_s": 42.5981,
+          "throughput_tok_per_s": 19.95,
+          "t_start_s": 79.844,
+          "t_done_s": 122.442,
+          "turn": 0
+        },
+        {
+          "ttft_s": 75.9809,
+          "tpot_s": 0.0452,
+          "output_tokens": 512,
+          "e2e_latency_s": 99.0732,
+          "throughput_tok_per_s": 22.13,
+          "t_start_s": 122.442,
+          "t_done_s": 221.516,
+          "turn": 1
+        },
+        {
+          "ttft_s": 140.1943,
+          "tpot_s": 0.0466,
+          "output_tokens": 512,
+          "e2e_latency_s": 164.0069,
+          "throughput_tok_per_s": 21.46,
+          "t_start_s": 221.516,
+          "t_done_s": 385.523,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 77.7203,
+      "avg_tpot_s": 0.0473,
+      "avg_throughput_tok_per_s": 21.18,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 199.009,
+      "t_arrival_s": 79.844,
+      "job_delay_s": 305.679
+    },
+    {
+      "id": "multi_turn_miss_func_196#40",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 44.649,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_60#104",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 137.6805,
+          "tpot_s": 0.0488,
+          "output_tokens": 269,
+          "e2e_latency_s": 150.746,
+          "throughput_tok_per_s": 20.51,
+          "t_start_s": 121.61,
+          "t_done_s": 272.356,
+          "turn": 0
+        },
+        {
+          "ttft_s": 159.2452,
+          "tpot_s": 0.0496,
+          "output_tokens": 124,
+          "e2e_latency_s": 165.3428,
+          "throughput_tok_per_s": 20.17,
+          "t_start_s": 272.455,
+          "t_done_s": 437.798,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 148.4629,
+      "avg_tpot_s": 0.0492,
+      "avg_throughput_tok_per_s": 20.34,
+      "total_output_tokens": 393,
+      "normalized_latency_ms_per_tok": 804.297,
+      "t_arrival_s": 121.61,
+      "job_delay_s": 316.188
+    },
+    {
+      "id": "multi_turn_miss_param_116#160",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 229.5598,
+          "tpot_s": 0.0489,
+          "output_tokens": 233,
+          "e2e_latency_s": 240.8939,
+          "throughput_tok_per_s": 20.47,
+          "t_start_s": 220.111,
+          "t_done_s": 461.005,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "400 Client Error: Bad Request for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 229.5598,
+      "avg_tpot_s": 0.0489,
+      "avg_throughput_tok_per_s": 20.47,
+      "total_output_tokens": 233,
+      "normalized_latency_ms_per_tok": 1033.879,
+      "t_arrival_s": 220.111,
+      "job_delay_s": 240.894
+    },
+    {
+      "id": "multi_turn_miss_param_50#94",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 116.7562,
+          "tpot_s": 0.0489,
+          "output_tokens": 280,
+          "e2e_latency_s": 130.4017,
+          "throughput_tok_per_s": 20.45,
+          "t_start_s": 114.91,
+          "t_done_s": 245.311,
+          "turn": 0
+        },
+        {
+          "ttft_s": 249.1682,
+          "tpot_s": 0.0473,
+          "output_tokens": 185,
+          "e2e_latency_s": 257.8631,
+          "throughput_tok_per_s": 21.16,
+          "t_start_s": 245.402,
+          "t_done_s": 503.265,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 182.9622,
+      "avg_tpot_s": 0.0481,
+      "avg_throughput_tok_per_s": 20.8,
+      "total_output_tokens": 465,
+      "normalized_latency_ms_per_tok": 834.978,
+      "t_arrival_s": 114.909,
+      "job_delay_s": 388.356
+    },
+    {
+      "id": "multi_turn_miss_param_32#76",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 85.7726,
+          "tpot_s": 0.0865,
+          "output_tokens": 18,
+          "e2e_latency_s": 87.2423,
+          "throughput_tok_per_s": 11.57,
+          "t_start_s": 82.518,
+          "t_done_s": 169.76,
+          "turn": 0
+        },
+        {
+          "ttft_s": 108.6036,
+          "tpot_s": 0.0512,
+          "output_tokens": 264,
+          "e2e_latency_s": 122.0703,
+          "throughput_tok_per_s": 19.53,
+          "t_start_s": 171.265,
+          "t_done_s": 293.335,
+          "turn": 1
+        },
+        {
+          "ttft_s": 210.5958,
+          "tpot_s": 0.0475,
+          "output_tokens": 361,
+          "e2e_latency_s": 227.7027,
+          "throughput_tok_per_s": 21.04,
+          "t_start_s": 293.43,
+          "t_done_s": 521.133,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 134.9907,
+      "avg_tpot_s": 0.0617,
+      "avg_throughput_tok_per_s": 17.38,
+      "total_output_tokens": 643,
+      "normalized_latency_ms_per_tok": 679.651,
+      "t_arrival_s": 82.518,
+      "job_delay_s": 438.615
+    },
+    {
+      "id": "multi_turn_miss_param_71#115",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 165.7826,
+          "tpot_s": 0.0459,
+          "output_tokens": 485,
+          "e2e_latency_s": 187.9876,
+          "throughput_tok_per_s": 21.8,
+          "t_start_s": 141.268,
+          "t_done_s": 329.256,
+          "turn": 0
+        },
+        {
+          "ttft_s": 183.1275,
+          "tpot_s": 0.0482,
+          "output_tokens": 381,
+          "e2e_latency_s": 201.4479,
+          "throughput_tok_per_s": 20.74,
+          "t_start_s": 329.349,
+          "t_done_s": 530.797,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "502 Server Error: Bad Gateway for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 174.455,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.27,
+      "total_output_tokens": 866,
+      "normalized_latency_ms_per_tok": 449.695,
+      "t_arrival_s": 141.268,
+      "job_delay_s": 389.529
+    },
+    {
+      "id": "multi_turn_miss_param_105#149",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 312.2903,
+          "tpot_s": 0.0485,
+          "output_tokens": 357,
+          "e2e_latency_s": 329.5548,
+          "throughput_tok_per_s": 20.62,
+          "t_start_s": 201.459,
+          "t_done_s": 531.014,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "502 Server Error: Bad Gateway for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 312.2903,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.62,
+      "total_output_tokens": 357,
+      "normalized_latency_ms_per_tok": 923.123,
+      "t_arrival_s": 201.459,
+      "job_delay_s": 329.555
+    },
+    {
+      "id": "multi_turn_miss_param_79#123",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 111.5405,
+          "tpot_s": 0.055,
+          "output_tokens": 209,
+          "e2e_latency_s": 122.9866,
+          "throughput_tok_per_s": 18.17,
+          "t_start_s": 149.28,
+          "t_done_s": 272.267,
+          "turn": 0
+        },
+        {
+          "ttft_s": 254.5997,
+          "tpot_s": 0.0512,
+          "output_tokens": 122,
+          "e2e_latency_s": 260.7911,
+          "throughput_tok_per_s": 19.54,
+          "t_start_s": 272.363,
+          "t_done_s": 533.154,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "502 Server Error: Bad Gateway for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 183.0701,
+      "avg_tpot_s": 0.0531,
+      "avg_throughput_tok_per_s": 18.86,
+      "total_output_tokens": 331,
+      "normalized_latency_ms_per_tok": 1159.449,
+      "t_arrival_s": 149.28,
+      "job_delay_s": 383.874
+    },
+    {
+      "id": "multi_turn_miss_param_54#98",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 195.7253,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 219.1746,
+          "throughput_tok_per_s": 21.79,
+          "t_start_s": 117.807,
+          "t_done_s": 336.982,
+          "turn": 0
+        },
+        {
+          "ttft_s": 184.4229,
+          "tpot_s": 0.051,
+          "output_tokens": 234,
+          "e2e_latency_s": 196.3164,
+          "throughput_tok_per_s": 19.59,
+          "t_start_s": 336.982,
+          "t_done_s": 533.299,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "502 Server Error: Bad Gateway for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 190.0741,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.69,
+      "total_output_tokens": 746,
+      "normalized_latency_ms_per_tok": 556.958,
+      "t_arrival_s": 117.807,
+      "job_delay_s": 415.492
+    },
+    {
+      "id": "multi_turn_miss_func_199#43",
+      "turns": [
+        {
+          "turn": 0,
+          "error": "list index out of range"
+        }
+      ],
+      "total_output_tokens": 0,
+      "num_turns": 0,
+      "t_arrival_s": 47.173,
+      "job_delay_s": null
+    },
+    {
+      "id": "multi_turn_miss_param_29#73",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 15.9295,
+          "tpot_s": 0.049,
+          "output_tokens": 512,
+          "e2e_latency_s": 40.9722,
+          "throughput_tok_per_s": 20.41,
+          "t_start_s": 77.933,
+          "t_done_s": 118.905,
+          "turn": 0
+        },
+        {
+          "ttft_s": 47.7509,
+          "tpot_s": 0.0453,
+          "output_tokens": 323,
+          "e2e_latency_s": 62.3238,
+          "throughput_tok_per_s": 22.1,
+          "t_start_s": 118.906,
+          "t_done_s": 181.23,
+          "turn": 1
+        },
+        {
+          "ttft_s": 229.7935,
+          "tpot_s": 0.0451,
+          "output_tokens": 512,
+          "e2e_latency_s": 252.8255,
+          "throughput_tok_per_s": 22.19,
+          "t_start_s": 181.274,
+          "t_done_s": 434.099,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 434.1,
+          "t_done_s": 434.1,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 97.8246,
+      "avg_tpot_s": 0.0465,
+      "avg_throughput_tok_per_s": 21.57,
+      "total_output_tokens": 1347,
+      "normalized_latency_ms_per_tok": 264.381,
+      "t_arrival_s": 77.933,
+      "job_delay_s": 356.167
+    },
+    {
+      "id": "multi_turn_miss_param_38#82",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 120.6403,
+          "tpot_s": 0.0469,
+          "output_tokens": 512,
+          "e2e_latency_s": 144.5946,
+          "throughput_tok_per_s": 21.33,
+          "t_start_s": 91.424,
+          "t_done_s": 236.019,
+          "turn": 0
+        },
+        {
+          "ttft_s": 167.1032,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 190.5174,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 236.019,
+          "t_done_s": 426.537,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 426.538,
+          "t_done_s": 426.538,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 143.8717,
+      "avg_tpot_s": 0.0464,
+      "avg_throughput_tok_per_s": 21.57,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 327.258,
+      "t_arrival_s": 91.424,
+      "job_delay_s": 335.114
+    },
+    {
+      "id": "multi_turn_miss_param_76#120",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 97.3499,
+          "tpot_s": 0.0505,
+          "output_tokens": 377,
+          "e2e_latency_s": 116.3279,
+          "throughput_tok_per_s": 19.81,
+          "t_start_s": 148.951,
+          "t_done_s": 265.279,
+          "turn": 0
+        },
+        {
+          "ttft_s": 157.732,
+          "tpot_s": 0.0488,
+          "output_tokens": 323,
+          "e2e_latency_s": 173.4424,
+          "throughput_tok_per_s": 20.5,
+          "t_start_s": 266.488,
+          "t_done_s": 439.931,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 440.022,
+          "t_done_s": 440.022,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 127.541,
+      "avg_tpot_s": 0.0496,
+      "avg_throughput_tok_per_s": 20.16,
+      "total_output_tokens": 700,
+      "normalized_latency_ms_per_tok": 413.958,
+      "t_arrival_s": 148.951,
+      "job_delay_s": 291.071
+    },
+    {
+      "id": "multi_turn_miss_param_17#61",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 16.6438,
+          "tpot_s": 0.0553,
+          "output_tokens": 202,
+          "e2e_latency_s": 27.7504,
+          "throughput_tok_per_s": 18.1,
+          "t_start_s": 62.336,
+          "t_done_s": 90.086,
+          "turn": 0
+        },
+        {
+          "ttft_s": 115.0587,
+          "tpot_s": 0.0465,
+          "output_tokens": 512,
+          "e2e_latency_s": 138.8327,
+          "throughput_tok_per_s": 21.49,
+          "t_start_s": 90.19,
+          "t_done_s": 229.023,
+          "turn": 1
+        },
+        {
+          "ttft_s": 254.0982,
+          "tpot_s": 0.0537,
+          "output_tokens": 109,
+          "e2e_latency_s": 259.8969,
+          "throughput_tok_per_s": 18.62,
+          "t_start_s": 229.023,
+          "t_done_s": 488.92,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 489.806,
+          "t_done_s": 489.806,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 128.6002,
+      "avg_tpot_s": 0.0518,
+      "avg_throughput_tok_per_s": 19.4,
+      "total_output_tokens": 823,
+      "normalized_latency_ms_per_tok": 518.202,
+      "t_arrival_s": 62.336,
+      "job_delay_s": 427.47
+    },
+    {
+      "id": "multi_turn_miss_param_18#62",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 23.0939,
+          "tpot_s": 0.0502,
+          "output_tokens": 512,
+          "e2e_latency_s": 48.7488,
+          "throughput_tok_per_s": 19.92,
+          "t_start_s": 63.77,
+          "t_done_s": 112.519,
+          "turn": 0
+        },
+        {
+          "ttft_s": 102.2959,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 125.1955,
+          "throughput_tok_per_s": 22.31,
+          "t_start_s": 112.519,
+          "t_done_s": 237.715,
+          "turn": 1
+        },
+        {
+          "ttft_s": 253.3375,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 276.6657,
+          "throughput_tok_per_s": 21.9,
+          "t_start_s": 237.715,
+          "t_done_s": 514.381,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 514.381,
+          "t_done_s": 514.381,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 126.2424,
+      "avg_tpot_s": 0.0469,
+      "avg_throughput_tok_per_s": 21.38,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 293.366,
+      "t_arrival_s": 63.77,
+      "job_delay_s": 450.611
+    },
+    {
+      "id": "multi_turn_miss_param_75#119",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 164.1471,
+          "tpot_s": 0.0488,
+          "output_tokens": 129,
+          "e2e_latency_s": 170.399,
+          "throughput_tok_per_s": 20.47,
+          "t_start_s": 148.337,
+          "t_done_s": 318.736,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 319.834,
+          "t_done_s": 319.834,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 164.1471,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.47,
+      "total_output_tokens": 129,
+      "normalized_latency_ms_per_tok": 1320.922,
+      "t_arrival_s": 148.336,
+      "job_delay_s": 171.498
+    },
+    {
+      "id": "multi_turn_miss_param_73#117",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 134.1137,
+          "tpot_s": 0.0491,
+          "output_tokens": 485,
+          "e2e_latency_s": 157.8749,
+          "throughput_tok_per_s": 20.37,
+          "t_start_s": 143.673,
+          "t_done_s": 301.548,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 301.643,
+          "t_done_s": 301.643,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 134.1137,
+      "avg_tpot_s": 0.0491,
+      "avg_throughput_tok_per_s": 20.37,
+      "total_output_tokens": 485,
+      "normalized_latency_ms_per_tok": 325.515,
+      "t_arrival_s": 143.673,
+      "job_delay_s": 157.97
+    },
+    {
+      "id": "multi_turn_miss_param_35#79",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 55.7113,
+          "tpot_s": 0.0462,
+          "output_tokens": 512,
+          "e2e_latency_s": 79.2999,
+          "throughput_tok_per_s": 21.66,
+          "t_start_s": 88.808,
+          "t_done_s": 168.108,
+          "turn": 0
+        },
+        {
+          "ttft_s": 177.636,
+          "tpot_s": 0.0439,
+          "output_tokens": 51,
+          "e2e_latency_s": 179.8323,
+          "throughput_tok_per_s": 22.77,
+          "t_start_s": 168.108,
+          "t_done_s": 347.94,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 347.985,
+          "t_done_s": 347.985,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 116.6736,
+      "avg_tpot_s": 0.045,
+      "avg_throughput_tok_per_s": 22.21,
+      "total_output_tokens": 563,
+      "normalized_latency_ms_per_tok": 460.27,
+      "t_arrival_s": 88.808,
+      "job_delay_s": 259.177
+    },
+    {
+      "id": "multi_turn_miss_param_94#138",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 188.4776,
+          "tpot_s": 0.0463,
+          "output_tokens": 512,
+          "e2e_latency_s": 212.1525,
+          "throughput_tok_per_s": 21.58,
+          "t_start_s": 189.039,
+          "t_done_s": 401.191,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 401.191,
+          "t_done_s": 401.191,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 188.4776,
+      "avg_tpot_s": 0.0463,
+      "avg_throughput_tok_per_s": 21.58,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 414.36,
+      "t_arrival_s": 189.038,
+      "job_delay_s": 212.153
+    },
+    {
+      "id": "multi_turn_miss_param_109#153",
+      "num_turns": 8,
+      "turns": [
+        {
+          "ttft_s": 115.1112,
+          "tpot_s": 0.0514,
+          "output_tokens": 119,
+          "e2e_latency_s": 121.1783,
+          "throughput_tok_per_s": 19.45,
+          "t_start_s": 205.821,
+          "t_done_s": 326.999,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 327.091,
+          "t_done_s": 327.091,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 115.1112,
+      "avg_tpot_s": 0.0514,
+      "avg_throughput_tok_per_s": 19.45,
+      "total_output_tokens": 119,
+      "normalized_latency_ms_per_tok": 1018.305,
+      "t_arrival_s": 205.821,
+      "job_delay_s": 121.27
+    },
+    {
+      "id": "multi_turn_miss_param_39#83",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 52.7664,
+          "tpot_s": 0.05,
+          "output_tokens": 145,
+          "e2e_latency_s": 59.9655,
+          "throughput_tok_per_s": 20.0,
+          "t_start_s": 94.038,
+          "t_done_s": 154.004,
+          "turn": 0
+        },
+        {
+          "ttft_s": 166.4016,
+          "tpot_s": 0.0566,
+          "output_tokens": 60,
+          "e2e_latency_s": 169.7424,
+          "throughput_tok_per_s": 17.66,
+          "t_start_s": 154.102,
+          "t_done_s": 323.844,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 323.938,
+          "t_done_s": 323.938,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 109.584,
+      "avg_tpot_s": 0.0533,
+      "avg_throughput_tok_per_s": 18.83,
+      "total_output_tokens": 205,
+      "normalized_latency_ms_per_tok": 1120.526,
+      "t_arrival_s": 94.038,
+      "job_delay_s": 229.9
+    },
+    {
+      "id": "multi_turn_miss_param_90#134",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 109.7216,
+          "tpot_s": 0.0483,
+          "output_tokens": 411,
+          "e2e_latency_s": 129.5285,
+          "throughput_tok_per_s": 20.7,
+          "t_start_s": 179.722,
+          "t_done_s": 309.251,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 311.667,
+          "t_done_s": 311.667,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 109.7216,
+      "avg_tpot_s": 0.0483,
+      "avg_throughput_tok_per_s": 20.7,
+      "total_output_tokens": 411,
+      "normalized_latency_ms_per_tok": 315.155,
+      "t_arrival_s": 179.722,
+      "job_delay_s": 131.945
+    },
+    {
+      "id": "multi_turn_miss_param_102#146",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 202.1276,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 225.5386,
+          "throughput_tok_per_s": 21.83,
+          "t_start_s": 200.906,
+          "t_done_s": 426.445,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 426.445,
+          "t_done_s": 426.445,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 202.1276,
+      "avg_tpot_s": 0.0458,
+      "avg_throughput_tok_per_s": 21.83,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 440.505,
+      "t_arrival_s": 200.906,
+      "job_delay_s": 225.539
+    },
+    {
+      "id": "multi_turn_miss_param_129#173",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 141.4796,
+          "tpot_s": 0.0515,
+          "output_tokens": 347,
+          "e2e_latency_s": 159.3012,
+          "throughput_tok_per_s": 19.41,
+          "t_start_s": 229.946,
+          "t_done_s": 389.247,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 389.345,
+          "t_done_s": 389.345,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 141.4796,
+      "avg_tpot_s": 0.0515,
+      "avg_throughput_tok_per_s": 19.41,
+      "total_output_tokens": 347,
+      "normalized_latency_ms_per_tok": 459.081,
+      "t_arrival_s": 229.946,
+      "job_delay_s": 159.399
+    },
+    {
+      "id": "multi_turn_miss_param_83#127",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 159.9773,
+          "tpot_s": 0.0444,
+          "output_tokens": 512,
+          "e2e_latency_s": 182.6576,
+          "throughput_tok_per_s": 22.53,
+          "t_start_s": 161.909,
+          "t_done_s": 344.566,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 344.567,
+          "t_done_s": 344.567,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 159.9773,
+      "avg_tpot_s": 0.0444,
+      "avg_throughput_tok_per_s": 22.53,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 356.753,
+      "t_arrival_s": 161.908,
+      "job_delay_s": 182.659
+    },
+    {
+      "id": "multi_turn_miss_param_64#108",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 232.8934,
+          "tpot_s": 0.0479,
+          "output_tokens": 414,
+          "e2e_latency_s": 252.6702,
+          "throughput_tok_per_s": 20.88,
+          "t_start_s": 125.796,
+          "t_done_s": 378.466,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 379.575,
+          "t_done_s": 379.575,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 232.8934,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.88,
+      "total_output_tokens": 414,
+      "normalized_latency_ms_per_tok": 610.314,
+      "t_arrival_s": 125.795,
+      "job_delay_s": 253.78
+    },
+    {
+      "id": "multi_turn_miss_param_96#140",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 196.4727,
+          "tpot_s": 0.0489,
+          "output_tokens": 239,
+          "e2e_latency_s": 208.104,
+          "throughput_tok_per_s": 20.46,
+          "t_start_s": 191.905,
+          "t_done_s": 400.009,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 401.103,
+          "t_done_s": 401.103,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 196.4727,
+      "avg_tpot_s": 0.0489,
+      "avg_throughput_tok_per_s": 20.46,
+      "total_output_tokens": 239,
+      "normalized_latency_ms_per_tok": 870.728,
+      "t_arrival_s": 191.905,
+      "job_delay_s": 209.198
+    },
+    {
+      "id": "multi_turn_miss_param_33#77",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 91.4371,
+          "tpot_s": 0.0435,
+          "output_tokens": 512,
+          "e2e_latency_s": 113.6508,
+          "throughput_tok_per_s": 23.0,
+          "t_start_s": 82.623,
+          "t_done_s": 196.274,
+          "turn": 0
+        },
+        {
+          "ttft_s": 107.7004,
+          "tpot_s": 0.0508,
+          "output_tokens": 181,
+          "e2e_latency_s": 116.842,
+          "throughput_tok_per_s": 19.69,
+          "t_start_s": 196.274,
+          "t_done_s": 313.116,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 313.207,
+          "t_done_s": 313.207,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 99.5687,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.34,
+      "total_output_tokens": 693,
+      "normalized_latency_ms_per_tok": 332.601,
+      "t_arrival_s": 82.622,
+      "job_delay_s": 230.585
+    },
+    {
+      "id": "multi_turn_miss_param_80#124",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 167.8361,
+          "tpot_s": 0.049,
+          "output_tokens": 347,
+          "e2e_latency_s": 184.7946,
+          "throughput_tok_per_s": 20.4,
+          "t_start_s": 154.905,
+          "t_done_s": 339.7,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 340.953,
+          "t_done_s": 340.953,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 167.8361,
+      "avg_tpot_s": 0.049,
+      "avg_throughput_tok_per_s": 20.4,
+      "total_output_tokens": 347,
+      "normalized_latency_ms_per_tok": 532.549,
+      "t_arrival_s": 154.905,
+      "job_delay_s": 186.048
+    },
+    {
+      "id": "multi_turn_miss_param_111#155",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 216.5096,
+          "tpot_s": 0.0457,
+          "output_tokens": 150,
+          "e2e_latency_s": 223.3201,
+          "throughput_tok_per_s": 21.88,
+          "t_start_s": 212.71,
+          "t_done_s": 436.03,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 436.077,
+          "t_done_s": 436.077,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 216.5096,
+      "avg_tpot_s": 0.0457,
+      "avg_throughput_tok_per_s": 21.88,
+      "total_output_tokens": 150,
+      "normalized_latency_ms_per_tok": 1488.801,
+      "t_arrival_s": 212.71,
+      "job_delay_s": 223.367
+    },
+    {
+      "id": "multi_turn_miss_param_25#69",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 65.5798,
+          "tpot_s": 0.0461,
+          "output_tokens": 512,
+          "e2e_latency_s": 89.1212,
+          "throughput_tok_per_s": 21.71,
+          "t_start_s": 72.915,
+          "t_done_s": 162.036,
+          "turn": 0
+        },
+        {
+          "ttft_s": 161.8547,
+          "tpot_s": 0.0489,
+          "output_tokens": 215,
+          "e2e_latency_s": 172.3165,
+          "throughput_tok_per_s": 20.46,
+          "t_start_s": 162.036,
+          "t_done_s": 334.352,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 334.442,
+          "t_done_s": 334.442,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 113.7173,
+      "avg_tpot_s": 0.0475,
+      "avg_throughput_tok_per_s": 21.09,
+      "total_output_tokens": 727,
+      "normalized_latency_ms_per_tok": 359.612,
+      "t_arrival_s": 72.914,
+      "job_delay_s": 261.528
+    },
+    {
+      "id": "multi_turn_miss_param_91#135",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 213.1382,
+          "tpot_s": 0.0443,
+          "output_tokens": 512,
+          "e2e_latency_s": 235.7606,
+          "throughput_tok_per_s": 22.59,
+          "t_start_s": 180.567,
+          "t_done_s": 416.328,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 416.328,
+          "t_done_s": 416.328,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 213.1382,
+      "avg_tpot_s": 0.0443,
+      "avg_throughput_tok_per_s": 22.59,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 460.47,
+      "t_arrival_s": 180.567,
+      "job_delay_s": 235.761
+    },
+    {
+      "id": "multi_turn_miss_func_183#27",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 2.6951,
+          "tpot_s": 0.053,
+          "output_tokens": 512,
+          "e2e_latency_s": 29.7978,
+          "throughput_tok_per_s": 18.85,
+          "t_start_s": 29.464,
+          "t_done_s": 59.261,
+          "turn": 0
+        },
+        {
+          "ttft_s": 25.9395,
+          "tpot_s": 0.0504,
+          "output_tokens": 512,
+          "e2e_latency_s": 51.6889,
+          "throughput_tok_per_s": 19.85,
+          "t_start_s": 59.262,
+          "t_done_s": 110.951,
+          "turn": 1
+        },
+        {
+          "ttft_s": 24.5601,
+          "tpot_s": 0.0686,
+          "output_tokens": 45,
+          "e2e_latency_s": 27.5801,
+          "throughput_tok_per_s": 14.57,
+          "t_start_s": 110.951,
+          "t_done_s": 138.531,
+          "turn": 2
+        },
+        {
+          "ttft_s": 246.4263,
+          "tpot_s": 0.0652,
+          "output_tokens": 55,
+          "e2e_latency_s": 249.9464,
+          "throughput_tok_per_s": 15.34,
+          "t_start_s": 140.626,
+          "t_done_s": 390.572,
+          "turn": 3
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 390.663,
+          "t_done_s": 390.663,
+          "turn": 4
+        },
+        {
+          "turn": 5,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 74.9052,
+      "avg_tpot_s": 0.0593,
+      "avg_throughput_tok_per_s": 17.15,
+      "total_output_tokens": 1124,
+      "normalized_latency_ms_per_tok": 319.407,
+      "t_arrival_s": 29.463,
+      "job_delay_s": 361.2
+    },
+    {
+      "id": "multi_turn_miss_param_81#125",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 173.302,
+          "tpot_s": 0.0509,
+          "output_tokens": 210,
+          "e2e_latency_s": 183.9402,
+          "throughput_tok_per_s": 19.65,
+          "t_start_s": 156.138,
+          "t_done_s": 340.078,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 340.174,
+          "t_done_s": 340.174,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 173.302,
+      "avg_tpot_s": 0.0509,
+      "avg_throughput_tok_per_s": 19.65,
+      "total_output_tokens": 210,
+      "normalized_latency_ms_per_tok": 875.906,
+      "t_arrival_s": 156.138,
+      "job_delay_s": 184.036
+    },
+    {
+      "id": "multi_turn_miss_param_48#92",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 32.6372,
+          "tpot_s": 0.0478,
+          "output_tokens": 512,
+          "e2e_latency_s": 57.0635,
+          "throughput_tok_per_s": 20.92,
+          "t_start_s": 113.665,
+          "t_done_s": 170.728,
+          "turn": 0
+        },
+        {
+          "ttft_s": 189.1191,
+          "tpot_s": 0.0456,
+          "output_tokens": 512,
+          "e2e_latency_s": 212.408,
+          "throughput_tok_per_s": 21.94,
+          "t_start_s": 170.728,
+          "t_done_s": 383.136,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 383.137,
+          "t_done_s": 383.137,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 110.8782,
+      "avg_tpot_s": 0.0467,
+      "avg_throughput_tok_per_s": 21.43,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 263.156,
+      "t_arrival_s": 113.664,
+      "job_delay_s": 269.473
+    },
+    {
+      "id": "multi_turn_miss_param_26#70",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 77.4504,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 100.1965,
+          "throughput_tok_per_s": 22.47,
+          "t_start_s": 73.967,
+          "t_done_s": 174.164,
+          "turn": 0
+        },
+        {
+          "ttft_s": 305.8247,
+          "tpot_s": 0.0463,
+          "output_tokens": 405,
+          "e2e_latency_s": 324.5236,
+          "throughput_tok_per_s": 21.61,
+          "t_start_s": 174.164,
+          "t_done_s": 498.688,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 498.738,
+          "t_done_s": 498.738,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 191.6376,
+      "avg_tpot_s": 0.0454,
+      "avg_throughput_tok_per_s": 22.04,
+      "total_output_tokens": 917,
+      "normalized_latency_ms_per_tok": 463.163,
+      "t_arrival_s": 73.967,
+      "job_delay_s": 424.771
+    },
+    {
+      "id": "multi_turn_miss_param_22#66",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 42.7013,
+          "tpot_s": 0.0523,
+          "output_tokens": 234,
+          "e2e_latency_s": 54.8856,
+          "throughput_tok_per_s": 19.12,
+          "t_start_s": 66.261,
+          "t_done_s": 121.146,
+          "turn": 0
+        },
+        {
+          "ttft_s": 64.0333,
+          "tpot_s": 0.0504,
+          "output_tokens": 127,
+          "e2e_latency_s": 70.3887,
+          "throughput_tok_per_s": 19.83,
+          "t_start_s": 121.243,
+          "t_done_s": 191.632,
+          "turn": 1
+        },
+        {
+          "ttft_s": 196.7494,
+          "tpot_s": 0.0461,
+          "output_tokens": 245,
+          "e2e_latency_s": 207.9959,
+          "throughput_tok_per_s": 21.7,
+          "t_start_s": 192.837,
+          "t_done_s": 400.832,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 400.924,
+          "t_done_s": 400.924,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 101.1613,
+      "avg_tpot_s": 0.0496,
+      "avg_throughput_tok_per_s": 20.22,
+      "total_output_tokens": 606,
+      "normalized_latency_ms_per_tok": 549.951,
+      "t_arrival_s": 66.26,
+      "job_delay_s": 334.664
+    },
+    {
+      "id": "multi_turn_miss_param_74#118",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 260.2851,
+          "tpot_s": 0.0468,
+          "output_tokens": 306,
+          "e2e_latency_s": 274.5598,
+          "throughput_tok_per_s": 21.37,
+          "t_start_s": 145.804,
+          "t_done_s": 420.364,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 421.654,
+          "t_done_s": 421.654,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 260.2851,
+      "avg_tpot_s": 0.0468,
+      "avg_throughput_tok_per_s": 21.37,
+      "total_output_tokens": 306,
+      "normalized_latency_ms_per_tok": 897.254,
+      "t_arrival_s": 145.804,
+      "job_delay_s": 275.85
+    },
+    {
+      "id": "multi_turn_miss_param_87#131",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 302.8518,
+          "tpot_s": 0.0459,
+          "output_tokens": 427,
+          "e2e_latency_s": 322.3884,
+          "throughput_tok_per_s": 21.81,
+          "t_start_s": 172.193,
+          "t_done_s": 494.581,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 494.629,
+          "t_done_s": 494.629,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 302.8518,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.81,
+      "total_output_tokens": 427,
+      "normalized_latency_ms_per_tok": 755.008,
+      "t_arrival_s": 172.193,
+      "job_delay_s": 322.436
+    },
+    {
+      "id": "multi_turn_miss_param_15#59",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 13.6335,
+          "tpot_s": 0.057,
+          "output_tokens": 155,
+          "e2e_latency_s": 22.4138,
+          "throughput_tok_per_s": 17.54,
+          "t_start_s": 61.391,
+          "t_done_s": 83.805,
+          "turn": 0
+        },
+        {
+          "ttft_s": 105.8707,
+          "tpot_s": 0.0484,
+          "output_tokens": 277,
+          "e2e_latency_s": 119.2375,
+          "throughput_tok_per_s": 20.65,
+          "t_start_s": 83.913,
+          "t_done_s": 203.151,
+          "turn": 1
+        },
+        {
+          "ttft_s": 292.2119,
+          "tpot_s": 0.0481,
+          "output_tokens": 512,
+          "e2e_latency_s": 316.7987,
+          "throughput_tok_per_s": 20.78,
+          "t_start_s": 203.241,
+          "t_done_s": 520.039,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 520.04,
+          "t_done_s": 520.04,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 137.2387,
+      "avg_tpot_s": 0.0512,
+      "avg_throughput_tok_per_s": 19.66,
+      "total_output_tokens": 944,
+      "normalized_latency_ms_per_tok": 485.646,
+      "t_arrival_s": 61.391,
+      "job_delay_s": 458.649
+    },
+    {
+      "id": "multi_turn_miss_param_36#80",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 42.6261,
+          "tpot_s": 0.0463,
+          "output_tokens": 512,
+          "e2e_latency_s": 66.308,
+          "throughput_tok_per_s": 21.58,
+          "t_start_s": 88.941,
+          "t_done_s": 155.248,
+          "turn": 0
+        },
+        {
+          "ttft_s": 297.233,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 320.5968,
+          "throughput_tok_per_s": 21.87,
+          "t_start_s": 155.249,
+          "t_done_s": 475.846,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 475.846,
+          "t_done_s": 475.846,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 169.9296,
+      "avg_tpot_s": 0.046,
+      "avg_throughput_tok_per_s": 21.73,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 377.837,
+      "t_arrival_s": 88.94,
+      "job_delay_s": 386.906
+    },
+    {
+      "id": "multi_turn_miss_param_101#145",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 255.7508,
+          "tpot_s": 0.0492,
+          "output_tokens": 194,
+          "e2e_latency_s": 265.2459,
+          "throughput_tok_per_s": 20.33,
+          "t_start_s": 198.299,
+          "t_done_s": 463.545,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 463.638,
+          "t_done_s": 463.638,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 255.7508,
+      "avg_tpot_s": 0.0492,
+      "avg_throughput_tok_per_s": 20.33,
+      "total_output_tokens": 194,
+      "normalized_latency_ms_per_tok": 1367.247,
+      "t_arrival_s": 198.299,
+      "job_delay_s": 265.339
+    },
+    {
+      "id": "multi_turn_miss_param_84#128",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 292.6307,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 316.0465,
+          "throughput_tok_per_s": 21.82,
+          "t_start_s": 164.995,
+          "t_done_s": 481.041,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 481.041,
+          "t_done_s": 481.041,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 292.6307,
+      "avg_tpot_s": 0.0458,
+      "avg_throughput_tok_per_s": 21.82,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 617.278,
+      "t_arrival_s": 164.994,
+      "job_delay_s": 316.047
+    },
+    {
+      "id": "multi_turn_miss_param_88#132",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 107.1229,
+          "tpot_s": 0.0518,
+          "output_tokens": 146,
+          "e2e_latency_s": 114.6375,
+          "throughput_tok_per_s": 19.3,
+          "t_start_s": 173.981,
+          "t_done_s": 288.619,
+          "turn": 0
+        },
+        {
+          "ttft_s": 195.613,
+          "tpot_s": 0.0486,
+          "output_tokens": 374,
+          "e2e_latency_s": 213.7306,
+          "throughput_tok_per_s": 20.59,
+          "t_start_s": 288.713,
+          "t_done_s": 502.444,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 505.327,
+          "t_done_s": 505.327,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 151.368,
+      "avg_tpot_s": 0.0502,
+      "avg_throughput_tok_per_s": 19.95,
+      "total_output_tokens": 520,
+      "normalized_latency_ms_per_tok": 631.477,
+      "t_arrival_s": 173.981,
+      "job_delay_s": 331.346
+    },
+    {
+      "id": "multi_turn_miss_param_40#84",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 72.5092,
+          "tpot_s": 0.0539,
+          "output_tokens": 65,
+          "e2e_latency_s": 75.9587,
+          "throughput_tok_per_s": 18.55,
+          "t_start_s": 99.624,
+          "t_done_s": 175.583,
+          "turn": 0
+        },
+        {
+          "ttft_s": 309.1058,
+          "tpot_s": 0.0476,
+          "output_tokens": 512,
+          "e2e_latency_s": 333.4283,
+          "throughput_tok_per_s": 21.01,
+          "t_start_s": 175.671,
+          "t_done_s": 509.099,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 509.099,
+          "t_done_s": 509.099,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 190.8075,
+      "avg_tpot_s": 0.0508,
+      "avg_throughput_tok_per_s": 19.78,
+      "total_output_tokens": 577,
+      "normalized_latency_ms_per_tok": 709.51,
+      "t_arrival_s": 99.624,
+      "job_delay_s": 409.475
+    },
+    {
+      "id": "multi_turn_miss_param_86#130",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 296.9607,
+          "tpot_s": 0.0482,
+          "output_tokens": 196,
+          "e2e_latency_s": 306.3632,
+          "throughput_tok_per_s": 20.74,
+          "t_start_s": 171.075,
+          "t_done_s": 477.438,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 480.363,
+          "t_done_s": 480.363,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 296.9607,
+      "avg_tpot_s": 0.0482,
+      "avg_throughput_tok_per_s": 20.74,
+      "total_output_tokens": 196,
+      "normalized_latency_ms_per_tok": 1563.078,
+      "t_arrival_s": 171.075,
+      "job_delay_s": 309.288
+    },
+    {
+      "id": "multi_turn_miss_param_24#68",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 56.876,
+          "tpot_s": 0.0486,
+          "output_tokens": 372,
+          "e2e_latency_s": 74.9104,
+          "throughput_tok_per_s": 20.57,
+          "t_start_s": 71.767,
+          "t_done_s": 146.678,
+          "turn": 0
+        },
+        {
+          "ttft_s": 271.168,
+          "tpot_s": 0.0463,
+          "output_tokens": 402,
+          "e2e_latency_s": 289.7155,
+          "throughput_tok_per_s": 21.62,
+          "t_start_s": 146.772,
+          "t_done_s": 436.488,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 436.534,
+          "t_done_s": 436.534,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 164.022,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.09,
+      "total_output_tokens": 774,
+      "normalized_latency_ms_per_tok": 471.093,
+      "t_arrival_s": 71.767,
+      "job_delay_s": 364.767
+    },
+    {
+      "id": "multi_turn_miss_param_59#103",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 59.1724,
+          "tpot_s": 0.0487,
+          "output_tokens": 229,
+          "e2e_latency_s": 70.2683,
+          "throughput_tok_per_s": 20.55,
+          "t_start_s": 121.178,
+          "t_done_s": 191.446,
+          "turn": 0
+        },
+        {
+          "ttft_s": 228.7173,
+          "tpot_s": 0.0514,
+          "output_tokens": 137,
+          "e2e_latency_s": 235.714,
+          "throughput_tok_per_s": 19.44,
+          "t_start_s": 192.7,
+          "t_done_s": 428.414,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 434.663,
+          "t_done_s": 434.663,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 143.9449,
+      "avg_tpot_s": 0.05,
+      "avg_throughput_tok_per_s": 20.0,
+      "total_output_tokens": 366,
+      "normalized_latency_ms_per_tok": 836.017,
+      "t_arrival_s": 121.177,
+      "job_delay_s": 313.486
+    },
+    {
+      "id": "multi_turn_miss_param_42#86",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 144.734,
+          "tpot_s": 0.0461,
+          "output_tokens": 334,
+          "e2e_latency_s": 160.0858,
+          "throughput_tok_per_s": 21.69,
+          "t_start_s": 100.017,
+          "t_done_s": 260.103,
+          "turn": 0
+        },
+        {
+          "ttft_s": 244.8035,
+          "tpot_s": 0.068,
+          "output_tokens": 30,
+          "e2e_latency_s": 246.7769,
+          "throughput_tok_per_s": 14.7,
+          "t_start_s": 260.148,
+          "t_done_s": 506.925,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 508.159,
+          "t_done_s": 508.159,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 194.7688,
+      "avg_tpot_s": 0.0571,
+      "avg_throughput_tok_per_s": 18.2,
+      "total_output_tokens": 364,
+      "normalized_latency_ms_per_tok": 1117.755,
+      "t_arrival_s": 100.016,
+      "job_delay_s": 408.143
+    },
+    {
+      "id": "multi_turn_miss_param_61#105",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 134.8178,
+          "tpot_s": 0.0485,
+          "output_tokens": 512,
+          "e2e_latency_s": 159.5811,
+          "throughput_tok_per_s": 20.64,
+          "t_start_s": 122.559,
+          "t_done_s": 282.14,
+          "turn": 0
+        },
+        {
+          "ttft_s": 189.5178,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 212.8521,
+          "throughput_tok_per_s": 21.9,
+          "t_start_s": 282.14,
+          "t_done_s": 494.992,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 494.993,
+          "t_done_s": 494.993,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 162.1678,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.27,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 363.704,
+      "t_arrival_s": 122.558,
+      "job_delay_s": 372.435
+    },
+    {
+      "id": "multi_turn_miss_param_43#87",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 83.4908,
+          "tpot_s": 0.0501,
+          "output_tokens": 122,
+          "e2e_latency_s": 89.5556,
+          "throughput_tok_per_s": 19.95,
+          "t_start_s": 100.558,
+          "t_done_s": 190.114,
+          "turn": 0
+        },
+        {
+          "ttft_s": 305.8089,
+          "tpot_s": 0.0481,
+          "output_tokens": 512,
+          "e2e_latency_s": 330.3806,
+          "throughput_tok_per_s": 20.8,
+          "t_start_s": 190.208,
+          "t_done_s": 520.589,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 520.589,
+          "t_done_s": 520.589,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 194.6498,
+      "avg_tpot_s": 0.0491,
+      "avg_throughput_tok_per_s": 20.38,
+      "total_output_tokens": 634,
+      "normalized_latency_ms_per_tok": 662.36,
+      "t_arrival_s": 100.558,
+      "job_delay_s": 420.031
+    },
+    {
+      "id": "multi_turn_miss_param_92#136",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 306.8245,
+          "tpot_s": 0.0477,
+          "output_tokens": 458,
+          "e2e_latency_s": 328.642,
+          "throughput_tok_per_s": 20.95,
+          "t_start_s": 185.545,
+          "t_done_s": 514.187,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 514.236,
+          "t_done_s": 514.236,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 306.8245,
+      "avg_tpot_s": 0.0477,
+      "avg_throughput_tok_per_s": 20.95,
+      "total_output_tokens": 458,
+      "normalized_latency_ms_per_tok": 717.559,
+      "t_arrival_s": 185.545,
+      "job_delay_s": 328.691
+    },
+    {
+      "id": "multi_turn_miss_param_23#67",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 55.6079,
+          "tpot_s": 0.0505,
+          "output_tokens": 283,
+          "e2e_latency_s": 69.861,
+          "throughput_tok_per_s": 19.79,
+          "t_start_s": 66.758,
+          "t_done_s": 136.619,
+          "turn": 0
+        },
+        {
+          "ttft_s": 124.1045,
+          "tpot_s": 0.0548,
+          "output_tokens": 151,
+          "e2e_latency_s": 132.3215,
+          "throughput_tok_per_s": 18.25,
+          "t_start_s": 136.715,
+          "t_done_s": 269.036,
+          "turn": 1
+        },
+        {
+          "ttft_s": 256.604,
+          "tpot_s": 0.052,
+          "output_tokens": 223,
+          "e2e_latency_s": 268.1504,
+          "throughput_tok_per_s": 19.23,
+          "t_start_s": 269.134,
+          "t_done_s": 537.285,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 145.4388,
+      "avg_tpot_s": 0.0524,
+      "avg_throughput_tok_per_s": 19.09,
+      "total_output_tokens": 657,
+      "normalized_latency_ms_per_tok": 715.88,
+      "t_arrival_s": 66.758,
+      "job_delay_s": 470.527
+    },
+    {
+      "id": "multi_turn_miss_param_58#102",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 133.1722,
+          "tpot_s": 0.0471,
+          "output_tokens": 296,
+          "e2e_latency_s": 147.0544,
+          "throughput_tok_per_s": 21.25,
+          "t_start_s": 120.175,
+          "t_done_s": 267.23,
+          "turn": 0
+        },
+        {
+          "ttft_s": 250.6101,
+          "tpot_s": 0.0491,
+          "output_tokens": 386,
+          "e2e_latency_s": 269.4986,
+          "throughput_tok_per_s": 20.38,
+          "t_start_s": 267.28,
+          "t_done_s": 536.779,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 191.8911,
+      "avg_tpot_s": 0.0481,
+      "avg_throughput_tok_per_s": 20.81,
+      "total_output_tokens": 682,
+      "normalized_latency_ms_per_tok": 610.782,
+      "t_arrival_s": 120.175,
+      "job_delay_s": 416.604
+    },
+    {
+      "id": "multi_turn_miss_param_46#90",
+      "num_turns": 2,
+      "turns": [
+        {
+          "ttft_s": 83.568,
+          "tpot_s": 0.0455,
+          "output_tokens": 512,
+          "e2e_latency_s": 106.8098,
+          "throughput_tok_per_s": 21.99,
+          "t_start_s": 106.215,
+          "t_done_s": 213.025,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 213.025,
+          "t_done_s": 213.025,
+          "turn": 1
+        }
+      ],
+      "avg_ttft_s": 83.568,
+      "avg_tpot_s": 0.0455,
+      "avg_throughput_tok_per_s": 21.99,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 208.613,
+      "t_arrival_s": 106.215,
+      "job_delay_s": 106.81
+    },
+    {
+      "id": "multi_turn_miss_param_13#57",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 5.8921,
+          "tpot_s": 0.0522,
+          "output_tokens": 512,
+          "e2e_latency_s": 32.58,
+          "throughput_tok_per_s": 19.15,
+          "t_start_s": 60.1,
+          "t_done_s": 92.679,
+          "turn": 0
+        },
+        {
+          "ttft_s": 135.1596,
+          "tpot_s": 0.0734,
+          "output_tokens": 27,
+          "e2e_latency_s": 137.0668,
+          "throughput_tok_per_s": 13.63,
+          "t_start_s": 92.68,
+          "t_done_s": 229.747,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 232.003,
+          "t_done_s": 232.003,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 70.5259,
+      "avg_tpot_s": 0.0628,
+      "avg_throughput_tok_per_s": 16.39,
+      "total_output_tokens": 539,
+      "normalized_latency_ms_per_tok": 314.744,
+      "t_arrival_s": 60.099,
+      "job_delay_s": 171.904
+    },
+    {
+      "id": "multi_turn_miss_param_20#64",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 16.7327,
+          "tpot_s": 0.0508,
+          "output_tokens": 512,
+          "e2e_latency_s": 42.6671,
+          "throughput_tok_per_s": 19.7,
+          "t_start_s": 64.662,
+          "t_done_s": 107.33,
+          "turn": 0
+        },
+        {
+          "ttft_s": 105.257,
+          "tpot_s": 0.0468,
+          "output_tokens": 512,
+          "e2e_latency_s": 129.1883,
+          "throughput_tok_per_s": 21.35,
+          "t_start_s": 107.33,
+          "t_done_s": 236.518,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 236.518,
+          "t_done_s": 236.518,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 60.9948,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.52,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 167.828,
+      "t_arrival_s": 64.662,
+      "job_delay_s": 171.856
+    },
+    {
+      "id": "multi_turn_miss_param_30#74",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 38.9728,
+          "tpot_s": 0.0472,
+          "output_tokens": 512,
+          "e2e_latency_s": 63.0892,
+          "throughput_tok_per_s": 21.19,
+          "t_start_s": 78.719,
+          "t_done_s": 141.809,
+          "turn": 0
+        },
+        {
+          "ttft_s": 96.7843,
+          "tpot_s": 0.046,
+          "output_tokens": 315,
+          "e2e_latency_s": 111.2187,
+          "throughput_tok_per_s": 21.75,
+          "t_start_s": 141.809,
+          "t_done_s": 253.028,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 253.078,
+          "t_done_s": 253.078,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 67.8786,
+      "avg_tpot_s": 0.0466,
+      "avg_throughput_tok_per_s": 21.47,
+      "total_output_tokens": 827,
+      "normalized_latency_ms_per_tok": 210.771,
+      "t_arrival_s": 78.719,
+      "job_delay_s": 174.359
+    },
+    {
+      "id": "multi_turn_miss_param_34#78",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 14.3863,
+          "tpot_s": 0.0547,
+          "output_tokens": 279,
+          "e2e_latency_s": 29.5854,
+          "throughput_tok_per_s": 18.29,
+          "t_start_s": 85.97,
+          "t_done_s": 115.556,
+          "turn": 0
+        },
+        {
+          "ttft_s": 130.401,
+          "tpot_s": 0.0524,
+          "output_tokens": 142,
+          "e2e_latency_s": 137.7951,
+          "throughput_tok_per_s": 19.07,
+          "t_start_s": 115.657,
+          "t_done_s": 253.452,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 253.546,
+          "t_done_s": 253.546,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 72.3937,
+      "avg_tpot_s": 0.0536,
+      "avg_throughput_tok_per_s": 18.68,
+      "total_output_tokens": 421,
+      "normalized_latency_ms_per_tok": 397.578,
+      "t_arrival_s": 85.97,
+      "job_delay_s": 167.576
+    },
+    {
+      "id": "multi_turn_miss_param_9#53",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 21.0242,
+          "tpot_s": 0.053,
+          "output_tokens": 268,
+          "e2e_latency_s": 35.1745,
+          "throughput_tok_per_s": 18.87,
+          "t_start_s": 55.686,
+          "t_done_s": 90.86,
+          "turn": 0
+        },
+        {
+          "ttft_s": 15.1918,
+          "tpot_s": 0.0478,
+          "output_tokens": 512,
+          "e2e_latency_s": 39.64,
+          "throughput_tok_per_s": 20.9,
+          "t_start_s": 90.912,
+          "t_done_s": 130.552,
+          "turn": 1
+        },
+        {
+          "ttft_s": 146.4889,
+          "tpot_s": 0.0464,
+          "output_tokens": 512,
+          "e2e_latency_s": 170.1848,
+          "throughput_tok_per_s": 21.56,
+          "t_start_s": 130.553,
+          "t_done_s": 300.738,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 300.738,
+          "t_done_s": 300.738,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 60.9016,
+      "avg_tpot_s": 0.0491,
+      "avg_throughput_tok_per_s": 20.44,
+      "total_output_tokens": 1292,
+      "normalized_latency_ms_per_tok": 189.628,
+      "t_arrival_s": 55.685,
+      "job_delay_s": 245.053
+    },
+    {
+      "id": "multi_turn_miss_param_4#48",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 17.8879,
+          "tpot_s": 0.0523,
+          "output_tokens": 512,
+          "e2e_latency_s": 44.5923,
+          "throughput_tok_per_s": 19.14,
+          "t_start_s": 52.617,
+          "t_done_s": 97.209,
+          "turn": 0
+        },
+        {
+          "ttft_s": 58.227,
+          "tpot_s": 0.0494,
+          "output_tokens": 342,
+          "e2e_latency_s": 75.0633,
+          "throughput_tok_per_s": 20.25,
+          "t_start_s": 97.21,
+          "t_done_s": 172.273,
+          "turn": 1
+        },
+        {
+          "ttft_s": 194.4987,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 217.8851,
+          "throughput_tok_per_s": 21.85,
+          "t_start_s": 172.366,
+          "t_done_s": 390.251,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 390.251,
+          "t_done_s": 390.251,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 90.2045,
+      "avg_tpot_s": 0.0492,
+      "avg_throughput_tok_per_s": 20.41,
+      "total_output_tokens": 1366,
+      "normalized_latency_ms_per_tok": 247.102,
+      "t_arrival_s": 52.617,
+      "job_delay_s": 337.634
+    },
+    {
+      "id": "multi_turn_miss_param_57#101",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 132.7376,
+          "tpot_s": 0.048,
+          "output_tokens": 512,
+          "e2e_latency_s": 157.2675,
+          "throughput_tok_per_s": 20.83,
+          "t_start_s": 119.4,
+          "t_done_s": 276.667,
+          "turn": 0
+        },
+        {
+          "ttft_s": 171.1043,
+          "tpot_s": 0.0518,
+          "output_tokens": 186,
+          "e2e_latency_s": 180.6833,
+          "throughput_tok_per_s": 19.31,
+          "t_start_s": 276.667,
+          "t_done_s": 457.351,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 458.69,
+          "t_done_s": 458.69,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 151.921,
+      "avg_tpot_s": 0.0499,
+      "avg_throughput_tok_per_s": 20.07,
+      "total_output_tokens": 698,
+      "normalized_latency_ms_per_tok": 484.17,
+      "t_arrival_s": 119.399,
+      "job_delay_s": 339.291
+    },
+    {
+      "id": "multi_turn_miss_param_45#89",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 157.5379,
+          "tpot_s": 0.0489,
+          "output_tokens": 287,
+          "e2e_latency_s": 171.5278,
+          "throughput_tok_per_s": 20.44,
+          "t_start_s": 104.491,
+          "t_done_s": 276.019,
+          "turn": 0
+        },
+        {
+          "ttft_s": 161.4967,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 184.936,
+          "throughput_tok_per_s": 21.8,
+          "t_start_s": 276.115,
+          "t_done_s": 461.051,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 461.052,
+          "t_done_s": 461.052,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 159.5173,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.12,
+      "total_output_tokens": 799,
+      "normalized_latency_ms_per_tok": 446.137,
+      "t_arrival_s": 104.491,
+      "job_delay_s": 356.561
+    },
+    {
+      "id": "multi_turn_miss_param_7#51",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 3.2736,
+          "tpot_s": 0.059,
+          "output_tokens": 166,
+          "e2e_latency_s": 13.0026,
+          "throughput_tok_per_s": 16.96,
+          "t_start_s": 54.793,
+          "t_done_s": 67.796,
+          "turn": 0
+        },
+        {
+          "ttft_s": 58.3226,
+          "tpot_s": 0.0467,
+          "output_tokens": 512,
+          "e2e_latency_s": 82.1651,
+          "throughput_tok_per_s": 21.43,
+          "t_start_s": 69.078,
+          "t_done_s": 151.243,
+          "turn": 1
+        },
+        {
+          "ttft_s": 272.8238,
+          "tpot_s": 0.0455,
+          "output_tokens": 512,
+          "e2e_latency_s": 296.0858,
+          "throughput_tok_per_s": 21.97,
+          "t_start_s": 151.243,
+          "t_done_s": 447.329,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 447.329,
+          "t_done_s": 447.329,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 111.4733,
+      "avg_tpot_s": 0.0504,
+      "avg_throughput_tok_per_s": 20.12,
+      "total_output_tokens": 1190,
+      "normalized_latency_ms_per_tok": 328.784,
+      "t_arrival_s": 54.793,
+      "job_delay_s": 392.536
+    },
+    {
+      "id": "multi_turn_miss_param_65#109",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 145.1558,
+          "tpot_s": 0.148,
+          "output_tokens": 10,
+          "e2e_latency_s": 146.488,
+          "throughput_tok_per_s": 6.76,
+          "t_start_s": 127.249,
+          "t_done_s": 273.737,
+          "turn": 0
+        },
+        {
+          "ttft_s": 174.4634,
+          "tpot_s": 0.0487,
+          "output_tokens": 309,
+          "e2e_latency_s": 189.4568,
+          "throughput_tok_per_s": 20.54,
+          "t_start_s": 278.31,
+          "t_done_s": 467.767,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 467.858,
+          "t_done_s": 467.858,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 159.8096,
+      "avg_tpot_s": 0.0983,
+      "avg_throughput_tok_per_s": 13.65,
+      "total_output_tokens": 319,
+      "normalized_latency_ms_per_tok": 1053.118,
+      "t_arrival_s": 127.248,
+      "job_delay_s": 340.61
+    },
+    {
+      "id": "multi_turn_miss_param_8#52",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 15.0158,
+          "tpot_s": 0.0513,
+          "output_tokens": 512,
+          "e2e_latency_s": 41.2547,
+          "throughput_tok_per_s": 19.47,
+          "t_start_s": 55.031,
+          "t_done_s": 96.286,
+          "turn": 0
+        },
+        {
+          "ttft_s": 23.7089,
+          "tpot_s": 0.0721,
+          "output_tokens": 29,
+          "e2e_latency_s": 25.7288,
+          "throughput_tok_per_s": 13.86,
+          "t_start_s": 96.286,
+          "t_done_s": 122.015,
+          "turn": 1
+        },
+        {
+          "ttft_s": 88.4081,
+          "tpot_s": 0.0769,
+          "output_tokens": 35,
+          "e2e_latency_s": 91.0222,
+          "throughput_tok_per_s": 13.01,
+          "t_start_s": 126.343,
+          "t_done_s": 217.365,
+          "turn": 2
+        },
+        {
+          "ttft_s": 243.3305,
+          "tpot_s": 0.0454,
+          "output_tokens": 512,
+          "e2e_latency_s": 266.5552,
+          "throughput_tok_per_s": 22.0,
+          "t_start_s": 223.434,
+          "t_done_s": 489.989,
+          "turn": 3
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 489.989,
+          "t_done_s": 489.989,
+          "turn": 4
+        }
+      ],
+      "avg_ttft_s": 92.6158,
+      "avg_tpot_s": 0.0614,
+      "avg_throughput_tok_per_s": 17.09,
+      "total_output_tokens": 1088,
+      "normalized_latency_ms_per_tok": 390.221,
+      "t_arrival_s": 55.031,
+      "job_delay_s": 434.958
+    },
+    {
+      "id": "multi_turn_miss_param_27#71",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 13.7544,
+          "tpot_s": 0.0523,
+          "output_tokens": 368,
+          "e2e_latency_s": 32.9348,
+          "throughput_tok_per_s": 19.13,
+          "t_start_s": 74.235,
+          "t_done_s": 107.17,
+          "turn": 0
+        },
+        {
+          "ttft_s": 158.4278,
+          "tpot_s": 0.0466,
+          "output_tokens": 512,
+          "e2e_latency_s": 182.2407,
+          "throughput_tok_per_s": 21.46,
+          "t_start_s": 108.821,
+          "t_done_s": 291.062,
+          "turn": 1
+        },
+        {
+          "ttft_s": 204.7011,
+          "tpot_s": 0.0551,
+          "output_tokens": 124,
+          "e2e_latency_s": 211.4748,
+          "throughput_tok_per_s": 18.16,
+          "t_start_s": 291.062,
+          "t_done_s": 502.537,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 502.631,
+          "t_done_s": 502.631,
+          "turn": 3
+        }
+      ],
+      "avg_ttft_s": 125.6278,
+      "avg_tpot_s": 0.0513,
+      "avg_throughput_tok_per_s": 19.58,
+      "total_output_tokens": 1004,
+      "normalized_latency_ms_per_tok": 424.95,
+      "t_arrival_s": 74.235,
+      "job_delay_s": 428.396
+    },
+    {
+      "id": "multi_turn_miss_param_41#85",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 75.9389,
+          "tpot_s": 0.0448,
+          "output_tokens": 512,
+          "e2e_latency_s": 98.8103,
+          "throughput_tok_per_s": 22.34,
+          "t_start_s": 99.804,
+          "t_done_s": 198.614,
+          "turn": 0
+        },
+        {
+          "ttft_s": 313.0712,
+          "tpot_s": 0.0494,
+          "output_tokens": 273,
+          "e2e_latency_s": 326.4981,
+          "throughput_tok_per_s": 20.26,
+          "t_start_s": 198.615,
+          "t_done_s": 525.113,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 525.207,
+          "t_done_s": 525.207,
+          "turn": 2
+        }
+      ],
+      "avg_ttft_s": 194.505,
+      "avg_tpot_s": 0.0471,
+      "avg_throughput_tok_per_s": 21.3,
+      "total_output_tokens": 785,
+      "normalized_latency_ms_per_tok": 541.794,
+      "t_arrival_s": 99.804,
+      "job_delay_s": 425.403
+    },
+    {
+      "id": "multi_turn_miss_param_118#162",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 226.209,
+          "t_done_s": 226.209,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 226.208,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_108#152",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 321.5094,
+          "tpot_s": 0.0461,
+          "output_tokens": 242,
+          "e2e_latency_s": 332.6108,
+          "throughput_tok_per_s": 21.71,
+          "t_start_s": 205.453,
+          "t_done_s": 538.064,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 321.5094,
+      "avg_tpot_s": 0.0461,
+      "avg_throughput_tok_per_s": 21.71,
+      "total_output_tokens": 242,
+      "normalized_latency_ms_per_tok": 1374.425,
+      "t_arrival_s": 205.452,
+      "job_delay_s": 332.612
+    },
+    {
+      "id": "multi_turn_miss_param_113#157",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 218.227,
+          "t_done_s": 218.227,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 218.227,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_112#156",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 217.995,
+          "t_done_s": 217.995,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 217.994,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_115#159",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 219.635,
+          "t_done_s": 219.635,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 219.634,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_0#44",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 20.6938,
+          "tpot_s": 0.0526,
+          "output_tokens": 512,
+          "e2e_latency_s": 47.5475,
+          "throughput_tok_per_s": 19.03,
+          "t_start_s": 47.392,
+          "t_done_s": 94.94,
+          "turn": 0
+        },
+        {
+          "ttft_s": 147.7432,
+          "tpot_s": 0.05,
+          "output_tokens": 240,
+          "e2e_latency_s": 159.6817,
+          "throughput_tok_per_s": 20.02,
+          "t_start_s": 94.94,
+          "t_done_s": 254.622,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 257.393,
+          "t_done_s": 257.393,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 84.2185,
+      "avg_tpot_s": 0.0513,
+      "avg_throughput_tok_per_s": 19.52,
+      "total_output_tokens": 752,
+      "normalized_latency_ms_per_tok": 275.571,
+      "t_arrival_s": 47.392,
+      "job_delay_s": 210.001
+    },
+    {
+      "id": "multi_turn_miss_param_53#97",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 126.5311,
+          "tpot_s": 0.0519,
+          "output_tokens": 179,
+          "e2e_latency_s": 135.7656,
+          "throughput_tok_per_s": 19.28,
+          "t_start_s": 117.353,
+          "t_done_s": 253.118,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 253.2,
+          "t_done_s": 253.2,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 126.5311,
+      "avg_tpot_s": 0.0519,
+      "avg_throughput_tok_per_s": 19.28,
+      "total_output_tokens": 179,
+      "normalized_latency_ms_per_tok": 758.467,
+      "t_arrival_s": 117.352,
+      "job_delay_s": 135.848
+    },
+    {
+      "id": "multi_turn_miss_param_125#169",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.203,
+          "t_done_s": 228.203,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.203,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_110#154",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 206.657,
+          "t_done_s": 206.657,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 206.656,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_126#170",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.218,
+          "t_done_s": 228.218,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.218,
+      "job_delay_s": -0.0
+    },
+    {
+      "id": "multi_turn_miss_param_121#165",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 227.729,
+          "t_done_s": 227.729,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 227.729,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_6#50",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 13.5792,
+          "tpot_s": 0.0552,
+          "output_tokens": 305,
+          "e2e_latency_s": 30.357,
+          "throughput_tok_per_s": 18.12,
+          "t_start_s": 52.752,
+          "t_done_s": 83.109,
+          "turn": 0
+        },
+        {
+          "ttft_s": 115.7167,
+          "tpot_s": 0.0488,
+          "output_tokens": 324,
+          "e2e_latency_s": 131.4891,
+          "throughput_tok_per_s": 20.48,
+          "t_start_s": 84.701,
+          "t_done_s": 216.19,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 216.284,
+          "t_done_s": 216.284,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 64.648,
+      "avg_tpot_s": 0.052,
+      "avg_throughput_tok_per_s": 19.3,
+      "total_output_tokens": 629,
+      "normalized_latency_ms_per_tok": 257.307,
+      "t_arrival_s": 52.752,
+      "job_delay_s": 163.532
+    },
+    {
+      "id": "multi_turn_miss_param_16#60",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 23.0186,
+          "tpot_s": 0.05,
+          "output_tokens": 512,
+          "e2e_latency_s": 48.571,
+          "throughput_tok_per_s": 20.0,
+          "t_start_s": 62.169,
+          "t_done_s": 110.74,
+          "turn": 0
+        },
+        {
+          "ttft_s": 92.8256,
+          "tpot_s": 0.0477,
+          "output_tokens": 312,
+          "e2e_latency_s": 107.6519,
+          "throughput_tok_per_s": 20.98,
+          "t_start_s": 110.741,
+          "t_done_s": 218.393,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 218.487,
+          "t_done_s": 218.487,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 57.9221,
+      "avg_tpot_s": 0.0489,
+      "avg_throughput_tok_per_s": 20.49,
+      "total_output_tokens": 824,
+      "normalized_latency_ms_per_tok": 189.591,
+      "t_arrival_s": 62.169,
+      "job_delay_s": 156.318
+    },
+    {
+      "id": "multi_turn_miss_param_119#163",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 226.628,
+          "t_done_s": 226.628,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 226.627,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_120#164",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 227.172,
+          "t_done_s": 227.172,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 227.171,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_128#172",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 229.102,
+          "t_done_s": 229.102,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 229.102,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_127#171",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.419,
+          "t_done_s": 228.419,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.418,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_10#54",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 1.3516,
+          "tpot_s": 0.0614,
+          "output_tokens": 150,
+          "e2e_latency_s": 10.507,
+          "throughput_tok_per_s": 16.27,
+          "t_start_s": 57.289,
+          "t_done_s": 67.796,
+          "turn": 0
+        },
+        {
+          "ttft_s": 13.3095,
+          "tpot_s": 0.0571,
+          "output_tokens": 136,
+          "e2e_latency_s": 21.0127,
+          "throughput_tok_per_s": 17.53,
+          "t_start_s": 69.022,
+          "t_done_s": 90.035,
+          "turn": 1
+        },
+        {
+          "ttft_s": 45.1914,
+          "tpot_s": 0.0517,
+          "output_tokens": 128,
+          "e2e_latency_s": 51.7529,
+          "throughput_tok_per_s": 19.36,
+          "t_start_s": 90.138,
+          "t_done_s": 141.891,
+          "turn": 2
+        },
+        {
+          "ttft_s": 128.9717,
+          "tpot_s": 0.0498,
+          "output_tokens": 431,
+          "e2e_latency_s": 150.369,
+          "throughput_tok_per_s": 20.1,
+          "t_start_s": 141.981,
+          "t_done_s": 292.35,
+          "turn": 3
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 293.9,
+          "t_done_s": 293.9,
+          "turn": 4
+        },
+        {
+          "turn": 5,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 47.206,
+      "avg_tpot_s": 0.055,
+      "avg_throughput_tok_per_s": 18.32,
+      "total_output_tokens": 845,
+      "normalized_latency_ms_per_tok": 276.499,
+      "t_arrival_s": 57.289,
+      "job_delay_s": 236.611
+    },
+    {
+      "id": "multi_turn_miss_param_124#168",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 228.116,
+          "t_done_s": 228.116,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 228.116,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_51#95",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 112.0373,
+          "tpot_s": 0.0517,
+          "output_tokens": 204,
+          "e2e_latency_s": 122.5311,
+          "throughput_tok_per_s": 19.34,
+          "t_start_s": 116.935,
+          "t_done_s": 239.467,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 239.555,
+          "t_done_s": 239.555,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 112.0373,
+      "avg_tpot_s": 0.0517,
+      "avg_throughput_tok_per_s": 19.34,
+      "total_output_tokens": 204,
+      "normalized_latency_ms_per_tok": 600.643,
+      "t_arrival_s": 116.935,
+      "job_delay_s": 122.62
+    },
+    {
+      "id": "multi_turn_miss_param_62#106",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 143.4638,
+          "tpot_s": 0.0466,
+          "output_tokens": 512,
+          "e2e_latency_s": 167.2702,
+          "throughput_tok_per_s": 21.46,
+          "t_start_s": 123.323,
+          "t_done_s": 290.593,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 290.594,
+          "t_done_s": 290.594,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 143.4638,
+      "avg_tpot_s": 0.0466,
+      "avg_throughput_tok_per_s": 21.46,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 326.7,
+      "t_arrival_s": 123.322,
+      "job_delay_s": 167.272
+    },
+    {
+      "id": "multi_turn_miss_param_130#174",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 231.404,
+          "t_done_s": 231.404,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 231.403,
+      "job_delay_s": 0.001
+    },
+    {
+      "id": "multi_turn_miss_param_85#129",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 160.772,
+          "tpot_s": 0.0439,
+          "output_tokens": 512,
+          "e2e_latency_s": 183.2268,
+          "throughput_tok_per_s": 22.76,
+          "t_start_s": 168.104,
+          "t_done_s": 351.331,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 351.331,
+          "t_done_s": 351.331,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 160.772,
+      "avg_tpot_s": 0.0439,
+      "avg_throughput_tok_per_s": 22.76,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 357.865,
+      "t_arrival_s": 168.103,
+      "job_delay_s": 183.228
+    },
+    {
+      "id": "multi_turn_miss_param_19#63",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 39.5697,
+          "tpot_s": 0.0551,
+          "output_tokens": 171,
+          "e2e_latency_s": 48.9331,
+          "throughput_tok_per_s": 18.16,
+          "t_start_s": 64.427,
+          "t_done_s": 113.36,
+          "turn": 0
+        },
+        {
+          "ttft_s": 108.1674,
+          "tpot_s": 0.0505,
+          "output_tokens": 263,
+          "e2e_latency_s": 121.4021,
+          "throughput_tok_per_s": 19.8,
+          "t_start_s": 113.459,
+          "t_done_s": 234.861,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 234.956,
+          "t_done_s": 234.956,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 73.8685,
+      "avg_tpot_s": 0.0528,
+      "avg_throughput_tok_per_s": 18.98,
+      "total_output_tokens": 434,
+      "normalized_latency_ms_per_tok": 392.477,
+      "t_arrival_s": 64.427,
+      "job_delay_s": 170.529
+    },
+    {
+      "id": "multi_turn_miss_param_72#116",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 131.4337,
+          "tpot_s": 0.0528,
+          "output_tokens": 202,
+          "e2e_latency_s": 142.0367,
+          "throughput_tok_per_s": 18.96,
+          "t_start_s": 142.565,
+          "t_done_s": 284.601,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 284.701,
+          "t_done_s": 284.701,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 131.4337,
+      "avg_tpot_s": 0.0528,
+      "avg_throughput_tok_per_s": 18.96,
+      "total_output_tokens": 202,
+      "normalized_latency_ms_per_tok": 703.152,
+      "t_arrival_s": 142.564,
+      "job_delay_s": 142.137
+    },
+    {
+      "id": "multi_turn_miss_param_67#111",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 238.8756,
+          "tpot_s": 0.0458,
+          "output_tokens": 299,
+          "e2e_latency_s": 252.5241,
+          "throughput_tok_per_s": 21.83,
+          "t_start_s": 134.865,
+          "t_done_s": 387.39,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 387.438,
+          "t_done_s": 387.438,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 238.8756,
+      "avg_tpot_s": 0.0458,
+      "avg_throughput_tok_per_s": 21.83,
+      "total_output_tokens": 299,
+      "normalized_latency_ms_per_tok": 844.562,
+      "t_arrival_s": 134.865,
+      "job_delay_s": 252.573
+    },
+    {
+      "id": "multi_turn_miss_param_55#99",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 136.192,
+          "tpot_s": 0.0461,
+          "output_tokens": 508,
+          "e2e_latency_s": 159.5548,
+          "throughput_tok_per_s": 21.7,
+          "t_start_s": 118.196,
+          "t_done_s": 277.751,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 277.94,
+          "t_done_s": 277.94,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 136.192,
+      "avg_tpot_s": 0.0461,
+      "avg_throughput_tok_per_s": 21.7,
+      "total_output_tokens": 508,
+      "normalized_latency_ms_per_tok": 314.084,
+      "t_arrival_s": 118.196,
+      "job_delay_s": 159.744
+    },
+    {
+      "id": "multi_turn_miss_param_70#114",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 128.082,
+          "tpot_s": 0.0511,
+          "output_tokens": 253,
+          "e2e_latency_s": 140.969,
+          "throughput_tok_per_s": 19.55,
+          "t_start_s": 138.948,
+          "t_done_s": 279.917,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 285.233,
+          "t_done_s": 285.233,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 128.082,
+      "avg_tpot_s": 0.0511,
+      "avg_throughput_tok_per_s": 19.55,
+      "total_output_tokens": 253,
+      "normalized_latency_ms_per_tok": 557.19,
+      "t_arrival_s": 138.948,
+      "job_delay_s": 146.285
+    },
+    {
+      "id": "multi_turn_miss_param_66#110",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 153.3126,
+          "tpot_s": 0.0486,
+          "output_tokens": 482,
+          "e2e_latency_s": 176.6842,
+          "throughput_tok_per_s": 20.58,
+          "t_start_s": 131.686,
+          "t_done_s": 308.371,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 308.684,
+          "t_done_s": 308.684,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 153.3126,
+      "avg_tpot_s": 0.0486,
+      "avg_throughput_tok_per_s": 20.58,
+      "total_output_tokens": 482,
+      "normalized_latency_ms_per_tok": 366.565,
+      "t_arrival_s": 131.686,
+      "job_delay_s": 176.998
+    },
+    {
+      "id": "multi_turn_miss_param_131#175",
+      "num_turns": 8,
+      "turns": [
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 237.733,
+          "t_done_s": 237.733,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": null,
+      "avg_tpot_s": null,
+      "avg_throughput_tok_per_s": null,
+      "total_output_tokens": 0,
+      "normalized_latency_ms_per_tok": null,
+      "t_arrival_s": 237.733,
+      "job_delay_s": 0.0
+    },
+    {
+      "id": "multi_turn_miss_param_28#72",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 17.9556,
+          "tpot_s": 0.049,
+          "output_tokens": 453,
+          "e2e_latency_s": 40.1209,
+          "throughput_tok_per_s": 20.39,
+          "t_start_s": 76.96,
+          "t_done_s": 117.081,
+          "turn": 0
+        },
+        {
+          "ttft_s": 115.8403,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 139.2168,
+          "throughput_tok_per_s": 21.86,
+          "t_start_s": 117.131,
+          "t_done_s": 256.347,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 256.348,
+          "t_done_s": 256.348,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 66.8979,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.12,
+      "total_output_tokens": 965,
+      "normalized_latency_ms_per_tok": 185.842,
+      "t_arrival_s": 76.96,
+      "job_delay_s": 179.388
+    },
+    {
+      "id": "multi_turn_miss_param_21#65",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 35.0417,
+          "tpot_s": 0.0488,
+          "output_tokens": 512,
+          "e2e_latency_s": 59.9908,
+          "throughput_tok_per_s": 20.48,
+          "t_start_s": 64.722,
+          "t_done_s": 124.712,
+          "turn": 0
+        },
+        {
+          "ttft_s": 219.1141,
+          "tpot_s": 0.0445,
+          "output_tokens": 512,
+          "e2e_latency_s": 241.84,
+          "throughput_tok_per_s": 22.49,
+          "t_start_s": 124.713,
+          "t_done_s": 366.553,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 366.553,
+          "t_done_s": 366.553,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 127.0779,
+      "avg_tpot_s": 0.0466,
+      "avg_throughput_tok_per_s": 21.48,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 294.757,
+      "t_arrival_s": 64.721,
+      "job_delay_s": 301.832
+    },
+    {
+      "id": "multi_turn_miss_param_68#112",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 158.3696,
+          "tpot_s": 0.0528,
+          "output_tokens": 153,
+          "e2e_latency_s": 166.3885,
+          "throughput_tok_per_s": 18.96,
+          "t_start_s": 138.405,
+          "t_done_s": 304.794,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 304.884,
+          "t_done_s": 304.884,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 158.3696,
+      "avg_tpot_s": 0.0528,
+      "avg_throughput_tok_per_s": 18.96,
+      "total_output_tokens": 153,
+      "normalized_latency_ms_per_tok": 1087.507,
+      "t_arrival_s": 138.405,
+      "job_delay_s": 166.479
+    },
+    {
+      "id": "multi_turn_miss_param_93#137",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 228.5227,
+          "tpot_s": 0.0504,
+          "output_tokens": 154,
+          "e2e_latency_s": 236.2268,
+          "throughput_tok_per_s": 19.86,
+          "t_start_s": 186.981,
+          "t_done_s": 423.208,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 423.3,
+          "t_done_s": 423.3,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 228.5227,
+      "avg_tpot_s": 0.0504,
+      "avg_throughput_tok_per_s": 19.86,
+      "total_output_tokens": 154,
+      "normalized_latency_ms_per_tok": 1533.94,
+      "t_arrival_s": 186.981,
+      "job_delay_s": 236.319
+    },
+    {
+      "id": "multi_turn_miss_param_77#121",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 144.5473,
+          "tpot_s": 0.0459,
+          "output_tokens": 473,
+          "e2e_latency_s": 166.2192,
+          "throughput_tok_per_s": 21.78,
+          "t_start_s": 148.976,
+          "t_done_s": 315.195,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 315.24,
+          "t_done_s": 315.24,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 144.5473,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.78,
+      "total_output_tokens": 473,
+      "normalized_latency_ms_per_tok": 351.415,
+      "t_arrival_s": 148.976,
+      "job_delay_s": 166.264
+    },
+    {
+      "id": "multi_turn_miss_param_2#46",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 3.2386,
+          "tpot_s": 0.0569,
+          "output_tokens": 318,
+          "e2e_latency_s": 21.2605,
+          "throughput_tok_per_s": 17.59,
+          "t_start_s": 47.761,
+          "t_done_s": 69.021,
+          "turn": 0
+        },
+        {
+          "ttft_s": 15.1033,
+          "tpot_s": 0.072,
+          "output_tokens": 37,
+          "e2e_latency_s": 17.6963,
+          "throughput_tok_per_s": 13.88,
+          "t_start_s": 72.987,
+          "t_done_s": 90.684,
+          "turn": 1
+        },
+        {
+          "ttft_s": 64.9968,
+          "tpot_s": 0.0645,
+          "output_tokens": 50,
+          "e2e_latency_s": 68.1578,
+          "throughput_tok_per_s": 15.5,
+          "t_start_s": 90.782,
+          "t_done_s": 158.939,
+          "turn": 2
+        },
+        {
+          "ttft_s": 179.0541,
+          "tpot_s": 0.0734,
+          "output_tokens": 40,
+          "e2e_latency_s": 181.9163,
+          "throughput_tok_per_s": 13.63,
+          "t_start_s": 159.036,
+          "t_done_s": 340.953,
+          "turn": 3
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 341.042,
+          "t_done_s": 341.042,
+          "turn": 4
+        },
+        {
+          "turn": 5,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 65.5982,
+      "avg_tpot_s": 0.0667,
+      "avg_throughput_tok_per_s": 15.15,
+      "total_output_tokens": 445,
+      "normalized_latency_ms_per_tok": 649.508,
+      "t_arrival_s": 47.761,
+      "job_delay_s": 293.281
+    },
+    {
+      "id": "multi_turn_miss_param_12#56",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 33.0447,
+          "tpot_s": 0.0494,
+          "output_tokens": 512,
+          "e2e_latency_s": 58.2692,
+          "throughput_tok_per_s": 20.26,
+          "t_start_s": 59.282,
+          "t_done_s": 117.551,
+          "turn": 0
+        },
+        {
+          "ttft_s": 177.2593,
+          "tpot_s": 0.0589,
+          "output_tokens": 58,
+          "e2e_latency_s": 180.6143,
+          "throughput_tok_per_s": 16.99,
+          "t_start_s": 117.551,
+          "t_done_s": 298.165,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 299.652,
+          "t_done_s": 299.652,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 105.152,
+      "avg_tpot_s": 0.0542,
+      "avg_throughput_tok_per_s": 18.62,
+      "total_output_tokens": 570,
+      "normalized_latency_ms_per_tok": 419.094,
+      "t_arrival_s": 59.281,
+      "job_delay_s": 240.371
+    },
+    {
+      "id": "multi_turn_miss_param_89#133",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 107.4644,
+          "tpot_s": 0.0485,
+          "output_tokens": 403,
+          "e2e_latency_s": 126.9632,
+          "throughput_tok_per_s": 20.62,
+          "t_start_s": 174.726,
+          "t_done_s": 301.69,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 302.932,
+          "t_done_s": 302.932,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 107.4644,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.62,
+      "total_output_tokens": 403,
+      "normalized_latency_ms_per_tok": 315.045,
+      "t_arrival_s": 174.726,
+      "job_delay_s": 128.206
+    },
+    {
+      "id": "multi_turn_miss_param_97#141",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 203.7401,
+          "tpot_s": 0.0457,
+          "output_tokens": 512,
+          "e2e_latency_s": 227.0736,
+          "throughput_tok_per_s": 21.9,
+          "t_start_s": 194.484,
+          "t_done_s": 421.558,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 421.558,
+          "t_done_s": 421.558,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 203.7401,
+      "avg_tpot_s": 0.0457,
+      "avg_throughput_tok_per_s": 21.9,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 443.503,
+      "t_arrival_s": 194.484,
+      "job_delay_s": 227.074
+    },
+    {
+      "id": "multi_turn_miss_param_49#93",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 106.7007,
+          "tpot_s": 0.0509,
+          "output_tokens": 104,
+          "e2e_latency_s": 111.9481,
+          "throughput_tok_per_s": 19.63,
+          "t_start_s": 114.721,
+          "t_done_s": 226.669,
+          "turn": 0
+        },
+        {
+          "ttft_s": 139.3171,
+          "tpot_s": 0.0469,
+          "output_tokens": 512,
+          "e2e_latency_s": 163.2947,
+          "throughput_tok_per_s": 21.31,
+          "t_start_s": 226.758,
+          "t_done_s": 390.052,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 390.053,
+          "t_done_s": 390.053,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 123.0089,
+      "avg_tpot_s": 0.0489,
+      "avg_throughput_tok_per_s": 20.47,
+      "total_output_tokens": 616,
+      "normalized_latency_ms_per_tok": 446.823,
+      "t_arrival_s": 114.72,
+      "job_delay_s": 275.333
+    },
+    {
+      "id": "multi_turn_miss_param_63#107",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 210.1246,
+          "tpot_s": 0.0522,
+          "output_tokens": 157,
+          "e2e_latency_s": 218.2653,
+          "throughput_tok_per_s": 19.16,
+          "t_start_s": 123.346,
+          "t_done_s": 341.611,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 341.699,
+          "t_done_s": 341.699,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 210.1246,
+      "avg_tpot_s": 0.0522,
+      "avg_throughput_tok_per_s": 19.16,
+      "total_output_tokens": 157,
+      "normalized_latency_ms_per_tok": 1390.225,
+      "t_arrival_s": 123.345,
+      "job_delay_s": 218.354
+    },
+    {
+      "id": "multi_turn_miss_func_194#38",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 7.7748,
+          "tpot_s": 0.0533,
+          "output_tokens": 512,
+          "e2e_latency_s": 35.0305,
+          "throughput_tok_per_s": 18.75,
+          "t_start_s": 39.278,
+          "t_done_s": 74.309,
+          "turn": 0
+        },
+        {
+          "ttft_s": 77.6956,
+          "tpot_s": 0.0458,
+          "output_tokens": 512,
+          "e2e_latency_s": 101.0811,
+          "throughput_tok_per_s": 21.85,
+          "t_start_s": 74.309,
+          "t_done_s": 175.39,
+          "turn": 1
+        },
+        {
+          "ttft_s": 208.7022,
+          "tpot_s": 0.0437,
+          "output_tokens": 512,
+          "e2e_latency_s": 231.0229,
+          "throughput_tok_per_s": 22.89,
+          "t_start_s": 175.39,
+          "t_done_s": 406.413,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 406.414,
+          "t_done_s": 406.414,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 98.0575,
+      "avg_tpot_s": 0.0476,
+      "avg_throughput_tok_per_s": 21.16,
+      "total_output_tokens": 1536,
+      "normalized_latency_ms_per_tok": 239.02,
+      "t_arrival_s": 39.278,
+      "job_delay_s": 367.136
+    },
+    {
+      "id": "multi_turn_miss_param_14#58",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 33.1055,
+          "tpot_s": 0.0511,
+          "output_tokens": 409,
+          "e2e_latency_s": 53.9408,
+          "throughput_tok_per_s": 19.58,
+          "t_start_s": 60.538,
+          "t_done_s": 114.479,
+          "turn": 0
+        },
+        {
+          "ttft_s": 172.1697,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 195.6471,
+          "throughput_tok_per_s": 21.77,
+          "t_start_s": 115.742,
+          "t_done_s": 311.389,
+          "turn": 1
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 311.389,
+          "t_done_s": 311.389,
+          "turn": 2
+        },
+        {
+          "turn": 3,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 102.6376,
+      "avg_tpot_s": 0.0485,
+      "avg_throughput_tok_per_s": 20.67,
+      "total_output_tokens": 921,
+      "normalized_latency_ms_per_tok": 270.997,
+      "t_arrival_s": 60.538,
+      "job_delay_s": 250.851
+    },
+    {
+      "id": "multi_turn_miss_param_5#49",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 22.5163,
+          "tpot_s": 0.0515,
+          "output_tokens": 512,
+          "e2e_latency_s": 48.8574,
+          "throughput_tok_per_s": 19.4,
+          "t_start_s": 52.73,
+          "t_done_s": 101.587,
+          "turn": 0
+        },
+        {
+          "ttft_s": 28.7015,
+          "tpot_s": 0.0461,
+          "output_tokens": 512,
+          "e2e_latency_s": 52.2697,
+          "throughput_tok_per_s": 21.68,
+          "t_start_s": 101.587,
+          "t_done_s": 153.857,
+          "turn": 1
+        },
+        {
+          "ttft_s": 279.474,
+          "tpot_s": 0.0489,
+          "output_tokens": 240,
+          "e2e_latency_s": 291.1589,
+          "throughput_tok_per_s": 20.45,
+          "t_start_s": 153.858,
+          "t_done_s": 445.017,
+          "turn": 2
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 445.109,
+          "t_done_s": 445.109,
+          "turn": 3
+        },
+        {
+          "turn": 4,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 110.2306,
+      "avg_tpot_s": 0.0488,
+      "avg_throughput_tok_per_s": 20.51,
+      "total_output_tokens": 1264,
+      "normalized_latency_ms_per_tok": 310.353,
+      "t_arrival_s": 52.729,
+      "job_delay_s": 392.38
+    },
+    {
+      "id": "multi_turn_miss_param_103#147",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 214.7535,
+          "tpot_s": 0.0462,
+          "output_tokens": 231,
+          "e2e_latency_s": 225.3882,
+          "throughput_tok_per_s": 21.63,
+          "t_start_s": 201.103,
+          "t_done_s": 426.491,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 426.537,
+          "t_done_s": 426.537,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 214.7535,
+      "avg_tpot_s": 0.0462,
+      "avg_throughput_tok_per_s": 21.63,
+      "total_output_tokens": 231,
+      "normalized_latency_ms_per_tok": 975.706,
+      "t_arrival_s": 201.102,
+      "job_delay_s": 225.435
+    },
+    {
+      "id": "multi_turn_miss_param_47#91",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 171.4512,
+          "tpot_s": 0.0484,
+          "output_tokens": 412,
+          "e2e_latency_s": 191.3301,
+          "throughput_tok_per_s": 20.68,
+          "t_start_s": 113.28,
+          "t_done_s": 304.61,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 304.703,
+          "t_done_s": 304.703,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 171.4512,
+      "avg_tpot_s": 0.0484,
+      "avg_throughput_tok_per_s": 20.68,
+      "total_output_tokens": 412,
+      "normalized_latency_ms_per_tok": 464.393,
+      "t_arrival_s": 113.28,
+      "job_delay_s": 191.423
+    },
+    {
+      "id": "multi_turn_miss_param_69#113",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 239.8588,
+          "tpot_s": 0.0495,
+          "output_tokens": 237,
+          "e2e_latency_s": 251.5425,
+          "throughput_tok_per_s": 20.2,
+          "t_start_s": 138.801,
+          "t_done_s": 390.343,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 392.606,
+          "t_done_s": 392.606,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 239.8588,
+      "avg_tpot_s": 0.0495,
+      "avg_throughput_tok_per_s": 20.2,
+      "total_output_tokens": 237,
+      "normalized_latency_ms_per_tok": 1061.361,
+      "t_arrival_s": 138.8,
+      "job_delay_s": 253.806
+    },
+    {
+      "id": "multi_turn_miss_param_104#148",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 268.7231,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 292.1608,
+          "throughput_tok_per_s": 21.8,
+          "t_start_s": 201.302,
+          "t_done_s": 493.463,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 493.463,
+          "t_done_s": 493.463,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 268.7231,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.8,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 570.627,
+      "t_arrival_s": 201.301,
+      "job_delay_s": 292.162
+    },
+    {
+      "id": "multi_turn_miss_param_106#150",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 285.1178,
+          "tpot_s": 0.0479,
+          "output_tokens": 512,
+          "e2e_latency_s": 309.5895,
+          "throughput_tok_per_s": 20.88,
+          "t_start_s": 202.292,
+          "t_done_s": 511.882,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 511.882,
+          "t_done_s": 511.882,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 285.1178,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.88,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 604.667,
+      "t_arrival_s": 202.292,
+      "job_delay_s": 309.59
+    },
+    {
+      "id": "multi_turn_miss_param_95#139",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 192.1586,
+          "tpot_s": 0.0514,
+          "output_tokens": 181,
+          "e2e_latency_s": 201.4153,
+          "throughput_tok_per_s": 19.45,
+          "t_start_s": 190.097,
+          "t_done_s": 391.513,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 391.605,
+          "t_done_s": 391.605,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 192.1586,
+      "avg_tpot_s": 0.0514,
+      "avg_throughput_tok_per_s": 19.45,
+      "total_output_tokens": 181,
+      "normalized_latency_ms_per_tok": 1112.792,
+      "t_arrival_s": 190.097,
+      "job_delay_s": 201.508
+    },
+    {
+      "id": "multi_turn_miss_param_98#142",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 249.1134,
+          "tpot_s": 0.0451,
+          "output_tokens": 512,
+          "e2e_latency_s": 272.1845,
+          "throughput_tok_per_s": 22.15,
+          "t_start_s": 195.444,
+          "t_done_s": 467.629,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 467.629,
+          "t_done_s": 467.629,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 249.1134,
+      "avg_tpot_s": 0.0451,
+      "avg_throughput_tok_per_s": 22.15,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 531.61,
+      "t_arrival_s": 195.444,
+      "job_delay_s": 272.185
+    },
+    {
+      "id": "multi_turn_miss_param_117#161",
+      "num_turns": 7,
+      "turns": [
+        {
+          "ttft_s": 246.4251,
+          "tpot_s": 0.0454,
+          "output_tokens": 325,
+          "e2e_latency_s": 261.1316,
+          "throughput_tok_per_s": 22.03,
+          "t_start_s": 224.528,
+          "t_done_s": 485.659,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 485.707,
+          "t_done_s": 485.707,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 246.4251,
+      "avg_tpot_s": 0.0454,
+      "avg_throughput_tok_per_s": 22.03,
+      "total_output_tokens": 325,
+      "normalized_latency_ms_per_tok": 803.482,
+      "t_arrival_s": 224.527,
+      "job_delay_s": 261.18
+    },
+    {
+      "id": "multi_turn_miss_param_99#143",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 301.517,
+          "tpot_s": 0.0474,
+          "output_tokens": 512,
+          "e2e_latency_s": 325.7265,
+          "throughput_tok_per_s": 21.11,
+          "t_start_s": 195.667,
+          "t_done_s": 521.393,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 521.394,
+          "t_done_s": 521.394,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 301.517,
+      "avg_tpot_s": 0.0474,
+      "avg_throughput_tok_per_s": 21.11,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 636.185,
+      "t_arrival_s": 195.667,
+      "job_delay_s": 325.727
+    },
+    {
+      "id": "multi_turn_miss_param_107#151",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 222.5312,
+          "tpot_s": 0.0451,
+          "output_tokens": 507,
+          "e2e_latency_s": 245.3434,
+          "throughput_tok_per_s": 22.18,
+          "t_start_s": 204.096,
+          "t_done_s": 449.439,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 449.487,
+          "t_done_s": 449.487,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 222.5312,
+      "avg_tpot_s": 0.0451,
+      "avg_throughput_tok_per_s": 22.18,
+      "total_output_tokens": 507,
+      "normalized_latency_ms_per_tok": 483.912,
+      "t_arrival_s": 204.096,
+      "job_delay_s": 245.391
+    },
+    {
+      "id": "multi_turn_miss_param_114#158",
+      "num_turns": 6,
+      "turns": [
+        {
+          "ttft_s": 226.5669,
+          "tpot_s": 0.0459,
+          "output_tokens": 512,
+          "e2e_latency_s": 250.0169,
+          "throughput_tok_per_s": 21.79,
+          "t_start_s": 218.904,
+          "t_done_s": 468.921,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 468.921,
+          "t_done_s": 468.921,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 226.5669,
+      "avg_tpot_s": 0.0459,
+      "avg_throughput_tok_per_s": 21.79,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 488.314,
+      "t_arrival_s": 218.903,
+      "job_delay_s": 250.018
+    },
+    {
+      "id": "multi_turn_miss_param_100#144",
+      "num_turns": 3,
+      "turns": [
+        {
+          "ttft_s": 300.0808,
+          "tpot_s": 0.0484,
+          "output_tokens": 351,
+          "e2e_latency_s": 317.0262,
+          "throughput_tok_per_s": 20.65,
+          "t_start_s": 198.261,
+          "t_done_s": 515.287,
+          "turn": 0
+        },
+        {
+          "ttft_s": null,
+          "tpot_s": null,
+          "output_tokens": 0,
+          "e2e_latency_s": null,
+          "throughput_tok_per_s": null,
+          "t_start_s": 515.336,
+          "t_done_s": 515.336,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 300.0808,
+      "avg_tpot_s": 0.0484,
+      "avg_throughput_tok_per_s": 20.65,
+      "total_output_tokens": 351,
+      "normalized_latency_ms_per_tok": 903.209,
+      "t_arrival_s": 198.261,
+      "job_delay_s": 317.075
+    },
+    {
+      "id": "multi_turn_miss_param_56#100",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 198.3866,
+          "tpot_s": 0.0462,
+          "output_tokens": 512,
+          "e2e_latency_s": 221.9785,
+          "throughput_tok_per_s": 21.66,
+          "t_start_s": 118.702,
+          "t_done_s": 340.681,
+          "turn": 0
+        },
+        {
+          "ttft_s": 181.998,
+          "tpot_s": 0.0495,
+          "output_tokens": 325,
+          "e2e_latency_s": 198.0252,
+          "throughput_tok_per_s": 20.22,
+          "t_start_s": 340.681,
+          "t_done_s": 538.706,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 190.1923,
+      "avg_tpot_s": 0.0479,
+      "avg_throughput_tok_per_s": 20.94,
+      "total_output_tokens": 837,
+      "normalized_latency_ms_per_tok": 501.797,
+      "t_arrival_s": 118.702,
+      "job_delay_s": 420.004
+    },
+    {
+      "id": "multi_turn_miss_param_122#166",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 296.0438,
+          "tpot_s": 0.0458,
+          "output_tokens": 422,
+          "e2e_latency_s": 315.3246,
+          "throughput_tok_per_s": 21.84,
+          "t_start_s": 227.773,
+          "t_done_s": 543.097,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 296.0438,
+      "avg_tpot_s": 0.0458,
+      "avg_throughput_tok_per_s": 21.84,
+      "total_output_tokens": 422,
+      "normalized_latency_ms_per_tok": 747.215,
+      "t_arrival_s": 227.772,
+      "job_delay_s": 315.325
+    },
+    {
+      "id": "multi_turn_miss_param_44#88",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 78.8708,
+          "tpot_s": 0.0463,
+          "output_tokens": 428,
+          "e2e_latency_s": 98.6562,
+          "throughput_tok_per_s": 21.58,
+          "t_start_s": 102.625,
+          "t_done_s": 201.281,
+          "turn": 0
+        },
+        {
+          "ttft_s": 317.623,
+          "tpot_s": 0.0456,
+          "output_tokens": 512,
+          "e2e_latency_s": 340.9076,
+          "throughput_tok_per_s": 21.95,
+          "t_start_s": 204.168,
+          "t_done_s": 545.075,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 198.2469,
+      "avg_tpot_s": 0.046,
+      "avg_throughput_tok_per_s": 21.77,
+      "total_output_tokens": 940,
+      "normalized_latency_ms_per_tok": 467.621,
+      "t_arrival_s": 102.625,
+      "job_delay_s": 442.45
+    },
+    {
+      "id": "multi_turn_miss_param_123#167",
+      "num_turns": 5,
+      "turns": [
+        {
+          "ttft_s": 296.8071,
+          "tpot_s": 0.0454,
+          "output_tokens": 512,
+          "e2e_latency_s": 319.9919,
+          "throughput_tok_per_s": 22.04,
+          "t_start_s": 227.791,
+          "t_done_s": 547.783,
+          "turn": 0
+        },
+        {
+          "turn": 1,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 296.8071,
+      "avg_tpot_s": 0.0454,
+      "avg_throughput_tok_per_s": 22.04,
+      "total_output_tokens": 512,
+      "normalized_latency_ms_per_tok": 624.984,
+      "t_arrival_s": 227.791,
+      "job_delay_s": 319.992
+    },
+    {
+      "id": "multi_turn_miss_param_82#126",
+      "num_turns": 4,
+      "turns": [
+        {
+          "ttft_s": 104.9988,
+          "tpot_s": 0.0484,
+          "output_tokens": 512,
+          "e2e_latency_s": 129.7536,
+          "throughput_tok_per_s": 20.64,
+          "t_start_s": 156.667,
+          "t_done_s": 286.421,
+          "turn": 0
+        },
+        {
+          "ttft_s": 243.0425,
+          "tpot_s": 0.0441,
+          "output_tokens": 512,
+          "e2e_latency_s": 265.5885,
+          "throughput_tok_per_s": 22.66,
+          "t_start_s": 286.421,
+          "t_done_s": 552.01,
+          "turn": 1
+        },
+        {
+          "turn": 2,
+          "error": "503 Server Error: Service Unavailable for url: http://127.0.0.1:8000/v1/chat/completions"
+        }
+      ],
+      "avg_ttft_s": 174.0206,
+      "avg_tpot_s": 0.0462,
+      "avg_throughput_tok_per_s": 21.65,
+      "total_output_tokens": 1024,
+      "normalized_latency_ms_per_tok": 386.076,
+      "t_arrival_s": 156.666,
+      "job_delay_s": 395.344
+    }
+  ]
+}
