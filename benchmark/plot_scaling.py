@@ -40,6 +40,18 @@ ARMS = [
 MAX_ERROR_RATE = 0.05
 
 
+def _prefill_pool(d):
+    """이 점이 어떤 prefill 풀로 돌았는지. 곡선 위의 점들은 이 값이 같아야 한다."""
+    for f in glob.glob(os.path.join(d, "p1.*.digest.txt")):
+        try:
+            m = re.search(r"max_total_num_tokens=(\d+)", open(f).read())
+            if m:
+                return int(m.group(1))
+        except OSError:
+            pass
+    return None
+
+
 def _summary(path):
     if not os.path.exists(path):
         return None
@@ -51,20 +63,29 @@ def _summary(path):
 
 
 def _point(d, arm):
-    """(정규화 TTFT, 에러율). 못 쓰는 점이면 (None, 에러율)."""
+    """(정규화 TTFT, 하단, 상단, 에러율). 못 쓰는 점이면 y=None.
+
+    선은 평균, 음영은 p50~p90 이다. 전부 같은 기준(같은 C 의 recompute 평균)으로
+    나누므로, 모든 arm 에 똑같이 걸리는 큐잉은 약분된다. 음영은 신뢰구간이 아니라
+    요청 간 분포이고 (REPEATS=1 이므로 run 간 분산이 아니다), 캡션에 그렇게 적어야 한다.
+    """
     b = _summary(os.path.join(d, f"bench_{arm}.json"))
     base = _summary(os.path.join(d, "bench_recompute.json"))
     if not b or not base or not base.get("avg_ttft_s"):
-        return None, None
+        return None, None, None, None
     n, e = b.get("total_items") or 0, b.get("error_items") or 0
     rate = (e / n) if n else 0.0
     # recompute 자체가 실패한 C 는 기준선이 못 되므로 그 점 전체를 버린다.
     bn, be = base.get("total_items") or 0, base.get("error_items") or 0
-    if bn and (be / bn) > MAX_ERROR_RATE:
-        return None, rate
-    if rate > MAX_ERROR_RATE:
-        return None, rate
-    return b["avg_ttft_s"] / base["avg_ttft_s"], rate
+    if (bn and (be / bn) > MAX_ERROR_RATE) or rate > MAX_ERROR_RATE:
+        return None, None, None, rate
+    ref = base["avg_ttft_s"]
+    lo = b.get("ttft_p50_s")
+    hi = b.get("ttft_p90_s")
+    return (b["avg_ttft_s"] / ref,
+            (lo / ref) if lo else None,
+            (hi / ref) if hi else None,
+            rate)
 
 
 def main():
@@ -87,30 +108,47 @@ def main():
         print(f"동시성을 읽을 수 있는 디렉터리가 없다: {args.dirs}")
         return 1
 
+    # 설정이 다른 점은 같은 곡선에 올리면 안 된다. 가로축은 C 하나여야 하는데,
+    # prefill 풀이 다른 점이 섞이면 축이 둘이 되고 곡선의 기울기가 무엇을 뜻하는지
+    # 말할 수 없다. 실제로 예전 C=64 run 은 P=79,000 이고 sweep 은 105,000 이었다.
+    pools = {c: _prefill_pool(d) for c, d in points.items()}
+    known = [v for v in pools.values() if v]
+    if known:
+        common = max(set(known), key=known.count)
+        odd = {c: v for c, v in pools.items() if v and v != common}
+        for c, v in sorted(odd.items()):
+            print(f"[제외] C={c}: prefill pool={v} (이 곡선은 {common}) -> 설정이 달라 뺀다")
+            points.pop(c, None)
+
     cs = sorted(points)
-    print(f"찾은 점: C={cs}")
+    print(f"찾은 점: C={cs}  (prefill pool={known and max(set(known), key=known.count)})")
 
     use_paper_style()
-    fig, ax = plt.subplots(figsize=(3.6, 2.6))
+    fig, ax = plt.subplots(figsize=(3.9, 2.9))
     dropped = []
     table = []
 
     for arm, label, color, style in ARMS:
-        xs, ys = [], []
+        xs, ys, los, his = [], [], [], []
         for c in cs:
-            y, rate = _point(points[c], arm)
+            y, lo, hi, rate = _point(points[c], arm)
             if y is None:
                 if rate is not None and rate > MAX_ERROR_RATE:
                     dropped.append((c, label, rate))
                 continue
-            xs.append(c)
-            ys.append(y)
+            xs.append(c); ys.append(y)
+            los.append(lo if lo is not None else y)
+            his.append(hi if hi is not None else y)
             table.append((c, arm, y, rate))
-        if xs:
-            ax.plot(xs, ys, color=color, label=label, lw=1.4, ms=4, **style)
+        if not xs:
+            continue
+        ax.fill_between(xs, los, his, color=color, alpha=0.15, lw=0)
+        ax.plot(xs, ys, color=color, label=label, lw=1.5, ms=4.5,
+                markeredgecolor="white", markeredgewidth=0.4, **style)
 
     ax.axhline(1.0, color="black", ls="-", lw=0.8)
-    ax.text(cs[0], 1.02, "Recompute", fontsize=6.5, va="bottom", color="#444444")
+    ax.text(0.99, 1.0, "Recompute baseline", fontsize=6.5, va="bottom", ha="right",
+            color="#444444", transform=ax.get_yaxis_transform())
     ax.set_xscale("log", base=2)
     ax.set_xticks(cs)
     ax.set_xticklabels([str(c) for c in cs])
@@ -118,7 +156,9 @@ def main():
     ax.set_ylabel("Normalized TTFT")
     ax.grid(color=PALETTE["grid"], lw=0.5)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=6.5, loc="best")
+    # 범례는 위쪽 바깥에. 참조 그림들이 그렇게 하고, 선이 가려지지 않는다.
+    ax.legend(frameon=False, fontsize=6.5, loc="lower center",
+              bbox_to_anchor=(0.5, 1.0), ncol=2, columnspacing=1.0)
     fig.tight_layout()
     savefig(fig, args.out)
 
