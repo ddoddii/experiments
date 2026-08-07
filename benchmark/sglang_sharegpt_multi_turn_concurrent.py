@@ -317,6 +317,17 @@ def process_item(item):
             break
 
     valid = [t for t in turn_metrics if t.get("ttft_s")]
+    total_out = sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens"))
+    # Normalized latency (ms/token): SERVING time only -- sum of each turn's own
+    # request->last-token span (e2e_latency_s), which excludes the time.sleep(TOOL_DELAY)
+    # gaps between turns -- divided by tokens generated. This is the "Throughput vs.
+    # normalized latency" convention (FlashGen/CachedAttention-style figures): it blends
+    # TTFT and decode cost per token into one number so requests of different output
+    # length land on the same curve, and unlike job_delay_s it is NOT inflated by
+    # injected think-time, so it reads as a serving-efficiency metric rather than a
+    # workload-pacing artifact.
+    _serving_s = sum(t["e2e_latency_s"] for t in turn_metrics
+                     if t.get("e2e_latency_s") and not t.get("error"))
     return {
         "id": item["id"],
         "num_turns": len(item["user_turns"]),
@@ -324,7 +335,8 @@ def process_item(item):
         "avg_ttft_s": round(sum(t["ttft_s"] for t in valid) / len(valid), 4) if valid else None,
         "avg_tpot_s": round(sum(t["tpot_s"] for t in valid if t.get("tpot_s")) / max(1, sum(1 for t in valid if t.get("tpot_s"))), 4) if valid else None,
         "avg_throughput_tok_per_s": round(sum(t["throughput_tok_per_s"] for t in valid if t.get("throughput_tok_per_s")) / max(1, sum(1 for t in valid if t.get("throughput_tok_per_s"))), 2) if valid else None,
-        "total_output_tokens": sum(t["output_tokens"] for t in turn_metrics if t.get("output_tokens")),
+        "total_output_tokens": total_out,
+        "normalized_latency_ms_per_tok": round(_serving_s * 1000 / total_out, 3) if total_out else None,
     }
 
 
@@ -421,6 +433,7 @@ def run_open_loop(items):
     # closed, otherwise its delay is either padded by warmup slack or truncated by the
     # drain and would misrepresent the offered rate either way.
     win_job_delays = []
+    win_norm_lat = []
     for r in results:
         for t in (r.get("turns") or []):
             ts, td = t.get("t_start_s"), t.get("t_done_s")
@@ -434,9 +447,12 @@ def run_open_loop(items):
         ta, jd = r.get("t_arrival_s"), r.get("job_delay_s")
         if ta is not None and jd is not None and ta >= lo and ta + jd <= hi:
             win_job_delays.append(jd)
+            if r.get("normalized_latency_ms_per_tok") is not None:
+                win_norm_lat.append(r["normalized_latency_ms_per_tok"])
     win = max(1e-9, hi - lo)
     win_ttfts.sort()
     win_job_delays.sort()
+    win_norm_lat.sort()
 
     def _p(p):
         if not win_ttfts:
@@ -450,6 +466,13 @@ def run_open_loop(items):
         k = max(0, min(len(win_job_delays) - 1,
                         int(round((p / 100.0) * (len(win_job_delays) - 1)))))
         return round(win_job_delays[k], 4)
+
+    def _pn(p):
+        if not win_norm_lat:
+            return None
+        k = max(0, min(len(win_norm_lat) - 1,
+                        int(round((p / 100.0) * (len(win_norm_lat) - 1)))))
+        return round(win_norm_lat[k], 4)
 
     stats = {
         "mode": "open_loop",
@@ -481,6 +504,13 @@ def run_open_loop(items):
         "window_job_delay_p50_s": _pd(50),
         "window_job_delay_p95_s": _pd(95),
         "window_job_delay_p99_s": _pd(99),
+        # Normalized latency (ms/token): x=throughput, y=this is the
+        # FlashGen/CachedAttention-style "latency vs. load" figure -- unlike job delay
+        # it is not inflated by TOOL_DELAY, so it reads as pure serving cost per token.
+        "window_norm_latency_mean_ms_tok": round(sum(win_norm_lat) / len(win_norm_lat), 4)
+                                            if win_norm_lat else None,
+        "window_norm_latency_p50_ms_tok": _pn(50),
+        "window_norm_latency_p95_ms_tok": _pn(95),
     }
     if stats["sessions_repeated"] > 0:
         print(f"\n  *** WARNING: the corpus wrapped -- {stats['sessions_repeated']} of "

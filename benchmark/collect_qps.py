@@ -107,6 +107,11 @@ def main():
             "job_delay_p50_s": s.get("window_job_delay_p50_s"),
             "job_delay_p95_s": s.get("window_job_delay_p95_s"),
             "job_delay_p99_s": s.get("window_job_delay_p99_s"),
+            # Normalized latency (ms/token): serving-time-only (no TOOL_DELAY), the
+            # x=throughput / y=this convention used by throughput-vs-latency figures.
+            "norm_latency_mean_ms_tok": s.get("window_norm_latency_mean_ms_tok"),
+            "norm_latency_p50_ms_tok": s.get("window_norm_latency_p50_ms_tok"),
+            "norm_latency_p95_ms_tok": s.get("window_norm_latency_p95_ms_tok"),
             "turns": s.get("window_turns"),
             "peak_inflight": s.get("peak_inflight_sessions"),
             "unfinished": unfinished,
