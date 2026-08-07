@@ -198,7 +198,21 @@ def run_turn(conversation, tools):
         data = line[len("data: "):]
         if data == "[DONE]":
             break
-        chunk = json.loads(data)
+        try:
+            chunk = json.loads(data)
+        except json.JSONDecodeError:
+            continue
+        # sglang emits at least one chunk under concurrent load with an EMPTY choices
+        # list (a keep-alive / usage-only-style chunk) -- chunk["choices"][0] on that
+        # raises IndexError: list index out of range, caught by process_item's bare
+        # except and misreported as a session error. Measured: 0% error at low offered
+        # rate, 95-96% at one specific mid-sweep rate point, dropping again at the
+        # highest rate -- a load-dependent crash, not organic saturation, and it silently
+        # invalidated most of a rate point's throughput/TTFT/job-delay stats (computed
+        # only over the handful of survivors) rather than failing loudly. Same guard the
+        # ShareGPT runner's run_turn() already has for the identical chunk shape.
+        if not chunk.get("choices"):
+            continue
         delta = chunk["choices"][0]["delta"]
         has_content = bool(delta.get("content") or delta.get("tool_calls"))
         if t_first is None and has_content:
