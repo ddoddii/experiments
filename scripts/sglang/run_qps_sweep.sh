@@ -137,6 +137,30 @@ OUTDIR=${OUTDIR:-results/qps/$TAG}
 LOG_DIR=${LOG_DIR:-logs/sglang}
 mkdir -p "$OUTDIR"
 
+# A bench_*.json left over from an EARLIER run in this same OUTDIR -- a different RATES
+# list, or an older code version -- gets globbed by collect_qps.py right alongside this
+# run's fresh points, with no way for it to tell old from new. The result is one curve
+# silently splicing together two different experiments (this has now actually happened:
+# a pre-bugfix llama8b BFCL run's r1.0/r1.8/r3.0 points sat here and got folded into a
+# post-fix re-run at r0.2..r1.6). Archive anything already here before adding to it,
+# rather than let that keep happening. SKIP_STALE_ARCHIVE=1 to disable (e.g. deliberately
+# resuming a sweep that died partway through and whose points ARE this run's own).
+if [ "${SKIP_STALE_ARCHIVE:-0}" != "1" ]; then
+  _stale_list=$(find "$OUTDIR" -maxdepth 1 -name 'bench_*.json' 2>/dev/null)
+  if [ -n "$_stale_list" ]; then
+    _archive="$OUTDIR/_stale_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$_archive"
+    _n=0
+    while IFS= read -r _f; do
+      [ -z "$_f" ] && continue
+      mv "$_f" "$_archive"/ 2>/dev/null && _n=$((_n + 1))
+    done <<< "$_stale_list"
+    echo "[warn] archived $_n pre-existing bench_*.json from $OUTDIR to $_archive"
+    echo "       (they predate this run -- possibly a different RATES list or older code"
+    echo "        -- and collect_qps.py would otherwise fold them into this run's curve)"
+  fi
+fi
+
 # Preflight the corpus budget before spending hours discovering it mid-run.
 #
 # BFCL's corpus is a FIXED 200 conversations -- a sweep at realistic rates routinely
