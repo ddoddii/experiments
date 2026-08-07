@@ -15,6 +15,11 @@ cache에 eviction 압박을 준다. 이때 tool-call 유휴시간 동안 다른 
   MAX_ITEMS       처리할 item 수 제한 (기본 전체 200)
   ITEM_OFFSET     시작 offset (open-loop sweep에서 rate point마다 서로 다른
                    corpus slice를 쓰기 위함; sharegpt 러너와 동일한 관례)
+  BFCL_CATEGORIES 풀에 넣을 multi-turn 카테고리들, 공백 구분 (기본 "base" 단독,
+                   기존 호출과 동일). "base miss_func miss_param long_context"로
+                   4개를 합치면 코퍼스가 200 -> 600+ 로 늘어남 -- QPS sweep의
+                   wrap 문제를 줄이려면 이걸 쓸 것. base 외 3개는 이 repo에
+                   없으므로 gorilla/ 클론에서 먼저 복사해야 함 (아래 주석 참고).
   ROUTER_URL      (기본 http://127.0.0.1:8000/v1/chat/completions)
   SESSION_RATE    >0이면 open-loop: 대화가 SESSION_RATE/s로 Poisson 도착.
                    0(기본)이면 기존 closed-loop (CONCURRENCY개 워커 풀).
@@ -97,8 +102,56 @@ def load_func_doc(path):
     return cleaned
 
 
+# BFCL_CATEGORIES selects which multi-turn category files to pool into one corpus.
+# Default is "base" alone, i.e. IDENTICAL to every caller that predates this -- nothing
+# changes unless the env var is set.
+#
+# WHY MORE THAN BASE: base is a fixed 200 conversations, which an open-loop QPS sweep
+# chews through fast (BFCL sessions are short: few turns, TOOL_DELAY=0), so most points
+# wrap and bias the cached arms. gorilla/ (already cloned per CLAUDE.md) ships three more
+# multi-turn categories with the IDENTICAL schema (id/question/initial_config/
+# involved_classes) -- miss_func, miss_param, long_context -- so pooling them is free
+# corpus, not a new dataset or a new harness. long_context also carries a deliberately
+# bigger initial_config (deeper nested file-system/social state serialized into the
+# system prompt), which pushes the prefill tail longer without changing tool-def cost.
+#
+# Not committed to this repo (gorilla/ isn't tracked here -- see CLAUDE.md). Copy them
+# from the local gorilla clone once:
+#   cd ~/experiments && cp gorilla/berkeley-function-call-leaderboard/bfcl_eval/data/BFCL_v4_multi_turn_{miss_func,miss_param,long_context}.json data/
+BFCL_CATEGORIES = os.environ.get("BFCL_CATEGORIES", "base").split()
+_CATEGORY_FILES = {
+    "base":         "data/BFCL_v3_multi_turn_base.json",     # already present (200 items)
+    "miss_func":    "data/BFCL_v4_multi_turn_miss_func.json",
+    "miss_param":   "data/BFCL_v4_multi_turn_miss_param.json",
+    "long_context": "data/BFCL_v4_multi_turn_long_context.json",
+}
+
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
-_all_items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
+_all_items = []
+for _cat in BFCL_CATEGORIES:
+    _path = _CATEGORY_FILES.get(_cat)
+    if _path is None:
+        raise SystemExit(f"unknown BFCL category '{_cat}' (want one of "
+                          f"{sorted(_CATEGORY_FILES)})")
+    if not os.path.exists(_path):
+        raise SystemExit(
+            f"BFCL category '{_cat}' needs {_path}, which isn't in this repo.\n"
+            f"  Copy it from the gorilla clone once:\n"
+            f"    cp gorilla/berkeley-function-call-leaderboard/bfcl_eval/data/"
+            f"BFCL_v4_multi_turn_{_cat}.json {_path}")
+    with open(_path) as f:
+        _cat_items = [json.loads(l) for l in f]
+    for _it in _cat_items:
+        _it["_bfcl_category"] = _cat   # provenance, for later per-category breakdowns
+    _all_items.extend(_cat_items)
+# Every multi-turn category draws from the same environment/class family, but this is
+# NOT verified upstream -- an item needing a class this harness has no func_doc for
+# would silently get an empty tool list rather than fail loudly, so check once at load.
+_unmapped = {cls for it in _all_items for cls in it.get("involved_classes", [])
+             if cls not in CLASS_TO_FILE}
+if _unmapped:
+    print(f"[warn] classes with no func_doc mapping: {sorted(_unmapped)} -- items "
+          f"needing them will get an empty tool list.")
 _n_all = len(_all_items)
 # ITEM_OFFSET slices out a DISJOINT range of the corpus so a sweep's rate points do not
 # each replay the same conversations against a server the previous point already warmed

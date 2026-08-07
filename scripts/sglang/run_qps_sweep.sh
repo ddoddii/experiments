@@ -98,6 +98,13 @@ case "$WORKLOAD" in
     BENCH=benchmark/sglang_BFCL_multi_turn_concurrent.py
     export MAX_TOKENS=${MAX_TOKENS:-512}
     export TOOL_DELAY=${TOOL_DELAY:-0}
+    # Pool all 4 multi-turn categories by default IN THE SWEEP specifically (the Python
+    # script's own default stays "base" alone for any non-sweep caller) -- base's fixed
+    # 200 conversations is the thing that forces heavy wrapping here in the first place.
+    # miss_func/miss_param/long_context need a one-time copy from the gorilla clone; the
+    # script fails loudly with the exact cp command if they're missing rather than
+    # silently running on base alone.
+    export BFCL_CATEGORIES=${BFCL_CATEGORIES:-"base miss_func miss_param long_context"}
     ;;
   *) echo "unknown WORKLOAD: $WORKLOAD (want sharegpt | bfcl)"; exit 1 ;;
 esac
