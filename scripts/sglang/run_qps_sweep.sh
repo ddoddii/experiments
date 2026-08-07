@@ -268,6 +268,8 @@ python benchmark/collect_qps.py --dir "$OUTDIR" --out "$OUTDIR/qps.json" \
 python benchmark/plot_qps.py "$OUTDIR/qps.json" --out "$OUTDIR/fig_qps"
 python benchmark/plot_job_delay.py "$OUTDIR/qps.json" --out "$OUTDIR/fig_job_delay"
 python benchmark/plot_normalized_latency.py "$OUTDIR/qps.json" --out "$OUTDIR/fig_norm_latency"
+node benchmark/make_qps_pptx.js "$OUTDIR/fig_qps.pptx" "$OUTDIR/qps.json" 2>&1 \
+  || echo "[warn] pptx generation failed (node/pptxgenjs missing?) -- figures are still in $OUTDIR"
 echo "================================================================"
 echo "READ THE PLATEAU, NOT THE TOP POINT. If delivered throughput is still rising at the"
 echo "highest rate, no arm reached capacity and the sweep is still client-limited --"
