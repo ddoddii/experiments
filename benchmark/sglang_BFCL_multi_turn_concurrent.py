@@ -99,13 +99,27 @@ def load_func_doc(path):
 
 func_docs = {cls: load_func_doc(path) for cls, path in CLASS_TO_FILE.items()}
 _all_items = [json.loads(l) for l in open("data/BFCL_v3_multi_turn_base.json")]
-# ITEM_OFFSET slices out a DISJOINT range of the (small, fixed-200) corpus so a sweep's
-# rate points do not each replay the same conversations against a server the previous
-# point already warmed -- same reasoning as the ShareGPT runner. Unlike ShareGPT, BFCL
-# has only 200 conversations total, so an offset-heavy sweep will exhaust the corpus and
-# an open-loop run cycles back to the start; run_open_loop() below reports that via
-# sessions_repeated exactly like the ShareGPT path does.
-items = _all_items[ITEM_OFFSET:ITEM_OFFSET + MAX_ITEMS] if MAX_ITEMS > 0 else _all_items[ITEM_OFFSET:]
+_n_all = len(_all_items)
+# ITEM_OFFSET slices out a DISJOINT range of the corpus so a sweep's rate points do not
+# each replay the same conversations against a server the previous point already warmed
+# -- same reasoning as the ShareGPT runner. Unlike ShareGPT's ~90k conversations, BFCL
+# has a FIXED 200, so a sweep's cumulative ITEM_OFFSET routinely runs past the corpus
+# length -- and a plain slice there returns an EMPTY list, which used to raise
+# SystemExit and kill the whole `set -e` sweep at whatever point first ran past 200,
+# not just warp that point's own numbers. Wrapping with modulo instead keeps every
+# point non-empty; run_open_loop()'s own sessions_repeated counter is what actually
+# flags and reports how much a given point wrapped, same as the ShareGPT path.
+if _n_all == 0:
+    items = []
+elif MAX_ITEMS > 0:
+    if ITEM_OFFSET + MAX_ITEMS <= _n_all:
+        items = _all_items[ITEM_OFFSET:ITEM_OFFSET + MAX_ITEMS]   # unchanged in-range case
+    else:
+        _start = ITEM_OFFSET % _n_all
+        items = [_all_items[(_start + i) % _n_all] for i in range(MAX_ITEMS)]
+else:
+    _start = ITEM_OFFSET % _n_all
+    items = _all_items[_start:] + _all_items[:_start]
 
 
 def run_turn(conversation, tools):
