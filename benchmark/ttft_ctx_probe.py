@@ -40,6 +40,7 @@ import requests
 
 from host_gpu_traffic_probe import (
     MODEL, MODEL_PATH, ROUTER_URL, TIMEOUT, build_doc, clear_hicache_disk_and_check_free,
+    snapshot_park,
 )
 
 FLOOD_MULTIPLE = 2.0   # phase-3 flood size, x pool-tokens -- eviction only, no TTFT recorded
@@ -120,6 +121,15 @@ def main():
         n_flood = max(MIN_FLOOD, int((args.pool_tokens * FLOOD_MULTIPLE) // L))
         print(f"\n=== context_len={L}  n_flood={n_flood}  reps={args.reps} ===")
         ttfts, errors = [], []
+        # A fast phase-4 TTFT is ambiguous on its own: a genuine park restore and a
+        # phase-3 flood that simply FAILED to evict (leaving the prefix GPU-resident, so
+        # phase 4 is a no-op local radix hit) both produce one. They differ in the park
+        # counters -- a restore moves tokens through a tier, a no-op hit moves none --
+        # so record them per context length. Motivated by a live 128k point that came
+        # back at 0.30s while every other length tracked recompute exactly: 0.30s is
+        # simultaneously consistent with a 17.2GB NVLink peer restore (~0.32s at 53GB/s)
+        # and with no transfer at all, and nothing in the TTFT alone separates the two.
+        h0, g0, hits0, miss0 = snapshot_park()
 
         for rep in range(args.reps):
             tag = f"ttftL{L}_r{rep}"
@@ -163,6 +173,7 @@ def main():
             else:
                 ttfts.append(dt4)
 
+        h1, g1, hits1, miss1 = snapshot_park()
         ttfts.sort()
         n = len(ttfts)
         row = {
@@ -174,6 +185,14 @@ def main():
             "ttft_median_s": round(ttfts[n // 2], 4) if n else None,
             "ttft_min_s": round(ttfts[0], 4) if n else None,
             "ttft_max_s": round(ttfts[-1], 4) if n else None,
+            # park arm only (hicache/recompute never publish this telemetry, so these
+            # stay 0 there). Nonzero host/gpu tokens = a real restore happened and the
+            # fast TTFT is the mechanism working; all-zero alongside a fast TTFT = the
+            # prefix was never evicted and phase 4 measured nothing.
+            "park_fetch_hits": max(0, hits1 - hits0),
+            "park_fetch_miss": max(0, miss1 - miss0),
+            "park_host_tokens": max(0, h1 - h0),
+            "park_gpu_tokens": max(0, g1 - g0),
         }
         print(f"  -> {row}")
         rows.append(row)

@@ -48,6 +48,12 @@ def main():
     ap.add_argument("--out", default="results/ttft_ctx/fig_ttft_ctx")
     ap.add_argument("--stat", default="ttft_median_s",
                      choices=["ttft_median_s", "ttft_mean_s"])
+    ap.add_argument(
+        "--logy", action="store_true",
+        help="log-scale y. TTFT here spans ~0.3s to ~60s; on a linear axis the whole "
+             "4k-32k region -- where the cached arms actually separate from recompute "
+             "-- collapses onto the baseline and only the 128k point is legible.",
+    )
     ap.add_argument("--width", type=float, default=3.4)
     ap.add_argument("--height", type=float, default=2.4)
     args = ap.parse_args()
@@ -80,6 +86,8 @@ def main():
                           "--recompute/--hicache/--park pointing at a ttft_ctx_probe JSON")
 
     ax.set_xscale("log", base=2)
+    if args.logy:
+        ax.set_yscale("log")
     xs = sorted(all_x)
     ax.set_xticks(xs)
     ax.set_xticklabels([fmt_tokens(v) for v in xs])
