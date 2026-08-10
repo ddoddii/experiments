@@ -128,10 +128,27 @@ def clear_hicache_disk_and_check_free(min_free_gb=15.0):
     documents, and re-checking free space here (not just once at the top of the shell
     script) means a still-too-small disk fails LOUDLY in Python with a clear message
     instead of silently degrading two layers down in a log file the caller isn't
-    watching."""
+    watching.
+
+    Empties the directory's CONTENTS, not the directory itself. rmtree()-ing
+    HICACHE_DISK_DIR outright was the first version of this fix and immediately broke
+    the very thing it was protecting: sglang doesn't create/reopen that directory per
+    write, so with it gone every subsequent write failed with ENOENT ("No such file or
+    directory: '/tmp/hicache/<hash>.bin'") -- confirmed live, right after this function
+    started running. Removing rmtree()'s target one level down (the directory's entries)
+    instead of the directory node itself keeps the path sglang expects to already exist
+    intact throughout."""
     import shutil
     if os.path.isdir(HICACHE_DISK_DIR):
-        shutil.rmtree(HICACHE_DISK_DIR, ignore_errors=True)
+        for name in os.listdir(HICACHE_DISK_DIR):
+            path = os.path.join(HICACHE_DISK_DIR, name)
+            if os.path.isdir(path) and not os.path.islink(path):
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
     free_gb = shutil.disk_usage(".").free / 1e9
     print(f"  disk free: {free_gb:.1f}G  (/tmp/hicache cleared)")
     if free_gb < min_free_gb:
