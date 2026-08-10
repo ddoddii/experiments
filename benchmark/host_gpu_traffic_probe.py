@@ -102,10 +102,14 @@ def bytes_per_token():
 
 
 def snapshot_park():
-    """Cumulative FETCHED tokens by serving tier, summed across every prefill's
-    telemetry file. host = read back from CPU DRAM (Host->GPU traffic); local/peer =
-    read back from a GPU park pool (GPU->GPU, no host DRAM involved)."""
-    host_tok = gpu_tok = 0
+    """Cumulative FETCHED tokens by serving tier, plus raw hit/miss counts, summed
+    across every prefill's telemetry file. host = read back from CPU DRAM (Host->GPU
+    traffic); local/peer = read back from a GPU park pool (GPU->GPU, no host DRAM
+    involved). hits/miss distinguish "0 GB because the mechanism avoided host traffic"
+    from "0 GB because nothing was ever found parked and every phase-4 hit just
+    recomputed from scratch" -- the two look identical on host_gb/park_gpu_gpu_gb
+    alone but mean opposite things."""
+    host_tok = gpu_tok = hits = miss = 0
     for path in glob.glob(os.path.join(PARK_DIR, "parked_gpu*.json")):
         try:
             with open(path) as fh:
@@ -115,7 +119,9 @@ def snapshot_park():
         tier = d.get("fetch_tok_tier") or {}
         host_tok += int(tier.get("host") or 0)
         gpu_tok += int(tier.get("local") or 0) + int(tier.get("peer") or 0)
-    return host_tok, gpu_tok
+        hits += int(d.get("fetch_hits") or 0)
+        miss += int(d.get("fetch_miss") or 0)
+    return host_tok, gpu_tok, hits, miss
 
 
 def snapshot_hicache_tokens():
@@ -305,7 +311,7 @@ def main():
         docs = [build_doc(tok, i, L) for i in range(n_docs)]
         flood = [build_doc(tok, f"flood{i}", L) for i in range(n_flood)]
 
-        h0, p0 = snapshot_park()
+        h0, p0, hits0, miss0 = snapshot_park()
         lb0 = snapshot_hicache_tokens()
 
         print("  phase 1/4 (warm hit, hit_count=1)...")
@@ -331,12 +337,14 @@ def main():
             dt = send(d)
             print(f"    doc {i}: {dt:.2f}s")
 
-        h1, p1 = snapshot_park()
+        h1, p1, hits1, miss1 = snapshot_park()
         lb1 = snapshot_hicache_tokens()
 
         host_bytes_park = max(0, h1 - h0) * bpt
         gpu_gpu_bytes_park = max(0, p1 - p0) * bpt
         host_bytes_hicache = max(0.0, lb1 - lb0) * bpt
+        park_hits = max(0, hits1 - hits0)
+        park_miss = max(0, miss1 - miss0)
 
         row = {
             "context_len": L,
@@ -348,6 +356,11 @@ def main():
             ),
             "park_gpu_gpu_gb": round(gpu_gpu_bytes_park / 1e9, 4),
             "bytes_per_token": bpt,
+            # park-only diagnostic: distinguishes "0 GB, avoided host traffic" from
+            # "0 GB, phase 4 never even found anything parked and just recomputed" --
+            # only meaningful for arm=park (hicache/recompute don't publish this file).
+            "park_fetch_hits": park_hits,
+            "park_fetch_miss": park_miss,
         }
         print(f"  -> {row}")
         rows.append(row)
