@@ -181,17 +181,28 @@ def main():
     ap.add_argument(
         "--pool-tokens", type=int,
         default=int(os.environ.get("PREFILL_MAX_TOTAL_TOKENS", "60000")),
+        help="the SERVER's actual --max-total-tokens -- must exceed the largest "
+             "--context-lens value (with margin) or that single request can't even be "
+             "admitted. Informational here; doc-count scaling uses --work-pool-tokens.",
+    )
+    ap.add_argument(
+        "--work-pool-tokens", type=int, default=None,
+        help="reference pool size FOR DOC-COUNT SCALING ONLY, decoupled from "
+             "--pool-tokens. Needed once --pool-tokens has to be raised past ~131072 "
+             "tokens to admit a single 128k document: scaling doc count off that same "
+             "huge number would blow up n_docs at small L too (e.g. ~100+ docs at 4k) "
+             "for no reason. Defaults to min(--pool-tokens, 60000).",
     )
     ap.add_argument(
         "--work-multiple", type=float, default=1.5,
-        help="working-set size as a multiple of pool-tokens, at every L -- ambient "
+        help="working-set size as a multiple of work-pool-tokens, at every L -- ambient "
              "eviction pressure only; phase 3 forces the real eviction",
     )
     ap.add_argument(
         "--flood-multiple", type=float, default=2.0,
-        help="phase-3 flood size as a multiple of pool-tokens -- must exceed the pool "
-             "on its own (with margin) so it evicts the phase-1/2 docs regardless of "
-             "how full the pool already was",
+        help="phase-3 flood size as a multiple of work-pool-tokens -- must exceed the "
+             "pool on its own (with margin) so it evicts the phase-1/2 docs regardless "
+             "of how full the pool already was",
     )
     ap.add_argument(
         "--min-docs", type=int, default=3,
@@ -211,23 +222,33 @@ def main():
              "because there was nothing on host yet to read",
     )
     ap.add_argument("--out", required=True)
+    ap.add_argument(
+        "--append", action="store_true",
+        help="merge new context-lens into an existing --out file instead of "
+             "overwriting it -- for adding e.g. 65536,131072 to an earlier 4k-32k run "
+             "without re-measuring the small L points. Rows with a matching "
+             "context_len are replaced, not duplicated.",
+    )
     args = ap.parse_args()
 
     if not MODEL_PATH:
         raise SystemExit("MODEL_PATH env var required (local tokenizer needed for exact "
                           "token-length prompts)")
 
+    work_pool_tokens = args.work_pool_tokens or min(args.pool_tokens, 60000)
+
     from transformers import AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained(MODEL_PATH)
     bpt = bytes_per_token()
     print(f"[probe] arm={args.arm} bytes/token={bpt} ({bpt/1024:.1f} KiB)  "
-          f"pool={args.pool_tokens}  ports={PREFILL_PORTS}")
+          f"server_pool={args.pool_tokens}  work_pool={work_pool_tokens}  "
+          f"ports={PREFILL_PORTS}")
 
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
-        n_docs = max(args.min_docs, int((args.pool_tokens * args.work_multiple) // L))
-        n_flood = max(args.min_docs, int((args.pool_tokens * args.flood_multiple) // L))
+        n_docs = max(args.min_docs, int((work_pool_tokens * args.work_multiple) // L))
+        n_flood = max(args.min_docs, int((work_pool_tokens * args.flood_multiple) // L))
         print(f"\n=== context_len={L}  n_docs={n_docs}  n_flood={n_flood}  "
               f"working_set={n_docs * L} tokens ===")
         docs = [build_doc(tok, i, L) for i in range(n_docs)]
@@ -280,10 +301,18 @@ def main():
         print(f"  -> {row}")
         rows.append(row)
 
+    if args.append and os.path.exists(args.out):
+        with open(args.out) as fh:
+            prior = json.load(fh)
+        by_len = {r["context_len"]: r for r in prior.get("rows", [])}
+        for r in rows:
+            by_len[r["context_len"]] = r  # new measurement replaces an old one at the same L
+        rows = sorted(by_len.values(), key=lambda r: r["context_len"])
+
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w") as fh:
         json.dump({"arm": args.arm, "model": MODEL, "rows": rows}, fh, indent=2)
-    print(f"\n[saved] {args.out}")
+    print(f"\n[saved] {args.out}  ({len(rows)} context lengths)")
 
 
 if __name__ == "__main__":

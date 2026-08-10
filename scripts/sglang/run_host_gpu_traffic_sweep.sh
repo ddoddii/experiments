@@ -10,12 +10,27 @@
 # single request's KV can't exceed the pool it's prefilling into. Default pool is
 # whatever start_2P_2D.sh / run_models_sweep.sh's model_pool() picks for llama8b
 # (~60000 tokens), so the default CONTEXT_LENS list (4096..32768) stays safely under it.
-# Raise PREFILL_MAX_TOTAL_TOKENS explicitly (and expect higher host RAM/VRAM use -- see
-# CLAUDE.md's hicache RAM warning) before adding 65536 or larger.
+#
+# For 65536/131072: PREFILL_MAX_TOTAL_TOKENS MUST be raised past the largest value in
+# CONTEXT_LENS (with margin -- try +10-15%), and MIN_DOCS should drop to 1. A single
+# 131072-token doc alone is ~17.2GB of KV (131072 x 128 KiB/token for this model); the
+# --min-docs 3 default that's fine at small L would mean ~52GB of documents at 128k,
+# well past both a realistic GPU pool and hicache's host budget (hicache-ratio x device
+# pool) or park's SGLANG_KV_PARK_HOST_MAX_GB (default 8GB) -- most of it would get
+# evicted-before-write or dropped rather than actually round-tripping through host,
+# which looks identical to "the mechanism doesn't work" (see host_gpu_traffic_probe.py's
+# docstring for the same failure mode at the old --min-docs 6). Expect higher host
+# RAM/VRAM use either way -- check `free -h` / `nvidia-smi` per CLAUDE.md's hicache RAM
+# warning before running, and consider APPEND=1 to add 64k/128k to an already-collected
+# 4k-32k run instead of re-measuring everything at the bigger pool size.
 #
 # 사용:
 #   ARMS="recompute hicache park" CONTEXT_LENS="4096,8192,16384,32768" \
 #     ./scripts/sglang/run_host_gpu_traffic_sweep.sh
+#
+#   # add 64k/128k to an existing run, merged into the same per-arm JSON:
+#   CONTEXT_LENS="65536,131072" PREFILL_MAX_TOTAL_TOKENS=170000 MIN_DOCS=1 APPEND=1 \
+#     ARMS="recompute hicache park" ./scripts/sglang/run_host_gpu_traffic_sweep.sh
 set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
@@ -29,11 +44,25 @@ export MODEL=${MODEL:-meta-llama/Llama-3.1-8B-Instruct}
 export PREFILL_PORTS=${PREFILL_PORTS:-30000,30001}
 export PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
 OUTDIR=${OUTDIR:-results/host_gpu_traffic}
+WORK_POOL_TOKENS=${WORK_POOL_TOKENS:-}
+MIN_DOCS=${MIN_DOCS:-}
+APPEND=${APPEND:-0}
 mkdir -p "$OUTDIR"
 
 if [ ! -f "$MODEL_PATH/config.json" ]; then
   echo "ERROR: no model at MODEL_PATH='$MODEL_PATH' (need config.json for the tokenizer"
   echo "       and bytes-per-token calc)."
+  exit 1
+fi
+
+# Preflight: a context length >= the pool can never be admitted, and the failure mode
+# is a slow per-request timeout inside the probe rather than a clear error up front.
+_max_L=$(echo "$CONTEXT_LENS" | tr ',' '\n' | sort -n | tail -1)
+if [ "$_max_L" -ge "$PREFILL_MAX_TOTAL_TOKENS" ]; then
+  echo "ERROR: largest CONTEXT_LENS ($_max_L) >= PREFILL_MAX_TOTAL_TOKENS ($PREFILL_MAX_TOTAL_TOKENS)."
+  echo "       A single request that size can never be admitted into the pool it's"
+  echo "       prefilling into. Raise PREFILL_MAX_TOTAL_TOKENS past $_max_L with margin,"
+  echo "       e.g. PREFILL_MAX_TOTAL_TOKENS=$((_max_L * 13 / 10))."
   exit 1
 fi
 
@@ -72,10 +101,13 @@ for arm in $ARMS; do
   rm -f "$PARK_DIR"/parked_gpu*.json 2>/dev/null || true
   start_arm "$arm"
 
-  python benchmark/host_gpu_traffic_probe.py --arm "$arm" \
-    --context-lens "$CONTEXT_LENS" \
-    --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" \
-    --out "$OUTDIR/$arm.json" \
+  PROBE_ARGS=(--arm "$arm" --context-lens "$CONTEXT_LENS"
+              --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" --out "$OUTDIR/$arm.json")
+  [ -n "$WORK_POOL_TOKENS" ] && PROBE_ARGS+=(--work-pool-tokens "$WORK_POOL_TOKENS")
+  [ -n "$MIN_DOCS" ] && PROBE_ARGS+=(--min-docs "$MIN_DOCS")
+  [ "$APPEND" = "1" ] && PROBE_ARGS+=(--append)
+
+  python benchmark/host_gpu_traffic_probe.py "${PROBE_ARGS[@]}" \
     2>&1 | tee "$OUTDIR/probe_$arm.log"
 done
 
