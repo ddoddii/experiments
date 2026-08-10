@@ -289,13 +289,29 @@ def build_doc(tokenizer, doc_id, n_tokens):
     # different requested lengths converging on the same number, consistent with
     # different-L runs all resolving to the same shared filler node rather than to
     # independent per-length content.
-    filler = f"[[DOC {doc_id}]] The quick brown fox jumps over the lazy dog near the riverbank at dawn. "
+    unit = f"[[DOC {doc_id}]] The quick brown fox jumps over the lazy dog near the riverbank at dawn. "
     budget = n_tokens - _GEN_TOKENS - _SAFETY_BUFFER
 
-    text = filler
-    while len(tokenizer(text, add_special_tokens=False)["input_ids"]) < budget:
-        text += filler
-    ids = tokenizer(text, add_special_tokens=False)["input_ids"][:budget]
+    # SIZE THE STRING FROM ONE MEASUREMENT, don't grow it a unit at a time. Appending
+    # `unit` (~20 tokens) in a loop that re-tokenizes the WHOLE accumulated text each
+    # step costs L^2/(2*20) tokens tokenized -- 430M at L=131072, ~5 minutes PER
+    # DOCUMENT. The pre-uniqueness version of this function hid that behind a `* 400`
+    # on the filler (~8000 tokens per append, 400x fewer steps); embedding doc_id per
+    # repetition dropped the multiplier and turned a sub-second build into a hang.
+    # Measured live: the hicache arm sat at 0 requests sent for minutes -- it builds
+    # 1 + n_flood docs per rep (84 per rep at L=4096) versus recompute's 1, so the same
+    # regression that merely made recompute slow made hicache look frozen.
+    _PROBE_REPS = 64
+    tokens_per_unit = (
+        len(tokenizer(unit * _PROBE_REPS, add_special_tokens=False)["input_ids"])
+        / _PROBE_REPS
+    )
+    text = unit * (int(budget / tokens_per_unit) + 8)  # overshoot; trimmed just below
+    ids = tokenizer(text, add_special_tokens=False)["input_ids"]
+    while len(ids) < budget:  # only if the per-unit estimate undershot
+        text += unit * 64
+        ids = tokenizer(text, add_special_tokens=False)["input_ids"]
+    ids = ids[:budget]
     text = tokenizer.decode(ids)
 
     for _ in range(8):

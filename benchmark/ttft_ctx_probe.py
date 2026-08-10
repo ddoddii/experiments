@@ -123,6 +123,7 @@ def main():
 
         for rep in range(args.reps):
             tag = f"ttftL{L}_r{rep}"
+            print(f"  rep {rep}: building target doc...", flush=True)
             doc = build_doc(tok, tag, L)
 
             if args.arm in ("recompute", "radix"):
@@ -134,7 +135,13 @@ def main():
                     ttfts.append(dt)
                 continue
 
-            # hicache/park: warm -> write -> flood/evict -> verify (the plotted point)
+            # hicache/park: warm -> write -> flood/evict -> verify (the plotted point).
+            # Printed BEFORE the build, not after: this is the longest silent stretch in
+            # the run (n_flood can be 80+ documents at small L), and with no output here
+            # a slow build is indistinguishable from a hang -- which is exactly how the
+            # O(n^2) build_doc regression presented, as "hicache stuck" with a healthy
+            # server logging nothing but /health polls.
+            print(f"  rep {rep}: building {n_flood} flood docs...", flush=True)
             flood = [build_doc(tok, f"{tag}_flood{i}", L) for i in range(n_flood)]
 
             print(f"  rep {rep}: phase 1/4 (warm hit)...")
