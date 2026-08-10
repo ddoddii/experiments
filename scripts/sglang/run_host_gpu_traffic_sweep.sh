@@ -102,6 +102,22 @@ for arm in $ARMS; do
   rm -f "$PARK_DIR"/parked_gpu*.json 2>/dev/null || true
   start_arm "$arm"
 
+  # hicache's file backend (/tmp/hicache) failing a write is silent past this point --
+  # sglang logs "Failed to save tensor ... 0 written" and keeps serving (degrading to
+  # no-cache behavior) rather than crashing, so host_gb would quietly read as "0, cache
+  # miss" rather than "write failed" for the rest of this arm. Docs here are much
+  # bigger than run_qps_sweep.sh's BFCL prompts (up to 17GB each at 128k), so the
+  # default free-space bar is higher too.
+  _free_gb=$(df -BG --output=avail . | tail -1 | tr -dc '0-9')
+  _hc_gb=$(du -sBG /tmp/hicache 2>/dev/null | cut -f1 | tr -dc '0-9')
+  echo "  disk free: ${_free_gb}G   /tmp/hicache: ${_hc_gb:-0}G"
+  if [ "${_free_gb:-0}" -lt "${NEED_FREE_GB:-30}" ]; then
+    echo "  ERROR: only ${_free_gb}G free (need ${NEED_FREE_GB:-30}G). Free space (rm -rf"
+    echo "         /tmp/hicache, or check df -h more broadly) and re-run:"
+    echo "           ARMS=\"$arm\" CONTEXT_LENS=\"$CONTEXT_LENS\" ./scripts/sglang/run_host_gpu_traffic_sweep.sh"
+    exit 1
+  fi
+
   PROBE_ARGS=(--arm "$arm" --context-lens "$CONTEXT_LENS"
               --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" --out "$OUTDIR/$arm.json")
   [ -n "$WORK_POOL_TOKENS" ] && PROBE_ARGS+=(--work-pool-tokens "$WORK_POOL_TOKENS")
