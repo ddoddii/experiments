@@ -83,8 +83,60 @@ MODEL_PATH = os.environ.get("MODEL_PATH", "")
 PARK_DIR = os.environ.get("PARK_DIR", "/dev/shm/sglang_kv_parking")
 PREFILL_PORTS = [int(p) for p in os.environ.get("PREFILL_PORTS", "30000,30001").split(",") if p]
 TIMEOUT = int(os.environ.get("TIMEOUT", "600"))
+HICACHE_DISK_DIR = os.environ.get("HICACHE_DISK_DIR", "/tmp/hicache")
 
 _LOAD_BACK_KEY = "sglang:load_back_tokens_total"
+_CACHE_GAUGE_KEYS = (
+    "sglang:cache_occupancy", "sglang:token_usage", "sglang:evictable_tokens",
+    "sglang:max_total_num_tokens",
+)
+
+
+def snapshot_hicache_disk_bytes():
+    """Direct, unambiguous evidence of host-side writes for the hicache arm: the L3
+    file-storage backend's on-disk footprint (HICACHE_STORAGE_BACKEND=file, see
+    start_2P_2D.sh) rather than inferring "it must have written something" backwards
+    from a nonzero read counter. 0 if the directory doesn't exist (recompute/park
+    never create it)."""
+    import subprocess
+    if not os.path.isdir(HICACHE_DISK_DIR):
+        return 0
+    try:
+        out = subprocess.run(["du", "-sb", HICACHE_DISK_DIR], capture_output=True,
+                              text=True, timeout=30)
+        return int(out.stdout.split()[0])
+    except Exception:
+        return 0
+
+
+def snapshot_cache_gauges():
+    """Current (not delta) sglang:cache_occupancy / evictable_tokens / token_usage per
+    prefill port -- the same gauges probe_cache_metric.sh reads. evictable staying near
+    0 after a load means the GPU-side radix tree isn't holding what phase 4 needs, i.e.
+    it had to come from somewhere else (host or a genuine miss) rather than a local hit
+    quietly padding the "it worked" read."""
+    out = {}
+    for port in PREFILL_PORTS:
+        vals = {}
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics", timeout=5) as r:
+                text = r.read().decode("utf-8", "replace")
+            for line in text.splitlines():
+                if line.startswith("#"):
+                    continue
+                parts = line.rsplit(None, 1)
+                if len(parts) != 2:
+                    continue
+                key = parts[0].split("{", 1)[0]
+                if key in _CACHE_GAUGE_KEYS:
+                    try:
+                        vals[key.split(":", 1)[1]] = float(parts[1])
+                    except ValueError:
+                        pass
+        except Exception:
+            pass
+        out[port] = vals
+    return out
 
 
 def bytes_per_token():
@@ -175,11 +227,21 @@ def build_doc(tokenizer, doc_id, n_tokens):
     Bad Request past the model's own 131072-token limit. Measures the ACTUAL wrapped
     length and trims proportionally to the measured excess until it fits under budget,
     rather than assuming a fixed overhead constant."""
-    header = f"[[DOC {doc_id} START]] "
-    filler = "The quick brown fox jumps over the lazy dog near the riverbank at dawn. " * 400
+    # doc_id embedded in EVERY repetition, not just a header -- a header alone only
+    # diverges the first ~10 tokens, after which every document (and every flood doc,
+    # and every OTHER context length's documents) shares the exact same repeated
+    # sentence verbatim. The radix tree matches on shared prefix, so "N distinct
+    # documents" was actually one giant shared node with N tiny distinct fronts:
+    # eviction pressure, hit_count (accumulates on the SHARED node, not per document),
+    # and every downstream count in this script assumed independence that didn't exist.
+    # Confirmed live -- hicache read back exactly 4020 tokens at 8k, 16k, AND 32k, three
+    # different requested lengths converging on the same number, consistent with
+    # different-L runs all resolving to the same shared filler node rather than to
+    # independent per-length content.
+    filler = f"[[DOC {doc_id}]] The quick brown fox jumps over the lazy dog near the riverbank at dawn. "
     budget = n_tokens - _GEN_TOKENS - _SAFETY_BUFFER
 
-    text = header + filler
+    text = filler
     while len(tokenizer(text, add_special_tokens=False)["input_ids"]) < budget:
         text += filler
     ids = tokenizer(text, add_special_tokens=False)["input_ids"][:budget]
@@ -308,11 +370,18 @@ def main():
         n_flood = max(args.min_flood, int((work_pool_tokens * args.flood_multiple) // L))
         print(f"\n=== context_len={L}  n_docs={n_docs}  n_flood={n_flood}  "
               f"working_set={n_docs * L} tokens ===")
-        docs = [build_doc(tok, i, L) for i in range(n_docs)]
-        flood = [build_doc(tok, f"flood{i}", L) for i in range(n_flood)]
+        # doc_id includes L: without it, doc_id=0 at L=8192 and doc_id=0 at a LATER
+        # L=16384 iteration would still share their first 8192 tokens verbatim (both
+        # built from the same "[[DOC 0]] ..." repeated unit), letting a later context
+        # length's phase-1 "warm hit" partially hit whatever the earlier length's run
+        # left resident/parked -- the same cross-request sharing bug this function
+        # exists to avoid, just moved from cross-doc to cross-L.
+        docs = [build_doc(tok, f"L{L}_{i}", L) for i in range(n_docs)]
+        flood = [build_doc(tok, f"L{L}_flood{i}", L) for i in range(n_flood)]
 
         h0, p0, hits0, miss0 = snapshot_park()
         lb0 = snapshot_hicache_tokens()
+        disk0 = snapshot_hicache_disk_bytes()
 
         print("  phase 1/4 (warm hit, hit_count=1)...")
         for i, d in enumerate(docs):
@@ -339,12 +408,17 @@ def main():
 
         h1, p1, hits1, miss1 = snapshot_park()
         lb1 = snapshot_hicache_tokens()
+        disk1 = snapshot_hicache_disk_bytes()
+        gauges = snapshot_cache_gauges()
 
         host_bytes_park = max(0, h1 - h0) * bpt
         gpu_gpu_bytes_park = max(0, p1 - p0) * bpt
         host_bytes_hicache = max(0.0, lb1 - lb0) * bpt
         park_hits = max(0, hits1 - hits0)
         park_miss = max(0, miss1 - miss0)
+        disk_delta_gb = round(max(0, disk1 - disk0) / 1e9, 4)
+        print(f"  hicache disk (/tmp/hicache) delta: {disk_delta_gb} GB   "
+              f"cache gauges (post-phase-4): {gauges}")
 
         row = {
             "context_len": L,
@@ -361,6 +435,11 @@ def main():
             # only meaningful for arm=park (hicache/recompute don't publish this file).
             "park_fetch_hits": park_hits,
             "park_fetch_miss": park_miss,
+            # direct evidence of host-side writes for hicache (L3 file-backend disk
+            # footprint), rather than only inferring "it must have written something"
+            # backwards from a nonzero read counter.
+            "hicache_disk_delta_gb": disk_delta_gb,
+            "cache_gauges_post": gauges,
         }
         print(f"  -> {row}")
         rows.append(row)
