@@ -146,16 +146,47 @@ def snapshot_hicache_tokens():
     return total
 
 
+_SUFFIX = "\n\nReply with one word."
+_GEN_TOKENS = 4          # matches send()'s max_tokens
+_SAFETY_BUFFER = 16      # slack for tokenizer nondeterminism right at the boundary
+
+
+def _wrapped_len(tokenizer, text):
+    """Token count of the EXACT request send() will issue: chat-template-wrapped, with
+    the generation prompt appended -- not just tokenizer(text), which is what the
+    server actually enforces its context-length limit against."""
+    msgs = [{"role": "user", "content": text + _SUFFIX}]
+    return len(tokenizer.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True))
+
+
 def build_doc(tokenizer, doc_id, n_tokens):
+    """Builds a document whose full wrapped request fits in n_tokens total.
+
+    Naively tokenizing the raw filler text to n_tokens ids and decoding back to a
+    string does NOT guarantee the server sees n_tokens: decode -> chat-template
+    re-encode is not a stable round trip. Confirmed live -- a document built to exactly
+    131072 ids produced a 134407-token wrapped request server-side (2.5% drift), a 400
+    Bad Request past the model's own 131072-token limit. Measures the ACTUAL wrapped
+    length and trims proportionally to the measured excess until it fits under budget,
+    rather than assuming a fixed overhead constant."""
     header = f"[[DOC {doc_id} START]] "
     filler = "The quick brown fox jumps over the lazy dog near the riverbank at dawn. " * 400
+    budget = n_tokens - _GEN_TOKENS - _SAFETY_BUFFER
+
     text = header + filler
-    ids = tokenizer(text, add_special_tokens=False)["input_ids"]
-    while len(ids) < n_tokens:
+    while len(tokenizer(text, add_special_tokens=False)["input_ids"]) < budget:
         text += filler
+    ids = tokenizer(text, add_special_tokens=False)["input_ids"][:budget]
+    text = tokenizer.decode(ids)
+
+    for _ in range(8):
+        excess = _wrapped_len(tokenizer, text) - budget
+        if excess <= 0:
+            break
         ids = tokenizer(text, add_special_tokens=False)["input_ids"]
-    ids = ids[:n_tokens]
-    return tokenizer.decode(ids)
+        cut = max(1, int(len(ids) * (excess / len(ids)) * 1.3))  # overshoot the cut a bit
+        text = tokenizer.decode(ids[:-cut])
+    return text
 
 
 def send(prompt):
@@ -216,6 +247,21 @@ def main():
              "floor was meant to guarantee.",
     )
     ap.add_argument(
+        "--min-flood", type=int, default=4,
+        help="SEPARATE floor for phase-3 flood docs, independent of --min-docs. The "
+             "router defaults to cache_aware routing, which sends each doc's repeated "
+             "hits to the SAME prefill replica it first landed on -- but a flood doc is "
+             "a novel, never-seen prefix, and cache_aware has no cache signal for it, "
+             "so which of the (here) 2 prefill replicas it lands on is effectively a "
+             "coin flip per flood doc. --min-docs 1 with --flood-multiple's formula "
+             "giving n_flood=1 confirmed this live: the single flood doc had a real "
+             "chance of landing on the OTHER replica from the target doc, applying zero "
+             "pressure to the pool that actually needed it, and measuring a clean 0 GB "
+             "that looked like 'the mechanism doesn't work' rather than 'got unlucky'. "
+             "4 flood docs makes both replicas getting hit overwhelmingly likely without "
+             "needing to know or hardcode the replica count.",
+    )
+    ap.add_argument(
         "--settle-s", type=float, default=3.0,
         help="pause after phase 2 so hicache's async write-to-host can land before "
              "phase 3 evicts the node -- too short and phase 4 reads nothing back "
@@ -248,7 +294,7 @@ def main():
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
         n_docs = max(args.min_docs, int((work_pool_tokens * args.work_multiple) // L))
-        n_flood = max(args.min_docs, int((work_pool_tokens * args.flood_multiple) // L))
+        n_flood = max(args.min_flood, int((work_pool_tokens * args.flood_multiple) // L))
         print(f"\n=== context_len={L}  n_docs={n_docs}  n_flood={n_flood}  "
               f"working_set={n_docs * L} tokens ===")
         docs = [build_doc(tok, i, L) for i in range(n_docs)]

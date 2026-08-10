@@ -46,6 +46,7 @@ export PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
 OUTDIR=${OUTDIR:-results/host_gpu_traffic}
 WORK_POOL_TOKENS=${WORK_POOL_TOKENS:-}
 MIN_DOCS=${MIN_DOCS:-}
+MIN_FLOOD=${MIN_FLOOD:-}
 APPEND=${APPEND:-0}
 mkdir -p "$OUTDIR"
 
@@ -105,6 +106,7 @@ for arm in $ARMS; do
               --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" --out "$OUTDIR/$arm.json")
   [ -n "$WORK_POOL_TOKENS" ] && PROBE_ARGS+=(--work-pool-tokens "$WORK_POOL_TOKENS")
   [ -n "$MIN_DOCS" ] && PROBE_ARGS+=(--min-docs "$MIN_DOCS")
+  [ -n "$MIN_FLOOD" ] && PROBE_ARGS+=(--min-flood "$MIN_FLOOD")
   [ "$APPEND" = "1" ] && PROBE_ARGS+=(--append)
 
   python benchmark/host_gpu_traffic_probe.py "${PROBE_ARGS[@]}" \
