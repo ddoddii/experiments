@@ -286,6 +286,11 @@ def main():
     from transformers import AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained(MODEL_PATH)
+    # build_doc()'s trim loop deliberately measures an over-length candidate before
+    # cutting it down (that's how it knows how much to cut) -- harmless by design, but
+    # HF's tokenizer warns on every call past model_max_length, which would otherwise
+    # print noise on every trim iteration at large L.
+    tok.model_max_length = int(1e9)
     bpt = bytes_per_token()
     print(f"[probe] arm={args.arm} bytes/token={bpt} ({bpt/1024:.1f} KiB)  "
           f"server_pool={args.pool_tokens}  work_pool={work_pool_tokens}  "
