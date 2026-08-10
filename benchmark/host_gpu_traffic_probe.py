@@ -5,12 +5,36 @@ Measure Host(DRAM)->GPU KV-cache traffic as context length grows -- the RULER-st
 baselines.
 
 For each context length L: build N distinct documents of exactly L tokens (a unique
-per-doc header token prevents cross-document prefix sharing on the radix tree), send
-each once (round 1 -- fills the serving pool and, once full, pushes the rest into
-whichever overflow tier the running arm uses), then re-send the same N documents
-(round 2 -- forces a read-back of anything that got evicted). Snapshot each arm's
-read-back counters before/after and report the delta as GB actually moved from host
-DRAM to GPU HBM:
+per-doc header token prevents cross-document prefix sharing on the radix tree), then
+run 4 phases to force a GENUINE host round-trip rather than hoping one falls out of
+random eviction timing:
+
+  1. warm hit    -- send each doc once (hit_count=1 on hicache's radix node; no write
+                     yet -- see below).
+  2. write hit   -- send each doc a 2nd time. hicache's write_through_selective policy
+                     only starts writing a node to host once hit_count reaches
+                     write_through_threshold=2 (hiradix_cache.py) -- this is the hit
+                     that crosses it. Still served from GPU, so this phase alone never
+                     produces a load-back read; skipping it means nothing is ever
+                     written to host to read back in phase 4. park's on-evict admission
+                     has no such hit-count gate, but phase 2 still helps make sure
+                     something has been evicted-and-parked by the time phase 3 runs.
+  3. flood/evict -- send a SEPARATE disposable batch, sized to exceed the pool, so the
+                     phase-1/2 docs get evicted from the GPU pool. Without this, a doc
+                     that never happened to get evicted by the ambient traffic simply
+                     stays GPU-resident forever and phase 4 reads it locally -- zero
+                     host traffic, indistinguishable from "the mechanism doesn't work".
+  4. verify hit  -- re-send the original docs a 3rd time. This is the ONLY phase that
+                     can produce a genuine load-back: written-to-host (phase 2) AND
+                     evicted-from-GPU (phase 3) AND referenced again (phase 4).
+
+An earlier 2-phase version of this script (send once, send again) produced a single
+isolated nonzero point per arm with zero everywhere else -- not a believable trend, and
+exactly what phase 2 alone predicts: it can enqueue a write but can't produce a read,
+so any nonzero reading was eviction-timing noise, not signal.
+
+Snapshot each arm's read-back counters before phase 1 and after phase 4, and report the
+delta as GB actually moved from host DRAM to GPU HBM:
 
   - park arm:    idle_kv_parking's own telemetry (parked_gpu*.json -> fetch_tok_tier),
                  which splits cumulative FETCHED (read-back) tokens by the tier that
@@ -28,9 +52,13 @@ DRAM to GPU HBM:
                  as the negative control, not skipped.
 
 N auto-scales with --pool-tokens (read from PREFILL_MAX_TOTAL_TOKENS by default) so the
-working set is a fixed multiple of the serving pool at every L, and is inflated further
-because the router round-robins across 2 prefill replicas -- each one only ever sees
-about half the documents.
+working set is a modest multiple of the serving pool at every L -- enough to guarantee
+some ambient eviction pressure in phases 1-2, but deliberately NOT so large that the
+overflow tiers (host DRAM cap, park pool capacity) themselves get overrun and start
+silently dropping data instead of parking it (an earlier --work-multiple=4.0 default
+put ~230-240k tokens, ~28-30GB of KV, through arms whose overflow capacity was never
+verified to hold that much). Phase 3's flood is what actually guarantees eviction now,
+so N no longer has to carry that job alone.
 
 사용:
   MODEL_PATH=/home/uhmturks/hf_models/Llama-3.1-8B-Instruct \
@@ -155,11 +183,33 @@ def main():
         default=int(os.environ.get("PREFILL_MAX_TOTAL_TOKENS", "60000")),
     )
     ap.add_argument(
-        "--work-multiple", type=float, default=4.0,
-        help="working-set size as a multiple of pool-tokens, at every L -- kept high "
-             "because the router splits documents across 2 prefill replicas",
+        "--work-multiple", type=float, default=1.5,
+        help="working-set size as a multiple of pool-tokens, at every L -- ambient "
+             "eviction pressure only; phase 3 forces the real eviction",
     )
-    ap.add_argument("--min-docs", type=int, default=6)
+    ap.add_argument(
+        "--flood-multiple", type=float, default=2.0,
+        help="phase-3 flood size as a multiple of pool-tokens -- must exceed the pool "
+             "on its own (with margin) so it evicts the phase-1/2 docs regardless of "
+             "how full the pool already was",
+    )
+    ap.add_argument(
+        "--min-docs", type=int, default=3,
+        help="floor on doc count -- keep this LOW. The host/park overflow budget is "
+             "roughly fixed in GB (e.g. hicache-ratio x device pool, or "
+             "SGLANG_KV_PARK_HOST_MAX_GB), not proportional to L, so a large floor "
+             "silently balloons the working set past that budget at big L (was 6: at "
+             "32768 tokens x 128 KiB/token, 6 docs alone is ~25GB against an ~8-9GB "
+             "host budget) and most of it gets evicted-before-write or dropped instead "
+             "of actually round-tripping through host -- the opposite of what a higher "
+             "floor was meant to guarantee.",
+    )
+    ap.add_argument(
+        "--settle-s", type=float, default=3.0,
+        help="pause after phase 2 so hicache's async write-to-host can land before "
+             "phase 3 evicts the node -- too short and phase 4 reads nothing back "
+             "because there was nothing on host yet to read",
+    )
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -177,19 +227,34 @@ def main():
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
         n_docs = max(args.min_docs, int((args.pool_tokens * args.work_multiple) // L))
-        print(f"\n=== context_len={L}  n_docs={n_docs}  "
+        n_flood = max(args.min_docs, int((args.pool_tokens * args.flood_multiple) // L))
+        print(f"\n=== context_len={L}  n_docs={n_docs}  n_flood={n_flood}  "
               f"working_set={n_docs * L} tokens ===")
         docs = [build_doc(tok, i, L) for i in range(n_docs)]
+        flood = [build_doc(tok, f"flood{i}", L) for i in range(n_flood)]
 
         h0, p0 = snapshot_park()
         lb0 = snapshot_hicache_tokens()
 
-        print("  round 1 (fill + spill)...")
+        print("  phase 1/4 (warm hit, hit_count=1)...")
         for i, d in enumerate(docs):
             dt = send(d)
             print(f"    doc {i}: {dt:.2f}s")
 
-        print("  round 2 (re-hit, forces load-back)...")
+        print("  phase 2/4 (write hit, crosses write_through_threshold)...")
+        for i, d in enumerate(docs):
+            dt = send(d)
+            print(f"    doc {i}: {dt:.2f}s")
+
+        print(f"  settling {args.settle_s}s for the async host write to land...")
+        time.sleep(args.settle_s)
+
+        print("  phase 3/4 (flood -- evicts the phase-1/2 docs from GPU)...")
+        for i, d in enumerate(flood):
+            dt = send(d)
+            print(f"    flood {i}: {dt:.2f}s")
+
+        print("  phase 4/4 (verify hit -- forces the genuine load-back)...")
         for i, d in enumerate(docs):
             dt = send(d)
             print(f"    doc {i}: {dt:.2f}s")
@@ -204,6 +269,7 @@ def main():
         row = {
             "context_len": L,
             "n_docs": n_docs,
+            "n_flood": n_flood,
             "working_set_tokens": n_docs * L,
             "host_gb": round(
                 (host_bytes_park if args.arm == "park" else host_bytes_hicache) / 1e9, 4
