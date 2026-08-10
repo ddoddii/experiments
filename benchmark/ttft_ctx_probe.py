@@ -38,7 +38,9 @@ import time
 
 import requests
 
-from host_gpu_traffic_probe import MODEL, MODEL_PATH, ROUTER_URL, TIMEOUT, build_doc
+from host_gpu_traffic_probe import (
+    MODEL, MODEL_PATH, ROUTER_URL, TIMEOUT, build_doc, clear_hicache_disk_and_check_free,
+)
 
 FLOOD_MULTIPLE = 2.0   # phase-3 flood size, x pool-tokens -- eviction only, no TTFT recorded
 MIN_FLOOD = 4          # matches host_gpu_traffic_probe.py's cache_aware routing-coverage floor
@@ -93,6 +95,13 @@ def main():
         default=int(os.environ.get("PREFILL_MAX_TOTAL_TOKENS", "60000")),
     )
     ap.add_argument("--settle-s", type=float, default=3.0)
+    ap.add_argument(
+        "--min-free-gb", type=float, default=15.0,
+        help="hard-fail before starting a context length if less than this much disk "
+             "is free (checked fresh each L, after clearing /tmp/hicache) -- hicache's "
+             "file-backend write failures are silent to this script otherwise, see "
+             "host_gpu_traffic_probe.py's clear_hicache_disk_and_check_free()",
+    )
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -107,6 +116,7 @@ def main():
 
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
+        clear_hicache_disk_and_check_free(args.min_free_gb)
         n_flood = max(MIN_FLOOD, int((args.pool_tokens * FLOOD_MULTIPLE) // L))
         print(f"\n=== context_len={L}  n_flood={n_flood}  reps={args.reps} ===")
         ttfts, errors = [], []

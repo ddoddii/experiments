@@ -109,6 +109,40 @@ def snapshot_hicache_disk_bytes():
         return 0
 
 
+def clear_hicache_disk_and_check_free(min_free_gb=15.0):
+    """Call at the START of every context length, not just once per arm.
+
+    Two live incidents drove this: (1) hicache's file-storage write failures are
+    SWALLOWED by sglang -- it logs "Failed to save tensor ... 0 written" / "Write page
+    to storage: N pages failed" and keeps serving degraded to a cache miss rather than
+    raising, so this script's own requests.post() never sees an error and the run
+    "succeeds" with numbers that quietly stopped meaning what they should; the failure
+    was only visible by hand-reading the prefill server's log. (2) a one-time disk
+    check before the whole arm starts (run_*_sweep.sh's preflight) isn't enough once
+    documents are this large (up to 17GB each at 128k) -- /tmp/hicache was never
+    cleared BETWEEN context lengths within one arm's run, so usage climbs
+    monotonically across the whole CONTEXT_LENS list and can exhaust the disk mid-run
+    even though there was plenty of room when the arm started.
+
+    Clearing it before each L keeps peak usage bounded to roughly one L's worth of
+    documents, and re-checking free space here (not just once at the top of the shell
+    script) means a still-too-small disk fails LOUDLY in Python with a clear message
+    instead of silently degrading two layers down in a log file the caller isn't
+    watching."""
+    import shutil
+    if os.path.isdir(HICACHE_DISK_DIR):
+        shutil.rmtree(HICACHE_DISK_DIR, ignore_errors=True)
+    free_gb = shutil.disk_usage(".").free / 1e9
+    print(f"  disk free: {free_gb:.1f}G  (/tmp/hicache cleared)")
+    if free_gb < min_free_gb:
+        raise SystemExit(
+            f"only {free_gb:.1f}G free (need {min_free_gb}G). hicache's file backend "
+            f"writes ~1 doc's worth of KV bytes per document at this L, and sglang "
+            f"won't error loudly when it runs out -- it'll just silently degrade to a "
+            f"cache miss. Free space (check `df -h` / `du -sh /tmp/hicache`) and re-run."
+        )
+
+
 def snapshot_cache_gauges():
     """Current (not delta) sglang:cache_occupancy / evictable_tokens / token_usage per
     prefill port -- the same gauges probe_cache_metric.sh reads. evictable staying near
@@ -335,6 +369,12 @@ def main():
              "phase 3 evicts the node -- too short and phase 4 reads nothing back "
              "because there was nothing on host yet to read",
     )
+    ap.add_argument(
+        "--min-free-gb", type=float, default=15.0,
+        help="hard-fail before starting a context length if less than this much disk "
+             "is free (checked fresh each L, after clearing /tmp/hicache -- see "
+             "clear_hicache_disk_and_check_free)",
+    )
     ap.add_argument("--out", required=True)
     ap.add_argument(
         "--append", action="store_true",
@@ -366,6 +406,7 @@ def main():
 
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
+        clear_hicache_disk_and_check_free(args.min_free_gb)
         n_docs = max(args.min_docs, int((work_pool_tokens * args.work_multiple) // L))
         n_flood = max(args.min_flood, int((work_pool_tokens * args.flood_multiple) // L))
         print(f"\n=== context_len={L}  n_docs={n_docs}  n_flood={n_flood}  "
