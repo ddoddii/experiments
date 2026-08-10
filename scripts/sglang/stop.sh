@@ -27,7 +27,11 @@ PATTERNS=(
 )
 # 8000/8001: router(s) -- 8001 exists only in ROUTER_MODE=skew.
 # 8998/8999: PD bootstrap. 30000-30003: servers. 8080: mooncake metadata.
-PORTS=(8000 8001 8998 8999 30000 30001 30002 30003 8080)
+# 31500-31530: the torch.distributed rendezvous ports start_2P_2D.sh now pins per
+# server (it used to let sglang draw them at random from overlapping ranges, which
+# collided). A dying scheduler holds its TCPStore port as surely as it holds :30001,
+# so freeing only the HTTP ports let the next arm fail on the one not listed here.
+PORTS=(8000 8001 8998 8999 30000 30001 30002 30003 8080 31500 31510 31520 31530)
 
 echo "[1/3] Terminating (SIGTERM first, so schedulers can release GPU memory)..."
 for p in "${PATTERNS[@]}"; do

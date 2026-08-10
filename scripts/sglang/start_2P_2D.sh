@@ -56,6 +56,22 @@ HICACHE_WRITE_POLICY=${HICACHE_WRITE_POLICY:-"write_through_selective"}
 export SGLANG_HOST_IP=${SGLANG_HOST_IP:-127.0.0.1}
 
 ROUTER_MODE=${ROUTER_MODE:-balanced}
+
+# torch.distributed rendezvous (TCPStore) port, ONE PER SERVER, pinned explicitly.
+# Left unset, sglang picks it as `--port + random.randint(100, 1000)` (see PortArgs
+# .init_new in server_args.py), so the four servers draw from 30100-31000, 30101-31001,
+# 30102-31002 and 30103-31003 -- ranges that almost entirely overlap. Its availability
+# check is check-then-bind, and these four launch within seconds of each other, so two
+# can draw the SAME number, both see it free, and whichever binds second dies with
+# "EADDRINUSE ... port: 30234" before the model even loads. Observed exactly that on a
+# park arm right after an identical hicache arm had come up fine -- the collision is a
+# dice roll per launch, not a property of the arm. These values sit above every
+# auto-picked range so they can't collide with a server that IS choosing randomly.
+NCCL_PORT_P0=${NCCL_PORT_P0:-31500}
+NCCL_PORT_P1=${NCCL_PORT_P1:-31510}
+NCCL_PORT_D0=${NCCL_PORT_D0:-31520}
+NCCL_PORT_D1=${NCCL_PORT_D1:-31530}
+
 PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-}
 DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-}
 P_MTT=""; [ -n "$PREFILL_MAX_TOTAL_TOKENS" ] && P_MTT="--max-total-tokens $PREFILL_MAX_TOTAL_TOKENS"
@@ -294,7 +310,7 @@ export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
 echo "[2/6] Starting Prefill server 1 (GPU ${GPU_P0}, port 30000, bootstrap 8998)  park=${IDLE_KV_PARKING:-0}..."
 env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30000 ${BASE_P0} \
+  --model-path $MODEL_PATH --tp 1 --port 30000 --nccl-port $NCCL_PORT_P0 ${BASE_P0} \
   --enable-metrics \
   ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
@@ -307,7 +323,7 @@ sleep 3
 
 echo "[3/6] Starting Prefill server 2 (GPU ${GPU_P1}, port 30001, bootstrap 8999)..."
 env CUDA_VISIBLE_DEVICES=${CVD_P1} ${ENV_P1} python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30001 ${BASE_P1} \
+  --model-path $MODEL_PATH --tp 1 --port 30001 --nccl-port $NCCL_PORT_P1 ${BASE_P1} \
   --enable-metrics \
   ${P_MTT} ${PARK_ARG} ${MEMFRAC_P} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
@@ -324,7 +340,7 @@ sleep 3
 
 echo "[4/6] Starting Decode server 1 (GPU ${GPU_D0}, port 30002)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D0} ${ENV_D0} python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30002 ${BASE_D0} \
+  --model-path $MODEL_PATH --tp 1 --port 30002 --nccl-port $NCCL_PORT_D0 ${BASE_D0} \
   --enable-metrics \
   ${D_MTT} ${PARK_ARG} ${MEMFRAC_D} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
@@ -336,7 +352,7 @@ sleep 3
 
 echo "[5/6] Starting Decode server 2 (GPU ${GPU_D1}, port 30003)..."
 env CUDA_VISIBLE_DEVICES=${CVD_D1} ${ENV_D1} python3 -m sglang.launch_server \
-  --model-path $MODEL_PATH --tp 1 --port 30003 ${BASE_D1} \
+  --model-path $MODEL_PATH --tp 1 --port 30003 --nccl-port $NCCL_PORT_D1 ${BASE_D1} \
   --enable-metrics \
   ${D_MTT} ${PARK_ARG} ${MEMFRAC_D} ${RADIX_ARG} \
   ${QUANTIZATION:+--quantization $QUANTIZATION} \
@@ -348,9 +364,34 @@ sleep 3
 
 echo ""
 echo "Waiting for all servers to be ready..."
+# BOUNDED, and it checks for death as well as for readiness. This loop used to be a bare
+# `while ! grep -q "ready to roll"; do sleep 3; done` -- when a server died at startup
+# (e.g. the nccl-port EADDRINUSE collision the pinned NCCL_PORT_* values above now
+# prevent) its log never gained the ready line, so the loop printed dots forever. An
+# unattended sweep then hung indefinitely instead of failing, and the actual traceback
+# sat unread in a log file while the terminal showed nothing but "Waiting for port
+# 30001......". Failing loudly here costs one run; hanging costs a whole overnight sweep.
+SERVER_WAIT_S=${SERVER_WAIT_S:-900}
 for port in 30000 30001 30002 30003; do
+  _log="$LOG_DIR/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log"
   echo -n "  Waiting for port $port..."
-  while ! grep -q "ready to roll" "$LOG_DIR/$(case $port in 30000) echo p1;; 30001) echo p2;; 30002) echo d1;; 30003) echo d2;; esac).log" 2>/dev/null; do
+  _deadline=$((SECONDS + SERVER_WAIT_S))
+  while ! grep -q "ready to roll" "$_log" 2>/dev/null; do
+    if grep -qE "Scheduler hit an exception|EADDRINUSE|Received sigquit|torch.distributed.DistNetworkError|CUDA out of memory" "$_log" 2>/dev/null; then
+      echo " FAILED"
+      echo "  >>> $_log reports a fatal startup error:"
+      grep -nE "Scheduler hit an exception|EADDRINUSE|Received sigquit|torch.distributed.DistNetworkError|CUDA out of memory" "$_log" 2>/dev/null | tail -5 | sed 's/^/      /'
+      echo "  >>> last 25 lines:"
+      tail -25 "$_log" 2>/dev/null | sed 's/^/      /'
+      exit 1
+    fi
+    if [ "$SECONDS" -ge "$_deadline" ]; then
+      echo " TIMEOUT"
+      echo "  >>> port $port never became ready in ${SERVER_WAIT_S}s. Last 25 lines of $_log:"
+      tail -25 "$_log" 2>/dev/null | sed 's/^/      /'
+      echo "  >>> raise the budget with SERVER_WAIT_S=<seconds> if this model is just slow to load."
+      exit 1
+    fi
     sleep 3
     echo -n "."
   done
