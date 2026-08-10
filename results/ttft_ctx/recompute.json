@@ -1,0 +1,66 @@
+{
+  "arm": "recompute",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "rows": [
+    {
+      "context_len": 4096,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 0.8534,
+      "ttft_median_s": 0.851,
+      "ttft_min_s": 0.8478,
+      "ttft_max_s": 0.8614
+    },
+    {
+      "context_len": 8192,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 1.5319,
+      "ttft_median_s": 1.5228,
+      "ttft_min_s": 1.5133,
+      "ttft_max_s": 1.5597
+    },
+    {
+      "context_len": 16384,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 3.1051,
+      "ttft_median_s": 3.0838,
+      "ttft_min_s": 3.0533,
+      "ttft_max_s": 3.1782
+    },
+    {
+      "context_len": 32768,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 7.2114,
+      "ttft_median_s": 7.2375,
+      "ttft_min_s": 7.1033,
+      "ttft_max_s": 7.2932
+    },
+    {
+      "context_len": 65536,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 19.181,
+      "ttft_median_s": 19.06,
+      "ttft_min_s": 19.0425,
+      "ttft_max_s": 19.4407
+    },
+    {
+      "context_len": 131072,
+      "reps": 3,
+      "n_ok": 3,
+      "n_err": 0,
+      "ttft_mean_s": 58.8283,
+      "ttft_median_s": 58.4932,
+      "ttft_min_s": 58.4826,
+      "ttft_max_s": 59.5092
+    }
+  ]
+}
