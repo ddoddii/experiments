@@ -29,6 +29,7 @@ OUTDIR=${OUTDIR:-results/ttft_ctx}
 REPS=${REPS:-3}
 MIN_FLOOD=${MIN_FLOOD:-}
 FLOOD_MULTIPLE=${FLOOD_MULTIPLE:-}
+FLOOD_TOKENS=${FLOOD_TOKENS:-}
 
 # PARK POOL SIZING -- the park arm is only meaningful if the pool can actually hold the
 # documents being swept, and the default cannot. start_2P_2D.sh defaults
@@ -43,15 +44,25 @@ FLOOD_MULTIPLE=${FLOOD_MULTIPLE:-}
 #   1. the park buffer lives OUTSIDE mem-fraction-static, so it has ~14.4GB =
 #      ~110k tokens per GPU -- and PARK_PEER=1 puts TWO pools on each GPU, halving that
 #      to ~55k tokens each. A single document must fit in ONE pool.
-#   2. the flood parks too (every completed request is parked), so the target only
-#      survives to phase 4 if the pool holds roughly (1 + n_flood) documents.
-# Together those cap the demonstrable context length well below 128k on this hardware:
-# a 131072-token document alone is 17.2GB of KV, which does not fit beside a KV pool
-# that must itself admit a 131072-token request.
+#   2. the flood parks too (every completed request is parked), so with same-length
+#      flood documents the target only survives to phase 4 if the pool holds roughly
+#      (1 + n_flood) documents -- ~26GB at 64k, more than any 48GB GPU can spare.
 #
-# Working configuration for the park arm up to 32k:
-#   PARK_PEER=0 PARK_POOL_TOKENS_PER_GPU=100000 MIN_FLOOD=2 \
-#   PREFILL_MAX_TOTAL_TOKENS=45000 CONTEXT_LENS="4096,8192,16384,32768"
+# FLOOD_TOKENS removes constraint 2. sglang skips parking any request shorter than
+# SGLANG_KV_PARK_ON_EVICT_MIN_TOKENS (default 512), so short flood documents still
+# evict from the KV pool -- total flood TOKENS is what evicts -- while never entering
+# the park ring. The park pool then only has to hold the target itself, and 64k
+# becomes reachable.
+#
+# 128k stays out of reach regardless: one 131072-token document is 17.2GB of KV and
+# cannot sit beside a KV pool that must itself admit a 131072-token request, on top of
+# ~16GB of weights.
+#
+# Working configuration for the park arm up to 64k (verified against the budgets above:
+# weights+KV 25.2GB of 28.8GB, park buffer 11.8GB of 19.2GB):
+#   PARK_PEER=0 PARK_POOL_TOKENS_PER_GPU=90000 PARK_MEM_FRACTION=0.60 \
+#   FLOOD_TOKENS=384 FLOOD_MULTIPLE=1.5 PREFILL_MAX_TOTAL_TOKENS=70000 \
+#   CONTEXT_LENS="4096,8192,16384,32768,65536"
 mkdir -p "$OUTDIR"
 
 if [ ! -f "$MODEL_PATH/config.json" ]; then
@@ -120,6 +131,7 @@ for arm in $ARMS; do
               --out "$OUTDIR/$arm.json")
   [ -n "$MIN_FLOOD" ] && PROBE_ARGS+=(--min-flood "$MIN_FLOOD")
   [ -n "$FLOOD_MULTIPLE" ] && PROBE_ARGS+=(--flood-multiple "$FLOOD_MULTIPLE")
+  [ -n "$FLOOD_TOKENS" ] && PROBE_ARGS+=(--flood-tokens "$FLOOD_TOKENS")
 
   python benchmark/ttft_ctx_probe.py "${PROBE_ARGS[@]}" \
     2>&1 | tee "$OUTDIR/probe_$arm.log"
