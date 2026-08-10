@@ -33,6 +33,7 @@ chunk under load (see that script's run_turn() for the incident this was fixed a
 """
 import argparse
 import json
+import math
 import os
 import time
 
@@ -104,6 +105,20 @@ def main():
     ap.add_argument("--min-flood", type=int, default=MIN_FLOOD)
     ap.add_argument("--flood-multiple", type=float, default=FLOOD_MULTIPLE)
     ap.add_argument(
+        "--flood-tokens", type=int, default=0,
+        help="length of each phase-3 flood document; 0 = same as the context length "
+             "being measured. SET IT BELOW 512 TO REACH LONG CONTEXTS. The flood has "
+             "one job -- evict the target from the KV pool -- but same-length flood "
+             "documents also get parked, so the park pool has to hold (1 + n_flood) "
+             "documents for the target to survive, which at 64k needs ~26GB of park "
+             "buffer against the ~14-19GB a 48GB GPU can spare. sglang skips parking "
+             "any request shorter than SGLANG_KV_PARK_ON_EVICT_MIN_TOKENS (default "
+             "512, the _evict_too_short path), so short flood documents still consume "
+             "KV-pool space -- total flood tokens is what evicts, not per-document "
+             "length -- while never entering the park ring at all. That decouples the "
+             "two constraints: the park pool then only has to hold the target itself.",
+    )
+    ap.add_argument(
         "--min-free-gb", type=float, default=15.0,
         help="hard-fail before starting a context length if less than this much disk "
              "is free (checked fresh each L, after clearing /tmp/hicache) -- hicache's "
@@ -125,8 +140,16 @@ def main():
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
         clear_hicache_disk_and_check_free(args.min_free_gb)
-        n_flood = max(args.min_flood, int((args.pool_tokens * args.flood_multiple) // L))
-        print(f"\n=== context_len={L}  n_flood={n_flood}  reps={args.reps} ===")
+        # Total flood TOKENS is what evicts the target, so the count scales with the
+        # flood document length rather than with L once the two are decoupled.
+        flood_len = args.flood_tokens or L
+        n_flood = max(
+            args.min_flood,
+            math.ceil(args.pool_tokens * args.flood_multiple / flood_len),
+        )
+        print(f"\n=== context_len={L}  n_flood={n_flood} x {flood_len} tok "
+              f"(= {n_flood * flood_len:,} flood tokens vs {args.pool_tokens:,} pool)  "
+              f"reps={args.reps} ===")
         ttfts, errors = [], []
         # A fast phase-4 TTFT is ambiguous on its own: a genuine park restore and a
         # phase-3 flood that simply FAILED to evict (leaving the prefix GPU-resident, so
@@ -158,8 +181,10 @@ def main():
             # a slow build is indistinguishable from a hang -- which is exactly how the
             # O(n^2) build_doc regression presented, as "hicache stuck" with a healthy
             # server logging nothing but /health polls.
-            print(f"  rep {rep}: building {n_flood} flood docs...", flush=True)
-            flood = [build_doc(tok, f"{tag}_flood{i}", L) for i in range(n_flood)]
+            print(f"  rep {rep}: building {n_flood} flood docs x {flood_len} tok...",
+                  flush=True)
+            flood = [build_doc(tok, f"{tag}_flood{i}", flood_len)
+                     for i in range(n_flood)]
 
             print(f"  rep {rep}: phase 1/4 (warm hit)...")
             _, err1 = send_ttft(doc)              # phase 1: warm hit (hit_count=1)
