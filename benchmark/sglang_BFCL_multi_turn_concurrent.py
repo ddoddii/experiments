@@ -266,6 +266,16 @@ def process_item(item):
     conversation = [{"role": "system", "content": system_content}]
     turn_metrics = []
     for turn_idx, turn in enumerate(item["question"]):
+        if not turn:
+            # BFCL v4's miss_func/miss_param/long_context categories (pooled in via
+            # BFCL_CATEGORIES) carry turns with an empty message list -- turn[0] on
+            # that raised IndexError: list index out of range, caught by the except
+            # below and misrecorded as a request-level error. Confirmed via item id:
+            # multi_turn_miss_func items errored at ~100% wherever ITEM_OFFSET's
+            # sweep window landed on them (e.g. 122/122 at one rate point), IDENTICAL
+            # across recompute/hicache/park -- a corpus/parsing bug, not a placement
+            # or caching one, so it wasn't caught by the earlier choices[0] fix.
+            continue
         # tool-call 유휴시간 모사: 이전 턴(assistant/tool) 이후 다음 유저 턴까지의 gap.
         if TOOL_DELAY > 0 and turn_idx > 0:
             time.sleep(TOOL_DELAY)
