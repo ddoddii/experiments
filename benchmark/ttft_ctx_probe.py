@@ -45,6 +45,11 @@ from host_gpu_traffic_probe import (
 
 FLOOD_MULTIPLE = 2.0   # phase-3 flood size, x pool-tokens -- eviction only, no TTFT recorded
 MIN_FLOOD = 4          # matches host_gpu_traffic_probe.py's cache_aware routing-coverage floor
+# Both overridable, because on the park arm the flood is not free: a prefill parks EVERY
+# completed request, flood documents included, so phase 3 cycles the park ring as well as
+# the KV pool. For the target to still be parked at phase 4 the park pool must hold
+# roughly (1 + n_flood) documents, which at large L is the binding constraint on the
+# whole experiment -- see the sizing note in run_ttft_ctx_sweep.sh.
 
 
 def send_ttft(prompt):
@@ -96,6 +101,8 @@ def main():
         default=int(os.environ.get("PREFILL_MAX_TOTAL_TOKENS", "60000")),
     )
     ap.add_argument("--settle-s", type=float, default=3.0)
+    ap.add_argument("--min-flood", type=int, default=MIN_FLOOD)
+    ap.add_argument("--flood-multiple", type=float, default=FLOOD_MULTIPLE)
     ap.add_argument(
         "--min-free-gb", type=float, default=15.0,
         help="hard-fail before starting a context length if less than this much disk "
@@ -118,7 +125,7 @@ def main():
     rows = []
     for L in [int(x) for x in args.context_lens.split(",") if x]:
         clear_hicache_disk_and_check_free(args.min_free_gb)
-        n_flood = max(MIN_FLOOD, int((args.pool_tokens * FLOOD_MULTIPLE) // L))
+        n_flood = max(args.min_flood, int((args.pool_tokens * args.flood_multiple) // L))
         print(f"\n=== context_len={L}  n_flood={n_flood}  reps={args.reps} ===")
         ttfts, errors = [], []
         # A fast phase-4 TTFT is ambiguous on its own: a genuine park restore and a

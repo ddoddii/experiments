@@ -27,6 +27,31 @@ export PREFILL_PORTS=${PREFILL_PORTS:-30000,30001}
 export PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
 OUTDIR=${OUTDIR:-results/ttft_ctx}
 REPS=${REPS:-3}
+MIN_FLOOD=${MIN_FLOOD:-}
+FLOOD_MULTIPLE=${FLOOD_MULTIPLE:-}
+
+# PARK POOL SIZING -- the park arm is only meaningful if the pool can actually hold the
+# documents being swept, and the default cannot. start_2P_2D.sh defaults
+# PARK_POOL_TOKENS=30000 split evenly over the candidate GPUs, so PARK_PEER=1 gives a
+# 15000-token pool: from L=16384 up, ONE document does not fit and nothing is ever
+# parked. Until the companion sglang fix, that failed silently (see that repo's
+# "Guard oversize parks in the ring path" commit) and simply looked like the mechanism
+# not helping -- park's TTFT tracked recompute exactly at 16k/32k/64k with zero hits.
+#
+# Two constraints, both per prefill GPU (~48GB, weights ~16GB, mem-fraction-static 0.70,
+# KV bytes/token = 128 KiB for Llama-3.1-8B):
+#   1. the park buffer lives OUTSIDE mem-fraction-static, so it has ~14.4GB =
+#      ~110k tokens per GPU -- and PARK_PEER=1 puts TWO pools on each GPU, halving that
+#      to ~55k tokens each. A single document must fit in ONE pool.
+#   2. the flood parks too (every completed request is parked), so the target only
+#      survives to phase 4 if the pool holds roughly (1 + n_flood) documents.
+# Together those cap the demonstrable context length well below 128k on this hardware:
+# a 131072-token document alone is 17.2GB of KV, which does not fit beside a KV pool
+# that must itself admit a 131072-token request.
+#
+# Working configuration for the park arm up to 32k:
+#   PARK_PEER=0 PARK_POOL_TOKENS_PER_GPU=100000 MIN_FLOOD=2 \
+#   PREFILL_MAX_TOTAL_TOKENS=45000 CONTEXT_LENS="4096,8192,16384,32768"
 mkdir -p "$OUTDIR"
 
 if [ ! -f "$MODEL_PATH/config.json" ]; then
@@ -90,11 +115,13 @@ for arm in $ARMS; do
     exit 1
   fi
 
-  python benchmark/ttft_ctx_probe.py --arm "$arm" \
-    --context-lens "$CONTEXT_LENS" \
-    --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" \
-    --reps "$REPS" \
-    --out "$OUTDIR/$arm.json" \
+  PROBE_ARGS=(--arm "$arm" --context-lens "$CONTEXT_LENS"
+              --pool-tokens "$PREFILL_MAX_TOTAL_TOKENS" --reps "$REPS"
+              --out "$OUTDIR/$arm.json")
+  [ -n "$MIN_FLOOD" ] && PROBE_ARGS+=(--min-flood "$MIN_FLOOD")
+  [ -n "$FLOOD_MULTIPLE" ] && PROBE_ARGS+=(--flood-multiple "$FLOOD_MULTIPLE")
+
+  python benchmark/ttft_ctx_probe.py "${PROBE_ARGS[@]}" \
     2>&1 | tee "$OUTDIR/probe_$arm.log"
 done
 
