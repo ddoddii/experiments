@@ -115,6 +115,22 @@ for arm in $ARMS; do
     rm -f "$PARK_DIR"/parked_gpu*.json 2>/dev/null || true
     start_arm "$arm"
 
+    # Disk check BEFORE the ~80 minutes, not after. hicache's file backend fails
+    # SILENTLY when the disk fills -- sglang logs "Failed to save tensor ... 0 written"
+    # and keeps serving degraded to a cache miss, so the point completes with numbers
+    # that quietly stopped measuring hicache. Twice now that has cost a finished
+    # measurement. stop.sh clears /tmp/hicache between points, so this is about one
+    # point's worth: 100 sessions at up to 48k tokens is a lot of KV pages.
+    _free_gb=$(df -BG --output=avail . | tail -1 | tr -dc '0-9')
+    _hc_gb=$(du -sBG /tmp/hicache 2>/dev/null | cut -f1 | tr -dc '0-9')
+    echo "  disk free: ${_free_gb}G   /tmp/hicache: ${_hc_gb:-0}G"
+    if [ "${_free_gb:-0}" -lt "${NEED_FREE_GB:-40}" ]; then
+      echo "  ERROR: only ${_free_gb}G free (need ${NEED_FREE_GB:-40}G). Free space and"
+      echo "         re-run just this point:"
+      echo "           ARMS=\"$arm\" CONCURRENCIES=\"$C\" ./scripts/sglang/run_agent_trace_sweep.sh"
+      exit 1
+    fi
+
     python benchmark/sys_mem_breakdown.py --out "$OUTDIR/mem_${arm}_c${C}.csv" \
       --interval 2 > "$OUTDIR/sampler_mem_${arm}_c${C}.log" 2>&1 &
     MEM_PID=$!
