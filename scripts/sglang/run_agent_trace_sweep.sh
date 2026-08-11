@@ -138,11 +138,25 @@ for arm in $ARMS; do
     # that quietly stopped measuring hicache. Twice now that has cost a finished
     # measurement. stop.sh clears /tmp/hicache between points, so this is about one
     # point's worth: 100 sessions at up to 48k tokens is a lot of KV pages.
+    # The bar depends on whether anything will actually write KV to disk. Only the
+    # hicache arm WITH the L3 file backend does, and that is no longer the default
+    # (HICACHE_STORAGE_BACKEND=none), so every other point needs room for results and
+    # logs only -- a few GB. A flat 40G bar is left over from when the file tier was on
+    # and would now block runs that cannot fill the disk at all, which is how the
+    # recompute point got refused with 33G free and /tmp/hicache empty.
+    _need=${NEED_FREE_GB:-}
+    if [ -z "$_need" ]; then
+      if [ "$arm" = "hicache" ] && [ "${HICACHE_STORAGE_BACKEND:-none}" = "file" ]; then
+        _need=40
+      else
+        _need=10
+      fi
+    fi
     _free_gb=$(df -BG --output=avail . | tail -1 | tr -dc '0-9')
     _hc_gb=$(du -sBG /tmp/hicache 2>/dev/null | cut -f1 | tr -dc '0-9')
-    echo "  disk free: ${_free_gb}G   /tmp/hicache: ${_hc_gb:-0}G"
-    if [ "${_free_gb:-0}" -lt "${NEED_FREE_GB:-40}" ]; then
-      echo "  ERROR: only ${_free_gb}G free (need ${NEED_FREE_GB:-40}G). Free space and"
+    echo "  disk free: ${_free_gb}G   /tmp/hicache: ${_hc_gb:-0}G   (need ${_need}G for $arm)"
+    if [ "${_free_gb:-0}" -lt "$_need" ]; then
+      echo "  ERROR: only ${_free_gb}G free (need ${_need}G). Free space and"
       echo "         re-run just this point:"
       echo "           ARMS=\"$arm\" CONCURRENCIES=\"$C\" ./scripts/sglang/run_agent_trace_sweep.sh"
       exit 1
