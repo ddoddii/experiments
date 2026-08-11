@@ -73,6 +73,15 @@ def main():
     ap.add_argument("--out", default="results/ttft_ctx/fig_ttft_ctx_panels")
     ap.add_argument("--detail-len", type=int, default=65536,
                      help="context length broken out in panel (d)")
+    ap.add_argument("--restore-units", default="gb", choices=["gb", "tokens"],
+                     help="y unit for panel (c)")
+    ap.add_argument(
+        "--bytes-per-token", type=int, default=131072,
+        help="fallback KV bytes/token for the GB conversion, used only when the result "
+             "rows predate the probe recording it. 131072 = 128 KiB = Llama-3.1-8B "
+             "(GQA, bf16); an MHA model is several times that, so this default would "
+             "understate a different model badly while still looking plausible.",
+    )
     ap.add_argument("--width", type=float, default=7.16)
     ap.add_argument("--height", type=float, default=5.0)
     args = ap.parse_args()
@@ -133,14 +142,28 @@ def main():
     idx = range(len(xs))
     gpu = [data.get("park", {}).get(L, {}).get("park_gpu_tokens", 0) or 0 for L in xs]
     hst = [data.get("park_host", {}).get(L, {}).get("park_host_tokens", 0) or 0 for L in xs]
-    ax_c.bar([i - width / 2 for i in idx], [g / 1000 for g in gpu], width,
+    if args.restore_units == "gb":
+        # Prefer the bytes/token the probe recorded for the model actually measured;
+        # only fall back to the CLI default for rows written before it did, and say so.
+        bpts = [r.get("bytes_per_token") for arm in data.values() for r in arm.values()
+                if r.get("bytes_per_token")]
+        bpt = bpts[0] if bpts else args.bytes_per_token
+        if not bpts:
+            print(f"[warn] no bytes_per_token in these results -- converting with the "
+                  f"--bytes-per-token default ({args.bytes_per_token} = "
+                  f"{args.bytes_per_token / 1024:.0f} KiB/token). Correct for "
+                  f"Llama-3.1-8B; wrong for a model with a different KV shape.")
+        scale, unit = bpt / 1e9, "GB"
+    else:
+        scale, unit = 1 / 1000, "k tokens"
+    ax_c.bar([i - width / 2 for i in idx], [g * scale for g in gpu], width,
              color=PALETTE["park"], label="Ours: GPU park pool")
-    ax_c.bar([i + width / 2 for i in idx], [h / 1000 for h in hst], width,
+    ax_c.bar([i + width / 2 for i in idx], [h * scale for h in hst], width,
              color=PALETTE["both"], label="Ours (host DRAM): host")
     ax_c.set_xticks(list(idx))
     ax_c.set_xticklabels([fmt_tokens(v) for v in xs])
     ax_c.set_xlabel("Context length (tokens)")
-    ax_c.set_ylabel("KV restored (k tokens)")
+    ax_c.set_ylabel(f"KV restored ({unit})")
     ax_c.set_title("(c)  Where the restored KV came from")
     ax_c.legend(loc="upper left")
     style_axes(ax_c)

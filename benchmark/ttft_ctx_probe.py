@@ -41,7 +41,7 @@ import requests
 
 from host_gpu_traffic_probe import (
     MODEL, MODEL_PATH, ROUTER_URL, TIMEOUT, build_doc, clear_hicache_disk_and_check_free,
-    snapshot_park, snapshot_hicache_tokens,
+    snapshot_park, snapshot_hicache_tokens, bytes_per_token,
 )
 
 FLOOD_MULTIPLE = 2.0   # phase-3 flood size, x pool-tokens -- eviction only, no TTFT recorded
@@ -138,6 +138,12 @@ def main():
 
     tok = AutoTokenizer.from_pretrained(MODEL_PATH)
     tok.model_max_length = int(1e9)
+    # Recorded per row so the plotter converts restored tokens to bytes with THIS
+    # model's KV size instead of assuming one. 128 KiB/token is Llama-3.1-8B (GQA,
+    # bf16); an MHA model of the same parameter count is several times that, so a
+    # hardcoded constant in the plot would silently misreport a different model by a
+    # large factor while still looking plausible.
+    bpt = bytes_per_token()
     print(f"[ttft-probe] arm={args.arm} pool={args.pool_tokens} reps={args.reps}")
 
     rows = []
@@ -241,6 +247,7 @@ def main():
             # hicache arm only (sglang:load_back_tokens_total). Zero alongside a
             # recompute-like TTFT = the all-or-nothing load-back was skipped.
             "hicache_load_back_tokens": int(max(0.0, lb1 - lb0)),
+            "bytes_per_token": bpt,
         }
         print(f"  -> {row}")
         rows.append(row)
