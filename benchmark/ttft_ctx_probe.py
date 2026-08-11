@@ -41,7 +41,7 @@ import requests
 
 from host_gpu_traffic_probe import (
     MODEL, MODEL_PATH, ROUTER_URL, TIMEOUT, build_doc, clear_hicache_disk_and_check_free,
-    snapshot_park,
+    snapshot_park, snapshot_hicache_tokens,
 )
 
 FLOOD_MULTIPLE = 2.0   # phase-3 flood size, x pool-tokens -- eviction only, no TTFT recorded
@@ -160,6 +160,15 @@ def main():
         # simultaneously consistent with a 17.2GB NVLink peer restore (~0.32s at 53GB/s)
         # and with no transfer at all, and nothing in the TTFT alone separates the two.
         h0, g0, hits0, miss0 = snapshot_park()
+        # Same treatment for the hicache arm. Its load-back is all-or-nothing:
+        # hiradix_cache.init_load_back() concatenates the whole evicted prefix and, if
+        # that exceeds the memory quota, returns None ("skip loading back if the total
+        # size is too small or exceeding the memory quota") -- the request then silently
+        # falls through to a full re-prefill. That predicts a TTFT indistinguishable
+        # from recompute with ZERO tokens loaded back, which is exactly what 65536
+        # looked like (19.41s vs recompute's 19.18s) while 32768 worked (2.52s vs
+        # 7.19s). Without this counter that collapse is only a hypothesis.
+        lb0 = snapshot_hicache_tokens()
 
         for rep in range(args.reps):
             tag = f"ttftL{L}_r{rep}"
@@ -206,6 +215,7 @@ def main():
                 ttfts.append(dt4)
 
         h1, g1, hits1, miss1 = snapshot_park()
+        lb1 = snapshot_hicache_tokens()
         ttfts.sort()
         n = len(ttfts)
         row = {
@@ -225,6 +235,9 @@ def main():
             "park_fetch_miss": max(0, miss1 - miss0),
             "park_host_tokens": max(0, h1 - h0),
             "park_gpu_tokens": max(0, g1 - g0),
+            # hicache arm only (sglang:load_back_tokens_total). Zero alongside a
+            # recompute-like TTFT = the all-or-nothing load-back was skipped.
+            "hicache_load_back_tokens": int(max(0.0, lb1 - lb0)),
         }
         print(f"  -> {row}")
         rows.append(row)
