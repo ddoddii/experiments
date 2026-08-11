@@ -76,6 +76,15 @@ def main():
     ap.add_argument("--restore-units", default="gb", choices=["gb", "tokens"],
                      help="y unit for panel (c)")
     ap.add_argument(
+        "--restore-basis", default="rep", choices=["rep", "total"],
+        help="panel (c): 'rep' divides by the repetition count, 'total' shows the raw "
+             "sweep total. Default is per-rep because the total scales with REPS, an "
+             "arbitrary experimental choice -- reporting 25.7GB restored at 64k invites "
+             "the reader to compare it against a per-request budget it was never "
+             "measured against. Per rep it is 8.58GB, which is one document's KV and "
+             "can be checked against 65536 x 128 KiB = 8.59GB directly.",
+    )
+    ap.add_argument(
         "--bytes-per-token", type=int, default=131072,
         help="fallback KV bytes/token for the GB conversion, used only when the result "
              "rows predate the probe recording it. 131072 = 128 KiB = Llama-3.1-8B "
@@ -140,8 +149,18 @@ def main():
     # ---------------------------------------------------------------- (c) restore source
     width = 0.38
     idx = range(len(xs))
-    gpu = [data.get("park", {}).get(L, {}).get("park_gpu_tokens", 0) or 0 for L in xs]
-    hst = [data.get("park_host", {}).get(L, {}).get("park_host_tokens", 0) or 0 for L in xs]
+    def restored(arm, field):
+        vals = []
+        for L in xs:
+            row = data.get(arm, {}).get(L, {})
+            v = row.get(field, 0) or 0
+            if args.restore_basis == "rep":
+                v /= max(1, row.get("reps") or 1)
+            vals.append(v)
+        return vals
+
+    gpu = restored("park", "park_gpu_tokens")
+    hst = restored("park_host", "park_host_tokens")
     if args.restore_units == "gb":
         # Prefer the bytes/token the probe recorded for the model actually measured;
         # only fall back to the CLI default for rows written before it did, and say so.
@@ -164,7 +183,8 @@ def main():
     ax_c.set_xticklabels([fmt_tokens(v) for v in xs])
     ax_c.set_xlabel("Context length (tokens)")
     ax_c.set_ylabel(f"KV restored ({unit})")
-    ax_c.set_title("(c)  Where the restored KV came from")
+    ax_c.set_title("(c)  Where the restored KV came from"
+                   + (", per request" if args.restore_basis == "rep" else ", sweep total"))
     ax_c.legend(loc="upper left")
     style_axes(ax_c)
 
