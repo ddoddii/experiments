@@ -94,7 +94,10 @@ def send_ttft(prompt):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", required=True, choices=["recompute", "radix", "hicache", "park"])
+    ap.add_argument(
+        "--arm", required=True,
+        choices=["recompute", "radix", "hicache", "park", "park_host"],
+    )
     ap.add_argument("--context-lens", default="4096,8192,16384,32768,65536,131072")
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument(

@@ -29,6 +29,11 @@ from paperstyle import PALETTE, STYLE, use_paper_style, style_axes, savefig
 ARMS = [
     ("recompute", "Recompute", PALETTE["recompute"], "recompute"),
     ("hicache", "SGLang", PALETTE["hicache"], "hicache"),
+    # The bandwidth ablation: our own mechanism with every park forced into pinned host
+    # DRAM over PCIe instead of a peer GPU (SGLANG_KV_PARK_FORCE_HOST=1). Only shows up
+    # when that arm was actually run; it is what separates "the link is faster" from
+    # "the policy is better", which park-vs-SGLang alone cannot do.
+    ("park_host", "Ours (host DRAM)", PALETTE["both"], "both"),
     ("park", "Ours", PALETTE["park"], "park"),
 ]
 

@@ -94,6 +94,23 @@ start_arm() {
         SGLANG_KV_PARK_HOST_OVERFLOW=${HOST_OVERFLOW:-1} \
         SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-8} \
         SGLANG_KV_PARK_REUSE_AWARE=1 ./scripts/sglang/start_2P_2D.sh ;;
+    park_host)
+      # THE BANDWIDTH ABLATION. Identical to `park` except SGLANG_KV_PARK_FORCE_HOST=1
+      # sends every park to pinned CPU DRAM over PCIe instead of to a peer GPU. Same
+      # index, same eviction, same reuse ranking, same fetch code, and the GPU park pool
+      # is still ALLOCATED so the two arms are memory-matched -- only the medium moves.
+      # That is what isolates link bandwidth; `park vs hicache` moves placement policy,
+      # transfer software and medium all at once and cannot attribute the difference to
+      # any one of them.
+      #
+      # HOST_MAX_GB must cover one document (8.6GB at 64k), well above the 8GB default,
+      # or the host tier refuses the park and this arm silently measures nothing.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 PARK_PEER=${PARK_PEER:-1} \
+        SGLANG_KV_PARK_BW_AWARE=1 \
+        SGLANG_KV_PARK_FORCE_HOST=1 \
+        SGLANG_KV_PARK_HOST_OVERFLOW=1 \
+        SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-24} \
+        SGLANG_KV_PARK_REUSE_AWARE=1 ./scripts/sglang/start_2P_2D.sh ;;
     *) echo "unknown arm: $1"; exit 1 ;;
   esac
 }
