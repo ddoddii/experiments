@@ -85,8 +85,25 @@ start_arm() {
     radix)
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=0 ./scripts/sglang/start_2P_2D.sh ;;
     hicache)
+      # L2-ONLY (host DRAM), NO L3 disk tier -- HICACHE_STORAGE_BACKEND=none.
+      #
+      # Practical: the file backend has no size cap, and this workload can write
+      # 100 sessions x 48k tokens x 128 KiB = 0.63 TB of KV pages. It filled the disk
+      # mid-run, and sglang does not fail loudly when that happens -- it logs
+      # "Failed to save tensor ... 0 written" and degrades to a cache miss, so the
+      # point would have completed with numbers that stopped measuring hicache. The
+      # start-of-point df check cannot catch that; only removing the unbounded tier can.
+      #
+      # Methodological, and the reason this is the right default rather than a
+      # workaround: park has exactly two tiers, idle GPU HBM and host DRAM. Leaving the
+      # disk tier on gives hicache a THIRD tier park does not have, so a hicache win
+      # could be the disk rather than the design, and a hicache loss would be against a
+      # configuration nobody would deploy for latency. L2-only holds the tier count
+      # equal and is bounded by hicache-ratio x GPU KV pool (~9.4GB per prefill here).
+      # HICACHE_STORAGE_BACKEND=file to put the disk tier back for an explicit A/B.
       IDLE_KV_PARKING=0 HICACHE_WRITE_POLICY=write_through_selective \
-        HICACHE_STORAGE_BACKEND=file ./scripts/sglang/start_2P_2D.sh ;;
+        HICACHE_STORAGE_BACKEND=${HICACHE_STORAGE_BACKEND:-none} \
+        ./scripts/sglang/start_2P_2D.sh ;;
     park)
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 PARK_PEER=${PARK_PEER:-0} \
         SGLANG_KV_PARK_BW_AWARE=1 \
