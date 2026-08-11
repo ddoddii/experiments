@@ -165,6 +165,14 @@ def load_multi(path):
         rows = rows.get("data") or rows.get("train") or rows.get("rows") or []
     sessions = []
     for i, row in enumerate(rows):
+        # Already-normalised sessions (this module's own --select output). Round-tripping
+        # matters because the sweep runs the append-only gate against the SELECTION, not
+        # the raw dataset -- checking the raw file would verify sessions the run will
+        # never send, and silently skip the truncation the selection applied.
+        if isinstance(row, dict) and isinstance(row.get("turns"), list) \
+                and row["turns"] and "prompt_messages" in row["turns"][0]:
+            sessions.append(row)
+            continue
         conv = row.get("conversations") if isinstance(row, dict) else None
         if conv is None and isinstance(row, list):
             conv = row

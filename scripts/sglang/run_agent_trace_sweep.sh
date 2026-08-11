@@ -1,11 +1,11 @@
 #!/bin/bash
-# Codex / SWE-bench Pro trace replay: 4 arms x concurrency sweep.
+# Codex / SWE-bench Pro trace replay: 3 arms x concurrency sweep.
 #
-# Arms: recompute (no cache at all), radix (GPU prefix cache only), hicache (radix +
-# host DRAM + disk), park (radix + idle-GPU victim cache + host overflow).
-# radix is included here and not in the context-length sweep because it is the honest
-# "what does SGLang already give you" baseline once the workload actually reuses
-# prefixes -- hicache's extra tiers only pay when the GPU tier overflows.
+# Arms: recompute (no cache at all), hicache (radix + host DRAM + disk, i.e. SGLang as
+# shipped), park (radix + idle-GPU victim cache + host overflow). A radix-only arm is
+# available via ARMS if the GPU-tier-only baseline is ever wanted, but it is not run by
+# default -- hicache already contains the radix tier, so radix mainly answers a
+# different question (what the extra tiers cost) than the one this sweep asks.
 #
 # PARK SIZING -- the part that decides whether the park arm measures anything.
 #   Sessions peak at ~48k tokens = 6.3GB of KV each (128 KiB/token, Llama-3.1-8B).
@@ -27,14 +27,14 @@
 #
 # 사용:
 #   ./scripts/sglang/run_agent_trace_sweep.sh
-#   CONCURRENCIES="4 8 16" ARMS="recompute radix hicache park" \
+#   CONCURRENCIES="4 8 16" ARMS="recompute hicache park" \
 #     ./scripts/sglang/run_agent_trace_sweep.sh
 set -e
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate sglang
 cd "$(dirname "$0")/../.."
 
-ARMS=${ARMS:-"recompute radix hicache park"}
+ARMS=${ARMS:-"recompute hicache park"}
 CONCURRENCIES=${CONCURRENCIES:-"4 8 16"}
 export SESSIONS=${SESSIONS:-data/codex_sessions_100.json}
 export MODEL_PATH=${MODEL_PATH:-/home/uhmturks/hf_models/Llama-3.1-8B-Instruct}
