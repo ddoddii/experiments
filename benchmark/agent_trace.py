@@ -280,12 +280,32 @@ def measure_and_filter(sessions, tokenizer, min_turns, max_turns, min_ctx, max_c
     to the point it crosses the bound, and dropping it biases the set toward traces that
     happened to finish early."""
     kept, stats = [], []
-    for s in sessions:
+    for si, s in enumerate(sessions):
+        if si % 25 == 0:
+            print(f"  ...scanned {si}/{len(sessions)} sessions, kept {len(kept)}",
+                  flush=True)
+        # INCREMENTAL, not one full render per turn. Rendering messages[:i] separately
+        # for every i re-tokenizes the whole accumulated prompt each time: O(T^2) in
+        # conversation length, measured at ~10M chars per session against 0.2M for the
+        # incremental form -- a 50x difference, ~17 minutes over 610 sessions, with no
+        # output while it ran. Same shape as the build_doc regression.
+        #
+        # Each message is tokenized ONCE; the per-message template overhead (role
+        # headers, separators) is calibrated from a single exact render and applied to
+        # the cumulative sums. The chosen turn is then re-rendered exactly, so the
+        # recorded peak is a real measurement and only the SEARCH is approximate.
+        msgs = s["turns"][-1]["prompt_messages"] + [s["turns"][-1]["recorded_reply"]]
+        tok_per_msg = [len(tokenizer(m["content"], add_special_tokens=False)["input_ids"])
+                       for m in msgs]
+        n_probe = len(s["turns"][0]["prompt_messages"])
+        exact = len(tokenizer.apply_chat_template(
+            s["turns"][0]["prompt_messages"], tokenize=True, add_generation_prompt=True))
+        overhead = max(0.0, (exact - sum(tok_per_msg[:n_probe])) / max(1, n_probe))
+
         lens, out_lens = [], []
         for t in s["turns"]:
-            ids = tokenizer.apply_chat_template(
-                t["prompt_messages"], tokenize=True, add_generation_prompt=True)
-            lens.append(len(ids))
+            k = len(t["prompt_messages"])
+            lens.append(int(sum(tok_per_msg[:k]) + overhead * k))
             out_lens.append(len(tokenizer(t["recorded_reply"]["content"],
                                           add_special_tokens=False)["input_ids"]))
         keep_n = sum(1 for L in lens if L <= max_ctx)
@@ -294,12 +314,21 @@ def measure_and_filter(sessions, tokenizer, min_turns, max_turns, min_ctx, max_c
         keep_n = min(keep_n, max_turns)
         if lens[keep_n - 1] < min_ctx:      # never gets long enough to be interesting
             continue
+        # Re-render the CHOSEN turn exactly: the search above is approximate, the
+        # recorded number must not be. If the estimate drifted enough to push the true
+        # peak over the bound, drop the session rather than admit an out-of-spec one.
+        peak_exact = len(tokenizer.apply_chat_template(
+            s["turns"][keep_n - 1]["prompt_messages"],
+            tokenize=True, add_generation_prompt=True))
+        if not (min_ctx <= peak_exact <= max_ctx):
+            continue
         s2 = dict(s)
         s2["turns"] = [
             dict(t, prompt_tokens=lens[i], recorded_out_tokens=min(out_lens[i], max_out))
             for i, t in enumerate(s["turns"][:keep_n])
         ]
-        s2["peak_prompt_tokens"] = lens[keep_n - 1]
+        s2["turns"][-1]["prompt_tokens"] = peak_exact
+        s2["peak_prompt_tokens"] = peak_exact
         kept.append(s2)
         stats.append((len(s2["turns"]), lens[0], lens[keep_n - 1]))
         if len(kept) >= n_want:
