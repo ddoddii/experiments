@@ -41,6 +41,49 @@ ARMS = [
 ]
 
 
+def _flat(o, pre=""):
+    out = {}
+    if isinstance(o, dict):
+        for k, v in o.items():
+            out.update(_flat(v, pre + k + ".") if isinstance(v, dict) else {pre + k: v})
+    return out
+
+
+def load_hit_rates(dirpath, node="prefill"):
+    """Server-side prefix hit rate per (arm, concurrency), from the prometheus
+    before/after scrapes: cached_tokens / prompt_tokens on the PREFILL nodes.
+
+    Prefill rather than decode because that is where a prefix hit removes work that
+    would otherwise land in TTFT; the decode counter tracks the same reuse one hop
+    later and would double-report it.
+
+    This is the SERVER's own accounting, independent of the park telemetry, so it says
+    whether a mechanism actually reduced recomputation rather than whether its own
+    counters incremented."""
+    out = {}
+    for f in sorted(glob.glob(os.path.join(dirpath, "metrics_*_after.json"))):
+        tag = re.match(r"metrics_(.+)_after\.json$", os.path.basename(f))
+        b = f.replace("_after", "_before")
+        if not tag or not os.path.exists(b):
+            continue
+        m = re.match(r"(.+)_c(\d+)$", tag.group(1))
+        if not m:
+            continue
+        try:
+            A, B = _flat(json.load(open(f))), _flat(json.load(open(b)))
+        except Exception:  # noqa: BLE001
+            continue
+        ck = f"nodes.{node}.sglang:cached_tokens_total"
+        pk = f"nodes.{node}.sglang:prompt_tokens_total"
+        if ck not in A or pk not in A:
+            continue
+        c = float(A[ck]) - float(B.get(ck, 0))
+        p = float(A[pk]) - float(B.get(pk, 0))
+        if p > 0:
+            out.setdefault(m.group(1), {})[int(m.group(2))] = 100 * c / p
+    return out
+
+
 def load(dirpath):
     out = {}
     for p in sorted(glob.glob(os.path.join(dirpath, "bench_*_c*.json"))):
@@ -62,7 +105,7 @@ def main():
     ap.add_argument("--out", default="results/agent_trace/fig_agent_trace")
     ap.add_argument("--ttft-stat", default="ttft_p50_s",
                      choices=["ttft_p50_s", "ttft_mean_per_turn_s", "ttft_p95_s"])
-    ap.add_argument("--width", type=float, default=7.16)
+    ap.add_argument("--width", type=float, default=9.5)
     ap.add_argument("--height", type=float, default=2.5)
     args = ap.parse_args()
 
@@ -82,7 +125,8 @@ def main():
     present = [a for a in ARMS if a[0] in data]
 
     use_paper_style()
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(args.width, args.height))
+    hits = load_hit_rates(args.dir)
+    fig, (ax_a, ax_b, ax_c) = plt.subplots(1, 3, figsize=(args.width, args.height))
 
     PANELS = [
         (ax_a, args.ttft_stat, "Normalized TTFT", "(a)  Time to first token"),
@@ -111,6 +155,30 @@ def main():
         style_axes(ax)
     ax_a.legend(loc="lower left", ncol=1)
 
+    # (c) Cache hit rate -- NOT normalised: it is already a ratio, and dividing one hit
+    # rate by another would be meaningless. recompute is omitted because it runs with
+    # DISABLE_RADIX_CACHE=1, so its hit rate is 0 by construction and a zero-height bar
+    # would suggest a measurement rather than an absent mechanism.
+    cache_arms = [a for a in present if a[0] != "recompute" and a[0] in hits]
+    w2 = 0.8 / max(1, len(cache_arms))
+    for ai, (arm, label, color) in enumerate(cache_arms):
+        xs, ys = [], []
+        for ci, c in enumerate(cs):
+            v = hits[arm].get(c)
+            if v is not None:
+                xs.append(ci + (ai - (len(cache_arms) - 1) / 2) * w2)
+                ys.append(v)
+        if xs:
+            ax_c.bar(xs, ys, w2, color=color, label=label,
+                     edgecolor="black", linewidth=0.4)
+    ax_c.set_xticks(range(len(cs)))
+    ax_c.set_xticklabels([f"C={c}" for c in cs])
+    ax_c.set_xlabel("Concurrent sessions")
+    ax_c.set_ylabel("Cache Hit Rate (%)")
+    ax_c.set_title("(c)  Server-side prefix reuse")
+    ax_c.set_ylim(0, 100)
+    style_axes(ax_c)
+
     fig.tight_layout()
     savefig(fig, args.out)
 
@@ -122,9 +190,13 @@ def main():
         for arm, label, _ in present:
             s = data[arm].get(c)
             if s:
+                hr = hits.get(arm, {}).get(c)
                 print(f"    {label:20s} TTFT {s.get(args.ttft_stat)}s   "
                       f"TPOT {s.get('avg_tpot_s')}s   "
-                      f"p95 {s.get('ttft_p95_s')}s")
+                      f"p95 {s.get('ttft_p95_s')}s   "
+                      f"hit {hr:.1f}%" if hr is not None else
+                      f"    {label:20s} TTFT {s.get(args.ttft_stat)}s   "
+                      f"TPOT {s.get('avg_tpot_s')}s   p95 {s.get('ttft_p95_s')}s")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,33 @@ const flag = (n, d) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : d;
 };
 const ttftKey = flag("ttft-stat", "ttft_p50_s");
+
+// Server-side prefix hit rate from the prometheus scrapes, prefill nodes: that is
+// where a hit removes work that would otherwise land in TTFT. Not normalised -- it is
+// already a ratio, and one hit rate divided by another means nothing.
+const flatten = (o, pre = "", out = {}) => {
+  for (const [k, v] of Object.entries(o || {}))
+    v && typeof v === "object" ? flatten(v, pre + k + ".", out) : (out[pre + k] = v);
+  return out;
+};
+const hits = {};
+for (const f of fs.readdirSync(dataDir)) {
+  const m = /^metrics_(.+)_c(\d+)_after\.json$/.exec(f);
+  if (!m) continue;
+  const before = path.join(dataDir, f.replace("_after", "_before"));
+  if (!fs.existsSync(before)) continue;
+  try {
+    const A = flatten(JSON.parse(fs.readFileSync(path.join(dataDir, f), "utf8")));
+    const B = flatten(JSON.parse(fs.readFileSync(before, "utf8")));
+    const ck = "nodes.prefill.sglang:cached_tokens_total";
+    const pk = "nodes.prefill.sglang:prompt_tokens_total";
+    const c = Number(A[ck]) - Number(B[ck] || 0);
+    const p = Number(A[pk]) - Number(B[pk] || 0);
+    if (p > 0) (hits[m[1]] ||= {})[Number(m[2])] = (100 * c) / p;
+  } catch (e) {
+    console.error(`[warn] ${f}: ${e.message}`);
+  }
+}
 const figPath = flag("fig", path.join(dataDir, "fig_agent_trace.png"));
 
 const ARMS = [
@@ -89,7 +116,7 @@ const PANELS = [
   { key: ttftKey, title: "(a)  Time to first token", axis: "Normalized TTFT" },
   { key: "avg_tpot_s", title: "(b)  Time per output token", axis: "Normalized TPOT" },
 ];
-const X0 = 1.9, W = 4.6, GAP = 0.5, Y = 1.35, H = 4.3;
+const X0 = 0.5, W = 4.0, GAP = 0.25, Y = 1.35, H = 4.3;
 PANELS.forEach((p, i) => {
   const series = present.map((a) => ({
     name: a.label,
@@ -104,6 +131,25 @@ PANELS.forEach((p, i) => {
     title: p.title, valAxisTitle: p.axis,
   });
 });
+
+// (c) cache hit rate. recompute is omitted: it runs with DISABLE_RADIX_CACHE=1, so its
+// hit rate is 0 by construction and a zero bar would read as a measurement rather than
+// as an absent mechanism.
+const cacheArms = present.filter((a) => a.key !== "recompute" && hits[a.key]);
+if (cacheArms.length) {
+  s1.addChart(
+    pres.ChartType.bar,
+    cacheArms.map((a) => ({
+      name: a.label,
+      labels: cs.map((c) => `C=${c}`),
+      values: cs.map((c) => (hits[a.key][c] != null ? Number(hits[a.key][c].toFixed(2)) : null)),
+    })),
+    { ...common, x: X0 + 2 * (W + GAP), y: Y, w: W, h: H,
+      valAxisMaxVal: 100, title: "(c)  Server-side prefix reuse",
+      valAxisTitle: "Cache Hit Rate (%)",
+      chartColors: cacheArms.map((a) => a.color) }
+  );
+}
 
 let lx = 3.2;
 for (const a of present) {
