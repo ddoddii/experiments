@@ -122,6 +122,15 @@ def main():
                      help="arms to draw in --merge mode; more than two makes the "
                           "line-style encoding unreadable")
     ap.add_argument("--hbm-total", type=float, default=49.0, help="GB per GPU")
+    ap.add_argument(
+        "--pct", action="store_true",
+        help="y as OCCUPANCY (%%) instead of GB: HBM against 2x--hbm-total, host DRAM "
+             "against --ram-total. Note that the HBM panels then measure how much of "
+             "the card is RESERVED, not how full the KV pool is -- SGLang reserves its "
+             "pool at startup, so those curves are flat by construction. Use "
+             "plot_kv_occupancy.py with kv_*.csv for the pool-filling picture.")
+    ap.add_argument("--ram-total", type=float, default=125.0,
+                     help="host RAM in GB, denominator for the CPU panel in --pct mode")
     ap.add_argument("--width", type=float, default=9.5)
     ap.add_argument("--height", type=float, default=2.5)
     args = ap.parse_args()
@@ -140,20 +149,31 @@ def main():
         return merged(args, series)
     fig, axes = plt.subplots(1, 3, figsize=(args.width, args.height))
     cap = 2 * args.hbm_total
-    PANELS = [
-        (axes[0], 1, "Prefill HBM (GB)", "(a)  Prefill GPUs", cap),
-        (axes[1], 2, "Decode HBM (GB)", "(b)  Decode GPUs", cap),
-        (axes[2], 3, "Host DRAM (GB)", "(c)  CPU memory (anon)", None),
-    ]
-    for ax, idx, ylab, title, ceiling in PANELS:
+    if args.pct:
+        PANELS = [
+            (axes[0], 1, "HBM occupancy (%)", "(a)  Prefill GPUs", 100, cap),
+            (axes[1], 2, "HBM occupancy (%)", "(b)  Decode GPUs", 100, cap),
+            (axes[2], 3, "CPU memory occupancy (%)", "(c)  Host DRAM", 100,
+             args.ram_total),
+        ]
+    else:
+        PANELS = [
+            (axes[0], 1, "Prefill HBM (GB)", "(a)  Prefill GPUs", cap, 1),
+            (axes[1], 2, "Decode HBM (GB)", "(b)  Decode GPUs", cap, 1),
+            (axes[2], 3, "Host DRAM (GB)", "(c)  CPU memory (anon)", None, 1),
+        ]
+    for ax, idx, ylab, title, ceiling, denom in PANELS:
         for key, (label, color, dash, data) in series.items():
             kw = {"dashes": dash} if dash else {}
-            ax.plot(data[0], data[idx], color=color, label=label, lw=1.4, **kw)
+            ys = [v / denom * 100 for v in data[idx]] if args.pct else data[idx]
+            ax.plot(data[0], ys, color=color, label=label, lw=1.4, **kw)
         if ceiling:
-            ax.axhline(ceiling, color=PALETTE["muted"], lw=0.8, ls=":")
-            ax.text(0.98, ceiling, " capacity", transform=ax.get_yaxis_transform(),
-                    ha="right", va="bottom", fontsize=6, color=PALETTE["muted"])
-            ax.set_ylim(0, ceiling * 1.08)
+            if not args.pct:
+                ax.axhline(ceiling, color=PALETTE["muted"], lw=0.8, ls=":")
+                ax.text(0.98, ceiling, " capacity",
+                        transform=ax.get_yaxis_transform(),
+                        ha="right", va="bottom", fontsize=6, color=PALETTE["muted"])
+            ax.set_ylim(0, ceiling * (1.0 if args.pct else 1.08))
         else:
             ax.set_ylim(0, None)
         ax.set_xlabel("time (s)")

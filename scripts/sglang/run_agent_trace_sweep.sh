@@ -168,7 +168,16 @@ for arm in $ARMS; do
     python benchmark/park_location_sampler.py --out "$OUTDIR/parked_${arm}_c${C}.csv" \
       --interval 2 > "$OUTDIR/sampler_park_${arm}_c${C}.log" 2>&1 &
     PARK_PID=$!
-    trap 'kill $MEM_PID $PARK_PID 2>/dev/null || true' EXIT
+    # KV-pool UTILISATION over time. sys_mem_breakdown reads nvidia-smi, which reports
+    # what SGLang RESERVED at startup from --mem-fraction-static and is therefore flat
+    # from the first second regardless of how much KV is resident -- it can never show a
+    # cache filling up. Only the server knows its own pool occupancy, and only the park
+    # arm publishes an equivalent (serving_gb) through park telemetry, so without this
+    # the "prefill fills to 100%" curve is unavailable for hicache and recompute.
+    python benchmark/kv_usage_sampler.py --out "$OUTDIR/kv_${arm}_c${C}.csv" \
+      --interval 2 > "$OUTDIR/sampler_kv_${arm}_c${C}.log" 2>&1 &
+    KV_PID=$!
+    trap 'kill $MEM_PID $PARK_PID $KV_PID 2>/dev/null || true' EXIT
 
     python benchmark/phase0_metrics_scraper.py --tag "${arm}_c${C}_before" \
       --out "$OUTDIR/metrics_${arm}_c${C}_before.json" > /dev/null 2>&1 || true
@@ -185,7 +194,7 @@ for arm in $ARMS; do
       --after "$OUTDIR/metrics_${arm}_c${C}_after.json" \
       --out "$OUTDIR/metrics_${arm}_c${C}_delta.json" > /dev/null 2>&1 || true
 
-    kill $MEM_PID $PARK_PID 2>/dev/null || true
+    kill $MEM_PID $PARK_PID $KV_PID 2>/dev/null || true
     sleep 2
   done
 done
