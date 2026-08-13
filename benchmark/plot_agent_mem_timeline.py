@@ -59,6 +59,50 @@ def load(path, gpus):
     return t, pre, dec, host
 
 
+WHERE = [(1, "Prefill HBM", PALETTE["park"]),
+         (2, "Decode HBM", PALETTE["both"]),
+         (3, "Host DRAM", PALETTE["hicache"])]
+STYLES = [(None, "-"), ((4, 2), "--"), ((1, 1.5), ":")]
+
+
+def merged(args, series):
+    fig, ax = plt.subplots(figsize=(args.width / 1.75, args.height * 1.25))
+    arms = [a for a in args.merge_arms.split(",") if a in series]
+    if not arms:
+        raise SystemExit(f"--merge-arms {args.merge_arms} not among {list(series)}")
+    for ai, key in enumerate(arms):
+        label, _, _, data = series[key]
+        dash, _ = STYLES[ai % len(STYLES)]
+        for idx, wlabel, color in WHERE:
+            kw = {"dashes": dash} if dash else {}
+            ax.plot(data[0], data[idx], color=color, lw=1.5, **kw)
+    # Two legends: one for the quantity (colour), one for the system (line style).
+    # A single combined legend would need one entry per line and would restate the
+    # colour three times, which is what makes these plots unreadable.
+    from matplotlib.lines import Line2D
+    l1 = ax.legend(handles=[Line2D([], [], color=c, lw=1.5, label=w)
+                            for _, w, c in WHERE],
+                   loc="upper left", bbox_to_anchor=(0.02, 0.76),
+                   fontsize=7, title="location")
+    ax.add_artist(l1)
+    ax.legend(handles=[Line2D([], [], color=PALETTE["muted"], lw=1.5,
+                              dashes=STYLES[i % len(STYLES)][0] or (1, 0),
+                              label=series[k][0]) for i, k in enumerate(arms)],
+              loc="upper left", bbox_to_anchor=(0.40, 0.76),
+              fontsize=7, title="system")
+    ax.set_xlabel("time (s)")
+    ax.set_ylabel("Memory occupancy (GB)")
+    ax.set_title("Where the KV lives over time")
+    ax.set_ylim(0, None)
+    style_axes(ax)
+    fig.tight_layout()
+    savefig(fig, args.out)
+    for k in arms:
+        label, _, _, d = series[k]
+        print(f"  {label:20s} prefill {max(d[1]):5.1f} GB   decode {max(d[2]):5.1f} GB   "
+              f"host {max(d[3]):5.1f} GB")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default="results/agent_trace")
@@ -66,6 +110,17 @@ def main():
     ap.add_argument("--layout", default="a", choices=["a", "b"],
                      help="PD_LAYOUT the run used; decides which GPUs are prefill")
     ap.add_argument("--out", default="results/agent_trace/fig_agent_mem")
+    ap.add_argument(
+        "--merge", action="store_true",
+        help="one axes instead of three: colour encodes WHERE the memory is (prefill "
+             "HBM / decode HBM / host DRAM) and line style encodes WHICH system. All "
+             "three quantities are GB on the same scale, so they can share an axis "
+             "honestly -- and putting them together is what makes the placement "
+             "trade-off visible as one picture rather than three that must be "
+             "cross-referenced.")
+    ap.add_argument("--merge-arms", default="hicache,park",
+                     help="arms to draw in --merge mode; more than two makes the "
+                          "line-style encoding unreadable")
     ap.add_argument("--hbm-total", type=float, default=49.0, help="GB per GPU")
     ap.add_argument("--width", type=float, default=9.5)
     ap.add_argument("--height", type=float, default=2.5)
@@ -81,6 +136,8 @@ def main():
         raise SystemExit(f"no mem_*_c{args.c}.csv in {args.dir}")
 
     use_paper_style()
+    if args.merge:
+        return merged(args, series)
     fig, axes = plt.subplots(1, 3, figsize=(args.width, args.height))
     cap = 2 * args.hbm_total
     PANELS = [
