@@ -91,6 +91,14 @@ def main():
                      choices=["occupancy", "token_usage"])
     ap.add_argument("--out", default="results/agent_trace/fig_kv_occupancy")
     ap.add_argument("--xmax", type=float, default=None, help="clip the time axis (s)")
+    ap.add_argument(
+        "--smooth", type=int, default=0,
+        help="centred rolling-mean window in SAMPLES (sampler interval is 2s by "
+             "default, so 15 ~= 30s). The decode pool genuinely oscillates request to "
+             "request; at a few thousand samples that fills the panel with ink and "
+             "hides the level. Smoothing is stated in the axis label rather than done "
+             "silently, and the printed final values below stay UNSMOOTHED so a quoted "
+             "number is never a filter artefact.")
     ap.add_argument("--width", type=float, default=3.6)
     ap.add_argument("--height", type=float, default=2.8)
     args = ap.parse_args()
@@ -114,18 +122,30 @@ def main():
             f"construction and cannot show a cache filling.")
 
     use_paper_style()
+    def smooth(ys):
+        w = args.smooth
+        if w < 2 or len(ys) < w:
+            return ys
+        out, half = [], w // 2
+        for i in range(len(ys)):
+            lo, hi = max(0, i - half), min(len(ys), i + half + 1)
+            out.append(sum(ys[lo:hi]) / (hi - lo))
+        return out
+
     fig, ax = plt.subplots(figsize=(args.width, args.height))
     for label, t, roles, cpre, cdec in series:
         for role, rlabel, ls in ROLES:
             ys = roles[role]
             if not ys:
                 continue
+            ys = smooth(ys)
             n = min(len(t), len(ys))
             ax.plot(t[:n], ys[:n], color=cpre if role == "prefill" else cdec,
                     ls=ls, lw=1.6, label=f"{label} {rlabel}")
     ax.set_xlabel("time (s)")
     ax.set_ylabel(("KV pool occupancy (%)" if args.stat == "occupancy"
-                   else "token_usage (%)"))
+                   else "token_usage (%)")
+                  + (f"\n(rolling mean, {args.smooth} samples)" if args.smooth >= 2 else ""))
     ax.set_ylim(0, 100)
     if args.xmax:
         ax.set_xlim(0, args.xmax)
