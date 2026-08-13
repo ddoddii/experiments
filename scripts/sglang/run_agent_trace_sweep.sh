@@ -20,6 +20,23 @@
 #      0.60, i.e. 2-3 slabs per GPU, 4-6 sessions parked across two prefills. That is
 #      why the concurrency sweep is informative -- C=4 fits, C=8/16 overflow to host and
 #      then to eviction, which is exactly the victim-cache gradient being measured.
+#   4. THE SERVING POOL MUST BE ABLE TO ACCEPT A RESTORE. A park hit allocates the WHOLE
+#      matched prefix at once (fetch_from_park: alloc(n), evict-to-room, retry, else give
+#      up as `nospace`). At PREFILL_MAX_TOTAL_TOKENS=60000 that alloc has to fit a ~45k
+#      restore beside two in-flight prompts of the same size, whose KV is pinned and
+#      therefore NOT evictable -- so it cannot, and the first measured run gave up on 263
+#      of 758 index hits (35%) with fetch_nospace. Parking was working; the destination
+#      had no room. Sizing rule, from the session peaks (p50 44.8k, max 47.5k):
+#
+#        PREFILL_MAX_TOTAL_TOKENS >= 2 x peak_context + peak_context
+#                                    \_ in flight _/   \_ the restore _/
+#
+#      112000 covers the median case (2x32k in flight + a 45k restore = 109k). Raising it
+#      is paid for by dropping the park pool from 3 slabs to 2, which keeps the prefill
+#      GPU at its measured 46/49 GB rather than pushing it into OOM:
+#        weights 16.0 + radix 13.67 (112k tok) + park 11.72 (96k tok) + 5.0 activations
+#        = 46.4 GB, against the 45.9 GB the previous sizing actually reached.
+#      Both numbers are per prefill GPU and both must move together.
 #
 # The serving KV pool is 1.4x (C=4) to 5.7x (C=16) oversubscribed at these context
 # lengths, so eviction happens on its own. Unlike the context-length probe this workload
@@ -42,11 +59,12 @@ export MODEL=${MODEL:-meta-llama/Llama-3.1-8B-Instruct}
 export TOOL_DELAY=${TOOL_DELAY:-3}
 export MAX_TOKENS=${MAX_TOKENS:-1024}
 export TIMEOUT=${TIMEOUT:-600}
-export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-60000}
-export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.60}
+# See note 4 above: these three are one budget and must be changed together.
+export PREFILL_MAX_TOTAL_TOKENS=${PREFILL_MAX_TOTAL_TOKENS:-112000}   # 13.67GB
+export PARK_MEM_FRACTION=${PARK_MEM_FRACTION:-0.64}   # >= (weights 16 + radix 13.67)/49
 export SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED:-1}
 export SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS:-48000}
-PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-144000}   # 3 slabs = 18.9GB
+PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-96000}    # 2 slabs = 11.7GB
 export PARK_POOL_TOKENS_PER_GPU
 OUTDIR=${OUTDIR:-results/agent_trace}
 PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
@@ -114,13 +132,53 @@ start_arm() {
   esac
 }
 
+# HBM budget check. The three sizing knobs above are independent variables that add up to
+# one fixed 49GB card, and getting it wrong costs a 90-minute run: too big OOMs at model
+# load, too small silently reproduces the fetch_nospace result this sizing exists to fix.
+# Charged per PREFILL GPU, which is the binding one (it carries both pools).
+HBM_PER_GPU_GB=${HBM_PER_GPU_GB:-49}
+WEIGHTS_GB=${WEIGHTS_GB:-16}          # Llama-3.1-8B bf16
+ACTIVATION_GB=${ACTIVATION_GB:-5}     # activations + CUDA graphs: MEASURED, not
+                                      # guessed. The 8/13 park run reserved 16+7.32+17.58
+                                      # = 40.9 GB by this model and nvidia-smi read 45.91,
+                                      # so the unmodelled remainder is 5.0 GB per GPU.
+BYTES_PER_TOKEN=${BYTES_PER_TOKEN:-131072}   # 2 x 32 layers x 8 kv heads x 128 dim x 2 B
+budget=$(python3 - <<PY
+radix = $PREFILL_MAX_TOTAL_TOKENS * $BYTES_PER_TOKEN / 2**30
+park  = $PARK_POOL_TOKENS_PER_GPU * $BYTES_PER_TOKEN / 2**30
+total = $WEIGHTS_GB + radix + park + $ACTIVATION_GB
+static_need = ($WEIGHTS_GB + radix) / $HBM_PER_GPU_GB
+slabs = $PARK_POOL_TOKENS_PER_GPU // $SGLANG_KV_PARK_SLAB_TOKENS
+print(f"{radix:.2f} {park:.2f} {total:.2f} {static_need:.3f} {slabs}")
+PY
+)
+read -r B_RADIX B_PARK B_TOTAL B_STATIC B_SLABS <<< "$budget"
 echo "================================================================"
 echo " Agent-trace replay   sessions=$SESSIONS"
 echo " arms: $ARMS   concurrency: $CONCURRENCIES   tool_delay=${TOOL_DELAY}s"
 echo " park: session-keyed, slab=${SGLANG_KV_PARK_SLAB_TOKENS} tok, "
-echo "       pool=${PARK_POOL_TOKENS_PER_GPU} tok/GPU, mem-fraction=${PARK_MEM_FRACTION}"
+echo "       pool=${PARK_POOL_TOKENS_PER_GPU} tok/GPU (${B_SLABS} slabs), mem-fraction=${PARK_MEM_FRACTION}"
+echo " prefill GPU budget: weights ${WEIGHTS_GB} + radix ${B_RADIX} + park ${B_PARK}"
+echo "                     + act ${ACTIVATION_GB} = ${B_TOTAL} GB of ${HBM_PER_GPU_GB} GB"
 echo " -> $OUTDIR"
 echo "================================================================"
+if (( $(echo "$B_TOTAL > $HBM_PER_GPU_GB" | bc -l) )); then
+  echo "ERROR: that config needs ${B_TOTAL} GB on a ${HBM_PER_GPU_GB} GB prefill GPU."
+  echo "       Lower PREFILL_MAX_TOTAL_TOKENS or PARK_POOL_TOKENS_PER_GPU."
+  exit 1
+fi
+if (( $(echo "$B_STATIC > $PARK_MEM_FRACTION" | bc -l) )); then
+  echo "ERROR: --mem-fraction-static ${PARK_MEM_FRACTION} cannot hold weights + a"
+  echo "       ${PREFILL_MAX_TOTAL_TOKENS}-token pool (needs >= ${B_STATIC})."
+  echo "       SGLang would cap the pool below PREFILL_MAX_TOTAL_TOKENS and the run would"
+  echo "       silently measure a smaller pool than the one being reported."
+  exit 1
+fi
+if [ "$B_SLABS" -lt 1 ]; then
+  echo "ERROR: park pool ${PARK_POOL_TOKENS_PER_GPU} < one ${SGLANG_KV_PARK_SLAB_TOKENS}-token"
+  echo "       slab, so no session can ever be parked on the GPU tier."
+  exit 1
+fi
 
 for arm in $ARMS; do
   for C in $CONCURRENCIES; do

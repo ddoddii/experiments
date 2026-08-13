@@ -96,6 +96,12 @@ def run_turn(messages, max_tokens):
             token_count += 1
             text.append(delta["content"])
 
+    # A stream that opened 200 and closed without a single content delta is a SERVER-SIDE
+    # ABORT (a failed prefill->decode KV transfer looks exactly like this), not a turn that
+    # legitimately had nothing to say. It raises no exception, so without an explicit flag
+    # it lands in the results as ttft_s=None and is then skipped by every percentile --
+    # 94 of them once passed as a clean run with error_items=0.
+    aborted = token_count == 0
     ttft = (t_first - t_request) if t_first else None
     e2e = (t_last - t_request) if t_last else None
     decode = (t_last - t_first) if (t_first and t_last) else None
@@ -108,6 +114,7 @@ def run_turn(messages, max_tokens):
         "prompt_tokens": prompt_tokens,
         "e2e_latency_s": round(e2e, 4) if e2e else None,
         "throughput_tok_per_s": round(tput, 2) if tput else None,
+        **({"error": "empty stream (server aborted; no content delta)"} if aborted else {}),
     }, "".join(text))
 
 
@@ -204,6 +211,20 @@ def main():
         "avg_throughput_tok_per_s": round(sum(r["avg_throughput_tok_per_s"] for r in valid if r["avg_throughput_tok_per_s"]) / max(1, sum(1 for r in valid if r["avg_throughput_tok_per_s"])), 2) if valid else None,
         "replay_mode": "generated" if REPLAY_GENERATED else "recorded",
     }
+    # Turn-level failures, reported next to the turn-level percentiles they distort.
+    # success_items/error_items are per SESSION and stay green while a tenth of the turns
+    # in every session die, so they cannot be the only integrity signal in the summary.
+    all_turns = [t for r in results for t in r.get("turns", [])]
+    failed = [t for t in all_turns if t.get("error")]
+    summary.update({
+        "total_turns": len(all_turns),
+        "failed_turns": len(failed),
+        "failed_turn_rate": round(len(failed) / len(all_turns), 4) if all_turns else None,
+    })
+    if failed:
+        print(f"[WARNING] {len(failed)}/{len(all_turns)} turns failed "
+              f"({len(failed) / len(all_turns) * 100:.1f}%) -- the TTFT percentiles below "
+              f"are over the SURVIVORS and are not comparable to a clean run.", flush=True)
     # Percentiles over EVERY turn, not per-session means: the cache acts per turn, and a
     # single mean hides a spread that has moved more than the effects being measured.
     all_ttft = sorted(t["ttft_s"] for r in results for t in r.get("turns", [])
