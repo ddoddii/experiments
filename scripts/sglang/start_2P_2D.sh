@@ -308,6 +308,21 @@ sleep 2
 
 export MOONCAKE_MASTER_SERVER=127.0.0.1:8080
 
+# Mooncake session blacklisting. Upstream marks a decode session dead after ONE failed
+# transfer and only ever clears it when that decode re-registers its KVArgs, which does
+# not happen again inside a run -- so a single transient error takes a P->D pair down for
+# good. That is what cost the 8/13 park run 94 turns: one failure at 16:21:52 on P1<->D2,
+# then 95 requests rejected without a transfer being attempted while P2<->D1 ran clean.
+# The turns came back as empty streams, which raise nothing, so the run reported
+# error_items=0 with a tenth of its turns missing.
+#
+# Set on EVERY arm, not just park: it changes failure handling, and an arm-specific
+# reliability floor would confound placement with survival. Requires the patched
+# sglang (SGLANG_DISAGG_SESSION_FAIL_* are ignored by an unpatched build, which then
+# behaves exactly as before rather than failing).
+export SGLANG_DISAGG_SESSION_FAIL_THRESHOLD=${SGLANG_DISAGG_SESSION_FAIL_THRESHOLD:-3}
+export SGLANG_DISAGG_SESSION_FAIL_COOLDOWN_S=${SGLANG_DISAGG_SESSION_FAIL_COOLDOWN_S:-30}
+
 echo "[2/6] Starting Prefill server 1 (GPU ${GPU_P0}, port 30000, bootstrap 8998)  park=${IDLE_KV_PARKING:-0}..."
 env CUDA_VISIBLE_DEVICES=${CVD_P0} ${ENV_P0} python3 -m sglang.launch_server \
   --model-path $MODEL_PATH --tp 1 --port 30000 --nccl-port $NCCL_PORT_P0 ${BASE_P0} \
