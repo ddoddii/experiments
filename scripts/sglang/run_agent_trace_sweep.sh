@@ -79,7 +79,13 @@ export PARK_POOL_TOKENS_PER_GPU
 # -- not the 18.9 GB that decode's 26% mean occupancy suggests. 176000 keeps ~3% over the
 # observed peak; DECODE_PARK_TOKENS is one 48000-token slab, which is all that fits.
 export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-176000}   # 21.5GB
-export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.77}   # >= (16 + 21.5)/49
+# Two values for ONE pool size. The static fraction has to cover whatever already sits on
+# the card, and only park_decode puts a park pool there -- so that arm needs a higher
+# fraction to reach the SAME 176000 tokens. Equal capacity is the thing being held fixed;
+# the fraction is just the knob that gets each arm there, and verify_pool_sizes.py checks
+# the outcome rather than the knob.
+export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.79}          # >= (16 + 21.48)/48
+PARK_MEM_FRACTION_D_DECODE_ARM=${PARK_MEM_FRACTION_D_DECODE_ARM:-0.91}  # + 5.86 park
 
 # park_decode uses ONE slab per GPU across two GPUs (prefill + its paired decode) against
 # park's two slabs on one GPU. Same park HBM per prefill, different placement -- which is
@@ -174,6 +180,7 @@ start_arm() {
       # Both arms park; they differ in where they are allowed to put it.
       PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 PARK_DECODE=1 \
         PARK_POOL_TOKENS_PER_GPU=${PARK_TOKENS_DECODE_ARM} \
+        PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D_DECODE_ARM} \
         SGLANG_KV_PARK_BW_AWARE=1 \
         SGLANG_KV_PARK_HOST_OVERFLOW=1 \
         SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-32} \
@@ -186,7 +193,7 @@ start_arm() {
 # one fixed 49GB card, and getting it wrong costs a 90-minute run: too big OOMs at model
 # load, too small silently reproduces the fetch_nospace result this sizing exists to fix.
 # Charged per PREFILL GPU, which is the binding one (it carries both pools).
-HBM_PER_GPU_GB=${HBM_PER_GPU_GB:-49}
+HBM_PER_GPU_GB=${HBM_PER_GPU_GB:-48}   # A6000 is 48 GB; 49 over-budgeted every check by 1 GB
 WEIGHTS_GB=${WEIGHTS_GB:-16}          # Llama-3.1-8B bf16
 # Decode's unmodelled overhead is MEASURED SEPARATELY and is much smaller than prefill's:
 # 43.45 GB peak with a 209036-token (25.5 GB) pool leaves 1.95 GB, because decode never
@@ -201,8 +208,8 @@ BYTES_PER_TOKEN=${BYTES_PER_TOKEN:-131072}   # 2 x 32 layers x 8 kv heads x 128 
 # Charged per arm, because park_decode moves park HBM from the prefill GPU to the decode
 # one and the two cards have different budgets: a config that fits prefill can still OOM
 # decode, whose pool is already 21.5 GB of live KV.
-check_budget() {   # $1 label  $2 park tok on each PREFILL gpu  $3 park tok on each DECODE gpu
-  local label="$1" ppark="$2" dpark="$3" out
+check_budget() {   # $1 label  $2 park tok/PREFILL gpu  $3 park tok/DECODE gpu  $4 memfrac_D
+  local label="$1" ppark="$2" dpark="$3" memfrac_d="$4" out
   out=$(python3 - <<PY
 bpt = $BYTES_PER_TOKEN
 radix  = $PREFILL_MAX_TOTAL_TOKENS * bpt / 2**30
@@ -211,8 +218,20 @@ ppark  = $ppark * bpt / 2**30
 dpark  = $dpark * bpt / 2**30
 p_tot  = $WEIGHTS_GB + radix + ppark + $ACTIVATION_GB
 d_tot  = $WEIGHTS_GB + dpool + dpark + $ACTIVATION_GB_D
+# The static fraction must cover whatever is ALREADY on the card when that server sizes
+# its pool -- SGLang uses rest_memory = available - total*(1 - mem_fraction) -- and the two
+# roles differ in ALLOCATION ORDER, which is why only the decode term carries its park
+# pool:
+#   prefill: sizes its KV pool first, then _init_park_gpu_pool takes what is left. The
+#            park buffer is outside the static fraction. Confirmed: 0.64 with a 11.72 GB
+#            local park pool still delivered the full 112000 tokens.
+#   decode : the PREFILL process allocates the park pool onto the decode GPU, and prefills
+#            start first, so that memory is already gone when decode sizes itself. Also
+#            confirmed: the same run asked decode for 176000 and got 133263.
+# Charging the prefill for its own park pool here would reject configurations that
+# demonstrably work; not charging the decode is what let this one through.
 print(f"{radix:.2f} {ppark:.2f} {p_tot:.2f} {($WEIGHTS_GB + radix) / $HBM_PER_GPU_GB:.3f} "
-      f"{dpool:.2f} {dpark:.2f} {d_tot:.2f} {($WEIGHTS_GB + dpool) / $HBM_PER_GPU_GB:.3f} "
+      f"{dpool:.2f} {dpark:.2f} {d_tot:.2f} {($WEIGHTS_GB + dpool + dpark) / $HBM_PER_GPU_GB:.3f} "
       f"{$ppark // $SGLANG_KV_PARK_SLAB_TOKENS} {$dpark // $SGLANG_KV_PARK_SLAB_TOKENS}")
 PY
 )
@@ -222,6 +241,7 @@ PY
   echo "                 + act ${ACTIVATION_GB} = ${PTOT} GB of ${HBM_PER_GPU_GB} GB"
   echo "    decode  GPU: weights ${WEIGHTS_GB} + pool ${DPOOL} + park ${DPARK} (${DSLABS} slab)"
   echo "                 + act ${ACTIVATION_GB_D} = ${DTOT} GB of ${HBM_PER_GPU_GB} GB"
+  echo "                 (decode --mem-fraction-static ${memfrac_d})"
   local bad=0
   if (( $(echo "$PTOT > $HBM_PER_GPU_GB" | bc -l) )); then
     echo "    ERROR: needs ${PTOT} GB on a ${HBM_PER_GPU_GB} GB PREFILL GPU."
@@ -242,8 +262,8 @@ PY
     echo "           smaller one than it reports."
     bad=1
   fi
-  if (( $(echo "$DSTATIC > $PARK_MEM_FRACTION_D" | bc -l) )); then
-    echo "    ERROR: PARK_MEM_FRACTION_D ${PARK_MEM_FRACTION_D} cannot hold weights + a"
+  if (( $(echo "$DSTATIC > $memfrac_d" | bc -l) )); then
+    echo "    ERROR: decode --mem-fraction-static ${memfrac_d} cannot hold weights + a"
     echo "           ${DECODE_MAX_TOTAL_TOKENS}-token decode pool (needs >= ${DSTATIC})."
     bad=1
   fi
@@ -280,9 +300,10 @@ echo "================================================================"
 rc=0
 for arm in $ARMS; do
   case "$arm" in
-    park_decode) check_budget "$arm" "$PARK_TOKENS_DECODE_ARM" "$PARK_TOKENS_DECODE_ARM" || rc=1 ;;
-    park)        check_budget "$arm" "$PARK_POOL_TOKENS_PER_GPU" 0 || rc=1 ;;
-    *)           check_budget "$arm" 0 0 || rc=1 ;;
+    park_decode) check_budget "$arm" "$PARK_TOKENS_DECODE_ARM" "$PARK_TOKENS_DECODE_ARM" \
+                              "$PARK_MEM_FRACTION_D_DECODE_ARM" || rc=1 ;;
+    park)        check_budget "$arm" "$PARK_POOL_TOKENS_PER_GPU" 0 "$PARK_MEM_FRACTION_D" || rc=1 ;;
+    *)           check_budget "$arm" 0 0 "$PARK_MEM_FRACTION_D" || rc=1 ;;
   esac
 done
 [ "$rc" = "0" ] || exit 1
@@ -326,6 +347,18 @@ for arm in $ARMS; do
       echo "         re-run just this point:"
       echo "           ARMS=\"$arm\" CONCURRENCIES=\"$C\" ./scripts/sglang/run_agent_trace_sweep.sh"
       exit 1
+    fi
+
+    # The servers are up: ask them what they ACTUALLY built. --max-total-tokens is a
+    # ceiling, and a park pool on a decode GPU comes out of that decode's pool, so a point
+    # can start clean and still be measuring a pool size nobody chose. Checked here, after
+    # start_arm, because only now can it be answered -- and before the ~100 minutes.
+    if ! python benchmark/verify_pool_sizes.py \
+           --expect "prefill:${PREFILL_MAX_TOTAL_TOKENS}" \
+           --expect "decode:${DECODE_MAX_TOTAL_TOKENS}"; then
+      echo "  Skipping arm=$arm C=$C. Set POOL_CHECK=0 to run anyway (the results will"
+      echo "  not be comparable to points that got the pools they asked for)."
+      [ "${POOL_CHECK:-1}" = "1" ] && exit 1
     fi
 
     # Record the sizing WITH the results. plot_agent_mem_timeline.py maps GPU columns to
