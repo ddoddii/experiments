@@ -43,8 +43,15 @@ ARMS = [
 ROLES = [("prefill", "Prefill", "-"), ("decode", "Decode", "-")]
 
 
-def load(path, stat):
-    """(t, {role: [percent]}) from a kv_usage_sampler CSV."""
+def load(path, stat, unit="pct", bytes_per_token=131072):
+    """(t, {role: [value]}) from a kv_usage_sampler CSV.
+
+    unit="pct" divides by each node's own max_total_num_tokens. That is the right
+    reading ONLY when the arms being compared were served with the SAME pool size --
+    otherwise 90% of a 60k pool and 90% of a 112k pool draw as one line while differing
+    by 1.9x in bytes held, which inverts the conclusion the figure exists to support.
+    unit="gb" plots what is actually resident and is safe across configurations.
+    """
     t, out = [], {r: [] for r, _, _ in ROLES}
     col = {"occupancy": "{r}_occupancy_frac",
            "token_usage": "{r}_token_usage"}[stat]
@@ -71,13 +78,34 @@ def load(path, stat):
             if raw in ("", None):
                 vals = {}
                 break
-            vals[role] = float(raw) * 100
+            if unit == "gb":
+                mx = r.get(f"{role}_max_tokens")
+                if mx in ("", None):
+                    vals = {}
+                    break
+                vals[role] = float(raw) * float(mx) * bytes_per_token / 2 ** 30
+            else:
+                vals[role] = float(raw) * 100
         if not vals:
             continue
         t.append(ts)
         for role in vals:
             out[role].append(vals[role])
     return t, out
+
+
+def pool_sizes(path):
+    """{role: max_tokens} from the first complete row, for the mismatch check."""
+    with open(path) as fh:
+        for r in csv.DictReader(fh):
+            got = {}
+            for role, _, _ in ROLES:
+                v = r.get(f"{role}_max_tokens")
+                if v not in ("", None) and float(v) > 0:
+                    got[role] = int(float(v))
+            if len(got) == len(ROLES):
+                return got
+    return {}
 
 
 def main():
@@ -89,6 +117,13 @@ def main():
                           "practical limit for one axes")
     ap.add_argument("--stat", default="occupancy",
                      choices=["occupancy", "token_usage"])
+    ap.add_argument(
+        "--unit", default="pct", choices=["pct", "gb"],
+        help="pct is a fraction of each arm's OWN pool and is only comparable when the "
+             "arms ran with the same --max-total-tokens; gb plots resident bytes and is "
+             "safe when they did not. A mismatch is detected and refused in pct mode.")
+    ap.add_argument("--bytes-per-token", type=int, default=131072,
+                     help="2 x 32 layers x 8 kv heads x 128 dim x 2 B (Llama-3.1-8B GQA)")
     ap.add_argument("--out", default="results/agent_trace/fig_kv_occupancy")
     ap.add_argument("--xmax", type=float, default=None, help="clip the time axis (s)")
     ap.add_argument(
@@ -104,7 +139,7 @@ def main():
     args = ap.parse_args()
 
     want = [a.strip() for a in args.arms.split(",")]
-    series = []
+    series, pools = [], {}
     for key, label, cpre, cdec in ARMS:
         if key not in want:
             continue
@@ -112,14 +147,34 @@ def main():
         if not os.path.exists(p):
             print(f"[warn] {p} not found -- run the sweep with kv_usage_sampler wired in")
             continue
-        t, roles = load(p, args.stat)
+        t, roles = load(p, args.stat, args.unit, args.bytes_per_token)
         if t:
             series.append((label, t, roles, cpre, cdec))
+            pools[label] = pool_sizes(p)
     if not series:
         raise SystemExit(
             f"no kv_*_c{args.c}.csv in {args.dir}. This figure needs the pool-occupancy "
             f"sampler; the mem_*.csv files hold nvidia-smi readings, which are flat by "
             f"construction and cannot show a cache filling.")
+
+    # A percentage is only a comparison if the denominators agree. These runs are served
+    # with --max-total-tokens set per arm, so a sizing change to one arm silently rescales
+    # only that arm's axis; the resulting figure looks fine and means nothing.
+    for role, _, _ in ROLES:
+        sizes = {lbl: p[role] for lbl, p in pools.items() if role in p}
+        # 1% tolerance: SGLang derives the pool from free HBM at startup, so two runs of
+        # the SAME config land a few tokens apart (209036 vs 209038 here). Flagging that
+        # would train the reader to ignore the warning that matters.
+        if sizes and (max(sizes.values()) - min(sizes.values())) > 0.01 * max(sizes.values()):
+            detail = ", ".join(f"{k} {v}" for k, v in sorted(sizes.items()))
+            if args.unit == "pct":
+                raise SystemExit(
+                    f"{role} pools differ across arms ({detail}), so occupancy % is not "
+                    f"comparable: the same percentage is a different number of bytes per "
+                    f"arm. Re-run the baselines at the same --max-total-tokens, or pass "
+                    f"--unit gb to plot resident bytes instead.")
+            print(f"[note] {role} pools differ ({detail}); plotting GB, so the lines are "
+                  f"comparable, but the arms did not have equal capacity.")
 
     use_paper_style()
     def smooth(ys):
@@ -143,10 +198,13 @@ def main():
             ax.plot(t[:n], ys[:n], color=cpre if role == "prefill" else cdec,
                     ls=ls, lw=1.6, label=f"{label} {rlabel}")
     ax.set_xlabel("time (s)")
-    ax.set_ylabel(("KV pool occupancy (%)" if args.stat == "occupancy"
-                   else "token_usage (%)")
-                  + (f"\n(rolling mean, {args.smooth} samples)" if args.smooth >= 2 else ""))
-    ax.set_ylim(0, 100)
+    if args.unit == "gb":
+        base = "Resident KV (GB)" if args.stat == "occupancy" else "token_usage (GB)"
+    else:
+        base = "KV pool occupancy (%)" if args.stat == "occupancy" else "token_usage (%)"
+    ax.set_ylabel(base + (f"\n(rolling mean, {args.smooth} samples)"
+                          if args.smooth >= 2 else ""))
+    ax.set_ylim(0, 100 if args.unit == "pct" else None)
     if args.xmax:
         ax.set_xlim(0, args.xmax)
     ax.legend(loc="lower right", fontsize=6.5, ncol=2)
@@ -154,10 +212,13 @@ def main():
     fig.tight_layout()
     savefig(fig, args.out)
 
-    print(f"\nfinal occupancy (C={args.c}, {args.stat}):")
+    suffix = "GB" if args.unit == "gb" else "%"
+    print(f"\nfinal (C={args.c}, {args.stat}, {args.unit}):")
     for label, t, roles, _, _ in series:
-        parts = [f"{r} {roles[r][-1]:5.1f}%" for r, _, _ in ROLES if roles[r]]
-        print(f"  {label:20s} " + "   ".join(parts))
+        parts = [f"{r} {roles[r][-1]:6.1f}{suffix}" for r, _, _ in ROLES if roles[r]]
+        pool = pools.get(label, {})
+        cap = "  pool=" + "/".join(f"{pool[r]}" for r, _, _ in ROLES if r in pool)
+        print(f"  {label:20s} " + "   ".join(parts) + cap)
 
 
 if __name__ == "__main__":
