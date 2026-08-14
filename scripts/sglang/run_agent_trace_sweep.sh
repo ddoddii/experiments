@@ -87,6 +87,24 @@ export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.77}   # >= (16 + 21.5)/49
 # park cache help". SGLang takes a single SGLANG_KV_PARK_POOL_TOKENS for every listed GPU,
 # so this is an arm-level override rather than a per-GPU setting.
 PARK_TOKENS_DECODE_ARM=${PARK_TOKENS_DECODE_ARM:-48000}   # 1 slab = 5.9GB per GPU
+
+# WHICH GPU EACH ROLE SITS ON. server17 has exactly two NVLink bridges, (0,1) and (2,3),
+# and every other pair is PCIe at 3.3 GB/s against 27-53 GB/s bridged. Two bridges over
+# four GPUs means "both prefills fast to each other" and "each prefill fast to a decode"
+# are mutually exclusive -- that is the hardware, not a preference.
+#
+#   a  P0=0 P1=1 D0=2 D1=3   every prefill->decode link is PCIe
+#   b  P0=0 D0=1 P1=2 D1=3   each NVLink island holds one prefill and its decode
+#
+# park_decode wants b. Under a, _select_pool ranks the decode pool as slow_link=1 and
+# takes it only once the local pool is full; under b the decode pool ties on link and
+# then WINS on serving usage, because decode's KV pool sits at 26% while prefill's is at
+# 85% -- which is the placement decision the design is claiming to make.
+#
+# b also moves half the Mooncake prefill->decode transfers onto NVLink, so it shifts
+# baseline TTFT by itself. Every arm of a comparison must run under the SAME layout, and
+# layout-b latencies must not be placed beside layout-a ones.
+export PD_LAYOUT=${PD_LAYOUT:-a}
 OUTDIR=${OUTDIR:-results/agent_trace}
 PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
 mkdir -p "$OUTDIR"
@@ -246,6 +264,17 @@ echo " Agent-trace replay   sessions=$SESSIONS"
 echo " arms: $ARMS   concurrency: $CONCURRENCIES   tool_delay=${TOOL_DELAY}s"
 echo " park: session-keyed, slab=${SGLANG_KV_PARK_SLAB_TOKENS} tok,"
 echo "       mem-fraction P=${PARK_MEM_FRACTION} D=${PARK_MEM_FRACTION_D}"
+if [ "$PD_LAYOUT" = "b" ]; then
+  echo " layout b: P0=gpu0 <NVLink> D0=gpu1   |   P1=gpu2 <NVLink> D1=gpu3"
+  echo "           each prefill's park target is its NVLink decode partner"
+else
+  echo " layout a: P0=gpu0 P1=gpu1 | D0=gpu2 D1=gpu3   (every P->D link is PCIe)"
+  case " $ARMS " in *" park_decode "*)
+    echo "           NOTE: park_decode under layout a parks over PCIe and only once the"
+    echo "           local pool is full. PD_LAYOUT=b is the NVLink pairing."  ;;
+  esac
+fi
+echo " plot these results with --layout $PD_LAYOUT"
 echo " -> $OUTDIR"
 echo "================================================================"
 rc=0
@@ -298,6 +327,31 @@ for arm in $ARMS; do
       echo "           ARMS=\"$arm\" CONCURRENCIES=\"$C\" ./scripts/sglang/run_agent_trace_sweep.sh"
       exit 1
     fi
+
+    # Record the sizing WITH the results. plot_agent_mem_timeline.py maps GPU columns to
+    # roles from --layout and defaults to 'a'; plotting a layout-b run with that default
+    # swaps the prefill and decode panels and inverts the conclusion, silently. Writing
+    # the layout next to the CSVs means the mapping is recoverable from the data rather
+    # than from memory of how the run was launched.
+    _park_p=0; _park_d=0
+    case "$arm" in
+      park_decode) _park_p=$PARK_TOKENS_DECODE_ARM; _park_d=$PARK_TOKENS_DECODE_ARM ;;
+      park)        _park_p=$PARK_POOL_TOKENS_PER_GPU ;;
+    esac
+    cat > "$OUTDIR/runmeta_${arm}_c${C}.json" <<META
+{
+  "arm": "$arm", "concurrency": $C, "pd_layout": "$PD_LAYOUT",
+  "prefill_max_total_tokens": $PREFILL_MAX_TOTAL_TOKENS,
+  "decode_max_total_tokens": $DECODE_MAX_TOTAL_TOKENS,
+  "park_tokens_per_prefill_gpu": $_park_p,
+  "park_tokens_per_decode_gpu": $_park_d,
+  "park_slab_tokens": $SGLANG_KV_PARK_SLAB_TOKENS,
+  "mem_fraction_prefill": $PARK_MEM_FRACTION,
+  "mem_fraction_decode": $PARK_MEM_FRACTION_D,
+  "sessions": "$SESSIONS", "tool_delay_s": $TOOL_DELAY, "max_tokens": $MAX_TOKENS,
+  "started_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+META
 
     python benchmark/sys_mem_breakdown.py --out "$OUTDIR/mem_${arm}_c${C}.csv" \
       --interval 2 > "$OUTDIR/sampler_mem_${arm}_c${C}.log" 2>&1 &
