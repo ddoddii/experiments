@@ -240,7 +240,22 @@ if [ "${IDLE_KV_PARKING:-0}" = "1" ]; then
     [ -n "${PARK_POOL_TOKENS_PER_GPU}" ] && _per=${PARK_POOL_TOKENS_PER_GPU}
     echo "SGLANG_KV_PARK_GPUS=${_list} ${_PENV/SGLANG_KV_PARK_POOL_TOKENS=${PARK_POOL_TOKENS}/SGLANG_KV_PARK_POOL_TOKENS=${_per}}"
   }
-  if [ "${PARK_PEER:-0}" = "1" ]; then
+  # PARK_DECODE=1 is the one that reaches DECODE HBM. Note that PARK_PEER does NOT: its
+  # peer is the other PREFILL, so PARK_PEER=1 spreads across GPU_P0/GPU_P1 and never
+  # touches a decode GPU. The claim "idle decode HBM is used as a victim cache" is only
+  # measurable under this branch.
+  #
+  # It needs room made for it. Decode takes SGLang's default --mem-fraction-static and
+  # holds ~43 of 49 GB, and unlike prefill its occupancy is ALL live: measured
+  # evictable_tokens is 0 at every sample, peak num_used 170078 of a 209036-token pool.
+  # So decode's spare capacity at PEAK is 4.8 GB, not the 18.9 GB its 26% mean suggests,
+  # and a 48000-token slab is 5.86 GB. DECODE_MAX_TOTAL_TOKENS/PARK_MEM_FRACTION_D must
+  # be set with the sweep's budget check, and set on the BASELINE arms too, or the
+  # baselines are the only ones with full-size decode pools and every occupancy
+  # comparison confounds placement with capacity.
+  if [ "${PARK_DECODE:-0}" = "1" ]; then
+    _L0="${GPU_P0},${GPU_D0}"; _L1="${GPU_P1},${GPU_D1}"
+  elif [ "${PARK_PEER:-0}" = "1" ]; then
     # Peer = the OTHER PREFILL, which is layout-dependent: under PD_LAYOUT=b the GPU
     # numbered 1 is a decode node, so hardcoding "0,1" here would silently mean
     # something else entirely.

@@ -66,6 +66,27 @@ export SGLANG_KV_PARK_SESSION_KEYED=${SGLANG_KV_PARK_SESSION_KEYED:-1}
 export SGLANG_KV_PARK_SLAB_TOKENS=${SGLANG_KV_PARK_SLAB_TOKENS:-48000}
 PARK_POOL_TOKENS_PER_GPU=${PARK_POOL_TOKENS_PER_GPU:-96000}    # 2 slabs = 11.7GB
 export PARK_POOL_TOKENS_PER_GPU
+
+# Decode-side sizing. Only the park_decode arm PLACES on a decode GPU, but the pool is
+# trimmed on EVERY arm so decode capacity is identical across them -- otherwise the
+# baselines are the only arms with full-size decode pools and an occupancy comparison
+# cannot separate placement from capacity.
+#
+# How far it can be trimmed is set by decode's LIVE usage, not its average. Measured over
+# the C=4 park run: evictable_tokens is 0 at every sample (decode holds no reusable cache
+# here), and peak num_used is 170078 of 209036 tokens. So the pool must stay above ~170k
+# or in-flight decodes get preempted, and the genuinely harvestable HBM at peak is 4.8 GB
+# -- not the 18.9 GB that decode's 26% mean occupancy suggests. 176000 keeps ~3% over the
+# observed peak; DECODE_PARK_TOKENS is one 48000-token slab, which is all that fits.
+export DECODE_MAX_TOTAL_TOKENS=${DECODE_MAX_TOTAL_TOKENS:-176000}   # 21.5GB
+export PARK_MEM_FRACTION_D=${PARK_MEM_FRACTION_D:-0.77}   # >= (16 + 21.5)/49
+
+# park_decode uses ONE slab per GPU across two GPUs (prefill + its paired decode) against
+# park's two slabs on one GPU. Same park HBM per prefill, different placement -- which is
+# the only way the arms answer "does reaching decode memory help" rather than "does more
+# park cache help". SGLang takes a single SGLANG_KV_PARK_POOL_TOKENS for every listed GPU,
+# so this is an arm-level override rather than a per-GPU setting.
+PARK_TOKENS_DECODE_ARM=${PARK_TOKENS_DECODE_ARM:-48000}   # 1 slab = 5.9GB per GPU
 OUTDIR=${OUTDIR:-results/agent_trace}
 PARK_DIR=${PARK_DIR:-/dev/shm/sglang_kv_parking}
 mkdir -p "$OUTDIR"
@@ -128,6 +149,17 @@ start_arm() {
         SGLANG_KV_PARK_HOST_OVERFLOW=1 \
         SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-32} \
         SGLANG_KV_PARK_REUSE_AWARE=1 ./scripts/sglang/start_2P_2D.sh ;;
+    park_decode)
+      # The arm that actually tests the paper's premise: each prefill may place into its
+      # own GPU OR the paired DECODE GPU. `park` above reaches only its own GPU, so it
+      # can show a victim cache working but never that the victim is idle DECODE memory.
+      # Both arms park; they differ in where they are allowed to put it.
+      PARK_NO_HICACHE=1 IDLE_KV_PARKING=1 PARK_DECODE=1 \
+        PARK_POOL_TOKENS_PER_GPU=${PARK_TOKENS_DECODE_ARM} \
+        SGLANG_KV_PARK_BW_AWARE=1 \
+        SGLANG_KV_PARK_HOST_OVERFLOW=1 \
+        SGLANG_KV_PARK_HOST_MAX_GB=${HOST_MAX_GB:-32} \
+        SGLANG_KV_PARK_REUSE_AWARE=1 ./scripts/sglang/start_2P_2D.sh ;;
     *) echo "unknown arm: $1"; exit 1 ;;
   esac
 }
@@ -138,47 +170,94 @@ start_arm() {
 # Charged per PREFILL GPU, which is the binding one (it carries both pools).
 HBM_PER_GPU_GB=${HBM_PER_GPU_GB:-49}
 WEIGHTS_GB=${WEIGHTS_GB:-16}          # Llama-3.1-8B bf16
+# Decode's unmodelled overhead is MEASURED SEPARATELY and is much smaller than prefill's:
+# 43.45 GB peak with a 209036-token (25.5 GB) pool leaves 1.95 GB, because decode never
+# runs a 45k-token prefill and so never builds prefill's activation buffer. Using the
+# prefill figure here would reject the park_decode arm as an OOM that it is not.
+ACTIVATION_GB_D=${ACTIVATION_GB_D:-2}
 ACTIVATION_GB=${ACTIVATION_GB:-5}     # activations + CUDA graphs: MEASURED, not
                                       # guessed. The 8/13 park run reserved 16+7.32+17.58
                                       # = 40.9 GB by this model and nvidia-smi read 45.91,
                                       # so the unmodelled remainder is 5.0 GB per GPU.
 BYTES_PER_TOKEN=${BYTES_PER_TOKEN:-131072}   # 2 x 32 layers x 8 kv heads x 128 dim x 2 B
-budget=$(python3 - <<PY
-radix = $PREFILL_MAX_TOTAL_TOKENS * $BYTES_PER_TOKEN / 2**30
-park  = $PARK_POOL_TOKENS_PER_GPU * $BYTES_PER_TOKEN / 2**30
-total = $WEIGHTS_GB + radix + park + $ACTIVATION_GB
-static_need = ($WEIGHTS_GB + radix) / $HBM_PER_GPU_GB
-slabs = $PARK_POOL_TOKENS_PER_GPU // $SGLANG_KV_PARK_SLAB_TOKENS
-print(f"{radix:.2f} {park:.2f} {total:.2f} {static_need:.3f} {slabs}")
+# Charged per arm, because park_decode moves park HBM from the prefill GPU to the decode
+# one and the two cards have different budgets: a config that fits prefill can still OOM
+# decode, whose pool is already 21.5 GB of live KV.
+check_budget() {   # $1 label  $2 park tok on each PREFILL gpu  $3 park tok on each DECODE gpu
+  local label="$1" ppark="$2" dpark="$3" out
+  out=$(python3 - <<PY
+bpt = $BYTES_PER_TOKEN
+radix  = $PREFILL_MAX_TOTAL_TOKENS * bpt / 2**30
+dpool  = $DECODE_MAX_TOTAL_TOKENS  * bpt / 2**30
+ppark  = $ppark * bpt / 2**30
+dpark  = $dpark * bpt / 2**30
+p_tot  = $WEIGHTS_GB + radix + ppark + $ACTIVATION_GB
+d_tot  = $WEIGHTS_GB + dpool + dpark + $ACTIVATION_GB_D
+print(f"{radix:.2f} {ppark:.2f} {p_tot:.2f} {($WEIGHTS_GB + radix) / $HBM_PER_GPU_GB:.3f} "
+      f"{dpool:.2f} {dpark:.2f} {d_tot:.2f} {($WEIGHTS_GB + dpool) / $HBM_PER_GPU_GB:.3f} "
+      f"{$ppark // $SGLANG_KV_PARK_SLAB_TOKENS} {$dpark // $SGLANG_KV_PARK_SLAB_TOKENS}")
 PY
 )
-read -r B_RADIX B_PARK B_TOTAL B_STATIC B_SLABS <<< "$budget"
+  read -r RADIX PPARK PTOT PSTATIC DPOOL DPARK DTOT DSTATIC PSLABS DSLABS <<< "$out"
+  echo "  [$label]"
+  echo "    prefill GPU: weights ${WEIGHTS_GB} + radix ${RADIX} + park ${PPARK} (${PSLABS} slab)"
+  echo "                 + act ${ACTIVATION_GB} = ${PTOT} GB of ${HBM_PER_GPU_GB} GB"
+  echo "    decode  GPU: weights ${WEIGHTS_GB} + pool ${DPOOL} + park ${DPARK} (${DSLABS} slab)"
+  echo "                 + act ${ACTIVATION_GB_D} = ${DTOT} GB of ${HBM_PER_GPU_GB} GB"
+  local bad=0
+  if (( $(echo "$PTOT > $HBM_PER_GPU_GB" | bc -l) )); then
+    echo "    ERROR: needs ${PTOT} GB on a ${HBM_PER_GPU_GB} GB PREFILL GPU."
+    echo "           Lower PREFILL_MAX_TOTAL_TOKENS or the park pool."
+    bad=1
+  fi
+  if (( $(echo "$DTOT > $HBM_PER_GPU_GB" | bc -l) )); then
+    echo "    ERROR: needs ${DTOT} GB on a ${HBM_PER_GPU_GB} GB DECODE GPU."
+    echo "           Lower DECODE_MAX_TOTAL_TOKENS or PARK_TOKENS_DECODE_ARM. Note that"
+    echo "           decode holds NO evictable cache (measured evictable_tokens = 0), so"
+    echo "           its pool cannot go below peak live usage without preempting."
+    bad=1
+  fi
+  if (( $(echo "$PSTATIC > $PARK_MEM_FRACTION" | bc -l) )); then
+    echo "    ERROR: --mem-fraction-static ${PARK_MEM_FRACTION} cannot hold weights + a"
+    echo "           ${PREFILL_MAX_TOTAL_TOKENS}-token prefill pool (needs >= ${PSTATIC})."
+    echo "           SGLang would cap the pool and the run would silently measure a"
+    echo "           smaller one than it reports."
+    bad=1
+  fi
+  if (( $(echo "$DSTATIC > $PARK_MEM_FRACTION_D" | bc -l) )); then
+    echo "    ERROR: PARK_MEM_FRACTION_D ${PARK_MEM_FRACTION_D} cannot hold weights + a"
+    echo "           ${DECODE_MAX_TOTAL_TOKENS}-token decode pool (needs >= ${DSTATIC})."
+    bad=1
+  fi
+  # Only for arms that asked for a park pool: recompute and hicache legitimately have
+  # none, and rejecting them here would block every baseline.
+  if [ "$ppark" -gt 0 ] || [ "$dpark" -gt 0 ]; then
+    if [ "$PSLABS" -lt 1 ] && [ "$DSLABS" -lt 1 ]; then
+      echo "    ERROR: the requested park pool is under one ${SGLANG_KV_PARK_SLAB_TOKENS}-token"
+      echo "           slab, so no session of this workload can be parked on the GPU tier."
+      bad=1
+    fi
+  fi
+  [ "$bad" = "1" ] && return 1 || return 0
+}
+
 echo "================================================================"
 echo " Agent-trace replay   sessions=$SESSIONS"
 echo " arms: $ARMS   concurrency: $CONCURRENCIES   tool_delay=${TOOL_DELAY}s"
-echo " park: session-keyed, slab=${SGLANG_KV_PARK_SLAB_TOKENS} tok, "
-echo "       pool=${PARK_POOL_TOKENS_PER_GPU} tok/GPU (${B_SLABS} slabs), mem-fraction=${PARK_MEM_FRACTION}"
-echo " prefill GPU budget: weights ${WEIGHTS_GB} + radix ${B_RADIX} + park ${B_PARK}"
-echo "                     + act ${ACTIVATION_GB} = ${B_TOTAL} GB of ${HBM_PER_GPU_GB} GB"
+echo " park: session-keyed, slab=${SGLANG_KV_PARK_SLAB_TOKENS} tok,"
+echo "       mem-fraction P=${PARK_MEM_FRACTION} D=${PARK_MEM_FRACTION_D}"
 echo " -> $OUTDIR"
 echo "================================================================"
-if (( $(echo "$B_TOTAL > $HBM_PER_GPU_GB" | bc -l) )); then
-  echo "ERROR: that config needs ${B_TOTAL} GB on a ${HBM_PER_GPU_GB} GB prefill GPU."
-  echo "       Lower PREFILL_MAX_TOTAL_TOKENS or PARK_POOL_TOKENS_PER_GPU."
-  exit 1
-fi
-if (( $(echo "$B_STATIC > $PARK_MEM_FRACTION" | bc -l) )); then
-  echo "ERROR: --mem-fraction-static ${PARK_MEM_FRACTION} cannot hold weights + a"
-  echo "       ${PREFILL_MAX_TOTAL_TOKENS}-token pool (needs >= ${B_STATIC})."
-  echo "       SGLang would cap the pool below PREFILL_MAX_TOTAL_TOKENS and the run would"
-  echo "       silently measure a smaller pool than the one being reported."
-  exit 1
-fi
-if [ "$B_SLABS" -lt 1 ]; then
-  echo "ERROR: park pool ${PARK_POOL_TOKENS_PER_GPU} < one ${SGLANG_KV_PARK_SLAB_TOKENS}-token"
-  echo "       slab, so no session can ever be parked on the GPU tier."
-  exit 1
-fi
+rc=0
+for arm in $ARMS; do
+  case "$arm" in
+    park_decode) check_budget "$arm" "$PARK_TOKENS_DECODE_ARM" "$PARK_TOKENS_DECODE_ARM" || rc=1 ;;
+    park)        check_budget "$arm" "$PARK_POOL_TOKENS_PER_GPU" 0 || rc=1 ;;
+    *)           check_budget "$arm" 0 0 || rc=1 ;;
+  esac
+done
+[ "$rc" = "0" ] || exit 1
+echo "================================================================"
 
 for arm in $ARMS; do
   for C in $CONCURRENCIES; do
